@@ -11,6 +11,10 @@ import { rebuildRouteAfterSkipChange, routeCandidateHouses } from "@/lib/route-c
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
+import {
+  captureRouteDisplayOrders,
+  mergeNewRouteDisplayOrders,
+} from "@/lib/route-display-order";
 import { readRouteMode, writeRouteMode } from "@/lib/route-mode";
 import type { PublicHouse } from "@/lib/types";
 
@@ -57,6 +61,8 @@ export function useNeighborhoodRoute({
 }) {
   const [routeMode, setRouteMode] = useState(() => readRouteMode());
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
+  const [routeSessionDisplayOrders, setRouteSessionDisplayOrders] =
+    useState<Map<string, number> | null>(null);
   const pendingRouteGps = useRef(false);
   const routeCandidates = useMemo(
     () =>
@@ -153,11 +159,21 @@ export function useNeighborhoodRoute({
     pinCurrentRoute();
   }, [routeMode, pinnedRoute, pinCurrentRoute]);
 
+  useEffect(() => {
+    if (!routeMode || !pinnedRoute) return;
+    setRouteSessionDisplayOrders((prev) => {
+      if (!prev) return captureRouteDisplayOrders(pinnedRoute);
+      const merged = mergeNewRouteDisplayOrders(prev, pinnedRoute);
+      return merged === prev ? prev : merged;
+    });
+  }, [routeMode, pinnedRoute]);
+
   function exitRouteMode() {
     pendingRouteGps.current = false;
     writeRouteMode(false);
     setRouteMode(false);
     setPinnedRoute(null);
+    setRouteSessionDisplayOrders(null);
   }
 
   function enterRouteMode() {
@@ -189,5 +205,6 @@ export function useNeighborhoodRoute({
     exitRouteMode,
     pendingRouteGps,
     clearPendingRouteGps,
+    routeSessionDisplayOrders,
   };
 }

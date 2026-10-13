@@ -4,6 +4,7 @@ import { filterHouses } from "@/lib/filter-houses";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { buildWalkingRouteOrdered } from "@/lib/route";
+import { captureRouteDisplayOrders } from "@/lib/route-display-order";
 import { buildRouteListItems } from "@/lib/route-list-items";
 
 function stub(id: string, overrides: Partial<PublicHouse> = {}): PublicHouse {
@@ -99,6 +100,37 @@ describe("buildRouteListItems", () => {
     const visitedTail = items.filter((item) => item.visitedTail);
     assert.equal(visitedTail.length, 1);
     assert.equal(visitedTail[0]!.house.id, "b");
+  });
+
+  it("keeps pinned stop numbers after a visit rebuild compacts orders", () => {
+    const houses = [
+      stub("a", { lat: 32.091, lng: 34.801 }),
+      stub("b", { lat: 32.092, lng: 34.802 }),
+      stub("c", { lat: 32.093, lng: 34.803 }),
+    ];
+    const full = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
+    assert.ok(full);
+    const session = captureRouteDisplayOrders(full);
+    const afterVisit = buildWalkingRouteOrdered([houses[1]!, houses[2]!], { lat: 32.09, lng: 34.81 });
+    assert.ok(afterVisit);
+
+    const items = buildRouteListItems({
+      route: afterVisit,
+      catalogHouses: houses,
+      houseSet: "real",
+      visitedIds: ["a"],
+      skippedIds: [],
+      origin: { lat: 32.09, lng: 34.81 },
+      distanceLabel: () => "hop",
+      distanceAllowed: () => true,
+      sessionDisplayOrders: session,
+    });
+
+    const active = items.filter((item) => !item.visitedTail && !item.skipped);
+    assert.deepEqual(
+      active.map((item) => item.order),
+      [2, 3],
+    );
   });
 
   it("omits hop labels before address reveal but keeps leg slots empty", () => {

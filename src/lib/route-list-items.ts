@@ -3,6 +3,7 @@ import { routeHouseIds } from "@/lib/filter-houses";
 import { distanceMeters } from "@/lib/geo";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import type { PublicHouse } from "@/lib/types";
+import { routeDisplayOrder } from "@/lib/route-display-order";
 import type { WalkingRoute } from "@/lib/route";
 
 export type RouteListItemInput = {
@@ -23,6 +24,8 @@ export function buildRouteListItems(options: {
   origin: { lat: number; lng: number };
   distanceLabel: (houseId: string, meters: number) => string;
   distanceAllowed: (houseId: string) => boolean;
+  /** Pinned 1…N for this route session; stops keep numbers after visits until route mode exits. */
+  sessionDisplayOrders?: Map<string, number> | null;
 }): RouteListItemInput[] {
   const {
     route,
@@ -33,6 +36,7 @@ export function buildRouteListItems(options: {
     origin,
     distanceLabel,
     distanceAllowed,
+    sessionDisplayOrders,
   } = options;
 
   const routeIds = routeHouseIds(route);
@@ -48,7 +52,7 @@ export function buildRouteListItems(options: {
       const allowed = distanceAllowed(house.id);
       return {
         house,
-        order: stop.order,
+        order: routeDisplayOrder(house.id, stop.order, sessionDisplayOrders),
         hop:
           !allowed
             ? ""

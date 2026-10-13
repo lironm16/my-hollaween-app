@@ -40,6 +40,7 @@ import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { buildRouteListItems } from "@/lib/route-list-items";
+import { routeDisplayOrder } from "@/lib/route-display-order";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
 import { LikeCheer } from "@/components/like-cheer";
@@ -633,6 +634,7 @@ export function NeighborhoodApp({
     exitRouteMode,
     pendingRouteGps,
     clearPendingRouteGps,
+    routeSessionDisplayOrders,
   } = useNeighborhoodRoute({
     houses,
     filters,
@@ -852,6 +854,7 @@ export function NeighborhoodApp({
       origin: { lat: origin.lat, lng: origin.lng },
       distanceLabel,
       distanceAllowed: addressReveal.distanceAllowed,
+      sessionDisplayOrders: routeSessionDisplayOrders,
     });
   }, [
     routeMode,
@@ -864,6 +867,7 @@ export function NeighborhoodApp({
     origin.lng,
     addressReveal,
     distanceLabel,
+    routeSessionDisplayOrders,
   ]);
 
   function applyRouteAfterSkipChange(
@@ -1358,7 +1362,22 @@ export function NeighborhoodApp({
     ? {
         house: selected,
         actionContext: houseActionContext,
-        index: selection.selectedListIndex,
+        index:
+          routeMode && activeRoute && routeSessionDisplayOrders
+            ? (() => {
+                const stop = activeRoute.stops.find((item) =>
+                  item.houses.some((h) => h.id === selected.id),
+                );
+                if (!stop) {
+                  return routeSessionDisplayOrders.get(selected.id) ?? selection.selectedListIndex;
+                }
+                return routeDisplayOrder(
+                  selected.id,
+                  stop.order,
+                  routeSessionDisplayOrders,
+                );
+              })()
+            : selection.selectedListIndex,
         onClose: selection.closeSelection,
         liked: likes.liked,
         visited: visits.visited,
@@ -1540,7 +1559,11 @@ export function NeighborhoodApp({
                     routeMode && activeRoute && !originPick.originPickActive
                       ? activeRoute.stops.map((stop) => ({
                           id: stop.house.id,
-                          order: stop.order,
+                          order: routeDisplayOrder(
+                            stop.house.id,
+                            stop.order,
+                            routeSessionDisplayOrders,
+                          ),
                           lat: stop.house.lat,
                           lng: stop.house.lng,
                         }))
