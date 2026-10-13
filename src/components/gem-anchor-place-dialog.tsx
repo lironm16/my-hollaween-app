@@ -11,6 +11,7 @@ import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { clearGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { copyText } from "@/lib/copy-text";
 import {
+  clampGemAnchorPlacement,
   gemAnchorPlacementError,
   GEM_ANCHOR_PLACE_MAX_METERS,
   nudgeGemAnchorPoint,
@@ -30,7 +31,6 @@ import {
   GEM_PLACE_RESET_CONFIRM_HE,
   GEM_PLACE_RESET_DONE_HE,
   GEM_PLACE_RESET_HE,
-  GEM_PLACE_RESET_HINT_HE,
   GEM_PLACE_SAVE_HE,
   GEM_PLACE_SAVED_HE,
   GEM_PLACE_STATUS_AUTO_HE,
@@ -156,7 +156,9 @@ export function GemAnchorPlaceDialog({
   }
 
   async function save() {
-    if (await send("PUT", { lat: point.lat, lng: point.lng })) {
+    const clamped = clampGemAnchorPlacement(house, point);
+    if (!samePoint(clamped, point)) setPoint(clamped);
+    if (await send("PUT", { lat: clamped.lat, lng: clamped.lng })) {
       toast.success(GEM_PLACE_SAVED_HE);
       onClose();
     }
@@ -319,7 +321,6 @@ export function GemAnchorPlaceDialog({
             {GEM_PLACE_RESET_HE}
           </Button>
         </div>
-        <p className="text-sm text-violet-400">{GEM_PLACE_RESET_HINT_HE}</p>
         {deviceOverride ? (
           <p className="text-sm text-amber-200">
             בטלפון הזה יש כיול GPS מקומי שדורס את המיקום.{" "}

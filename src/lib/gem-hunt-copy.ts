@@ -24,12 +24,10 @@ export const GEM_PLACE_MAP_EXPAND_HE = "הגדלת מפה";
 export const GEM_PLACE_MAP_SHRINK_HE = "מפה קטנה";
 export const GEM_PLACE_MY_LOCATION_HE = "המיקום שלי";
 export const GEM_PLACE_SAVE_HE = "שמירת מיקום";
-export const GEM_PLACE_RESET_HE = "ברירת מחדל";
-export const GEM_PLACE_RESET_HINT_HE =
-  "«ברירת מחדל» מחזירה את השדון למיקום שהאפליקציה מחשבת לבד — על המדרכה הקרובה לבית.";
+export const GEM_PLACE_RESET_HE = "אפס";
 export const GEM_PLACE_RESET_CONFIRM_HE = "המיקום הידני יימחק לכולם.";
 export const GEM_PLACE_SAVED_HE = "מיקום השדון נשמר";
-export const GEM_PLACE_RESET_DONE_HE = "השדון חזר למיקום ברירת המחדל";
+export const GEM_PLACE_RESET_DONE_HE = "המיקום אופס";
 export const GEM_PLACE_STATUS_PLACED_HE = "מיקום שנבחר ידנית";
 export const GEM_PLACE_STATUS_AUTO_HE = "ברירת מחדל — מחושב לפי המדרכה הקרובה";
 export const GEM_ACTION_FIND_HE = "מצא שדון";

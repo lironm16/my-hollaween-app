@@ -30,7 +30,8 @@ describe("gem anchor placement", () => {
   it("clamps a dragged point back onto the circle", () => {
     const far = destinationPoint(house, 45, GEM_ANCHOR_PLACE_MAX_METERS * 3);
     const clamped = clampGemAnchorPlacement(house, far);
-    assert.ok(distanceMeters(house, clamped) <= GEM_ANCHOR_PLACE_MAX_METERS + 0.5);
+    assert.ok(distanceMeters(house, clamped) <= GEM_ANCHOR_PLACE_MAX_METERS + 0.05);
+    assert.equal(gemAnchorPlacementError(house, clamped), null);
   });
 
   it("uses the shared placement from the catalog row", () => {

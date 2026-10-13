@@ -11,7 +11,7 @@ const COPY: Record<
   { title: string; sub: string; kicker: string }
 > = {
   map: {
-    kicker: "כל השדונים על המפה",
+    kicker: "כל השדונים במפה שלך",
     title: "השכונה שלכם מלאה קסם!",
     sub: "מצאתם את כל השדונים הנסתרים — התיק מוכן לפסגה.",
   },

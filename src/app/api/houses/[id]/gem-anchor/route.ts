@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
-import { gemAnchorPlacementError } from "@/lib/gem-anchor-placement";
+import { clampGemAnchorPlacement, gemAnchorPlacementError } from "@/lib/gem-anchor-placement";
 import { houseMatchesGemHuntSet } from "@/lib/gem-school-campus";
 import { canonicalHouseId, toEditorHouse } from "@/lib/ids";
 import { grantOwnerHouse, ownerMayEdit } from "@/lib/owner-session";
@@ -71,7 +71,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   const body = await readBody(request);
   const auth = await authorize(request, id, body);
   if ("error" in auth) return auth.error;
-  const point = { lat: Number(body.lat), lng: Number(body.lng) };
+  const raw = { lat: Number(body.lat), lng: Number(body.lng) };
+  const point = clampGemAnchorPlacement(auth.existing, raw);
   const invalid = gemAnchorPlacementError(auth.existing, point);
   if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
   return save(auth.existing.id, point);

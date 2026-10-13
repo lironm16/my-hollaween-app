@@ -1,4 +1,4 @@
-import { distanceMeters } from "@/lib/geo";
+import { bearingDegrees, destinationPoint, distanceMeters } from "@/lib/geo";
 import type { GemAnchorPlacement } from "@/lib/types";
 
 /** Owners/admins may drag the gem this far from the house pin (keeps it at the house, not across the street block). */
@@ -24,7 +24,7 @@ export function gemAnchorPlacementError(
 ): string | null {
   if (!Number.isFinite(point.lat) || !Number.isFinite(point.lng)) return "מיקום לא תקין.";
   if (Math.abs(point.lat) > 90 || Math.abs(point.lng) > 180) return "מיקום לא תקין.";
-  if (distanceMeters(house, point) > GEM_ANCHOR_PLACE_MAX_METERS) return GEM_ANCHOR_TOO_FAR_HE;
+  if (distanceMeters(house, point) > GEM_ANCHOR_PLACE_MAX_METERS + 0.05) return GEM_ANCHOR_TOO_FAR_HE;
   return null;
 }
 
@@ -55,9 +55,5 @@ export function clampGemAnchorPlacement(
 ): { lat: number; lng: number } {
   const d = distanceMeters(house, point);
   if (d <= GEM_ANCHOR_PLACE_MAX_METERS || d === 0) return point;
-  const t = GEM_ANCHOR_PLACE_MAX_METERS / d;
-  return {
-    lat: house.lat + (point.lat - house.lat) * t,
-    lng: house.lng + (point.lng - house.lng) * t,
-  };
+  return destinationPoint(house, bearingDegrees(house, point), GEM_ANCHOR_PLACE_MAX_METERS);
 }
