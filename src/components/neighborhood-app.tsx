@@ -307,7 +307,10 @@ export function NeighborhoodApp({
   const skips = useSkippedHouses();
   const owned = useOwnedHouses();
   const nightPass = useNightPass();
-  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer();
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer({
+    userLocation: gps,
+    refreshLocation: geo.refresh,
+  });
   const { openOwnerPasses } = useNightPassDialog();
   useEffect(() => {
     applyClockSearchParams(window.location.search);

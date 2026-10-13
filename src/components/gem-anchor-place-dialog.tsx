@@ -8,6 +8,10 @@ import { HouseEditModal } from "@/components/house-edit-modal";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { Button } from "@/components/ui/button";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
+import {
+  resolveUserLocationForUi,
+  type UserLocation,
+} from "@/hooks/use-user-location";
 import { clearGemAnchorOverride, GEM_ANCHOR_CHANGED_EVENT } from "@/lib/gem-anchor-overrides";
 import { copyText } from "@/lib/copy-text";
 import {
@@ -48,8 +52,15 @@ function samePoint(a: LatLng, b: LatLng) {
   return Math.abs(a.lat - b.lat) < 1e-7 && Math.abs(a.lng - b.lng) < 1e-7;
 }
 
+export type GemAnchorPlacerOptions = {
+  /** Live GPS from the host page (main map blue dot). */
+  userLocation?: UserLocation | null;
+  refreshLocation?: () => Promise<UserLocation | null>;
+};
+
 /** Page-level state for {@link GemAnchorPlaceDialog} — `open(house, editCode)` from a ⋮ menu. */
-export function useGemAnchorPlacer() {
+export function useGemAnchorPlacer(options: GemAnchorPlacerOptions = {}) {
+  const { userLocation = null, refreshLocation } = options;
   const [target, setTarget] = useState<{ house: PublicHouse; editCode?: string } | null>(null);
   const open = useCallback((house: PublicHouse, editCode?: string) => setTarget({ house, editCode }), []);
   const dialog = target ? (
@@ -57,6 +68,8 @@ export function useGemAnchorPlacer() {
       open
       house={target.house}
       editCode={target.editCode}
+      userLocation={userLocation}
+      refreshLocation={refreshLocation}
       onClose={() => setTarget(null)}
     />
   ) : null;
@@ -89,11 +102,15 @@ export function GemAnchorPlaceDialog({
   open,
   house,
   editCode,
+  userLocation: knownUserLocation = null,
+  refreshLocation,
   onClose,
 }: {
   open: boolean;
   house: PublicHouse;
   editCode?: string;
+  userLocation?: UserLocation | null;
+  refreshLocation?: () => Promise<UserLocation | null>;
   onClose: () => void;
 }) {
   const { overrides } = useGemAnchorOverrides();
@@ -195,39 +212,44 @@ export function GemAnchorPlaceDialog({
     }
   }
 
-  function applyMyLocation() {
+  function applyGpsFix(here: UserLocation) {
+    const accuracy = Math.round(here.accuracy);
+    setMyLocation({ lat: here.lat, lng: here.lng });
+    setAccuracyM(accuracy);
+    setMapFitTick((tick) => tick + 1);
+    const invalid = gemAnchorPlacementError(house, here);
+    if (invalid && invalid !== GEM_ANCHOR_TOO_FAR_HE) {
+      toast.error(invalid);
+      return;
+    }
+    const snapped = clampGemAnchorPlacement(house, here);
+    setPoint(snapped);
+    if (invalid) {
+      toast.message(
+        `אתם ${Math.round(distanceMeters(house, here))} מ׳ מהבית — השדון הוזז לנקודה הקרובה בטווח (${GEM_ANCHOR_PLACE_MAX_METERS} מ׳).`,
+      );
+    }
+  }
+
+  async function applyMyLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       toast.error("המכשיר לא תומך במיקום.");
       return;
     }
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false);
-        const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        const accuracy = Math.round(pos.coords.accuracy);
-        setMyLocation(here);
-        setAccuracyM(accuracy);
-        setMapFitTick((tick) => tick + 1);
-        const invalid = gemAnchorPlacementError(house, here);
-        if (invalid && invalid !== GEM_ANCHOR_TOO_FAR_HE) {
-          toast.error(invalid);
-          return;
-        }
-        const snapped = clampGemAnchorPlacement(house, here);
-        setPoint(snapped);
-        if (invalid) {
-          toast.message(
-            `אתם ${Math.round(distanceMeters(house, here))} מ׳ מהבית — השדון הוזז לנקודה הקרובה בטווח (${GEM_ANCHOR_PLACE_MAX_METERS} מ׳).`,
-          );
-        }
-      },
-      () => {
-        setLocating(false);
+    try {
+      const fix = await resolveUserLocationForUi({
+        seed: knownUserLocation,
+        refresh: refreshLocation,
+      });
+      if (!fix) {
         toast.error("לא הצלחנו לקבל מיקום. בדקו שהרשאת מיקום פתוחה.");
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
+        return;
+      }
+      applyGpsFix(fix);
+    } finally {
+      setLocating(false);
+    }
   }
 
   function reset() {

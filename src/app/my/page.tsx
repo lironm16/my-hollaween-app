@@ -73,7 +73,6 @@ function MyCollectionsPageContent() {
     useGemHuntAdminUi(admin);
   const addressReveal = useAddressReveal();
   const { houseSet } = useHouseSet();
-  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer();
   const addHouseOpen = useAddHouseOpen();
   const urlTab = parseTab(searchParams.get("tab"), showCollected);
   const [tab, setTab] = useState<PersonalMarksTab>(urlTab);
@@ -103,6 +102,10 @@ function MyCollectionsPageContent() {
     previewDeployment: isPreviewDeploymentClient(),
   });
   const geo = useUserLocation();
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer({
+    userLocation: geo.location,
+    refreshLocation: geo.refresh,
+  });
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
   const nightPass = useNightPass();

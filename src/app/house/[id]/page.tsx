@@ -53,8 +53,11 @@ export default function HousePage() {
   const { gemUiVisible: gemUi } = useGemHuntAdminUi(admin);
   const addressReveal = useAddressReveal();
   const { houseSet } = useHouseSet();
-  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer();
   const geo = useUserLocation({ watch: gemUi });
+  const { open: openGemPlacer, dialog: gemPlacerDialog } = useGemAnchorPlacer({
+    userLocation: geo.location,
+    refreshLocation: geo.refresh,
+  });
   const { setWatchEnabled } = geo;
   const editFlow = useHouseEditFlow();
   const [adminHouses, setAdminHouses] = useState<House[]>([]);
