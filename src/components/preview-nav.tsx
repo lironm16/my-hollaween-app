@@ -10,6 +10,7 @@ export const PREVIEW_LINKS = [
   { href: "/preview/strollers", label: "עגלות" },
   { href: "/preview/push", label: "התראות" },
   { href: "/preview/hours", label: "שעות" },
+  { href: "/preview/stats-design", label: "תמונת מצb" },
   { href: "/preview/countdown", label: "ספירה" },
   { href: "/preview/countdown-fonts", label: "גופני ספירה" },
   { href: "/preview/countdown-finale", label: "finale" },

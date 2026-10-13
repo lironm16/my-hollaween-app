@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>תמונת מצב — סה״כ / עכשיו</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f0a14;
+      color: #f8fafc;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .phone {
+      width: 390px;
+      background: #1a1024;
+      border-radius: 28px;
+      padding: 14px;
+      border: 1px solid #3b2a4a;
+    }
+    h1 { color: #fdba74; font-size: 1.4rem; margin-bottom: 10px; }
+    .section {
+      background: #241332;
+      border-radius: 14px;
+      padding: 10px;
+    }
+    .section h2 { color: #fb923c; font-size: 15px; margin-bottom: 8px; }
+    .event-only {
+      border: 1px solid rgba(45, 212, 191, .2);
+      border-radius: 12px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+    .event-only .tag {
+      font-size: 9px;
+      color: #5eead4;
+      text-align: center;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      background: #14081c;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .seg button {
+      border: none;
+      border-radius: 9px;
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      background: transparent;
+      color: #94a3b8;
+      font-family: inherit;
+    }
+    .seg button.on-total { background: #ea580c; color: #fff; }
+    .seg button.on-now { background: #059669; color: #fff; }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .tile {
+      background: #14081c;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tile .num { font-size: 22px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; color: #f8fafc; }
+    .tile .lbl { font-size: 10px; color: #94a3b8; margin-top: 2px; line-height: 1.2; }
+    .ico {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      background: rgba(255,255,255,.06);
+      flex-shrink: 0;
+    }
+    .ico-house { color: #fdba74; font-size: 18px; }
+    .ico-open { width: 14px; height: 14px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,.25); }
+    .device-img {
+      width: 22px; height: 22px;
+      object-fit: contain;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .hood {
+      --accent: #a78bfa;
+      background: #14081c;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+    .hood .name {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      padding: 5px;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 68px;
+    }
+    .half {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 6px;
+    }
+    .half:first-child { border-left: 1px solid rgba(255,255,255,.06); }
+    .half .n { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; color: #f8fafc; }
+    .half .k { font-size: 9px; color: #94a3b8; text-align: center; line-height: 1.2; }
+    .hood-v { --accent: #a78bfa; }
+    .hood-a { --accent: #fbbf24; }
+    .hood-t { --accent: #2dd4bf; }
+    .hood-r { --accent: #fb7185; }
+    .mini-map {
+      margin-top: 10px;
+      height: 108px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #e8e4dc, #d4e8d4);
+      position: relative;
+      overflow: hidden;
+    }
+    .zone { position: absolute; border-radius: 6px; }
+    .z1 { left: 5%; top: 10%; width: 35%; height: 45%; background: rgba(124,58,237,.11); }
+    .z2 { left: 42%; top: 8%; width: 50%; height: 38%; background: rgba(217,119,6,.1); }
+    .z3 { left: 28%; top: 42%; width: 55%; height: 48%; background: rgba(13,148,136,.18); }
+    .z4 { left: 40%; top: 72%; width: 40%; height: 22%; background: rgba(225,29,72,.09); }
+    .heat { position: absolute; filter: blur(14px); border-radius: 50%; }
+    .h1 { left: 50%; top: 52%; width: 65px; height: 50px; background: rgba(13,148,136,.4); }
+    .panel { display: none; }
+    .panel.on { display: block; }
+    .off-msg {
+      display: none;
+      text-align: center;
+      padding: 24px 12px;
+      color: #64748b;
+      font-size: 13px;
+    }
+    .phone.before-event .event-only { display: none; }
+    .phone.before-event .off-msg { display: block; }
+  </style>
+</head>
+<body>
+  <div class="phone" id="root">
+    <h1>תמונת מצב</h1>
+    <div class="section">
+      <h2>מפה · שכונות</h2>
+      <p class="off-msg">מכשירים ו«עכשיו» — מ־18:00 בליל האירוע</p>
+      <div class="event-only">
+        <p class="tag">ליל האירוע · שעון פעיל</p>
+        <div class="seg">
+          <button type="button" id="btn-total" class="on-total">סה״כ</button>
+          <button type="button" id="btn-now">עכשיו</button>
+        </div>
+        <div id="panel-total" class="panel on">
+          <div class="pair">
+            <div class="tile">
+              <div class="ico ico-house">🏠</div>
+              <div><div class="num">186</div><div class="lbl">בתים במפה</div></div>
+            </div>
+            <div class="tile">
+              <div class="ico"><img class="device-img" src="/icons/device-map.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'📱',style:'font-size:18px'}))" /></div>
+              <div><div class="num">512</div><div class="lbl">מכשירים מתחילת האירוע</div></div>
+            </div>
+          </div>
+          <div class="grid">
+            <div class="hood hood-v"><div class="name">חרוזים</div><div class="split">
+              <div class="half"><span class="n">41</span><span class="k">בתים</span></div>
+              <div class="half"><span class="n">28</span><span class="k">מכשירים</span></div>
+            </div></div>
+            <div class="hood hood-a"><div class="name">שיכון ותיקים</div><div class="split">
+              <div class="half"><span class="n">52</span><span class="k">בתים</span></div>
+              <div class="half"><span class="n">104</span><span class="k">מכשירים</span></div>
+            </div></div>
+            <div class="hood hood-t"><div class="name">נחלת גנים</div><div class="split">
+              <div class="half"><span class="n">61</span><span class="k">בתים</span></div>
+              <div class="half"><span class="n">198</span><span class="k">מכשירים</span></div>
+            </div></div>
+            <div class="hood hood-r"><div class="name">הגפן</div><div class="split">
+              <div class="half"><span class="n">28</span><span class="k">בתים</span></div>
+              <div class="half"><span class="n">67</span><span class="k">מכשירים</span></div>
+            </div></div>
+          </div>
+        </div>
+        <div id="panel-now" class="panel">
+          <div class="pair">
+            <div class="tile">
+              <div class="ico"><span class="ico-open"></span></div>
+              <div><div class="num">94</div><div class="lbl">בתים פתוחים</div></div>
+            </div>
+            <div class="tile">
+              <div class="ico"><img class="device-img" src="/icons/device-map.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'📱',style:'font-size:18px'}))" /></div>
+              <div><div class="num">500</div><div class="lbl">מכשירים פעילים</div></div>
+            </div>
+          </div>
+          <div class="grid">
+            <div class="hood hood-v"><div class="name">חרוזים</div><div class="split">
+              <div class="half"><span class="n">18</span><span class="k">פתוחים</span></div>
+              <div class="half"><span class="n">23</span><span class="k">מכשירים פעילים</span></div>
+            </div></div>
+            <div class="hood hood-a"><div class="name">שיכון ותיקים</div><div class="split">
+              <div class="half"><span class="n">31</span><span class="k">פתוחים</span></div>
+              <div class="half"><span class="n">98</span><span class="k">מכשירים פעילים</span></div>
+            </div></div>
+            <div class="hood hood-t"><div class="name">נחלת גנים</div><div class="split">
+              <div class="half"><span class="n">27</span><span class="k">פתוחים</span></div>
+              <div class="half"><span class="n">142</span><span class="k">מכשירים פעילים</span></div>
+            </div></div>
+            <div class="hood hood-r"><div class="name">הגפן</div><div class="split">
+              <div class="half"><span class="n">12</span><span class="k">פתוחים</span></div>
+              <div class="half"><span class="n">41</span><span class="k">מכשירים פעילים</span></div>
+            </div></div>
+          </div>
+          <div class="mini-map">
+            <div class="zone z1"></div><div class="zone z2"></div><div class="zone z3"></div><div class="zone z4"></div>
+            <div class="heat h1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const btnT = document.getElementById("btn-total");
+    const btnN = document.getElementById("btn-now");
+    const pT = document.getElementById("panel-total");
+    const pN = document.getElementById("panel-now");
+    function set(mode) {
+      const total = mode === "total";
+      btnT.className = total ? "on-total" : "";
+      btnN.className = total ? "" : "on-now";
+      pT.classList.toggle("on", total);
+      pN.classList.toggle("on", !total);
+    }
+    btnT.onclick = () => set("total");
+    btnN.onclick = () => set("now");
+    // toggle: document.getElementById("root").classList.add("before-event");
+  </script>
+</body>
+</html>

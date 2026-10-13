@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>תמונת מצב — מטיילים לפי שכונה (mockup)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f0a14;
+      color: #f8fafc;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .page { width: min(100%, 400px); }
+    h1 { font-size: 1.5rem; color: #fdba74; margin-bottom: 16px; }
+    .section {
+      background: #241332;
+      border-radius: 16px;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .section > h2 { font-size: 1rem; color: #fb923c; margin-bottom: 8px; }
+    .sub { font-size: .85rem; color: #c4b5fd; margin: 12px 0 6px; font-weight: 600; }
+    .tiles { display: grid; grid-cols: 2; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tile {
+      background: #14081c;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tile.wide { grid-column: 1 / -1; }
+    .icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .val { font-size: 1.35rem; font-weight: 800; line-height: 1; }
+    .lbl { font-size: .8rem; color: rgba(255,255,255,.75); margin-top: 2px; }
+    .live .icon { background: rgba(45,212,191,.15); color: #2dd4bf; }
+    .live .val { color: #5eead4; }
+    .hood-v { --c: #a78bfa; }
+    .hood-a { --c: #fbbf24; }
+    .hood-t { --c: #2dd4bf; }
+    .hood-r { --c: #fb7185; }
+    .hood .icon { background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); }
+    .hood .val { color: var(--c); }
+    .note { font-size: 11px; color: #64748b; text-align: center; margin-top: 16px; line-height: 1.5; }
+    .mini-map {
+      height: 140px;
+      border-radius: 12px;
+      margin-top: 8px;
+      background: linear-gradient(135deg, #e8e4dc, #d4e8d4);
+      position: relative;
+      overflow: hidden;
+    }
+    .zone { position: absolute; border-radius: 8px; opacity: .35; }
+    .z1 { left: 5%; top: 10%; width: 35%; height: 45%; background: #7c3aed; }
+    .z2 { left: 42%; top: 8%; width: 50%; height: 38%; background: #d97706; }
+    .z3 { left: 28%; top: 42%; width: 55%; height: 48%; background: #0d9488; outline: 2px solid #2dd4bf; }
+    .z4 { left: 40%; top: 72%; width: 40%; height: 22%; background: #e11d48; opacity: .25; }
+    .dim-label { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>תמונת מצב</h1>
+
+    <div class="section">
+      <h2>סימונים שלי</h2>
+      <div class="tiles">
+        <div class="tile"><div class="icon">♥</div><div><div class="val">12</div><div class="lbl">אהבתי</div></div></div>
+        <div class="tile"><div class="icon">✓</div><div><div class="val">8</div><div class="lbl">ביקרתי</div></div></div>
+      </div>
+    </div>
+
+    <div class="section live">
+      <h2>פעילות עכשיו</h2>
+      <p class="dim-label">מכשירים עם מפה פתוחה · מתעדכן ~כל 30 שנ׳</p>
+      <div class="tiles">
+        <div class="tile wide">
+          <div class="icon">📡</div>
+          <div><div class="val">500</div><div class="lbl">מכשירים פעילים (סה״כ)</div></div>
+        </div>
+      </div>
+      <p class="sub">לפי שכונה</p>
+      <div class="tiles">
+        <div class="tile hood hood-v"><div class="icon">◆</div><div><div class="val">23</div><div class="lbl">חרוזים</div></div></div>
+        <div class="tile hood hood-a"><div class="icon">◆</div><div><div class="val">98</div><div class="lbl">שיכון ותיקים</div></div></div>
+        <div class="tile hood hood-t"><div class="icon">◆</div><div><div class="val">142</div><div class="lbl">נחלת גנים</div></div></div>
+        <div class="tile hood hood-r"><div class="icon">◆</div><div><div class="val">41</div><div class="lbl">הגפן</div></div></div>
+        <div class="tile"><div class="icon">◆</div><div><div class="val">6</div><div class="lbl">אחר / מחוץ לגבול</div></div></div>
+      </div>
+      <div class="mini-map">
+        <div class="zone z1"></div><div class="zone z2"></div><div class="zone z3"></div><div class="zone z4"></div>
+      </div>
+      <p class="note">לחיצה על שכונה → פותחת מפה ממוקדת (אופציונלי)</p>
+    </div>
+
+    <div class="section">
+      <h2>מפה</h2>
+      <div class="tiles">
+        <div class="tile"><div class="icon">🏠</div><div><div class="val">186</div><div class="lbl">בתים במפה</div></div></div>
+        <div class="tile"><div class="icon">🟢</div><div><div class="val">94</div><div class="lbl">פתוחים עכשיו</div></div></div>
+      </div>
+      <p class="sub">שכונות (בתים רשומים)</p>
+      <div class="tiles">
+        <div class="tile"><div class="icon">📍</div><div><div class="val">41</div><div class="lbl">חרוזים</div></div></div>
+        <div class="tile"><div class="icon">📍</div><div><div class="val">52</div><div class="lbl">ותיקים</div></div></div>
+        <div class="tile"><div class="icon">📍</div><div><div class="val">61</div><div class="lbl">נחלת גנים</div></div></div>
+        <div class="tile"><div class="icon">📍</div><div><div class="val">28</div><div class="lbl">הגפן</div></div></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

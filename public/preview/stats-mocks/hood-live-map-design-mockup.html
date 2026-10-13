@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" width="390" />
+  <title>HallowHood — live by hood (design mockup)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #0f0a14;
+      min-height: 100vh;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px;
+      color: #f8fafc;
+    }
+    h1 {
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 44px;
+      background: #1a1024;
+      box-shadow: 0 24px 80px rgba(0,0,0,.55), inset 0 0 0 2px #3b2a4a;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .phone-label {
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 8px;
+      max-width: 390px;
+    }
+    .status {
+      height: 44px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .header {
+      padding: 0 12px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-title {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .chip-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 0 12px 10px;
+      scrollbar-width: none;
+    }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #2a1a38;
+      color: #cbd5e1;
+      border: 1px solid #4a3560;
+    }
+    .chip.active {
+      background: #0d9488;
+      color: #fff;
+      border-color: #2dd4bf;
+      box-shadow: 0 0 0 1px rgba(45,212,191,.35);
+    }
+    .chip .n { font-variant-numeric: tabular-nums; margin-inline-start: 4px; opacity: .95; }
+    .map-wrap {
+      margin: 0 8px;
+      height: 620px;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    /* faux Voyager-ish map */
+    .map-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, #e8e4dc 0%, #ddd6c8 40%, #d4e8d4 70%, #e8e4dc 100%);
+    }
+    .map-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(120,113,108,.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120,113,108,.12) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .roads {
+      position: absolute;
+      inset: 0;
+      opacity: .85;
+    }
+    .roads path { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; }
+    .roads path.minor { stroke: #f5f5f4; stroke-width: 3; }
+    .park {
+      position: absolute;
+      background: rgba(134, 179, 134, .45);
+      border-radius: 8px;
+    }
+    /* hood zones */
+    .zone {
+      position: absolute;
+      border-radius: 12px;
+      pointer-events: none;
+    }
+    .zone.charuzim { left: 4%; top: 8%; width: 38%; height: 42%; background: rgba(109, 40, 217, .11); }
+    .zone.vatikim { left: 42%; top: 6%; width: 52%; height: 38%; background: rgba(245, 158, 11, .10); }
+    .zone.nahalat { left: 28%; top: 38%; width: 58%; height: 48%; background: rgba(13, 148, 136, .16); outline: 2px solid rgba(45, 212, 191, .45); outline-offset: -2px; }
+    .zone.gefen { left: 38%; top: 72%; width: 42%; height: 22%; background: rgba(244, 63, 94, .10); opacity: .55; }
+    /* density inside selected hood */
+    .heat {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(18px);
+      pointer-events: none;
+    }
+    .heat.h1 { left: 42%; top: 52%; width: 80px; height: 80px; background: rgba(13, 148, 136, .55); }
+    .heat.h2 { left: 55%; top: 58%; width: 100px; height: 70px; background: rgba(13, 148, 136, .4); }
+    .heat.h3 { left: 48%; top: 68%; width: 60px; height: 60px; background: rgba(13, 148, 136, .35); }
+    .hex-label {
+      position: absolute;
+      font-size: 10px;
+      font-weight: 700;
+      color: #0f766e;
+      background: rgba(255,255,255,.75);
+      padding: 2px 6px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .hood-pill {
+      position: absolute;
+      min-width: 72px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: #1d1028;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,.45);
+      z-index: 5;
+    }
+    .hood-pill .name { font-size: 10px; font-weight: 600; opacity: .85; line-height: 1.2; }
+    .hood-pill .count { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 2px 0; }
+    .hood-pill .sub { font-size: 9px; color: #94a3b8; }
+    .hood-pill.ring-violet { box-shadow: 0 8px 24px rgba(0,0,0,.45), 0 0 0 2px rgba(167, 139, 250, .5); }
+    .hood-pill.ring-amber { box-shadow: 0 8px 24px rgba(0,0,0,.45), 0 0 0 2px rgba(251, 191, 36, .5); }
+    .hood-pill.ring-teal { box-shadow: 0 8px 24px rgba(0,0,0,.45), 0 0 0 2px rgba(45, 212, 191, .65); transform: scale(1.06); }
+    .hood-pill.ring-rose { box-shadow: 0 8px 24px rgba(0,0,0,.45), 0 0 0 2px rgba(251, 113, 133, .4); opacity: .7; }
+    .pill-charuzim { left: 10%; top: 14%; }
+    .pill-vatikim { left: 58%; top: 12%; }
+    .pill-nahalat { left: 44%; top: 46%; }
+    .pill-gefen { left: 48%; top: 76%; }
+    /* house pins */
+    .house-pin {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border-radius: 50% 50% 50% 12%;
+      transform: rotate(-45deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 8;
+      box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    }
+    .house-pin .face {
+      transform: rotate(45deg);
+      font-size: 18px;
+    }
+    .house-pin.purple { background: #6d28d9; }
+    .house-pin.orange { background: #f97316; }
+    .house-pin.gray { background: #94a3b8; }
+    .cluster {
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #6d28d9;
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9;
+      box-shadow: 0 4px 14px rgba(0,0,0,.3);
+      border: 3px solid #fff;
+    }
+    /* you */
+    .you-wrap {
+      position: absolute;
+      left: 32%;
+      top: 62%;
+      z-index: 12;
+      width: 48px;
+      height: 48px;
+    }
+    .you-pulse {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, .25);
+      animation: pulse 1.8s ease-out infinite;
+    }
+    .you-dot {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #38bdf8;
+      border: 3px solid #1d1028;
+      box-shadow: 0 0 0 2px rgba(125, 211, 252, .6);
+    }
+    @keyframes pulse {
+      0% { transform: scale(.6); opacity: .9; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    .fab-stack {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 15;
+    }
+    .fab {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: #1d1028;
+      border: none;
+      color: #7dd3fc;
+      box-shadow: 0 8px 24px rgba(0,0,0,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .total-bar {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 6;
+      background: rgba(29, 16, 40, .88);
+      backdrop-filter: blur(8px);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .total-bar b { color: #2dd4bf; font-size: 13px; margin-inline: 4px; }
+    .dim .house-pin.outside,
+    .dim .cluster.outside { opacity: .28; filter: grayscale(.4); }
+    .legend-note {
+      padding: 12px 16px 20px;
+      font-size: 10px;
+      color: #64748b;
+      line-height: 1.45;
+      text-align: center;
+    }
+    .frame-group { display: flex; flex-direction: column; align-items: center; }
+  </style>
+</head>
+<body>
+  <h1>מוקאפ עיצוב — פעילות חיה לפי שכונה (לא קוד אמיתי)</h1>
+
+  <div class="frame-group">
+    <div class="phone" id="screen-a">
+      <div class="status">21:14</div>
+      <div class="header">
+        <span>☰</span>
+        <span class="header-title">הלואין בשכונה</span>
+        <span>🗺</span>
+      </div>
+      <div class="chip-row">
+        <span class="chip">הכל <span class="n">500</span></span>
+        <span class="chip">חרוזים <span class="n">23</span></span>
+        <span class="chip">ותיקים <span class="n">98</span></span>
+        <span class="chip active">נחלת גנים <span class="n">142</span></span>
+        <span class="chip">הגפן <span class="n">41</span></span>
+      </div>
+      <div class="map-wrap dim">
+        <div class="map-bg"></div>
+        <svg class="roads" viewBox="0 0 390 620" preserveAspectRatio="none">
+          <path d="M0 200 H390 M0 320 H390 M0 450 H390" class="minor"/>
+          <path d="M120 0 V620 M240 0 V620"/>
+          <path d="M0 380 Q195 300 390 400"/>
+        </svg>
+        <div class="park" style="left:8%;top:55%;width:22%;height:18%"></div>
+        <div class="zone charuzim"></div>
+        <div class="zone vatikim"></div>
+        <div class="zone nahalat"></div>
+        <div class="zone gefen"></div>
+        <div class="heat h1"></div>
+        <div class="heat h2"></div>
+        <div class="heat h3"></div>
+        <span class="hex-label" style="left:52%;top:54%">12</span>
+        <span class="hex-label" style="left:58%;top:62%">28</span>
+        <span class="hex-label" style="left:46%;top:66%">9</span>
+        <div class="total-bar">פעילים עכשיו <b>500</b> מכשירים</div>
+        <div class="hood-pill ring-violet pill-charuzim">
+          <div class="name">חרוזים</div>
+          <div class="count">23</div>
+          <div class="sub">עכשיו</div>
+        </div>
+        <div class="hood-pill ring-amber pill-vatikim">
+          <div class="name">שיכון ותיקים</div>
+          <div class="count">98</div>
+          <div class="sub">עכשיו</div>
+        </div>
+        <div class="hood-pill ring-teal pill-nahalat">
+          <div class="name">נחלת גנים</div>
+          <div class="count">142</div>
+          <div class="sub">עכשיו</div>
+        </div>
+        <div class="hood-pill ring-rose pill-gefen">
+          <div class="name">הגפן</div>
+          <div class="count">41</div>
+          <div class="sub">עכשיו</div>
+        </div>
+        <div class="house-pin purple outside" style="left:18%;top:22%"><span class="face">👻</span></div>
+        <div class="house-pin purple outside" style="left:72%;top:18%"><span class="face">🎃</span></div>
+        <div class="house-pin orange" style="left:38%;top:48%"><span class="face">👻</span></div>
+        <div class="cluster" style="left:52%;top:52%">4</div>
+        <div class="house-pin purple" style="left:62%;top:58%"><span class="face">😱</span></div>
+        <div class="house-pin gray" style="left:48%;top:72%"><span class="face">🏚</span></div>
+        <div class="house-pin purple outside" style="left:55%;top:78%"><span class="face">👻</span></div>
+        <div class="you-wrap">
+          <div class="you-pulse"></div>
+          <div class="you-dot"></div>
+        </div>
+        <div class="fab-stack">
+          <button class="fab" type="button">◎</button>
+          <button class="fab" type="button">ℹ</button>
+        </div>
+      </div>
+      <p class="legend-note">מצב B: שכונה נבחרה (נחלת גנים) — מספרים מדויקים, עומס פנימי בגוונים + תאים עם ספירה</p>
+    </div>
+    <p class="phone-label">390×844 — זoom ~16, 500 מכשירים, ללא נקודות בודדות</p>
+  </div>
+
+  <div class="frame-group">
+    <div class="phone" id="screen-b">
+      <div class="status">21:14</div>
+      <div class="header">
+        <span>☰</span>
+        <span class="header-title">הלואין בשכונה</span>
+        <span>🗺</span>
+      </div>
+      <div class="chip-row">
+        <span class="chip active">הכל <span class="n">500</span></span>
+        <span class="chip">חרוזים <span class="n">23</span></span>
+        <span class="chip">ותיקים <span class="n">98</span></span>
+        <span class="chip">נחלת גנים <span class="n">142</span></span>
+        <span class="chip">הגפן <span class="n">41</span></span>
+      </div>
+      <div class="map-wrap">
+        <div class="map-bg"></div>
+        <svg class="roads" viewBox="0 0 390 620" preserveAspectRatio="none">
+          <path d="M0 200 H390 M0 320 H390 M0 450 H390" class="minor"/>
+          <path d="M120 0 V620 M240 0 V620"/>
+        </svg>
+        <div class="zone charuzim"></div>
+        <div class="zone vatikim"></div>
+        <div class="zone nahalat"></div>
+        <div class="zone gefen"></div>
+        <div class="heat h1" style="opacity:.35;left:35%"></div>
+        <div class="heat h2" style="opacity:.3;left:50%"></div>
+        <div class="total-bar">פעילים עכשיו <b>500</b> מכשירים</div>
+        <div class="hood-pill ring-violet pill-charuzim">
+          <div class="name">חרוזים</div>
+          <div class="count">23</div>
+          <div class="sub">עכשיו</div>
+        </div>
+        <div class="hood-pill ring-amber pill-vatikim">
+          <div class="name">שיכון ותיקים</div>
+          <div class="count">98</div>
+          <div class="sub">עכשיו</div>
+        </div>
+        <div class="hood-pill ring-teal pill-nahalat">
+          <div class="name">נחלת גנים</div>
+          <div class="count">142</div>
+          <div class="sub">עכשיו</div>
+        </div>
+        <div class="hood-pill ring-rose pill-gefen">
+          <div class="name">הגפן</div>
+          <div class="count">41</div>
+          <div class="sub">עכשיו</div>
+        </div>
+        <div class="house-pin purple" style="left:18%;top:22%"><span class="face">👻</span></div>
+        <div class="house-pin purple" style="left:72%;top:18%"><span class="face">🎃</span></div>
+        <div class="house-pin orange" style="left:38%;top:48%"><span class="face">👻</span></div>
+        <div class="cluster" style="left:52%;top:52%">4</div>
+        <div class="house-pin purple" style="left:62%;top:58%"><span class="face">😱</span></div>
+        <div class="you-wrap" style="left:45%;top:42%">
+          <div class="you-pulse"></div>
+          <div class="you-dot"></div>
+        </div>
+        <div class="fab-stack">
+          <button class="fab" type="button">◎</button>
+          <button class="fab" type="button">ℹ</button>
+        </div>
+      </div>
+      <p class="legend-note">מצב A: כל השכונות — ארבעה מספרים, צבע עדין, בתים בולטים</p>
+    </div>
+    <p class="phone-label">מבט מלא על האירוע — zoom ~15</p>
+  </div>
+</body>
+</html>
