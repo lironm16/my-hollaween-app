@@ -20,7 +20,6 @@ type SlotView = {
   registeredAt: string | null;
   registrations: number;
   resetCount: number;
-  resetsLeft: number | null;
 };
 
 type PassesResponse = {
@@ -210,8 +209,7 @@ export function NightPassesCard({
         {data.slots.map((slot) => {
           const mine = data.thisDeviceSlot === slot.slot;
           const inUse = slot.status === "active";
-          const canReset =
-            inUse && (admin || (slot.resetsLeft != null && slot.resetsLeft > 0));
+          const canReset = inUse;
           const resetting = busySlot === slot.slot;
           const showConnect = !mine && (inUse || !data.thisDeviceRegistered);
 

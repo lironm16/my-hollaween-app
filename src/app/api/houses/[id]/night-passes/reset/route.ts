@@ -31,13 +31,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const outcome = await resetNightPassSlot(house.id, slot as NightPassSlot, { admin });
   if (!outcome.ok) {
     return NextResponse.json(
-      {
-        error:
-          outcome.error === "limit"
-            ? "הגעתם למספר האיפוסים לקוד הכניסה הזה. פנו למארגנים."
-            : "קוד הכניסה לא נמצא.",
-      },
-      { status: outcome.error === "limit" ? 429 : 404, headers: NO_STORE },
+      { error: "קוד הכניסה לא נמצא." },
+      { status: 404, headers: NO_STORE },
     );
   }
   return NextResponse.json({ ok: true, slot: nightPassSlotView(outcome.record, admin) }, { headers: NO_STORE });
