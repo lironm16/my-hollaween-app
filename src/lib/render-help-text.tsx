@@ -1,13 +1,6 @@
 import { Fragment, type ReactNode } from "react";
-import { HelpUiChip } from "@/components/help-ui-chip";
 
-const CHIP_PATTERN = /<<([^>]+)>>/g;
-const INLINE_PATTERN = /<<([^>]+)>>|\*\*([^*]+)\*\*|\*([^*]+)\*/g;
-
-export function containsChipMarkers(text: string): boolean {
-  CHIP_PATTERN.lastIndex = 0;
-  return CHIP_PATTERN.test(text);
-}
+const INLINE_PATTERN = /\*\*([^*]+)\*\*|\*([^*]+)\*/g;
 
 function renderLine(text: string, keyPrefix: string): ReactNode {
   const parts: ReactNode[] = [];
@@ -22,15 +15,13 @@ function renderLine(text: string, keyPrefix: string): ReactNode {
     }
 
     if (match[1] !== undefined) {
-      parts.push(<HelpUiChip key={`${keyPrefix}-${key++}`}>{match[1]}</HelpUiChip>);
-    } else if (match[2] !== undefined) {
       parts.push(
         <strong key={`${keyPrefix}-${key++}`} className="text-orange-200">
-          {match[2]}
+          {match[1]}
         </strong>,
       );
-    } else if (match[3] !== undefined) {
-      parts.push(<em key={`${keyPrefix}-${key++}`}>{match[3]}</em>);
+    } else if (match[2] !== undefined) {
+      parts.push(<em key={`${keyPrefix}-${key++}`}>{match[2]}</em>);
     }
 
     lastIndex = match.index + match[0].length;
@@ -46,7 +37,7 @@ function renderLine(text: string, keyPrefix: string): ReactNode {
   return <Fragment>{parts}</Fragment>;
 }
 
-/** Split copy on `<<label>>` markers (and optional **strong** / *em*) and render UI labels as inline chips. */
+/** Split copy on optional **strong** / *em* markers. */
 export function renderHelpText(text: string): ReactNode {
   const lines = text.split("\n");
   if (lines.length === 1) return renderLine(text, "line");
@@ -63,7 +54,7 @@ export function renderHelpText(text: string): ReactNode {
   );
 }
 
-/** App-wide helper: auto-parses string children for <<ui-label>> chips; passes ReactNode through unchanged. */
+/** App-wide helper: auto-parses string children for emphasis; passes ReactNode through unchanged. */
 export function HelpText({ children }: { children: ReactNode }) {
   if (typeof children === "string") return renderHelpText(children);
   return children;

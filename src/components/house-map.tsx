@@ -685,6 +685,8 @@ type Props = {
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
+  /** Pinned stop numbers for visited/skipped houses still shown on the map in route mode. */
+  routeSessionDisplayOrders?: Map<string, number> | null;
   /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
   routeStartedFrom?: "gps" | "neighborhood" | "custom" | null;
@@ -739,6 +741,7 @@ export function HouseMap({
   onLocate,
   routeLine = null,
   routeStops = null,
+  routeSessionDisplayOrders = null,
   routeStart = null,
   routeStartedFrom = null,
   visitedIds = [],
@@ -781,8 +784,18 @@ export function HouseMap({
   const routeOrderById = useMemo(() => {
     const map = new Map<string, number>();
     for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
+    if (routeSessionDisplayOrders) {
+      for (const id of visitedIds) {
+        const order = routeSessionDisplayOrders.get(id);
+        if (order !== undefined) map.set(id, order);
+      }
+      for (const id of skippedIds) {
+        const order = routeSessionDisplayOrders.get(id);
+        if (order !== undefined) map.set(id, order);
+      }
+    }
     return map;
-  }, [routeStops]);
+  }, [routeStops, routeSessionDisplayOrders, visitedIds, skippedIds]);
   const skippedIdSet = useMemo(() => new Set(skippedIds), [skippedIds]);
   const lineRenderer = useMemo(() => L.canvas({ padding: 0.5 }), []);
   const focus = useMemo(() => {

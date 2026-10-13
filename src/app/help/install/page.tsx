@@ -13,13 +13,13 @@ function installHelpImage(name: string) {
 const IPHONE_STEPS = [
   {
     title: "לחצו שיתוף",
-    body: "ב-Safari, בסרגל התחתון — כפתור <<שיתוף>> (חץ למעלה מריבוע).",
+    body: "ב-Safari, בסרגל התחתון — כפתור שיתוף (חץ למעלה מריבוע).",
     image: installHelpImage("ios-2-share"),
     imageAlt: "כפתור שיתוף בסафari",
   },
   {
     title: "הוספה למסך הבית",
-    body: "גללו ובחרו <<הוספה למסך הבית>> → <<הוסף>>. האייקון יופיע במסך הבית.",
+    body: "גללו ובחרו הוספה למסך הבית → הוסף. האייקון יופיע במסך הבית.",
     image: installHelpImage("ios-3-add-home"),
     imageAlt: "הוספה למסך הבית בתפריט השיתוף",
   },
@@ -34,7 +34,7 @@ const ANDROID_STEPS = [
   },
   {
     title: "קיצור דרך למסך הבית",
-    body: "בתפריט ⋮ בחרו <<הוסף למסך הבית>> (לא «התקנת אפל» אם מופיעה אזהרת Google Play Protect). פתיחה מהאייקון תמשיך ב-Chrome — המפה וההתראות עובדים.",
+    body: "בתפריט ⋮ בחרו הוסף למסך הבית (לא «התקנת אפל» אם מופיעה אזהרת Google Play Protect). פתיחה מהאייקון תמשיך ב-Chrome — המפה וההתראות עובדים.",
     image: installHelpImage("android-2-menu"),
     imageAlt: "תפריט Chrome — הוסף למסך הבית",
   },
@@ -97,7 +97,7 @@ export default function InstallHelpPage() {
     <HelpShell title="איך מתקינים את האפליקציה?">
       <p className="mb-4 text-lg leading-relaxed text-orange-50">
         <HelpText>
-          {"<<התקנה>> = הוספה למסך הבית. פתחו פעם אחת ברשת כדי שהמפה תישמר בטלפון."}
+          {"התקנה = הוספה למסך הבית. פתחו פעם אחת ברשת כדי שהמפה תישמר בטלפון."}
         </HelpText>
       </p>
       <div className="space-y-3">

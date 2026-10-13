@@ -526,7 +526,7 @@ export function HouseForm({
           ) : null}
         </FormSection>
       ) : null}
-      <FormSection title={isPracticePlace ? "בית תרגול" : isPoi ? "נקודת העניין" : "הבית"}>
+      <FormSection title={isPracticePlace ? "בית תרגול" : isPoi ? "העסק" : "הבית"}>
         <Field
           label={isPoi ? "שם המקום" : "שם הבית"}
           charCount={{ length: form.name.length, max: HOUSE_FIELD_LIMITS.name.max }}

@@ -118,7 +118,7 @@ export function HelpStep({
   n: number;
   title: ReactNode;
   body: ReactNode;
-  /** When true (default for string bodies), `body` is parsed for <<ui-label>> chips only. */
+  /** When true (default for string bodies), `body` is parsed for **strong** / *em* only. */
   parseBody?: boolean;
   image: string;
   imageAlt: string;

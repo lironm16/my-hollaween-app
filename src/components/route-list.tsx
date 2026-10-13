@@ -18,11 +18,11 @@ export type RouteListItem = {
   distanceM?: number;
 };
 
-function RouteLeg({ label }: { label: string }) {
+function RouteLeg({ label }: { label?: string }) {
   return (
-    <div className="route-list-leg">
+    <div className={cn("route-list-leg", !label && "route-list-leg--line-only")}>
       <span className="route-list-leg-line" aria-hidden="true" />
-      <span className="route-list-leg-label">{label}</span>
+      {label ? <span className="route-list-leg-label">{label}</span> : null}
     </div>
   );
 }
@@ -54,8 +54,9 @@ export function RouteList({
     focusRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [focusId]);
 
+  const waitingForGpsOrigin = startedFrom === "gps" && !hasGps;
   const gpsAction =
-    !hasGps && onRequestLocation ? (
+    waitingForGpsOrigin && onRequestLocation ? (
       <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
         <Navigation className="size-3.5" />
         הפעילו מיקום
@@ -119,11 +120,11 @@ export function RouteList({
               {showSkippedHeading ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
-              {hop ? <RouteLeg label={hop} /> : null}
+              <RouteLeg label={hop || undefined} />
               <div className="route-list-house">
                 <HouseCard
                   {...houseCardPropsFor(house, actionContext, {
-                    index: isTail ? undefined : order,
+                    index: order > 0 ? order : undefined,
                     distanceM: addressReveal.distanceAllowed(house.id) ? distanceM : undefined,
                   })}
                 />

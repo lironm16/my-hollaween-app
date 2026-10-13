@@ -142,7 +142,7 @@ export function AdminStatsCard({
           <StatTile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
           <StatTile
             icon={<LocationKindSign kind="poi" className="size-8" />}
-            label="נקודות עניין"
+            label="עסקים"
             value={stats.pois}
             plain
           />
