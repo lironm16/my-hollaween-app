@@ -269,7 +269,17 @@ export function GemAnchorPlaceDialog({
               {coordsText}
             </button>
           </div>
-          <div className="pointer-events-auto flex justify-center gap-1">
+          <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 shrink-0 gap-1.5 px-2.5 text-sm"
+              disabled={locating || saving}
+              onClick={applyMyLocation}
+            >
+              <LocateFixed className="size-4 shrink-0" />
+              {locating ? "מאתרים…" : GEM_PLACE_MY_LOCATION_HE}
+            </Button>
             {(
               [
                 ["north", ArrowUp],
@@ -281,7 +291,7 @@ export function GemAnchorPlaceDialog({
               <button
                 key={dir}
                 type="button"
-                className="flex size-9 items-center justify-center rounded-lg bg-black/40 text-orange-100 ring-1 ring-orange-500/25"
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-black/40 text-orange-100 ring-1 ring-orange-500/25"
                 aria-label={`${dir} 1m`}
                 onClick={() => {
                   setPoint((prev) => nudgeGemAnchorPoint(house, prev, dir as GemAnchorNudge));
@@ -291,34 +301,22 @@ export function GemAnchorPlaceDialog({
                 <Icon className="size-4" />
               </button>
             ))}
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 shrink-0 gap-1.5 px-2.5 text-sm"
+              disabled={saving || atAuto}
+              onClick={() => void reset()}
+            >
+              <RotateCcw className="size-4 shrink-0" />
+              {GEM_PLACE_RESET_HE}
+            </Button>
           </div>
         </div>
         <p className="rounded-lg bg-black/25 px-3 py-2 text-sm text-violet-300 ring-1 ring-orange-500/15">
           {distanceM} מ׳ מהבית (עד {GEM_ANCHOR_PLACE_MAX_METERS} מ׳)
           {accuracyM != null ? ` · דיוק GPS ~${accuracyM} מ׳` : ""}
         </p>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 min-w-0 flex-1 justify-center text-base"
-            disabled={locating || saving}
-            onClick={applyMyLocation}
-          >
-            <LocateFixed className="size-5" />
-            {locating ? "מאתרים…" : GEM_PLACE_MY_LOCATION_HE}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 min-w-0 flex-1 justify-center text-base"
-            disabled={saving || atAuto}
-            onClick={() => void reset()}
-          >
-            <RotateCcw className="size-5" />
-            {GEM_PLACE_RESET_HE}
-          </Button>
-        </div>
         {deviceOverride ? (
           <p className="text-sm text-amber-200">
             בטלפון הזה יש כיול GPS מקומי שדורס את המיקום.{" "}
