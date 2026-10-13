@@ -81,6 +81,8 @@ function GemAnchorMapInteraction({
   programmaticRef,
 }: GemAnchorEditState & { programmaticRef: MutableRefObject<boolean> }) {
   const map = useMap();
+  const pointRef = useRef(point);
+  pointRef.current = point;
 
   useEffect(() => {
     const center = map.getCenter();
@@ -92,14 +94,15 @@ function GemAnchorMapInteraction({
       programmaticRef.current = false;
     });
     return () => window.cancelAnimationFrame(id);
-  }, [map, point]);
+  }, [map, point, programmaticRef]);
 
   useMapEvents({
-    moveend() {
+    /** Pan only — moveend also fires after zoom and would shift coords under the fixed center pin. */
+    dragend() {
       if (programmaticRef.current) return;
       const c = map.getCenter();
       const next = clampGemAnchorPlacement(house, { lat: c.lat, lng: c.lng });
-      if (samePoint(next, point)) return;
+      if (samePoint(next, pointRef.current)) return;
       onMove(next);
       if (!samePoint({ lat: c.lat, lng: c.lng }, next)) {
         programmaticRef.current = true;
@@ -108,6 +111,18 @@ function GemAnchorMapInteraction({
           programmaticRef.current = false;
         });
       }
+    },
+    /** Wheel/pinch zoom moves the map under the overlay pin — keep the same lat/lng after zoom. */
+    zoomend() {
+      if (programmaticRef.current) return;
+      const pin = pointRef.current;
+      const center = map.getCenter();
+      if (samePoint({ lat: center.lat, lng: center.lng }, pin)) return;
+      programmaticRef.current = true;
+      map.setView([pin.lat, pin.lng], map.getZoom(), { animate: false });
+      window.requestAnimationFrame(() => {
+        programmaticRef.current = false;
+      });
     },
     click(event) {
       const next = clampGemAnchorPlacement(house, {
