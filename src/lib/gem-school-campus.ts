@@ -8,7 +8,7 @@ import type { PublicHouse } from "@/lib/types";
  * Emissive strength for hunt gems (school booths + future house gems).
  * Emissive is flat light on every face — higher values wash the model in its hue and hide shading.
  */
-export const GEM_HUNT_GLOW_INTENSITY = 0.12;
+export const GEM_HUNT_GLOW_INTENSITY = 0;
 
 export type GemMonsterTint = {
   hue: number;

@@ -115,7 +115,9 @@ export function GemSprite({
         className,
       )}
     >
-      <span className="gem-sprite__glow" aria-hidden />
+      {mode !== "3d" && mode !== "inspect360" ? (
+        <span className="gem-sprite__glow" aria-hidden />
+      ) : null}
       <GemModel3D
         monsterId={monsterId}
         houseId={id}
