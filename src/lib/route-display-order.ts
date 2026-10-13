@@ -19,21 +19,3 @@ export function routeDisplayOrder(
   if (!sessionOrders) return fallbackOrder;
   return sessionOrders.get(houseId) ?? fallbackOrder;
 }
-
-/** Assign display numbers to houses newly added mid-session without renumbering existing stops. */
-export function mergeNewRouteDisplayOrders(
-  sessionOrders: Map<string, number>,
-  route: WalkingRoute,
-): Map<string, number> {
-  let next = sessionOrders;
-  let max = Math.max(0, ...sessionOrders.values());
-  for (const stop of route.stops) {
-    for (const house of stop.houses) {
-      if (sessionOrders.has(house.id)) continue;
-      if (next === sessionOrders) next = new Map(sessionOrders);
-      max += 1;
-      next.set(house.id, max);
-    }
-  }
-  return next;
-}

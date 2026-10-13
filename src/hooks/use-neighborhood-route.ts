@@ -11,10 +11,7 @@ import { rebuildRouteAfterSkipChange, routeCandidateHouses } from "@/lib/route-c
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
-import {
-  captureRouteDisplayOrders,
-  mergeNewRouteDisplayOrders,
-} from "@/lib/route-display-order";
+import { captureRouteDisplayOrders } from "@/lib/route-display-order";
 import { readRouteMode, writeRouteMode } from "@/lib/route-mode";
 import type { PublicHouse } from "@/lib/types";
 
@@ -64,6 +61,8 @@ export function useNeighborhoodRoute({
   const [routeSessionDisplayOrders, setRouteSessionDisplayOrders] =
     useState<Map<string, number> | null>(null);
   const pendingRouteGps = useRef(false);
+  const lastVisitedCountRef = useRef(0);
+  const recaptureDisplayOrdersAfterVisitClearRef = useRef(false);
   const routeCandidates = useMemo(
     () =>
       routeCandidateHouses(houses, filters, {
@@ -160,11 +159,29 @@ export function useNeighborhoodRoute({
   }, [routeMode, pinnedRoute, pinCurrentRoute]);
 
   useEffect(() => {
+    if (!routeMode) {
+      lastVisitedCountRef.current = 0;
+      recaptureDisplayOrdersAfterVisitClearRef.current = false;
+      return;
+    }
+    if (visitedIds.length === 0 && lastVisitedCountRef.current > 0) {
+      recaptureDisplayOrdersAfterVisitClearRef.current = true;
+    }
+    lastVisitedCountRef.current = visitedIds.length;
+  }, [routeMode, visitedIds.length]);
+
+  useEffect(() => {
     if (!routeMode || !pinnedRoute) return;
     setRouteSessionDisplayOrders((prev) => {
+      if (
+        recaptureDisplayOrdersAfterVisitClearRef.current &&
+        pinnedRoute.stops.length > 0
+      ) {
+        recaptureDisplayOrdersAfterVisitClearRef.current = false;
+        return captureRouteDisplayOrders(pinnedRoute);
+      }
       if (!prev) return captureRouteDisplayOrders(pinnedRoute);
-      const merged = mergeNewRouteDisplayOrders(prev, pinnedRoute);
-      return merged === prev ? prev : merged;
+      return prev;
     });
   }, [routeMode, pinnedRoute]);
 
