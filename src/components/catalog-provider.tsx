@@ -484,19 +484,18 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       return prev;
     }
     emptyDeltaStreakRef.current = 0;
-    let next!: Catalog;
-    setCatalog((cur) => {
-      let merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
-      merged = {
+    const mergeInto = (cur: Catalog | null): Catalog => {
+      const merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
+      const withDetail: Catalog = {
         ...merged,
         houses: merged.houses.map((row) => withServerHouseDetail(row)),
       };
-      next = merged === cur ? cur : merged;
-      if (next === cur) return cur;
-      const published = publishCatalog(next, cur);
-      next = published ?? next;
-      return next;
-    });
+      return publishCatalog(withDetail, cur) ?? withDetail;
+    };
+    // React may defer a state updater to the next render, so the code below cannot read its result.
+    const next = mergeInto(prev);
+    catalogRef.current = next;
+    setCatalog((cur) => (cur === prev ? next : mergeInto(cur)));
     trackCatalogRemovalDelta(prev, next, live.removed);
     if (isMapListSuspended()) return next;
     setSource("network");
@@ -522,9 +521,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     if (!online) {
       const cached = await readDeviceCatalog();
       if (cached) {
-        let next: Catalog = cached;
         setCatalog((prev) => {
-          next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
+          const next = withDeviceHouseOverlays(syncCatalog(cached, prev ?? cached));
           return publishCatalog(next, prev) ?? next;
         });
         if (isMapListSuspended()) return;
@@ -718,11 +716,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         return;
       } catch {
         const cached = await readDeviceCatalog();
-        let kept = false;
+        const kept = Boolean(catalogRef.current ?? cached);
         setCatalog((prev) => {
           const merged = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
           const next = merged ? withDeviceHouseOverlays(merged) : merged;
-          kept = Boolean(next);
           if (next && !isMapListSuspended()) void saveCatalogCache(next);
           if (!next) return prev;
           return publishCatalog(next, prev) ?? next;
