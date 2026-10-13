@@ -51,7 +51,6 @@ import {
   type GemClusterSessionCatch,
 } from "@/components/gem-cluster-session-summary";
 import { GemResetConfirmDialog } from "@/components/gem-reset-confirm-dialog";
-import { GemMapCompleteBanner } from "@/components/gem-map-complete-banner";
 import {
   GemHuntExperienceLazy,
   preloadGemHuntChunks,
@@ -454,11 +453,6 @@ export function NeighborhoodApp({
 
   const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
-
-  const gemAllCollected = useMemo(() => {
-    if (!gemHuntActive || gemMapRingHouses.length === 0) return false;
-    return gemMapRingHouses.every((h) => gems.collected(h.id));
-  }, [gemHuntActive, gemMapRingHouses, gems.collectedIds]);
 
   const bootMapGemHunt = useCallback(
     async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
@@ -1627,9 +1621,6 @@ export function NeighborhoodApp({
                   showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
                 />
-              {view === "map" && gemHuntActive && gemAllCollected && !originPick.originPickActive ? (
-                <GemMapCompleteBanner />
-              ) : null}
               {view === "map" && originPick.originPickActive ? (
                   <div className="origin-pick-bar">
                     <p className="origin-pick-label">{originPick.originDraftLabel}</p>
