@@ -841,9 +841,11 @@ export function HouseMap({
       <MapContainer
         key={pickMode ? "pick" : embed ? "embed" : "view"}
         center={
-          embed && focus
-            ? [focus.lat, focus.lng]
-            : [config.map.center.lat, config.map.center.lng]
+          embed && gemAnchorEdit
+            ? [gemAnchorEdit.point.lat, gemAnchorEdit.point.lng]
+            : embed && focus
+              ? [focus.lat, focus.lng]
+              : [config.map.center.lat, config.map.center.lng]
         }
         zoom={
           embed && focus
@@ -873,7 +875,7 @@ export function HouseMap({
         ) : null}
         <SizeSync />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
-        {embed && embedCenterOnSelect && focus ? (
+        {embed && embedCenterOnSelect && focus && !gemAnchorEdit ? (
           <CenterOnHouse lat={focus.lat} lng={focus.lng} zoom={config.map.maxZoom - 1} />
         ) : null}
         {focus && !originPickActive && !embed ? (

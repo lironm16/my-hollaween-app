@@ -28,6 +28,7 @@ function GemAnchorMapInteraction({ house, point, onMove }: GemAnchorEditState) {
     const center = map.getCenter();
     if (samePoint({ lat: center.lat, lng: center.lng }, point)) return;
     programmaticRef.current = true;
+    map.invalidateSize({ animate: false });
     map.setView([point.lat, point.lng], map.getZoom(), { animate: false });
     const id = window.requestAnimationFrame(() => {
       programmaticRef.current = false;

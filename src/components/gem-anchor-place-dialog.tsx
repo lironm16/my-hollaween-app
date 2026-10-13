@@ -8,7 +8,7 @@ import { HouseEditModal } from "@/components/house-edit-modal";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import { Button } from "@/components/ui/button";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
-import { clearGemAnchorOverride } from "@/lib/gem-anchor-overrides";
+import { clearGemAnchorOverride, GEM_ANCHOR_CHANGED_EVENT } from "@/lib/gem-anchor-overrides";
 import { copyText } from "@/lib/copy-text";
 import {
   clampGemAnchorPlacement,
@@ -28,7 +28,6 @@ import {
   GEM_PLACE_MAP_EXPAND_HE,
   GEM_PLACE_MAP_SHRINK_HE,
   GEM_PLACE_MY_LOCATION_HE,
-  GEM_PLACE_RESET_CONFIRM_HE,
   GEM_PLACE_RESET_DONE_HE,
   GEM_PLACE_RESET_HE,
   GEM_PLACE_SAVE_HE,
@@ -103,32 +102,45 @@ export function GemAnchorPlaceDialog({
 }) {
   const { overrides } = useGemAnchorOverrides();
   const deviceOverride = Boolean(overrides[house.id]);
-  const current = useMemo(() => {
-    void overrides;
-    const a = gemAnchorForHouse(house);
-    return { lat: a.lat, lng: a.lng };
-  }, [house, overrides]);
+  void overrides;
   const auto = useMemo(() => {
     const a = automaticGemAnchorForHouse(house);
     return { lat: a.lat, lng: a.lng };
   }, [house]);
-  const placed = placedGemAnchorForHouse(house);
-  const [point, setPoint] = useState<LatLng>(current);
+  const [point, setPoint] = useState<LatLng>(() => ({ lat: house.lat, lng: house.lng }));
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const [mapExpanded, setMapExpanded] = useState(false);
   const wasOpen = useRef(false);
+  const [anchorRevision, setAnchorRevision] = useState(0);
 
   useEffect(() => {
-    if (open && !wasOpen.current) setPoint(current);
+    const bump = () => setAnchorRevision((n) => n + 1);
+    window.addEventListener(GEM_ANCHOR_CHANGED_EVENT, bump);
+    return () => window.removeEventListener(GEM_ANCHOR_CHANGED_EVENT, bump);
+  }, []);
+
+  const resolvedCurrent = useMemo(() => {
+    void anchorRevision;
+    const a = gemAnchorForHouse(house);
+    return { lat: a.lat, lng: a.lng };
+  }, [house, anchorRevision]);
+
+  const placed = useMemo(() => {
+    void anchorRevision;
+    return placedGemAnchorForHouse(house);
+  }, [house, anchorRevision]);
+
+  useEffect(() => {
+    if (open && !wasOpen.current) setPoint(resolvedCurrent);
     if (!open) setMapExpanded(false);
     wasOpen.current = open;
-  }, [open, current]);
+  }, [open, resolvedCurrent]);
 
   const distanceM = Math.round(distanceMeters(house, point));
   const coordsText = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
-  const dirty = !samePoint(point, current);
+  const dirty = !samePoint(point, resolvedCurrent);
   const atAuto = samePoint(point, auto);
 
   async function send(method: "PUT" | "DELETE", body: Record<string, unknown>) {
@@ -197,7 +209,6 @@ export function GemAnchorPlaceDialog({
       setPoint(auto);
       return;
     }
-    if (!window.confirm(`${GEM_PLACE_RESET_HE}? ${GEM_PLACE_RESET_CONFIRM_HE}`)) return;
     if (await send("DELETE", {})) {
       setPoint(auto);
       toast.success(GEM_PLACE_RESET_DONE_HE);
@@ -227,6 +238,7 @@ export function GemAnchorPlaceDialog({
                 houses={[house]}
                 selectedId={house.id}
                 embed
+                embedCenterOnSelect={false}
                 className="h-full w-full"
                 gemAnchorEdit={{
                   house,
