@@ -14,6 +14,7 @@ import {
   clampGemAnchorPlacement,
   gemAnchorPlacementError,
   GEM_ANCHOR_PLACE_MAX_METERS,
+  GEM_ANCHOR_TOO_FAR_HE,
   nudgeGemAnchorPoint,
   type GemAnchorNudge,
 } from "@/lib/gem-anchor-placement";
@@ -208,13 +209,18 @@ export function GemAnchorPlaceDialog({
         setMyLocation(here);
         setAccuracyM(accuracy);
         setMapFitTick((tick) => tick + 1);
-        if (gemAnchorPlacementError(house, here)) {
-          toast.error(
-            `אתם ${Math.round(distanceMeters(house, here))} מ׳ מהבית — צריך לעמוד עד ${GEM_ANCHOR_PLACE_MAX_METERS} מ׳ ממנו. המיקום שלכם מסומן במפה.`,
-          );
+        const invalid = gemAnchorPlacementError(house, here);
+        if (invalid && invalid !== GEM_ANCHOR_TOO_FAR_HE) {
+          toast.error(invalid);
           return;
         }
-        setPoint(here);
+        const snapped = clampGemAnchorPlacement(house, here);
+        setPoint(snapped);
+        if (invalid) {
+          toast.message(
+            `אתם ${Math.round(distanceMeters(house, here))} מ׳ מהבית — השדון הוזז לנקודה הקרובה בטווח (${GEM_ANCHOR_PLACE_MAX_METERS} מ׳).`,
+          );
+        }
       },
       () => {
         setLocating(false);
