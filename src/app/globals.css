@@ -2621,6 +2621,10 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   width: 44px;
   height: 44px;
 }
+
+.gem-anchor-place-map__footer {
+  white-space: nowrap;
+}
 .map-gem-diamond-leaflet-icon {
   background: transparent;
   border: none;

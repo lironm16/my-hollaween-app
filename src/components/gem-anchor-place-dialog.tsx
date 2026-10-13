@@ -142,6 +142,12 @@ export function GemAnchorPlaceDialog({
   const coordsText = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
   const dirty = !samePoint(point, resolvedCurrent);
   const atAuto = samePoint(point, auto);
+  const mapDistanceLine = useMemo(() => {
+    const parts = [`${distanceM} מ׳ מהבית (עד ${GEM_ANCHOR_PLACE_MAX_METERS} מ׳)`];
+    if (accuracyM != null) parts.push(`דיוק GPS ~${accuracyM} מ׳`);
+    if (dirty) parts.push("לא נשמר");
+    return parts.join(" · ");
+  }, [distanceM, accuracyM, dirty]);
 
   async function send(method: "PUT" | "DELETE", body: Record<string, unknown>) {
     setSaving(true);
@@ -262,11 +268,17 @@ export function GemAnchorPlaceDialog({
             </div>
             <button
               type="button"
-              dir="ltr"
-              className="absolute bottom-2 start-2 z-[510] max-w-[calc(100%-1rem)] truncate rounded-lg bg-black/60 px-2.5 py-1.5 font-mono text-xs text-orange-100 ring-1 ring-orange-500/30"
+              dir="rtl"
+              className="gem-anchor-place-map__footer absolute inset-x-2 bottom-2 z-[510] flex max-w-[calc(100%-1rem)] items-center gap-2 rounded-lg bg-black/65 px-2.5 py-1.5 text-start ring-1 ring-orange-500/30 backdrop-blur-sm"
+              title={`${mapDistanceLine} · ${coordsText}`}
               onClick={() => void copyText(coordsText, "הקואורדינטות הועתקו")}
             >
-              {coordsText}
+              <span className="min-w-0 flex-1 truncate text-sm leading-tight text-violet-100">
+                {mapDistanceLine}
+              </span>
+              <span dir="ltr" className="shrink-0 font-mono text-xs tabular-nums text-orange-100">
+                {coordsText}
+              </span>
             </button>
           </div>
           <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1 pt-1">
@@ -313,10 +325,6 @@ export function GemAnchorPlaceDialog({
             </Button>
           </div>
         </div>
-        <p className="rounded-lg bg-black/25 px-3 py-2 text-sm text-violet-300 ring-1 ring-orange-500/15">
-          {distanceM} מ׳ מהבית (עד {GEM_ANCHOR_PLACE_MAX_METERS} מ׳)
-          {accuracyM != null ? ` · דיוק GPS ~${accuracyM} מ׳` : ""}
-        </p>
         {deviceOverride ? (
           <p className="text-sm text-amber-200">
             בטלפון הזה יש כיול GPS מקומי שדורס את המיקום.{" "}
