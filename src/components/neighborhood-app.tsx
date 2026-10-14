@@ -103,7 +103,11 @@ import { useHouseFilters, countActiveFilters } from "@/hooks/use-house-filters";
 import { useHouseSelection } from "@/hooks/use-house-selection";
 import { AdminHouseFieldsProvider } from "@/hooks/use-admin-house-fields";
 import { isCatalogRemoved } from "@/lib/catalog-removed";
-import { enrichHousesWithAdminLocations, useMergedHouses } from "@/hooks/use-merged-houses";
+import {
+  enrichHousesForUserPreview,
+  enrichHousesWithAdminLocations,
+  useMergedHouses,
+} from "@/hooks/use-merged-houses";
 import { useNeighborhoodRoute } from "@/hooks/use-neighborhood-route";
 import { useOriginPick } from "@/hooks/use-origin-pick";
 import { useLikedHouses } from "@/hooks/use-liked-houses";
@@ -380,8 +384,15 @@ export function NeighborhoodApp({
   const displayHouses = useMemo(() => {
     const applyVisitorLocations = (list: PublicHouse[]) =>
       gemPreviewAsUser ? housesWithLocationPolicy(list, addressReveal) : list;
-    const applyAdminLocations = (list: PublicHouse[]) =>
-      enrichHousesWithAdminLocations(list, adminHouses, restoreRedactedLocations);
+    const applyAdminLocations = (list: PublicHouse[]) => {
+      if (restoreRedactedLocations) {
+        return enrichHousesWithAdminLocations(list, adminHouses, true);
+      }
+      if (gemPreviewAsUser) {
+        return enrichHousesForUserPreview(list, adminHouses, addressReveal);
+      }
+      return list;
+    };
 
     if (housesForMap.length > 0) {
       const next = applyVisitorLocations(applyAdminLocations(housesForMap));

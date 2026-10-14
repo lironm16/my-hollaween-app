@@ -31,7 +31,7 @@ import {
   flushPendingHouseWrites,
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
-import { readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
+import { CLOCK_EVENT, readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 import { runCatalogBootMigrationIfNeeded } from "@/lib/catalog-boot-migration";
 import {
   catalogCacheIncomplete,
@@ -52,12 +52,11 @@ import { catalogHasExplicitStubFlags } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
 import { syncPlacedGemAnchors } from "@/lib/gem-placed-anchors";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
-import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
-import { appNow } from "@/lib/app-clock";
+import { houseWithLocationPolicy } from "@/lib/address-reveal";
+import { visitorPreviewAddressRevealContext } from "@/lib/visitor-preview-address";
 import { withServerHouseDetail } from "@/lib/device-catalog-cache";
 import { HOUSE_DETAIL_LOADED_EVENT } from "@/lib/fetch-public-house";
 import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
-import { loadOwnedHouses } from "@/lib/offline-db";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
 import { trackCatalogRemovalDelta } from "@/lib/catalog-removed";
 import {
@@ -772,12 +771,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       if (readGemPreviewAsUser()) {
         house = houseWithLocationPolicy(
           house,
-          visitorAddressRevealContext(
-            appNow(),
-            loadOwnedHouses().map((row) => row.id),
-            undefined,
-            nightPassAudience(readNightPassState()),
-          ),
+          visitorPreviewAddressRevealContext(catalogRef.current?.eventSettings?.addressReveal),
         );
       }
       setCatalog((prev) => {
@@ -865,8 +859,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       })();
     });
     const unsubscribePreview = subscribeAdminPreviewAsUser(() => {
+      clearSessionHouseDetails();
       void refreshNightPassState({ force: true });
     });
+
+    const onRehearsalClock = () => {
+      if (readGemPreviewAsUser()) clearSessionHouseDetails();
+    };
+    window.addEventListener(CLOCK_EVENT, onRehearsalClock);
 
     let pollTimer: number | undefined;
     const schedulePoll = () => {
@@ -892,6 +892,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       window.removeEventListener(SERVER_SIM_EVENT, onSim);
       unsubscribeNightPass();
       unsubscribePreview();
+      window.removeEventListener(CLOCK_EVENT, onRehearsalClock);
     };
   }, [refresh, syncCatalogScope, publishCatalog]);
 

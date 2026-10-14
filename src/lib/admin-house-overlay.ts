@@ -1,6 +1,19 @@
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
 
 /** Overlay catalog/redacted rows with the admin API snapshot (street, arrival, contact). */
+/** Street / arrival / notes only — for «תצוגת משתמש» after simulated reveal (no owner contact). */
+export function mergePublicHouseLocationFromAdminRow(
+  house: PublicHouse,
+  admin?: House | null,
+): PublicHouse {
+  if (!admin) return house;
+  const address = house.address?.trim() ? house.address : (admin.address ?? "");
+  const arrival = house.arrival?.trim() ? house.arrival : (admin.arrival ?? "");
+  const notes = house.notes?.trim() ? house.notes : admin.notes;
+  if (address === house.address && arrival === house.arrival && notes === house.notes) return house;
+  return { ...house, address, arrival, notes };
+}
+
 export function mergePublicHouseWithAdminRow(
   house: PublicHouse,
   admin?: House | null,
