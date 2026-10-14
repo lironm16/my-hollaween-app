@@ -1,25 +1,26 @@
 "use client";
 
 import { useMemo } from "react";
-import { splitRoutePreviewProgress, type LatLng, type WalkingRoute } from "@/lib/route";
+import { routeProgressSegments, type RouteProgressSegment } from "@/lib/route-session-progress";
+import type { WalkingRoute } from "@/lib/route";
 
 /** Straight stop-to-stop lines for the map route overview. */
 export function useRouteGeometry(
   route: WalkingRoute | null,
   enabled: boolean,
-  prefixStopCount = 0,
+  visitedIds: readonly string[] = [],
+  skippedIds: readonly string[] = [],
 ) {
-  const { done, planned } = useMemo((): { done: LatLng[] | null; planned: LatLng[] | null } => {
-    if (!enabled || !route || route.stops.length < 2) {
-      return { done: null, planned: null };
-    }
-    const split = splitRoutePreviewProgress(route, prefixStopCount);
-    return {
-      done: split.done.length >= 2 ? split.done : null,
-      planned: split.planned.length >= 2 ? split.planned : null,
-    };
-  }, [enabled, route, prefixStopCount]);
+  const segments = useMemo((): RouteProgressSegment[] => {
+    if (!enabled || !route || route.stops.length < 2) return [];
+    return routeProgressSegments(route, visitedIds, skippedIds);
+  }, [enabled, route, visitedIds, skippedIds]);
 
-  const line = planned ?? done;
-  return { line, done, planned, status: line ? ("fallback" as const) : ("idle" as const) };
+  const line = useMemo(() => {
+    if (segments.length === 0) return null;
+    const points = [segments[0]!.points[0], ...segments.map((segment) => segment.points[1])];
+    return points.length >= 2 ? points : null;
+  }, [segments]);
+
+  return { line, segments, status: line ? ("fallback" as const) : ("idle" as const) };
 }

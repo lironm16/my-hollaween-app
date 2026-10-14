@@ -493,19 +493,6 @@ export function routePreviewPoints(route: WalkingRoute): LatLng[] {
   return dedupeRoutePoints(routePoints(route));
 }
 
-/** Split stop-to-stop preview into done vs remaining legs for map progress coloring. */
-export function splitRoutePreviewProgress(route: WalkingRoute, prefixStopCount: number) {
-  const points = routePreviewPoints(route);
-  if (points.length < 2 || prefixStopCount <= 0) {
-    return { done: [] as LatLng[], planned: points };
-  }
-  const doneEnd = Math.min(prefixStopCount, points.length - 1);
-  return {
-    done: points.slice(0, doneEnd + 1),
-    planned: points.slice(doneEnd),
-  };
-}
-
 /** Drop consecutive stops at the same building — keeps stub/rehearsal lines clean. */
 export function dedupeRoutePoints(points: LatLng[], meters = 12): LatLng[] {
   const unique: LatLng[] = [];

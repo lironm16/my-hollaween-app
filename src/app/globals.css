@@ -4135,7 +4135,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .route-list-card--done {
-  box-shadow: 0 0 0 2px #22c55e;
+  box-shadow: 0 0 0 2px #059669;
 }
 
 .route-list-house {
@@ -4144,8 +4144,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .route-list-house--done {
-  box-shadow: 0 0 0 2px #22c55e;
-  background: rgb(6 78 59 / 0.12);
+  box-shadow: 0 0 0 2px #059669;
+  background: rgb(5 150 105 / 0.12);
 }
 
 .route-list-house--skipped {
@@ -4175,10 +4175,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #22c55e;
+  background: #059669;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #052e16;
+  color: #ecfdf5;
 }
 
 .route-list-collapsed-title {
@@ -4226,7 +4226,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .route-list-leg-line--done {
-  background: #22c55e;
+  background: #059669;
 }
 
 .route-list-leg-label {
@@ -4237,7 +4237,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 
 .route-list-leg-label--done {
-  color: #86efac;
+  color: #6ee7b7;
 }
 
 .route-list-skipped-heading {

@@ -61,7 +61,10 @@ export function useNeighborhoodRoute({
   const [pinnedRoute, setPinnedRouteState] = useState<WalkingRoute | null>(null);
   const setPinnedRoute = useCallback((route: WalkingRoute | null) => {
     setPinnedRouteState(route);
+  }, []);
+  const commitSessionPlan = useCallback((route: WalkingRoute | null) => {
     setRouteSessionPlan(route);
+    if (route) setRouteSessionDisplayOrders(captureRouteDisplayOrders(route));
   }, []);
   const [routeSessionDisplayOrders, setRouteSessionDisplayOrders] =
     useState<Map<string, number> | null>(null);
@@ -90,8 +93,8 @@ export function useNeighborhoodRoute({
   const pinCurrentRoute = useCallback(() => {
     if (!filterRoute) return;
     setPinnedRoute(filterRoute);
-    setRouteSessionDisplayOrders(captureRouteDisplayOrders(filterRoute));
-  }, [filterRoute, setPinnedRoute]);
+    commitSessionPlan(filterRoute);
+  }, [filterRoute, setPinnedRoute, commitSessionPlan]);
 
   const clearPendingRouteGps = useCallback(() => {
     pendingRouteGps.current = false;
@@ -108,7 +111,13 @@ export function useNeighborhoodRoute({
         accessible: accessibleOnly,
         originLabel: origin.label,
       });
-      setRouteSessionPlan(refreshed);
+      setRouteSessionPlan((plan) =>
+        plan ? refreshWalkingRoute(plan, { lat: gps.lat, lng: gps.lng }, {
+          startedFrom: "gps",
+          accessible: accessibleOnly,
+          originLabel: origin.label,
+        }) : refreshed,
+      );
       return refreshed;
     });
   }, [routeMode, gps, filterRoute, accessibleOnly, origin.label]);
@@ -123,9 +132,7 @@ export function useNeighborhoodRoute({
         originLabel: origin.label,
       };
       if (shouldReoptimizeRoute(current, origin)) {
-        const reoptimized = buildWalkingRoute(routeCandidates, originPoint(origin), routeOptions);
-        setRouteSessionPlan(reoptimized);
-        return reoptimized;
+        return buildWalkingRoute(routeCandidates, originPoint(origin), routeOptions);
       }
 
       const context = { ...filterContext, skippedIds };
@@ -147,12 +154,10 @@ export function useNeighborhoodRoute({
         if (current.accessible === accessibleOnly) return current;
         const trimmed = trimWalkingRouteToVisible(current, visibleForTrim);
         if (!trimmed) return null;
-        const refreshed = refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
-        setRouteSessionPlan(refreshed);
-        return refreshed;
+        return refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
       }
 
-      const rebuilt = rebuildRouteAfterSkipChange(
+      return rebuildRouteAfterSkipChange(
         current,
         houses,
         filters,
@@ -162,8 +167,6 @@ export function useNeighborhoodRoute({
         originPoint(origin),
         routeOptions,
       );
-      setRouteSessionPlan(rebuilt);
-      return rebuilt;
     });
   }, [
     routeMode,
@@ -251,5 +254,6 @@ export function useNeighborhoodRoute({
     clearPendingRouteGps,
     routeSessionDisplayOrders,
     routeSessionPlan,
+    commitSessionPlan,
   };
 }

@@ -1,4 +1,18 @@
-import type { RouteStop, WalkingRoute } from "@/lib/route";
+import { distanceMeters } from "@/lib/geo";
+import type { LatLng, RouteStop, WalkingRoute } from "@/lib/route";
+
+/** Same green as `.house-pin.is-visited` on the map. */
+export const ROUTE_VISITED_GREEN = "#059669";
+export const ROUTE_VISITED_GREEN_SHADOW = "#047857";
+
+export function stopForHouse(route: WalkingRoute, houseId: string): RouteStop | undefined {
+  return route.stops.find((stop) => stop.houses.some((house) => house.id === houseId));
+}
+
+export function stopPoint(stop: RouteStop): LatLng {
+  const house = stop.house;
+  return { lat: house.lat, lng: house.lng };
+}
 
 /** Lead house id per stop — stable key for session order. */
 export function sessionStopHouseIds(route: WalkingRoute): string[] {
@@ -11,6 +25,17 @@ export function stopIsDone(
   skippedIds: ReadonlySet<string>,
 ): boolean {
   return stop.houses.every((house) => visitedIds.has(house.id) || skippedIds.has(house.id));
+}
+
+/** Any house at this stop still unvisited and not skipped. */
+export function stopHasRemainingActive(
+  stop: RouteStop,
+  visitedIds: readonly string[],
+  skippedIds: readonly string[],
+): boolean {
+  const visited = new Set(visitedIds);
+  const skipped = new Set(skippedIds);
+  return stop.houses.some((house) => !visited.has(house.id) && !skipped.has(house.id));
 }
 
 /** Longest prefix of session stops that are each fully visited or skipped. */
@@ -29,39 +54,43 @@ export function routePrefixStopCount(
   return count;
 }
 
-/** Marking this house visited stays on the planned prefix (no reorder / compact). */
-export function isInOrderRouteVisit(
-  plan: WalkingRoute,
-  houseId: string,
+export type RouteProgressSegment = {
+  points: [LatLng, LatLng];
+  done: boolean;
+};
+
+/** Paint each stop-to-stop leg green when both endpoint stops are fully visited or skipped. */
+export function routeProgressSegments(
+  route: WalkingRoute,
   visitedIds: readonly string[],
   skippedIds: readonly string[],
-  markingVisited: boolean,
-): boolean {
-  if (!markingVisited) return true;
+  samePointMeters = 12,
+): RouteProgressSegment[] {
   const visited = new Set(visitedIds);
   const skipped = new Set(skippedIds);
-  if (visited.has(houseId)) return true;
-
-  let stopIndex = -1;
-  for (let i = 0; i < plan.stops.length; i++) {
-    if (plan.stops[i]!.houses.some((house) => house.id === houseId)) {
-      stopIndex = i;
-      break;
-    }
+  const segments: RouteProgressSegment[] = [];
+  for (let i = 1; i < route.stops.length; i++) {
+    const prev = route.stops[i - 1]!;
+    const curr = route.stops[i]!;
+    const a = stopPoint(prev);
+    const b = stopPoint(curr);
+    if (distanceMeters(a, b) < samePointMeters) continue;
+    segments.push({
+      points: [a, b],
+      done: stopIsDone(prev, visited, skipped) && stopIsDone(curr, visited, skipped),
+    });
   }
-  if (stopIndex < 0) return false;
-
-  for (let i = 0; i < stopIndex; i++) {
-    if (!stopIsDone(plan.stops[i]!, visited, skipped)) return false;
-  }
-  return true;
+  return segments;
 }
 
-/** Main-chain segment index (0 = first stop leg on stop-only preview) is painted done. */
-export function routeSegmentDoneThroughStop(prefixStopCount: number, segmentIndex: number): boolean {
-  return segmentIndex < prefixStopCount;
-}
-
-export function approachLegDone(prefixStopCount: number): boolean {
-  return prefixStopCount > 0;
+export function approachLegDone(
+  route: WalkingRoute,
+  visitedIds: readonly string[],
+  skippedIds: readonly string[],
+): boolean {
+  const first = route.stops[0];
+  if (!first) return false;
+  const visited = new Set(visitedIds);
+  const skipped = new Set(skippedIds);
+  return stopIsDone(first, visited, skipped);
 }

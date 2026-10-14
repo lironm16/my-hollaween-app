@@ -182,6 +182,19 @@ describe("buildRouteListItems", () => {
     assert.ok(a?.doneCollapsed);
     assert.equal(a?.legDone, true);
     assert.equal(b?.legDone, false);
+
+    const outOfOrder = buildRouteListItems({
+      route,
+      catalogHouses: houses,
+      houseSet: "real",
+      visitedIds: ["c"],
+      skippedIds: [],
+      origin: { lat: 32.09, lng: 34.81 },
+      distanceLabel: () => "hop",
+      distanceAllowed: () => true,
+    });
+    const cOnly = outOfOrder.find((item) => item.house.id === "c");
+    assert.ok(cOnly?.doneCollapsed);
     assert.equal(items.filter((item) => item.visitedTail).length, 0);
   });
 

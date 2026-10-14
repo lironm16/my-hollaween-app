@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
+import { Fragment, memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import {
   Circle,
   MapContainer,
@@ -33,6 +33,10 @@ import {
   stripApproachFromRouteLine,
   type LatLng,
 } from "@/lib/route";
+import {
+  ROUTE_VISITED_GREEN,
+  ROUTE_VISITED_GREEN_SHADOW,
+} from "@/lib/route-session-progress";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { useCatalog } from "@/hooks/use-catalog";
 import {
@@ -697,8 +701,7 @@ type Props = {
   locating?: boolean;
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
-  routeLineDone?: LatLng[] | null;
-  routeLinePlanned?: LatLng[] | null;
+  routeLineSegments?: { points: [LatLng, LatLng]; done: boolean }[] | null;
   approachLegDone?: boolean;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Pinned stop numbers for visited/skipped houses still shown on the map in route mode. */
@@ -758,8 +761,7 @@ export function HouseMap({
   locating = false,
   onLocate,
   routeLine = null,
-  routeLineDone = null,
-  routeLinePlanned = null,
+  routeLineSegments = null,
   approachLegDone = false,
   routeStops = null,
   routeSessionDisplayOrders = null,
@@ -849,14 +851,6 @@ export function HouseMap({
     () => normalizeRouteLine(routeLine),
     [normalizeRouteLine, routeLine],
   );
-  const displayRouteLineDone = useMemo(
-    () => normalizeRouteLine(routeLineDone),
-    [normalizeRouteLine, routeLineDone],
-  );
-  const displayRouteLinePlanned = useMemo(
-    () => normalizeRouteLine(routeLinePlanned ?? routeLine),
-    [normalizeRouteLine, routeLinePlanned, routeLine],
-  );
   const routePositions = useMemo(
     () =>
       displayRouteLine && displayRouteLine.length >= 2
@@ -864,21 +858,17 @@ export function HouseMap({
         : null,
     [displayRouteLine],
   );
-  const routeDonePositions = useMemo(
+  const routeSegmentLines = useMemo(
     () =>
-      displayRouteLineDone && displayRouteLineDone.length >= 2
-        ? displayRouteLineDone.map((point) => [point.lat, point.lng] as [number, number])
-        : null,
-    [displayRouteLineDone],
+      routeLineSegments?.map((segment) => ({
+        done: segment.done,
+        positions: segment.points.map(
+          (point) => [point.lat, point.lng] as [number, number],
+        ),
+      })) ?? [],
+    [routeLineSegments],
   );
-  const routePlannedPositions = useMemo(
-    () =>
-      displayRouteLinePlanned && displayRouteLinePlanned.length >= 2
-        ? displayRouteLinePlanned.map((point) => [point.lat, point.lng] as [number, number])
-        : null,
-    [displayRouteLinePlanned],
-  );
-  const useSplitRoute = Boolean(routeDonePositions || routePlannedPositions);
+  const useSegmentRoute = routeSegmentLines.length > 0;
   const approachPositions = useMemo(() => {
     const first = routeStops?.[0];
     const start = routeStart ?? userLocation;
@@ -1006,7 +996,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: approachLegDone ? "#14532d" : "#7c2d12",
+                color: approachLegDone ? ROUTE_VISITED_GREEN_SHADOW : "#7c2d12",
                 weight: 6,
                 opacity: 0.35,
                 dashArray: "8 9",
@@ -1019,7 +1009,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: approachLegDone ? "#4ade80" : "#fdba74",
+                color: approachLegDone ? ROUTE_VISITED_GREEN : "#fdba74",
                 weight: 4,
                 opacity: 0.9,
                 dashArray: "8 9",
@@ -1031,16 +1021,15 @@ export function HouseMap({
             />
           </>
         ) : null}
-        {!pickMode && useSplitRoute ? (
-          <>
-            {routeDonePositions ? (
-              <>
+        {!pickMode && useSegmentRoute
+          ? routeSegmentLines.map((segment, index) => (
+              <Fragment key={`route-seg-${index}`}>
                 <Polyline
-                  positions={routeDonePositions}
+                  positions={segment.positions}
                   pathOptions={{
-                    color: "#14532d",
+                    color: segment.done ? ROUTE_VISITED_GREEN_SHADOW : "#9a3412",
                     weight: 8,
-                    opacity: 0.45,
+                    opacity: segment.done ? 0.45 : 0.4,
                     lineCap: "round",
                     lineJoin: "round",
                   }}
@@ -1048,9 +1037,9 @@ export function HouseMap({
                   interactive={false}
                 />
                 <Polyline
-                  positions={routeDonePositions}
+                  positions={segment.positions}
                   pathOptions={{
-                    color: "#22c55e",
+                    color: segment.done ? ROUTE_VISITED_GREEN : "#f97316",
                     weight: 5,
                     opacity: 1,
                     lineCap: "round",
@@ -1059,39 +1048,10 @@ export function HouseMap({
                   smoothFactor={0}
                   interactive={false}
                 />
-              </>
-            ) : null}
-            {routePlannedPositions ? (
-              <>
-                <Polyline
-                  positions={routePlannedPositions}
-                  pathOptions={{
-                    color: "#9a3412",
-                    weight: 8,
-                    opacity: 0.4,
-                    lineCap: "round",
-                    lineJoin: "round",
-                  }}
-                  smoothFactor={0}
-                  interactive={false}
-                />
-                <Polyline
-                  positions={routePlannedPositions}
-                  pathOptions={{
-                    color: "#f97316",
-                    weight: 5,
-                    opacity: 1,
-                    lineCap: "round",
-                    lineJoin: "round",
-                  }}
-                  smoothFactor={0}
-                  interactive={false}
-                />
-              </>
-            ) : null}
-          </>
-        ) : null}
-        {!pickMode && !useSplitRoute && routePositions ? (
+              </Fragment>
+            ))
+          : null}
+        {!pickMode && !useSegmentRoute && routePositions ? (
           <>
             <Polyline
               key={`route-shadow-${routePositions.length}-${routePositions[0]?.join(",")}`}

@@ -44,8 +44,8 @@ import { RouteList } from "@/components/route-list";
 import { buildRouteListItems } from "@/lib/route-list-items";
 import {
   approachLegDone,
-  isInOrderRouteVisit,
-  routePrefixStopCount,
+  stopForHouse,
+  stopHasRemainingActive,
 } from "@/lib/route-session-progress";
 import { routeDisplayOrder } from "@/lib/route-display-order";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
@@ -677,6 +677,7 @@ export function NeighborhoodApp({
     clearPendingRouteGps,
     routeSessionDisplayOrders,
     routeSessionPlan,
+    commitSessionPlan,
   } = useNeighborhoodRoute({
     houses,
     filters,
@@ -750,10 +751,6 @@ export function NeighborhoodApp({
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
   const routePlan = routeMode ? (routeSessionPlan ?? activeRoute) : null;
-  const routePrefixStopCountValue = useMemo(() => {
-    if (!routePlan) return 0;
-    return routePrefixStopCount(routePlan, visits.visitedIds, skips.skippedIds);
-  }, [routePlan, visits.visitedIds, skips.skippedIds]);
 
   useEffect(() => {
     if (houses.length === 0) return;
@@ -783,6 +780,7 @@ export function NeighborhoodApp({
       toast.error("לא נמצאו בתים מהמסלול המשותף במפה שלכם");
     } else {
       setPinnedRoute(route);
+      commitSessionPlan(route);
       toast.success(`המסלול הוחלף · ${route.stops.length} עצירות`);
     }
     writePendingRouteShare(null);
@@ -798,6 +796,7 @@ export function NeighborhoodApp({
     routeMode,
     routeSharePrompt,
     setPinnedRoute,
+    commitSessionPlan,
     startRouteMode,
   ]);
 
@@ -847,28 +846,11 @@ export function NeighborhoodApp({
       } else {
         selection.clearListFocus();
       }
-      if (!routeMode) return;
-      const plan = routeSessionPlan ?? pinnedRoute ?? activeRoute ?? filterRoute;
-      const priorVisitedIds = marking
-        ? visits.visitedIds.filter((item) => item !== id)
-        : visits.visitedIds;
-      const inOrder =
-        plan &&
-        isInOrderRouteVisit(plan, id, priorVisitedIds, nextSkippedIds, marking);
-      if (inOrder) return;
-      applyRouteAfterSkipChange(nextSkippedIds, !marking, nextVisitedIds);
+      void nextVisitedIds;
+      void nextSkippedIds;
+      /* Route tour geometry stays on session plan — progress is segment/list coloring only. */
     },
-    [
-      celebrateVisit,
-      routeMode,
-      routeSessionPlan,
-      pinnedRoute,
-      activeRoute,
-      filterRoute,
-      selection.clearListFocus,
-      skips,
-      visits,
-    ],
+    [celebrateVisit, selection.clearListFocus, skips, visits],
   );
 
   const onToggleVisited = useCallback(
@@ -1018,10 +1000,17 @@ export function NeighborhoodApp({
     }
     skips.clearNote(house.id);
     if (routeMode && !wasSkipped) {
+      const plan = routeSessionPlan ?? pinnedRoute ?? activeRoute ?? filterRoute;
+      const stop = plan ? stopForHouse(plan, house.id) : undefined;
       const nextVisitedIds = visits.visited(house.id)
         ? visits.visitedIds.filter((item) => item !== house.id)
         : visits.visitedIds;
-      applyRouteAfterSkipChange(nextSkippedIds, false, nextVisitedIds);
+      const needsRebuild =
+        !stop ||
+        !stopHasRemainingActive(stop, nextVisitedIds, nextSkippedIds);
+      if (needsRebuild) {
+        applyRouteAfterSkipChange(nextSkippedIds, false, nextVisitedIds);
+      }
     }
   }
 
@@ -1169,11 +1158,16 @@ export function NeighborhoodApp({
     );
     applyRouteAfterSkipChange(nextSkippedIds, added.length > 0);
   }
-  const { line: routeLine, done: routeLineDone, planned: routeLinePlanned } = useRouteGeometry(
+  const { line: routeLine, segments: routeLineSegments } = useRouteGeometry(
     routePlan,
     routeMode,
-    routePrefixStopCountValue,
+    visits.visitedIds,
+    skips.skippedIds,
   );
+  const routeApproachDone =
+    routePlan && routeMode
+      ? approachLegDone(routePlan, visits.visitedIds, skips.skippedIds)
+      : false;
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
@@ -1622,13 +1616,10 @@ export function NeighborhoodApp({
                   locating={geo.status === "pending" && askedLocation}
                   onLocate={originPick.goToMyLocation}
                   routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
-                  routeLineDone={
-                    routeMode && !originPick.originPickActive ? routeLineDone : null
+                  routeLineSegments={
+                    routeMode && !originPick.originPickActive ? routeLineSegments : null
                   }
-                  routeLinePlanned={
-                    routeMode && !originPick.originPickActive ? routeLinePlanned : null
-                  }
-                  approachLegDone={routeMode && approachLegDone(routePrefixStopCountValue)}
+                  approachLegDone={routeMode && routeApproachDone}
                   routeStart={routeMode ? origin : null}
                   routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                   visitedIds={visits.visitedIds}
@@ -1749,7 +1740,7 @@ export function NeighborhoodApp({
                     actionContext={houseActionContext}
                     originLabel={routePlan?.originLabel}
                     startedFrom={routePlan?.startedFrom}
-                    originLegDone={approachLegDone(routePrefixStopCountValue)}
+                    originLegDone={routeApproachDone}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
