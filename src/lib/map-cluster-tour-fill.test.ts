@@ -62,6 +62,16 @@ describe("clusterTourRingGradient", () => {
     assert.match(gradient!, /#f97316 0% 50%/);
     assert.match(gradient!, /#64748b 50% 100%/);
   });
+
+  it("emits one ring slice per cluster house (not capped)", () => {
+    const houses = Array.from({ length: 12 }, (_, index) => stub(`u${index}`));
+    const gradient = clusterTourRingGradient(houses, ["u0"], ["u1"], true);
+    assert.ok(gradient);
+    assert.match(gradient!, /#059669 0% 8\.333333333333334%/);
+    assert.match(gradient!, /#64748b 8\.333333333333334% 16\.666666666666668%/);
+    assert.match(gradient!, /16\.666666666666668% 25%/);
+    assert.match(gradient!, /91\.66666666666667% 100%/);
+  });
 });
 
 describe("clusterTourRingDecor", () => {

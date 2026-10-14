@@ -327,9 +327,8 @@ function clusterIcon(
   const clusterLabel = attr(clusterPinAriaLabel(houses));
   const pinFill = "#6d28d9";
   const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
-  const tourHouses = clusterBadgeHouses(houses);
   const tourRing = pinTourRingDecor(
-    tourHouses,
+    houses,
     visitedIds,
     skippedIds ? [...skippedIds] : [],
     decorRouteMode,
