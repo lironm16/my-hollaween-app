@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { MapPin, Navigation } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, MapPin, Navigation } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
 import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { houseHeadline } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -14,15 +15,71 @@ export type RouteListItem = {
   order: number;
   hop: string;
   skipped: boolean;
+  doneCollapsed?: boolean;
+  legDone?: boolean;
   visitedTail?: boolean;
   distanceM?: number;
 };
 
-function RouteLeg({ label }: { label?: string }) {
+function RouteLeg({ label, done }: { label?: string; done?: boolean }) {
   return (
     <div className={cn("route-list-leg", !label && "route-list-leg--line-only")}>
-      <span className="route-list-leg-line" aria-hidden="true" />
-      {label ? <span className="route-list-leg-label">{label}</span> : null}
+      <span
+        className={cn("route-list-leg-line", done && "route-list-leg-line--done")}
+        aria-hidden="true"
+      />
+      {label ? (
+        <span className={cn("route-list-leg-label", done && "route-list-leg-label--done")}>
+          {label}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function RouteListCollapsedHouse({
+  house,
+  order,
+  actionContext,
+  skipped,
+  expanded,
+  onToggle,
+}: {
+  house: PublicHouse;
+  order: number;
+  actionContext: HouseCardActionContext;
+  skipped: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const barProps = houseCardPropsFor(house, actionContext, { index: order > 0 ? order : undefined });
+  return (
+    <div
+      className={cn(
+        "route-list-house route-list-house--collapsed",
+        skipped && "route-list-house--skipped",
+        !skipped && "route-list-house--done",
+      )}
+    >
+      <button
+        type="button"
+        className="route-list-collapsed-trigger"
+        aria-expanded={expanded}
+        onClick={onToggle}
+      >
+        {order > 0 ? (
+          <span className="route-list-collapsed-order" aria-hidden="true">
+            {order}
+          </span>
+        ) : null}
+        <span className="route-list-collapsed-title">{houseHeadline(house)}</span>
+        <ChevronDown className={cn("route-list-collapsed-chevron", expanded && "is-open")} />
+      </button>
+      {expanded ? (
+        <div className="route-list-collapsed-body">
+          <HouseCard {...barProps} expanded hideHoursBanner />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -36,6 +93,7 @@ export function RouteList({
   onRequestLocation,
   onChangeOrigin,
   focusId,
+  originLegDone,
 }: {
   items: RouteListItem[];
   actionContext: HouseCardActionContext;
@@ -45,9 +103,12 @@ export function RouteList({
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
   focusId?: string | null;
+  /** First leg from start → stop 1 is green when the first stop is done. */
+  originLegDone?: boolean;
 }) {
   const focusRef = useRef<HTMLLIElement | null>(null);
   const addressReveal = useAddressReveal();
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     if (!focusId) return;
@@ -80,9 +141,14 @@ export function RouteList({
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
       <ol className="route-list">
-        <li className="route-list-card">
+        <li className={cn("route-list-card", originLegDone && "route-list-card--done")}>
           <div className="flex items-start gap-3">
-            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black">
+            <span
+              className={cn(
+                "inline-flex size-8 shrink-0 items-center justify-center rounded-full text-black",
+                originLegDone ? "bg-emerald-500" : "bg-orange-500",
+              )}
+            >
               <MapPin className="size-4" strokeWidth={2.4} />
             </span>
             <div className="min-w-0 flex-1">
@@ -99,36 +165,59 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped, visitedTail, distanceM }, i) => {
-          const showSkippedHeading = skipped && (i === 0 || !items[i - 1]!.skipped);
+        {items.map(({ house, order, hop, skipped, doneCollapsed, legDone, visitedTail, distanceM }, i) => {
+          const showSkippedHeading =
+            skipped && !doneCollapsed && (i === 0 || !items[i - 1]!.skipped);
           const showVisitedHeading =
             visitedTail && (i === 0 || !items[i - 1]?.visitedTail);
-          const isTail = skipped || visitedTail;
           return (
             <li
               key={house.id}
               ref={house.id === focusId ? focusRef : undefined}
               className={cn(
                 house.id === focusId && "house-list-focus",
-                skipped && "route-list-skipped",
+                skipped && !doneCollapsed && "route-list-skipped",
                 visitedTail && "route-list-visited",
               )}
             >
               {showVisitedHeading ? (
-                <p className="route-list-visited-heading">ביקרתם</p>
+                <p className="route-list-visited-heading">ביקרתם (מחוץ למסלול)</p>
               ) : null}
-              {showSkippedHeading ? (
+              {showSkippedHeading && !doneCollapsed ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
-              <RouteLeg label={hop || undefined} />
-              <div className="route-list-house">
-                <HouseCard
-                  {...houseCardPropsFor(house, actionContext, {
-                    index: order > 0 ? order : undefined,
-                    distanceM: addressReveal.distanceAllowed(house.id) ? distanceM : undefined,
-                  })}
+              <RouteLeg label={hop || undefined} done={legDone} />
+              {doneCollapsed ? (
+                <RouteListCollapsedHouse
+                  house={house}
+                  order={order}
+                  actionContext={actionContext}
+                  skipped={skipped}
+                  expanded={expandedIds.has(house.id)}
+                  onToggle={() =>
+                    setExpandedIds((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(house.id)) next.delete(house.id);
+                      else next.add(house.id);
+                      return next;
+                    })
+                  }
                 />
-              </div>
+              ) : (
+                <div
+                  className={cn(
+                    "route-list-house",
+                    skipped && "route-list-house--skipped",
+                  )}
+                >
+                  <HouseCard
+                    {...houseCardPropsFor(house, actionContext, {
+                      index: order > 0 ? order : undefined,
+                      distanceM: addressReveal.distanceAllowed(house.id) ? distanceM : undefined,
+                    })}
+                  />
+                </div>
+              )}
             </li>
           );
         })}

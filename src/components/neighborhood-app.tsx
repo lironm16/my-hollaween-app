@@ -42,6 +42,11 @@ import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { buildRouteListItems } from "@/lib/route-list-items";
+import {
+  approachLegDone,
+  isInOrderRouteVisit,
+  routePrefixStopCount,
+} from "@/lib/route-session-progress";
 import { routeDisplayOrder } from "@/lib/route-display-order";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
@@ -671,6 +676,7 @@ export function NeighborhoodApp({
     pendingRouteGps,
     clearPendingRouteGps,
     routeSessionDisplayOrders,
+    routeSessionPlan,
   } = useNeighborhoodRoute({
     houses,
     filters,
@@ -743,6 +749,11 @@ export function NeighborhoodApp({
 
   const walkingRoute = routeMode ? pinnedRoute : null;
   const activeRoute = routeMode ? (walkingRoute ?? filterRoute) : null;
+  const routePlan = routeMode ? (routeSessionPlan ?? activeRoute) : null;
+  const routePrefixStopCountValue = useMemo(() => {
+    if (!routePlan) return 0;
+    return routePrefixStopCount(routePlan, visits.visitedIds, skips.skippedIds);
+  }, [routePlan, visits.visitedIds, skips.skippedIds]);
 
   useEffect(() => {
     if (houses.length === 0) return;
@@ -806,11 +817,13 @@ export function NeighborhoodApp({
   const visitCelebration = useCallback(
     (_id: string, nextVisitedIds: string[]) => {
       if (!routeMode || !walkingRoute) return "visit";
-      return isRouteFullyVisited(walkingRoute, skips.skippedIds, nextVisitedIds)
+      const plan = routeSessionPlan ?? walkingRoute;
+      if (!plan) return "visit";
+      return isRouteFullyVisited(plan, skips.skippedIds, nextVisitedIds)
         ? "route-complete"
         : "visit";
     },
-    [routeMode, walkingRoute, skips.skippedIds],
+    [routeMode, walkingRoute, routeSessionPlan, skips.skippedIds],
   );
   const { onToggleLike, celebrateVisit, visitCheer, routeCompleteCheer, likeCheer } = useHouseActions(
     likes,
@@ -835,9 +848,28 @@ export function NeighborhoodApp({
         selection.clearListFocus();
       }
       if (!routeMode) return;
+      const plan = routeSessionPlan ?? pinnedRoute;
+      const inOrder =
+        plan &&
+        isInOrderRouteVisit(
+          plan,
+          id,
+          visits.visitedIds,
+          skips.skippedIds,
+          marking,
+        );
+      if (inOrder) return;
       applyRouteAfterSkipChange(nextSkippedIds, !marking, nextVisitedIds);
     },
-    [celebrateVisit, routeMode, selection.clearListFocus, skips.skippedIds, visits],
+    [
+      celebrateVisit,
+      routeMode,
+      routeSessionPlan,
+      pinnedRoute,
+      selection.clearListFocus,
+      skips.skippedIds,
+      visits,
+    ],
   );
 
   const onToggleVisited = useCallback(
@@ -880,9 +912,9 @@ export function NeighborhoodApp({
   }, [visitFromUrl, focusId, houses, mapListHouses, selection]);
 
   const routeListItems = useMemo(() => {
-    if (!routeMode || !activeRoute) return [];
+    if (!routeMode || !routePlan) return [];
     return buildRouteListItems({
-      route: activeRoute,
+      route: routePlan,
       catalogHouses: mapListHouses,
       houseSet: activeHouseSet,
       visitedIds: visits.visitedIds,
@@ -894,7 +926,7 @@ export function NeighborhoodApp({
     });
   }, [
     routeMode,
-    activeRoute,
+    routePlan,
     skips.skippedIds,
     visits.visitedIds,
     mapListHouses,
@@ -1139,7 +1171,11 @@ export function NeighborhoodApp({
     );
     applyRouteAfterSkipChange(nextSkippedIds, added.length > 0);
   }
-  const { line: routeLine } = useRouteGeometry(activeRoute, routeMode);
+  const { line: routeLine, done: routeLineDone, planned: routeLinePlanned } = useRouteGeometry(
+    routePlan,
+    routeMode,
+    routePrefixStopCountValue,
+  );
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
@@ -1588,6 +1624,13 @@ export function NeighborhoodApp({
                   locating={geo.status === "pending" && askedLocation}
                   onLocate={originPick.goToMyLocation}
                   routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
+                  routeLineDone={
+                    routeMode && !originPick.originPickActive ? routeLineDone : null
+                  }
+                  routeLinePlanned={
+                    routeMode && !originPick.originPickActive ? routeLinePlanned : null
+                  }
+                  approachLegDone={routeMode && approachLegDone(routePrefixStopCountValue)}
                   routeStart={routeMode ? origin : null}
                   routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                   visitedIds={visits.visitedIds}
@@ -1604,8 +1647,8 @@ export function NeighborhoodApp({
                     )
                   }
                   routeStops={
-                    routeMode && activeRoute && !originPick.originPickActive
-                      ? activeRoute.stops.map((stop) => ({
+                    routeMode && routePlan && !originPick.originPickActive
+                      ? routePlan.stops.map((stop) => ({
                           id: stop.house.id,
                           order: routeDisplayOrder(
                             stop.house.id,
@@ -1706,8 +1749,9 @@ export function NeighborhoodApp({
                   <RouteList
                     items={routeListItems}
                     actionContext={houseActionContext}
-                    originLabel={activeRoute?.originLabel}
-                    startedFrom={activeRoute?.startedFrom}
+                    originLabel={routePlan?.originLabel}
+                    startedFrom={routePlan?.startedFrom}
+                    originLegDone={approachLegDone(routePrefixStopCountValue)}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}

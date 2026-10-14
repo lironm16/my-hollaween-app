@@ -61,6 +61,8 @@ export function useNeighborhoodRoute({
   const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
   const [routeSessionDisplayOrders, setRouteSessionDisplayOrders] =
     useState<Map<string, number> | null>(null);
+  /** Full tour geometry for map/list progress — updates on skip/rebuild, not on in-order visits. */
+  const [routeSessionPlan, setRouteSessionPlan] = useState<WalkingRoute | null>(null);
   const pendingRouteGps = useRef(false);
   const lastVisitedCountRef = useRef(0);
   const recaptureDisplayOrdersAfterVisitClearRef = useRef(false);
@@ -120,7 +122,10 @@ export function useNeighborhoodRoute({
       const candidateIds = new Set(routeCandidates.map((house) => house.id));
       const currentStopIds = current.stops.map((stop) => stop.house.id);
       const hasNewCandidates = routeCandidates.some((house) => !currentStopIds.includes(house.id));
-      const hasRemovedStops = currentStopIds.some((id) => !candidateIds.has(id));
+      const visitedSet = new Set(filterContext.visitedIds);
+      const hasRemovedStops = currentStopIds.some(
+        (id) => !candidateIds.has(id) && !visitedSet.has(id),
+      );
 
       if (!hasNewCandidates && !hasRemovedStops) {
         if (current.accessible === accessibleOnly) return current;
@@ -172,6 +177,14 @@ export function useNeighborhoodRoute({
   }, [routeMode, visitedIds.length]);
 
   useEffect(() => {
+    if (!routeMode) {
+      setRouteSessionPlan(null);
+      return;
+    }
+    if (pinnedRoute) setRouteSessionPlan(pinnedRoute);
+  }, [routeMode, pinnedRoute]);
+
+  useEffect(() => {
     if (!routeMode || !pinnedRoute) return;
     setRouteSessionDisplayOrders((prev) => {
       if (
@@ -192,6 +205,7 @@ export function useNeighborhoodRoute({
     setRouteMode(false);
     setPinnedRoute(null);
     setRouteSessionDisplayOrders(null);
+    setRouteSessionPlan(null);
   }
 
   function enterRouteMode() {
@@ -224,5 +238,6 @@ export function useNeighborhoodRoute({
     pendingRouteGps,
     clearPendingRouteGps,
     routeSessionDisplayOrders,
+    routeSessionPlan,
   };
 }

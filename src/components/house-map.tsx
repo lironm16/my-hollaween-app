@@ -697,6 +697,9 @@ type Props = {
   locating?: boolean;
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
+  routeLineDone?: LatLng[] | null;
+  routeLinePlanned?: LatLng[] | null;
+  approachLegDone?: boolean;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Pinned stop numbers for visited/skipped houses still shown on the map in route mode. */
   routeSessionDisplayOrders?: Map<string, number> | null;
@@ -755,6 +758,9 @@ export function HouseMap({
   locating = false,
   onLocate,
   routeLine = null,
+  routeLineDone = null,
+  routeLinePlanned = null,
+  approachLegDone = false,
   routeStops = null,
   routeSessionDisplayOrders = null,
   routeStart = null,
@@ -828,14 +834,29 @@ export function HouseMap({
     }
     return { lat: cluster.lat, lng: cluster.lng, offsetX: 0, offsetY: 0 };
   }, [clusters, houses, pickMode, selectedId]);
-  const displayRouteLine = useMemo(() => {
-    if (!routeLine || routeLine.length < 2) return null;
-    const first = routeStops?.[0];
-    const start = routeStart ?? userLocation;
-    if (!first || !start) return routeLine;
-    if (!shouldShowRouteApproach(start, first, routeStartedFrom)) return routeLine;
-    return stripApproachFromRouteLine(routeLine, first, start);
-  }, [routeLine, routeStops, routeStart, userLocation, routeStartedFrom]);
+  const normalizeRouteLine = useCallback(
+    (line: LatLng[] | null | undefined) => {
+      if (!line || line.length < 2) return null;
+      const first = routeStops?.[0];
+      const start = routeStart ?? userLocation;
+      if (!first || !start) return line;
+      if (!shouldShowRouteApproach(start, first, routeStartedFrom)) return line;
+      return stripApproachFromRouteLine(line, first, start);
+    },
+    [routeStops, routeStart, userLocation, routeStartedFrom],
+  );
+  const displayRouteLine = useMemo(
+    () => normalizeRouteLine(routeLine),
+    [normalizeRouteLine, routeLine],
+  );
+  const displayRouteLineDone = useMemo(
+    () => normalizeRouteLine(routeLineDone),
+    [normalizeRouteLine, routeLineDone],
+  );
+  const displayRouteLinePlanned = useMemo(
+    () => normalizeRouteLine(routeLinePlanned ?? routeLine),
+    [normalizeRouteLine, routeLinePlanned, routeLine],
+  );
   const routePositions = useMemo(
     () =>
       displayRouteLine && displayRouteLine.length >= 2
@@ -843,6 +864,21 @@ export function HouseMap({
         : null,
     [displayRouteLine],
   );
+  const routeDonePositions = useMemo(
+    () =>
+      displayRouteLineDone && displayRouteLineDone.length >= 2
+        ? displayRouteLineDone.map((point) => [point.lat, point.lng] as [number, number])
+        : null,
+    [displayRouteLineDone],
+  );
+  const routePlannedPositions = useMemo(
+    () =>
+      displayRouteLinePlanned && displayRouteLinePlanned.length >= 2
+        ? displayRouteLinePlanned.map((point) => [point.lat, point.lng] as [number, number])
+        : null,
+    [displayRouteLinePlanned],
+  );
+  const useSplitRoute = Boolean(routeDonePositions || routePlannedPositions);
   const approachPositions = useMemo(() => {
     const first = routeStops?.[0];
     const start = routeStart ?? userLocation;
@@ -970,7 +1006,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: "#7c2d12",
+                color: approachLegDone ? "#14532d" : "#7c2d12",
                 weight: 6,
                 opacity: 0.35,
                 dashArray: "8 9",
@@ -983,7 +1019,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: "#fdba74",
+                color: approachLegDone ? "#4ade80" : "#fdba74",
                 weight: 4,
                 opacity: 0.9,
                 dashArray: "8 9",
@@ -995,7 +1031,67 @@ export function HouseMap({
             />
           </>
         ) : null}
-        {!pickMode && routePositions ? (
+        {!pickMode && useSplitRoute ? (
+          <>
+            {routeDonePositions ? (
+              <>
+                <Polyline
+                  positions={routeDonePositions}
+                  pathOptions={{
+                    color: "#14532d",
+                    weight: 8,
+                    opacity: 0.45,
+                    lineCap: "round",
+                    lineJoin: "round",
+                  }}
+                  smoothFactor={0}
+                  interactive={false}
+                />
+                <Polyline
+                  positions={routeDonePositions}
+                  pathOptions={{
+                    color: "#22c55e",
+                    weight: 5,
+                    opacity: 1,
+                    lineCap: "round",
+                    lineJoin: "round",
+                  }}
+                  smoothFactor={0}
+                  interactive={false}
+                />
+              </>
+            ) : null}
+            {routePlannedPositions ? (
+              <>
+                <Polyline
+                  positions={routePlannedPositions}
+                  pathOptions={{
+                    color: "#9a3412",
+                    weight: 8,
+                    opacity: 0.4,
+                    lineCap: "round",
+                    lineJoin: "round",
+                  }}
+                  smoothFactor={0}
+                  interactive={false}
+                />
+                <Polyline
+                  positions={routePlannedPositions}
+                  pathOptions={{
+                    color: "#f97316",
+                    weight: 5,
+                    opacity: 1,
+                    lineCap: "round",
+                    lineJoin: "round",
+                  }}
+                  smoothFactor={0}
+                  interactive={false}
+                />
+              </>
+            ) : null}
+          </>
+        ) : null}
+        {!pickMode && !useSplitRoute && routePositions ? (
           <>
             <Polyline
               key={`route-shadow-${routePositions.length}-${routePositions[0]?.join(",")}`}
