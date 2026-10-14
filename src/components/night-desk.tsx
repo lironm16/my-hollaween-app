@@ -12,6 +12,7 @@ import {
   catalogRemovedViewOnlyNotice,
 } from "@/lib/labels";
 import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, forgetPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
+import { rememberSessionHouseDetail } from "@/lib/house-detail-session-cache";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { readApiJson } from "@/lib/api-json";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
@@ -81,6 +82,7 @@ export function NightDesk({
       createdAt: new Date().toISOString(),
     });
     onUpdated(next);
+    rememberSessionHouseDetail(next);
     notifyCatalogChanged();
     setNotice(null);
     toast.success("נשמר במכשיר · יישלח כשיש רשת");
@@ -129,6 +131,7 @@ export function NightDesk({
         return null;
       }
       onUpdated(data.house);
+      rememberSessionHouseDetail(data.house);
       rememberPublishedHouse(data.house);
       if (!admin && editCode) {
         saveOwnedHouse({

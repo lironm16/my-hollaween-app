@@ -22,6 +22,7 @@ import {
   rememberPublishedHouse,
   saveOwnedHouse,
 } from "@/lib/offline-db";
+import { rememberSessionHouseDetail } from "@/lib/house-detail-session-cache";
 import {
   buildQuickUpdatePatch,
   currentQuickCandy,
@@ -118,6 +119,7 @@ export function QuickUpdateOverlay({
           createdAt: new Date().toISOString(),
         });
         onUpdated(next);
+        rememberSessionHouseDetail(next);
         notifyCatalogChanged();
         toast.success("נשמר במכשיר · יישלח כשיש רשת");
         onClose();
@@ -152,6 +154,7 @@ export function QuickUpdateOverlay({
       }
 
       onUpdated(data.house);
+      rememberSessionHouseDetail(data.house);
       rememberPublishedHouse(data.house);
       if (!admin && editCode) {
         saveOwnedHouse({

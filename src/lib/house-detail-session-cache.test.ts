@@ -36,6 +36,23 @@ describe("house-detail-session-cache", () => {
     assert.equal(houseNeedsSessionHydration(pin("בית-1")), false);
   });
 
+  it("ignores session cache when catalog row has a newer updatedAt", () => {
+    rememberSessionHouseDetail({
+      ...full("בית-3"),
+      description: "ישן",
+      updatedAt: "2026-10-31T10:00:00.000Z",
+    });
+    assert.equal(readSessionHouseDetail("בית-3")?.description, "ישן");
+    assert.equal(readSessionHouseDetail("בית-3", "2026-10-31T12:00:00.000Z"), null);
+    assert.equal(
+      houseNeedsSessionHydration({
+        ...pin("בית-3"),
+        updatedAt: "2026-10-31T12:00:00.000Z",
+      }),
+      true,
+    );
+  });
+
   it("dedupes concurrent fetches by id", async () => {
     const original = globalThis.fetch;
     let calls = 0;

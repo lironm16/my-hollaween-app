@@ -35,7 +35,7 @@ function applyPreviewPolicy(detail: PublicHouse): PublicHouse {
 
 export function useServerHouseDetail(house: PublicHouse | null) {
   const [resolved, setResolved] = useState<PublicHouse | null>(() =>
-    house ? readSessionHouseDetail(house.id) ?? house : null,
+    house ? readSessionHouseDetail(house.id, house.updatedAt) ?? house : null,
   );
   const [loading, setLoading] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
@@ -48,7 +48,7 @@ export function useServerHouseDetail(house: PublicHouse | null) {
       return;
     }
 
-    const cached = readSessionHouseDetail(house.id);
+    const cached = readSessionHouseDetail(house.id, house.updatedAt);
     if (cached) {
       setResolved(cached);
       setUnavailable(false);
@@ -71,7 +71,7 @@ export function useServerHouseDetail(house: PublicHouse | null) {
     }, LOADING_DELAY_MS);
 
     void (async () => {
-      const result = await fetchPublicHouseSession(house.id);
+      const result = await fetchPublicHouseSession(house.id, house.updatedAt);
       if (cancelled) return;
       window.clearTimeout(loadingTimer);
       setLoading(false);
