@@ -4,7 +4,7 @@ import { distanceMeters } from "@/lib/geo";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import type { PublicHouse } from "@/lib/types";
 import { routeDisplayOrder } from "@/lib/route-display-order";
-import { routeSegmentShouldDraw, stopIsDone } from "@/lib/route-session-progress";
+import { stopIsDone } from "@/lib/route-session-progress";
 import type { WalkingRoute } from "@/lib/route";
 
 export type RouteListItemInput = {
@@ -16,8 +16,8 @@ export type RouteListItemInput = {
   doneCollapsed?: boolean;
   /** Connector line before this card uses the “done” color. */
   legDone?: boolean;
-  /** Hide connector when stop is skipped or off-path (orphan visit). */
-  legHidden?: boolean;
+  /** Connector before this card uses skipped gray when leading into a skipped stop/house. */
+  legSkipped?: boolean;
   /** Off-plan visit shown after the tour (legacy compact). */
   visitedTail?: boolean;
   distanceM?: number;
@@ -70,12 +70,14 @@ export function buildRouteListItems(options: {
           : prevStop
             ? stopIsDone(prevStop, visitedSet, skippedSet) && stopIsDone(stop, visitedSet, skippedSet)
             : false;
-      const legHidden =
-        houseIndex === 0 && stopIdx > 0
-          ? !routeSegmentShouldDraw(route, stopIdx, visitedSet, skippedSet)
-          : false;
+      const prevStopBreaks =
+        stopIdx > 0 && route.stops[stopIdx - 1]!.houses.some((h) => skippedSet.has(h.id));
+      const stopBreaks = stop.houses.some((h) => skippedSet.has(h.id));
+      const legSkipped =
+        houseIndex === 0 && stopIdx > 0 && (skipped || prevStopBreaks || stopBreaks);
       const legDone =
-        houseIndex > 0 ? visited : stopIdx === 0 ? visited : legFromPrevStopDone;
+        !legSkipped &&
+        (houseIndex > 0 ? visited : stopIdx === 0 ? visited : legFromPrevStopDone);
       items.push({
         house,
         order: routeDisplayOrder(house.id, stop.order, sessionDisplayOrders),
@@ -87,8 +89,8 @@ export function buildRouteListItems(options: {
               : distanceLabel(house.id, stop.fromPreviousMeters),
         skipped,
         legDone,
-        legHidden,
-        doneCollapsed: visited && !skipped,
+        legSkipped,
+        doneCollapsed: visited || skipped,
       });
     });
     stopIdx += 1;
@@ -117,7 +119,8 @@ export function buildRouteListItems(options: {
         skipped: flags.skipped,
         visitedTail: flags.visitedTail,
         legDone: flags.visitedTail && visitedSet.has(id),
-        doneCollapsed: flags.visitedTail && visitedSet.has(id) && !flags.skipped,
+        doneCollapsed: flags.skipped || (flags.visitedTail && visitedSet.has(id)),
+        legSkipped: flags.skipped,
         distanceM: distanceAllowed(house.id) ? distanceMeters(originPoint, point) : undefined,
       });
       tailCursor = point;

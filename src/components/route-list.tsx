@@ -17,20 +17,30 @@ export type RouteListItem = {
   skipped: boolean;
   doneCollapsed?: boolean;
   legDone?: boolean;
-  legHidden?: boolean;
+  legSkipped?: boolean;
   visitedTail?: boolean;
   distanceM?: number;
 };
 
-function RouteLeg({ label, done }: { label?: string; done?: boolean }) {
+function RouteLeg({ label, done, skipped }: { label?: string; done?: boolean; skipped?: boolean }) {
   return (
     <div className={cn("route-list-leg", !label && "route-list-leg--line-only")}>
       <span
-        className={cn("route-list-leg-line", done && "route-list-leg-line--done")}
+        className={cn(
+          "route-list-leg-line",
+          done && "route-list-leg-line--done",
+          skipped && "route-list-leg-line--skipped",
+        )}
         aria-hidden="true"
       />
       {label ? (
-        <span className={cn("route-list-leg-label", done && "route-list-leg-label--done")}>
+        <span
+          className={cn(
+            "route-list-leg-label",
+            done && "route-list-leg-label--done",
+            skipped && "route-list-leg-label--skipped",
+          )}
+        >
           {label}
         </span>
       ) : null}
@@ -166,9 +176,9 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped, doneCollapsed, legDone, legHidden, visitedTail, distanceM }, i) => {
+        {items.map(({ house, order, hop, skipped, doneCollapsed, legDone, legSkipped, visitedTail, distanceM }, i) => {
           const showSkippedHeading =
-            skipped && !doneCollapsed && (i === 0 || !items[i - 1]!.skipped);
+            skipped && !doneCollapsed && !visitedTail && (i === 0 || !items[i - 1]!.skipped);
           const showVisitedHeading =
             visitedTail && (i === 0 || !items[i - 1]?.visitedTail);
           return (
@@ -187,7 +197,7 @@ export function RouteList({
               {showSkippedHeading && !doneCollapsed ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
-              {legHidden ? null : <RouteLeg label={hop || undefined} done={legDone} />}
+              <RouteLeg label={hop || undefined} done={legDone} skipped={legSkipped} />
               {doneCollapsed ? (
                 <RouteListCollapsedHouse
                   house={house}

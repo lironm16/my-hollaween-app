@@ -6382,8 +6382,15 @@ svg.leaflet-zoom-animated {
 .pumpkin-pin.is-visited {
   border-color: #059669;
 }
+.house-pin.is-skipped,
+.pumpkin-pin.is-skipped {
+  border-color: #64748b;
+}
 .house-pin.is-apt.is-visited {
   box-shadow: 0 0 0 4px #059669, 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+.house-pin.is-apt.is-skipped {
+  box-shadow: 0 0 0 4px #64748b, 0 2px 6px rgba(0, 0, 0, 0.55);
 }
 .house-pin.is-apt {
   box-shadow: 0 0 0 4px #fb923c,
@@ -6691,11 +6698,7 @@ svg.leaflet-zoom-animated {
   height: 22px;
 }
 .pin-apt-dot.is-skipped {
-  background-color: #64748b;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M3.75 3.5 14.25 12 3.75 20.5Z'/%3E%3Crect fill='%23fff' x='15.25' y='3.5' width='5' height='17' rx='2.5'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 72%;
+  box-shadow: 0 0 0 2px #64748b;
 }
 .house-pin.house-pin-dot .pin-status {
   width: 14px;
@@ -9255,7 +9258,20 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   background: rgb(5 150 105 / 0.12);
 }
 .route-list-house--skipped {
-  box-shadow: 0 0 0 2px #a78bfa;
+  box-shadow: 0 0 0 2px #64748b;
+}
+.route-list-house--collapsed.route-list-house--skipped {
+  background: rgb(100 116 139 / 0.12);
+}
+.route-list-house--collapsed.route-list-house--skipped .route-list-collapsed-trigger {
+  color: #94a3b8;
+}
+.route-list-house--collapsed.route-list-house--skipped .route-list-collapsed-order {
+  background: #64748b;
+  color: #f1f5f9;
+}
+.route-list-house--collapsed.route-list-house--skipped .route-list-collapsed-chevron {
+  color: #94a3b8;
 }
 .route-list-house--collapsed {
   overflow: hidden;
@@ -9323,6 +9339,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .route-list-leg-line--done {
   background: #059669;
 }
+.route-list-leg-line--skipped {
+  background: #64748b;
+}
 .route-list-leg-label {
   align-self: center;
   font-size: 1rem;
@@ -9331,6 +9350,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .route-list-leg-label--done {
   color: #6ee7b7;
+}
+.route-list-leg-label--skipped {
+  color: #94a3b8;
 }
 .route-list-skipped-heading {
   margin: 1rem 0 0.5rem;

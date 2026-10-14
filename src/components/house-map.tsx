@@ -63,7 +63,6 @@ import {
   mapCoordsForHouse,
   usesSchoolCampusClusterChrome,
 } from "@/lib/school-campus";
-import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 import {
   gemMapHouseIdSet,
@@ -122,17 +121,11 @@ function pinFaceKind(house: PublicHouse): "bare" | "scare" {
   return isDecorated(house) ? "scare" : "bare";
 }
 
-function pinSkippedMark() {
-  return `<b class="pin-status is-skipped" aria-label="דילגתי">${SKIP_ICON_SVG}</b>`;
-}
-
 function pinStatusMark(
   house: PublicHouse,
   now: Date,
   addressReveal: AddressRevealSchedule | undefined,
-  skipped = false,
 ) {
-  if (skipped) return pinSkippedMark();
   const visit = pinVisitKind(house, now, addressReveal);
   if (visit === "closed") {
     return `<b class="pin-status is-closed" aria-label="סגור"></b>`;
@@ -171,7 +164,8 @@ function clusterAptDotsHtml(
       const filteredClass =
         matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
       if (skippedIds?.has(house.id)) {
-        return `<i class="pin-apt-dot is-skipped${filteredClass}"></i>`;
+        const dot = candyPinDot(house) ?? "out";
+        return `<i class="pin-apt-dot is-${dot} is-skipped${filteredClass}"></i>`;
       }
       const visit = pinVisitKind(house, now, addressReveal);
       if (visit === "closed") return `<i class="pin-apt-dot is-closed${filteredClass}"></i>`;
@@ -204,6 +198,7 @@ function housePinHtml(
   const visit = pinVisitKind(house, now, gemCtx.addressReveal);
   const bareClass = face === "bare" ? " is-undecorated" : "";
   const visitedClass = extras?.visited ? " is-visited" : "";
+  const skippedClass = extras?.skipped && !extras?.visited ? " is-skipped" : "";
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = pinBackgroundFill(house, face !== "bare");
@@ -221,7 +216,7 @@ function housePinHtml(
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal, extras?.skipped)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${skippedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();

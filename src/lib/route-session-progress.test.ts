@@ -43,7 +43,7 @@ function stub(id: string, lat: number, lng: number): PublicHouse {
 }
 
 describe("routeProgressSegments", () => {
-  it("hides legs to an orphan visit until bridged by adjacent done stops", () => {
+  it("keeps full tour legs; orphan visits stay orange until bridged", () => {
     const houses = [
       stub("a", 32.091, 34.801),
       stub("b", 32.092, 34.802),
@@ -51,14 +51,14 @@ describe("routeProgressSegments", () => {
     ];
     const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
     assert.ok(route);
-    assert.equal(routeProgressSegments(route, ["c"], []).length, 1);
-    assert.equal(routeProgressSegments(route, ["c"], [])[0]!.done, false);
+    assert.equal(routeProgressSegments(route, ["c"], []).length, 2);
+    assert.equal(routeProgressSegments(route, ["c"], [])[1]!.done, false);
     const bridged = routeProgressSegments(route, ["b", "c"], []);
-    assert.equal(bridged.length, 1);
-    assert.equal(bridged[0]!.done, true);
+    assert.equal(bridged.length, 2);
+    assert.equal(bridged[1]!.done, true);
   });
 
-  it("removes legs through a skipped stop", () => {
+  it("keeps legs through a skipped stop", () => {
     const houses = [
       stub("a", 32.091, 34.801),
       stub("b", 32.092, 34.802),
@@ -66,7 +66,7 @@ describe("routeProgressSegments", () => {
     ];
     const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
     assert.ok(route);
-    assert.equal(routeProgressSegments(route, [], ["b"]).length, 0);
+    assert.equal(routeProgressSegments(route, [], ["b"]).length, 2);
   });
 });
 
