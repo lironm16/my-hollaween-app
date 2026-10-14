@@ -327,22 +327,22 @@ export function AdminPushPanel() {
             <PushNotice payload={previewPayload} />
             <div className="flex gap-2">
               <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={savingEdit}
-                className="text-violet-200"
-                onClick={cancelEdit}
-              >
-                סגור
-              </Button>
-              <Button
                 type="submit"
                 size="sm"
                 disabled={savingEdit || !draftTitle.trim() || !draftBody.trim() || !draftChanged}
-                className="bg-orange-500 text-black hover:bg-orange-400"
+                className="min-h-10 flex-1 bg-orange-500 text-black hover:bg-orange-400"
               >
                 {savingEdit ? "שומרים…" : "שמירה"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={savingEdit}
+                className="min-h-10 flex-1 text-violet-200"
+                onClick={cancelEdit}
+              >
+                סגור
               </Button>
             </div>
           </form>

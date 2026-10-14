@@ -875,17 +875,6 @@ export function HouseForm({
           </div>
       </FormSection>
       <div className={onCancel ? "flex gap-2" : undefined}>
-        {onCancel ? (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={blocked}
-            className="h-11 flex-1 text-lg"
-            onClick={onCancel}
-          >
-            ביטול
-          </Button>
-        ) : null}
         <Button
           type="submit"
           disabled={blocked}
@@ -897,6 +886,17 @@ export function HouseForm({
         >
           {blocked ? "שומרים בשרת…" : submitLabel}
         </Button>
+        {onCancel ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={blocked}
+            className="h-11 flex-1 text-lg"
+            onClick={onCancel}
+          >
+            ביטול
+          </Button>
+        ) : null}
       </div>
       {extraActions}
     </form>

@@ -68,15 +68,15 @@ export function VisitSkipConflictDialog({
           <span>לא להציג שוב</span>
         </label>
         <div className="flex gap-2 pt-1">
-          <Button type="button" variant="outline" className="min-w-0 flex-1 text-lg" onClick={onCancel}>
-            ביטול
-          </Button>
           <Button
             type="button"
             className="min-w-0 flex-1 bg-orange-500 text-lg text-black hover:bg-orange-400"
             onClick={() => onConfirm(dismissFuture)}
           >
             אישור
+          </Button>
+          <Button type="button" variant="outline" className="min-w-0 flex-1 text-lg" onClick={onCancel}>
+            ביטול
           </Button>
         </div>
       </div>
