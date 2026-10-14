@@ -24,17 +24,11 @@ export type RouteListItem = {
   distanceM?: number;
 };
 
-function routeLegClass(tone: TourLegTone = "open-route") {
-  return `route-list-leg-line--${tone}`;
-}
-
-function RouteLeg({ label, tone = "open-route" }: { label?: string; tone?: TourLegTone }) {
+function RouteLeg({ label }: { label?: string }) {
   return (
     <div className={cn("route-list-leg", !label && "route-list-leg--line-only")}>
-      <span className={cn("route-list-leg-line", routeLegClass(tone))} aria-hidden="true" />
-      {label ? (
-        <span className={cn("route-list-leg-label", `route-list-leg-label--${tone}`)}>{label}</span>
-      ) : null}
+      <span className="route-list-leg-line" aria-hidden="true" />
+      {label ? <span className="route-list-leg-label">{label}</span> : null}
     </div>
   );
 }
@@ -195,7 +189,7 @@ export function RouteList({
               {showSkippedHeading && !doneCollapsed ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
-              <RouteLeg label={hop || undefined} tone={tone} />
+              <RouteLeg label={hop || undefined} />
               {doneCollapsed ? (
                 <RouteListCollapsedHouse
                   house={house}

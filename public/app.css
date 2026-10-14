@@ -5916,7 +5916,7 @@ svg.leaflet-zoom-animated {
   width: 56px;
   height: 56px;
   border-radius: 999px;
-  background: #fff7ed !important;
+  background: #6d28d9 !important;
   border: 4px solid #fff7ed;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
@@ -6076,24 +6076,11 @@ svg.leaflet-zoom-animated {
 .house-pin.is-undecorated {
   background: #94a3b8 !important;
 }
+.house-pin.is-poi {
+  background: #f97316 !important;
+}
 .house-pin.is-poi.is-undecorated {
   background: #78716c !important;
-}
-.house-pin:not(.is-poi):not(.is-undecorated):not(.is-building) .pin-scare {
-  filter: brightness(0) saturate(100%) invert(24%) sepia(98%) saturate(2800%) hue-rotate(252deg)
-    brightness(92%) contrast(95%);
-}
-.house-pin.is-poi:not(.is-undecorated) .pin-scare {
-  filter: brightness(0) saturate(100%) invert(52%) sepia(95%) saturate(4200%) hue-rotate(360deg)
-    brightness(102%) contrast(101%);
-}
-.pin-cluster-houses .pin-cluster-art {
-  filter: brightness(0) saturate(100%) invert(24%) sepia(98%) saturate(2800%) hue-rotate(252deg)
-    brightness(92%) contrast(95%);
-}
-.pin-cluster-businesses .pin-cluster-art {
-  filter: brightness(0) saturate(100%) invert(52%) sepia(95%) saturate(4200%) hue-rotate(360deg)
-    brightness(102%) contrast(101%);
 }
 .house-pin.is-poi .pin-scare {
   width: 88% !important;
@@ -6233,10 +6220,20 @@ svg.leaflet-zoom-animated {
   left: 50%;
   transform: translateX(-50%);
 }
-.house-pin.is-cluster-houses,
-.house-pin.is-cluster-businesses,
+.house-pin.is-cluster-houses {
+  background: #6d28d9 !important;
+}
+.house-pin.is-cluster-businesses {
+  background: #f97316 !important;
+}
 .house-pin.is-cluster-mixed {
-  background: #fff7ed !important;
+  background: linear-gradient(
+    to right,
+    #6d28d9 0%,
+    #6d28d9 50%,
+    #f97316 50%,
+    #f97316 100%
+  ) !important;
 }
 .house-pin.is-route-ring {
   border-color: #f97316;
@@ -6247,7 +6244,7 @@ svg.leaflet-zoom-animated {
 .house-pin.pin-tour-ring::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -4px;
   z-index: 0;
   border-radius: inherit;
   padding: 4px;
@@ -9372,7 +9369,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: 3px;
   flex-shrink: 0;
   border-radius: 999px;
-  background: #f97316;
+  background: #a855f7;
 }
 .route-list-leg-line--visited {
   background: #059669;
@@ -9396,7 +9393,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   align-self: center;
   font-size: 1rem;
   font-weight: 600;
-  color: #fdba74;
+  color: #c4b5fd;
 }
 .route-list-leg-label--visited {
   color: #6ee7b7;
