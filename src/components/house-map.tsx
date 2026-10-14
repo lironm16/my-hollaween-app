@@ -34,6 +34,10 @@ import {
   type LatLng,
 } from "@/lib/route";
 import {
+  ROUTE_ORIGIN_PURPLE,
+  ROUTE_ORIGIN_PURPLE_SHADOW,
+  ROUTE_SKIPPED_GRAY,
+  ROUTE_SKIPPED_GRAY_SHADOW,
   ROUTE_VISITED_GREEN,
   ROUTE_VISITED_GREEN_SHADOW,
 } from "@/lib/route-session-progress";
@@ -696,9 +700,8 @@ type Props = {
   locating?: boolean;
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
-  routeLineSegments?: { points: [LatLng, LatLng]; done: boolean }[] | null;
-  approachLegDone?: boolean;
-  /** Dashed origin spur aims at the next unvisited tour stop (not always stop 1). */
+  routeLineSegments?: { points: [LatLng, LatLng]; done: boolean; skipped?: boolean }[] | null;
+  /** Dashed purple origin spur — always to tour stop 1 when set. */
   approachTarget?: LatLng | null;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Pinned stop numbers for visited/skipped houses still shown on the map in route mode. */
@@ -759,7 +762,6 @@ export function HouseMap({
   onLocate,
   routeLine = null,
   routeLineSegments = null,
-  approachLegDone = false,
   approachTarget = null,
   routeStops = null,
   routeSessionDisplayOrders = null,
@@ -860,6 +862,7 @@ export function HouseMap({
     () =>
       routeLineSegments?.map((segment) => ({
         done: segment.done,
+        skipped: segment.skipped,
         positions: segment.points.map(
           (point) => [point.lat, point.lng] as [number, number],
         ),
@@ -995,7 +998,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: approachLegDone ? ROUTE_VISITED_GREEN_SHADOW : "#7c2d12",
+                color: ROUTE_ORIGIN_PURPLE_SHADOW,
                 weight: 6,
                 opacity: 0.35,
                 dashArray: "8 9",
@@ -1008,7 +1011,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: approachLegDone ? ROUTE_VISITED_GREEN : "#fdba74",
+                color: ROUTE_ORIGIN_PURPLE,
                 weight: 4,
                 opacity: 0.9,
                 dashArray: "8 9",
@@ -1021,14 +1024,25 @@ export function HouseMap({
           </>
         ) : null}
         {!pickMode && useSegmentRoute
-          ? routeSegmentLines.map((segment, index) => (
+          ? routeSegmentLines.map((segment, index) => {
+              const shadow = segment.skipped
+                ? ROUTE_SKIPPED_GRAY_SHADOW
+                : segment.done
+                  ? ROUTE_VISITED_GREEN_SHADOW
+                  : "#9a3412";
+              const stroke = segment.skipped
+                ? ROUTE_SKIPPED_GRAY
+                : segment.done
+                  ? ROUTE_VISITED_GREEN
+                  : "#f97316";
+              return (
               <Fragment key={`route-seg-${index}`}>
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: segment.done ? ROUTE_VISITED_GREEN_SHADOW : "#9a3412",
+                    color: shadow,
                     weight: 8,
-                    opacity: segment.done ? 0.45 : 0.4,
+                    opacity: segment.done || segment.skipped ? 0.45 : 0.4,
                     lineCap: "round",
                     lineJoin: "round",
                   }}
@@ -1038,7 +1052,7 @@ export function HouseMap({
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: segment.done ? ROUTE_VISITED_GREEN : "#f97316",
+                    color: stroke,
                     weight: 5,
                     opacity: 1,
                     lineCap: "round",
@@ -1048,7 +1062,8 @@ export function HouseMap({
                   interactive={false}
                 />
               </Fragment>
-            ))
+              );
+            })
           : null}
         {!pickMode && !useSegmentRoute && routePositions ? (
           <>

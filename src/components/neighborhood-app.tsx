@@ -42,12 +42,7 @@ import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { buildRouteListItems } from "@/lib/route-list-items";
-import {
-  approachLegDone,
-  nextApproachStopPoint,
-  stopForHouse,
-  stopHasRemainingActive,
-} from "@/lib/route-session-progress";
+import { firstRouteStopPoint } from "@/lib/route-session-progress";
 import { routeDisplayOrder } from "@/lib/route-display-order";
 import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
@@ -166,9 +161,7 @@ import {
   writePendingRouteShare,
   type SharedRoutePayload,
 } from "@/lib/route-share";
-import { diffRouteBySkippedIds, rebuildRouteAfterSkipChange } from "@/lib/route-changes";
 import { useRouteStatusAlerts } from "@/hooks/use-route-status-alerts";
-import { drainPendingRouteRestores } from "@/lib/route-mode";
 import {
   availableTemporaryRestoreOptions,
   skipStatusSnapshot,
@@ -920,35 +913,6 @@ export function NeighborhoodApp({
     routeSessionDisplayOrders,
   ]);
 
-  function applyRouteAfterSkipChange(
-    nextSkippedIds: string[],
-    includeNew: boolean,
-    nextVisitedIds: string[] = filterContext.visitedIds,
-  ) {
-    const rebuilt = rebuildRouteAfterSkipChange(
-      pinnedRoute,
-      houses,
-      filters,
-      { ...filterContext, visitedIds: nextVisitedIds },
-      nextSkippedIds,
-      includeNew,
-      { lat: origin.lat, lng: origin.lng },
-      {
-        accessible: accessibleOnly,
-        startedFrom: origin.kind,
-        originLabel: origin.label,
-      },
-    );
-    setPinnedRoute(rebuilt);
-  }
-
-  useEffect(() => {
-    if (!routeMode || houses.length === 0) return;
-    const pending = drainPendingRouteRestores();
-    if (pending.length === 0) return;
-    applyRouteAfterSkipChange(skips.skippedIds, true);
-  }, [routeMode, houses.length, skips.skippedIds.join("\0")]);
-
   useEffect(() => {
     const houseById = new Map(housesForSkipCount.map((house) => [house.id, house]));
     const toRestore = skips.skippedIds.filter((id) => {
@@ -972,9 +936,6 @@ export function NeighborhoodApp({
     }
     const nextSkippedIds = skips.skippedIds.filter((id) => !toRestore.includes(id));
     for (const id of toRestore) skips.unskip(id);
-    if (routeMode) {
-      applyRouteAfterSkipChange(nextSkippedIds, true);
-    }
   }, [routeMode, housesForSkipCount, now, filters, skips.skippedIds.join("\0")]);
 
   function applySkipHouse(
@@ -1000,19 +961,6 @@ export function NeighborhoodApp({
       skips.skip(house.id, meta);
     }
     skips.clearNote(house.id);
-    if (routeMode && !wasSkipped) {
-      const plan = routeSessionPlan ?? pinnedRoute ?? activeRoute ?? filterRoute;
-      const stop = plan ? stopForHouse(plan, house.id) : undefined;
-      const nextVisitedIds = visits.visited(house.id)
-        ? visits.visitedIds.filter((item) => item !== house.id)
-        : visits.visitedIds;
-      const needsRebuild =
-        !stop ||
-        !stopHasRemainingActive(stop, nextVisitedIds, nextSkippedIds);
-      if (needsRebuild) {
-        applyRouteAfterSkipChange(nextSkippedIds, false, nextVisitedIds);
-      }
-    }
   }
 
   function proceedWithSkipHouse(house: PublicHouse) {
@@ -1149,15 +1097,6 @@ export function NeighborhoodApp({
     if (!skips.skipped(id)) return;
     const nextSkippedIds = skips.skippedIds.filter((item) => item !== id);
     skips.unskip(id);
-    if (!routeMode) return;
-    const { added } = diffRouteBySkippedIds(
-      pinnedRoute,
-      houses,
-      filters,
-      filterContext,
-      nextSkippedIds,
-    );
-    applyRouteAfterSkipChange(nextSkippedIds, added.length > 0);
   }
   const { line: routeLine, segments: routeLineSegments } = useRouteGeometry(
     routePlan,
@@ -1165,14 +1104,8 @@ export function NeighborhoodApp({
     visits.visitedIds,
     skips.skippedIds,
   );
-  const routeApproachDone =
-    routePlan && routeMode
-      ? approachLegDone(routePlan, visits.visitedIds, skips.skippedIds)
-      : false;
   const routeApproachTarget =
-    routePlan && routeMode
-      ? nextApproachStopPoint(routePlan, visits.visitedIds, skips.skippedIds)
-      : null;
+    routePlan && routeMode ? firstRouteStopPoint(routePlan) : null;
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
@@ -1624,7 +1557,6 @@ export function NeighborhoodApp({
                   routeLineSegments={
                     routeMode && !originPick.originPickActive ? routeLineSegments : null
                   }
-                  approachLegDone={routeMode && routeApproachDone}
                   approachTarget={routeMode && !originPick.originPickActive ? routeApproachTarget : null}
                   routeStart={routeMode ? origin : null}
                   routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
@@ -1746,7 +1678,6 @@ export function NeighborhoodApp({
                     actionContext={houseActionContext}
                     originLabel={routePlan?.originLabel}
                     startedFrom={routePlan?.startedFrom}
-                    originLegDone={routeApproachDone}
                     hasGps={Boolean(gps)}
                     onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
                     onChangeOrigin={() => originPick.setOriginPickerOpen(true)}

@@ -4,6 +4,10 @@ import type { LatLng, RouteStop, WalkingRoute } from "@/lib/route";
 /** Same green as `.house-pin.is-visited` on the map. */
 export const ROUTE_VISITED_GREEN = "#059669";
 export const ROUTE_VISITED_GREEN_SHADOW = "#047857";
+export const ROUTE_SKIPPED_GRAY = "#64748b";
+export const ROUTE_SKIPPED_GRAY_SHADOW = "#475569";
+export const ROUTE_ORIGIN_PURPLE = "#a855f7";
+export const ROUTE_ORIGIN_PURPLE_SHADOW = "#7e22ce";
 
 export function stopForHouse(route: WalkingRoute, houseId: string): RouteStop | undefined {
   return route.stops.find((stop) => stop.houses.some((house) => house.id === houseId));
@@ -56,10 +60,24 @@ export function routePrefixStopCount(
 
 export type RouteProgressSegment = {
   points: [LatLng, LatLng];
+  /** Green leg leading onto a visited stop/house. */
   done: boolean;
+  /** Gray leg leading onto a skipped stop/house. */
+  skipped?: boolean;
 };
 
-/** Stop-to-stop legs for the full pinned tour; green when both ends are done. */
+/** Color of the connector onto this house (list legs and map segments use the same rules). */
+export function legStyleForHouse(
+  houseId: string,
+  visitedIds: ReadonlySet<string>,
+  skippedIds: ReadonlySet<string>,
+): { legDone: boolean; legSkipped: boolean } {
+  if (skippedIds.has(houseId)) return { legDone: false, legSkipped: true };
+  if (visitedIds.has(houseId)) return { legDone: true, legSkipped: false };
+  return { legDone: false, legSkipped: false };
+}
+
+/** Stop-to-stop legs for the full pinned tour; color by the destination stop’s lead house. */
 export function routeProgressSegments(
   route: WalkingRoute,
   visitedIds: readonly string[],
@@ -75,12 +93,20 @@ export function routeProgressSegments(
     const a = stopPoint(prev);
     const b = stopPoint(curr);
     if (distanceMeters(a, b) < samePointMeters) continue;
+    const targetId = curr.house.id;
+    const style = legStyleForHouse(targetId, visited, skipped);
     segments.push({
       points: [a, b],
-      done: stopIsDone(prev, visited, skipped) && stopIsDone(curr, visited, skipped),
+      done: style.legDone,
+      skipped: style.legSkipped,
     });
   }
   return segments;
+}
+
+export function firstRouteStopPoint(route: WalkingRoute): LatLng | null {
+  const first = route.stops[0];
+  return first ? stopPoint(first) : null;
 }
 
 /** First tour stop that still has an unvisited, unskipped house. */

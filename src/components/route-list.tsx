@@ -104,7 +104,6 @@ export function RouteList({
   onRequestLocation,
   onChangeOrigin,
   focusId,
-  originLegDone,
 }: {
   items: RouteListItem[];
   actionContext: HouseCardActionContext;
@@ -114,8 +113,6 @@ export function RouteList({
   onRequestLocation?: () => void;
   onChangeOrigin?: () => void;
   focusId?: string | null;
-  /** First leg from start → stop 1 is green when the first stop is done. */
-  originLegDone?: boolean;
 }) {
   const focusRef = useRef<HTMLLIElement | null>(null);
   const addressReveal = useAddressReveal();
@@ -141,7 +138,7 @@ export function RouteList({
         {gpsAction}
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
         <p className="mt-2 text-base">
-          שנו סינון כדי לראות בתים במסלול. בתים שכבר סימנתם כביקור לא נכללים במסלול.
+          שנו סינון כדי לראות בתים במסלול.
         </p>
       </div>
     );
@@ -152,14 +149,9 @@ export function RouteList({
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
       <ol className="route-list">
-        <li className={cn("route-list-card", originLegDone && "route-list-card--done")}>
+        <li className="route-list-card route-list-card--origin">
           <div className="flex items-start gap-3">
-            <span
-              className={cn(
-                "inline-flex size-8 shrink-0 items-center justify-center rounded-full text-black",
-                originLegDone ? "bg-emerald-500" : "bg-orange-500",
-              )}
-            >
+            <span className="route-list-origin-mark" aria-hidden="true">
               <MapPin className="size-4" strokeWidth={2.4} />
             </span>
             <div className="min-w-0 flex-1">

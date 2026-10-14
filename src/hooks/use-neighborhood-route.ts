@@ -138,17 +138,9 @@ export function useNeighborhoodRoute({
       const context = { ...filterContext, skippedIds };
       const candidateIds = new Set(routeCandidates.map((house) => house.id));
       const currentStopIds = current.stops.map((stop) => stop.house.id);
-      const visitedSet = new Set(filterContext.visitedIds);
-      /** Visited stops stay on the pinned tour — only skip/filter may remove them. */
-      const stopLostFromRoute = currentStopIds.some(
-        (id) => !candidateIds.has(id) && !visitedSet.has(id),
-      );
-      const visibleForTrim = new Set(candidateIds);
-      for (const stop of current.stops) {
-        for (const house of stop.houses) {
-          if (visitedSet.has(house.id)) visibleForTrim.add(house.id);
-        }
-      }
+      /** Only filter changes remove stops — visit/skip are progress, not route membership. */
+      const stopLostFromRoute = currentStopIds.some((id) => !candidateIds.has(id));
+      const visibleForTrim = candidateIds;
 
       if (!stopLostFromRoute) {
         if (current.accessible === accessibleOnly) return current;

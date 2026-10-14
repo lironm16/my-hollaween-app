@@ -2049,9 +2049,6 @@
       background-color: color-mix(in oklab, var(--destructive) 10%, transparent);
     }
   }
-  .bg-emerald-500 {
-    background-color: var(--color-emerald-500);
-  }
   .bg-emerald-600 {
     background-color: var(--color-emerald-600);
   }
@@ -9246,8 +9243,20 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   padding: 0.75rem;
   box-shadow: 0 0 0 2px #f97316;
 }
-.route-list-card--done {
-  box-shadow: 0 0 0 2px #059669;
+.route-list-card--origin {
+  box-shadow: 0 0 0 2px #a855f7;
+}
+.route-list-origin-mark {
+  display: inline-flex;
+  size: 2rem;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.45rem;
+  background: #a855f7;
+  color: #1e1033;
 }
 .route-list-house {
   border-radius: 1.1rem;

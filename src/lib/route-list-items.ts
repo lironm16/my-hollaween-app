@@ -4,7 +4,7 @@ import { distanceMeters } from "@/lib/geo";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import type { PublicHouse } from "@/lib/types";
 import { routeDisplayOrder } from "@/lib/route-display-order";
-import { stopIsDone } from "@/lib/route-session-progress";
+import { legStyleForHouse } from "@/lib/route-session-progress";
 import type { WalkingRoute } from "@/lib/route";
 
 export type RouteListItemInput = {
@@ -63,21 +63,7 @@ export function buildRouteListItems(options: {
       const allowed = distanceAllowed(house.id);
       const skipped = skippedSet.has(house.id);
       const visited = visitedSet.has(house.id);
-      const prevStop = stopIdx > 0 ? route.stops[stopIdx - 1] : null;
-      const legFromPrevStopDone =
-        stopIdx === 0
-          ? visited
-          : prevStop
-            ? stopIsDone(prevStop, visitedSet, skippedSet) && stopIsDone(stop, visitedSet, skippedSet)
-            : false;
-      const prevStopBreaks =
-        stopIdx > 0 && route.stops[stopIdx - 1]!.houses.some((h) => skippedSet.has(h.id));
-      const stopBreaks = stop.houses.some((h) => skippedSet.has(h.id));
-      const legSkipped =
-        houseIndex === 0 && stopIdx > 0 && (skipped || prevStopBreaks || stopBreaks);
-      const legDone =
-        !legSkipped &&
-        (houseIndex > 0 ? visited : stopIdx === 0 ? visited : legFromPrevStopDone);
+      const { legDone, legSkipped } = legStyleForHouse(house.id, visitedSet, skippedSet);
       items.push({
         house,
         order: routeDisplayOrder(house.id, stop.order, sessionDisplayOrders),

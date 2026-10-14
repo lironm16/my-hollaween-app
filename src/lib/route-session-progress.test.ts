@@ -52,7 +52,7 @@ describe("routeProgressSegments", () => {
     const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
     assert.ok(route);
     assert.equal(routeProgressSegments(route, ["c"], []).length, 2);
-    assert.equal(routeProgressSegments(route, ["c"], [])[1]!.done, false);
+    assert.equal(routeProgressSegments(route, ["c"], [])[1]!.done, true);
     const bridged = routeProgressSegments(route, ["b", "c"], []);
     assert.equal(bridged.length, 2);
     assert.equal(bridged[1]!.done, true);

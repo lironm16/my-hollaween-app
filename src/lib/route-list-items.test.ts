@@ -195,7 +195,27 @@ describe("buildRouteListItems", () => {
     });
     const cOnly = outOfOrder.find((item) => item.house.id === "c");
     assert.ok(cOnly?.doneCollapsed);
+    assert.equal(cOnly?.legDone, true);
     assert.equal(items.filter((item) => item.visitedTail).length, 0);
+  });
+
+  it("uses gray legs onto skipped houses", () => {
+    const houses = [stub("a"), stub("b")];
+    const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
+    assert.ok(route);
+    const items = buildRouteListItems({
+      route,
+      catalogHouses: houses,
+      houseSet: "real",
+      visitedIds: [],
+      skippedIds: ["b"],
+      origin: { lat: 32.09, lng: 34.81 },
+      distanceLabel: () => "hop",
+      distanceAllowed: () => true,
+    });
+    const b = items.find((item) => item.house.id === "b");
+    assert.equal(b?.legSkipped, true);
+    assert.equal(b?.legDone, false);
   });
 
   it("includes skipped tail houses not on the route", () => {
