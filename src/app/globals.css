@@ -1502,10 +1502,11 @@
   z-index: 12;
 }
 
-/* Single-house pins: candy/skip drops higher on the disc rim. */
-.house-pin:not(.is-building) .pin-status {
-  bottom: 6px;
-  inset-inline-start: -12px;
+/* Single-house pins only — cluster apt dots use .pin-apt-dots (unchanged). */
+.house-pin:not(.is-building) .pin-status,
+.house-pin:not(.is-building) .pin-status.is-skipped {
+  bottom: 18px;
+  inset-inline-start: -11px;
 }
 
 .skip-pin-badge.is-list {
