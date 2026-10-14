@@ -6061,7 +6061,8 @@ svg.leaflet-zoom-animated {
   background: #fff;
   flex-shrink: 0;
 }
-.house-pin .pin-scare {
+.house-pin .pin-scare,
+.house-pin .pin-glyph {
   display: block;
   width: 92% !important;
   height: 92% !important;
@@ -6073,29 +6074,39 @@ svg.leaflet-zoom-animated {
   z-index: 1;
   pointer-events: none;
 }
-.house-pin:not(.is-poi):not(.is-undecorated) .pin-scare {
-  filter: sepia(1) saturate(14) hue-rotate(248deg) brightness(0.72) contrast(1.2);
+.pin-glyph {
+  background-color: #6d28d9;
+  -webkit-mask-image: var(--pin-glyph-mask);
+  mask-image: var(--pin-glyph-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
-.house-pin.is-poi:not(.is-undecorated) .pin-scare {
-  filter: sepia(1) saturate(16) hue-rotate(352deg) brightness(0.82) contrast(1.15);
+.pin-glyph-poi,
+.pin-glyph-cluster-businesses {
+  background-color: #f97316;
 }
-.house-pin.is-cluster-houses .pin-cluster-art {
-  filter: sepia(1) saturate(14) hue-rotate(248deg) brightness(0.72) contrast(1.2);
+.pin-glyph-cluster-houses {
+  background-color: #6d28d9;
 }
-.house-pin.is-cluster-businesses .pin-cluster-art {
-  filter: sepia(1) saturate(16) hue-rotate(352deg) brightness(0.82) contrast(1.15);
+.pin-cluster-icon .pin-glyph {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
 }
 .house-pin.is-undecorated {
   background: #fff7ed !important;
   border-color: transparent;
 }
-.house-pin.is-undecorated .pin-scare {
-  filter: grayscale(1) brightness(0.42) contrast(1.05);
+.house-pin.is-undecorated .pin-glyph {
+  background-color: #94a3b8;
 }
-.house-pin.is-poi.is-undecorated .pin-scare {
-  filter: grayscale(1) brightness(0.42) contrast(1.05);
-}
-.house-pin.is-poi .pin-scare {
+.house-pin.is-poi .pin-scare,
+.house-pin.is-poi .pin-glyph {
   width: 88% !important;
   height: 88% !important;
   max-width: 88% !important;

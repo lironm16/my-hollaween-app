@@ -83,7 +83,7 @@ describe("pinBuildingClusterIconHtml", () => {
     const houses = [house("a"), house("b")];
     const html = pinBuildingClusterIconHtml(houses);
     assert.match(html, /pin-cluster-houses/);
-    assert.match(html, /pin-cluster-art/);
+    assert.match(html, /pin-glyph-cluster-houses/);
     assert.match(html, /pin-cluster-ghosts\.png/);
   });
 

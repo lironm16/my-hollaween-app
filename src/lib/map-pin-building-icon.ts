@@ -1,4 +1,5 @@
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
+import { pinGlyphHtml } from "@/lib/pin-glyph-html";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import type { PublicHouse } from "@/lib/types";
 
@@ -66,5 +67,9 @@ export function pinBuildingClusterIconHtml(houses: PublicHouse[]) {
   const kind = buildingClusterIconKind(houses);
   if (!kind) return "";
   const { src, src2x, width, height } = CLUSTER_ICON[kind];
-  return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind}" aria-hidden="true"><img class="pin-cluster-art" src="${src}" srcset="${src} 1x, ${src2x} 2x" width="${width}" height="${height}" alt="" decoding="async" /></span>`;
+  if (kind === "mixed") {
+    return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind}" aria-hidden="true"><img class="pin-cluster-art" src="${src}" srcset="${src} 1x, ${src2x} 2x" width="${width}" height="${height}" alt="" decoding="async" /></span>`;
+  }
+  const glyphKind = kind === "houses" ? "cluster-houses" : "cluster-businesses";
+  return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind}" aria-hidden="true">${pinGlyphHtml(src, glyphKind)}</span>`;
 }
