@@ -34,7 +34,11 @@ import {
   type LatLng,
 } from "@/lib/route";
 import { pinTourRingDecor } from "@/lib/map-cluster-tour-fill";
-import { tourLegStrokeColors, tourLegTone, type TourLegTone } from "@/lib/route-session-progress";
+import {
+  ROUTE_ORIGIN_PURPLE,
+  ROUTE_ORIGIN_PURPLE_SHADOW,
+  type TourLegTone,
+} from "@/lib/route-session-progress";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { useCatalog } from "@/hooks/use-catalog";
 import {
@@ -352,7 +356,7 @@ function clusterIcon(
 const pickIcon = L.divIcon({
   className: "pumpkin-pin-icon",
   html: `<div class="house-pin is-pick" style="background:#6d28d9"><span>📍</span></div>`,
-  iconSize: [PIN_BOX, PIN_BOX + 4],
+  iconSize: [PIN_BOX, PIN_DISC],
   iconAnchor: [PIN_BOX / 2, PIN_DISC / 2],
 });
 

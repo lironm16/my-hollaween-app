@@ -6240,6 +6240,7 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.pin-tour-ring {
   border-color: transparent;
+  overflow: visible;
 }
 .house-pin.pin-tour-ring::before {
   content: "";
