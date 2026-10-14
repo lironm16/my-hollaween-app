@@ -5,7 +5,7 @@ import {
   isHoursNightOver,
   isOpeningSoon,
 } from "@/lib/hours";
-import type { PublicHouse } from "@/lib/types";
+import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
 export type MapGemPinRingVariant = "sparkle" | "diamond";
 
@@ -13,13 +13,15 @@ export type MapGemPinRingContext = {
   showGemRings: boolean;
   gemHouseIds: ReadonlySet<string>;
   isCollected: (houseId: string) => boolean;
+  addressReveal?: AddressRevealSchedule;
 };
 
 export function pinHoursRingKind(
   house: PublicHouse,
   now: Date,
+  addressReveal?: AddressRevealSchedule,
 ): "closing" | "opening" | null {
-  if (isClosingSoon(house, now) && !clusterPinVisitKind(house, now)) return "closing";
+  if (isClosingSoon(house, now) && !clusterPinVisitKind(house, now, addressReveal)) return "closing";
   if (
     isOpeningSoon(house, now) &&
     effectiveVisit(house) !== "closed" &&
@@ -33,9 +35,10 @@ export function pinHoursRingKind(
 export function clusterHoursRingKind(
   houses: PublicHouse[],
   now: Date,
+  addressReveal?: AddressRevealSchedule,
 ): "closing" | "opening" | null {
-  if (houses.some((house) => pinHoursRingKind(house, now) === "closing")) return "closing";
-  if (houses.some((house) => pinHoursRingKind(house, now) === "opening")) return "opening";
+  if (houses.some((house) => pinHoursRingKind(house, now, addressReveal) === "closing")) return "closing";
+  if (houses.some((house) => pinHoursRingKind(house, now, addressReveal) === "opening")) return "opening";
   return null;
 }
 
@@ -79,7 +82,7 @@ export function mapPinRingDecorForHouse(
   now: Date,
   ctx: MapGemPinRingContext,
 ): MapPinRingDecor {
-  const hoursKind = pinHoursRingKind(house, now);
+  const hoursKind = pinHoursRingKind(house, now, ctx.addressReveal);
   const uncollected = houseHasUncollectedMapGem(house.id, ctx);
   const gemVariant = resolveMapGemPinRingVariant(uncollected, hoursKind, ctx.showGemRings);
 
@@ -102,7 +105,7 @@ export function mapPinRingDecorForCluster(
   now: Date,
   ctx: MapGemPinRingContext,
 ): MapPinRingDecor {
-  const hoursKind = clusterHoursRingKind(houses, now);
+  const hoursKind = clusterHoursRingKind(houses, now, ctx.addressReveal);
   const uncollected = clusterHasUncollectedMapGem(houses, ctx);
   const gemVariant = resolveMapGemPinRingVariant(uncollected, hoursKind, ctx.showGemRings);
 

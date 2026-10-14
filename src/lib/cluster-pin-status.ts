@@ -1,6 +1,6 @@
 import { candyPinDot, effectiveVisit, isOwnerFrozen } from "@/lib/house-state";
-import { isHoursNightOver, isHoursNotYetOpen, isOnBreak } from "@/lib/hours";
-import type { PublicHouse } from "@/lib/types";
+import { isHouseClosedBeforeOpening, isHoursNightOver, isOnBreak } from "@/lib/hours";
+import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
 export type ClusterPinStatus =
   | "plenty"
@@ -14,10 +14,11 @@ export type ClusterPinStatus =
 export function clusterPinVisitKind(
   house: PublicHouse,
   now: Date,
+  addressReveal?: AddressRevealSchedule,
 ): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
   if (isHoursNightOver(house, now)) return "closed";
-  if (isHoursNotYetOpen(house, now)) return "closed";
+  if (isHouseClosedBeforeOpening(house, now, addressReveal)) return "closed";
   if (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now)) return "break";
   return null;
 }
@@ -25,10 +26,10 @@ export function clusterPinVisitKind(
 export function clusterPinStatus(
   house: PublicHouse,
   now: Date,
-  opts?: { skipped?: boolean },
+  opts?: { skipped?: boolean; addressReveal?: AddressRevealSchedule },
 ): ClusterPinStatus {
   if (opts?.skipped) return "skipped";
-  const visit = clusterPinVisitKind(house, now);
+  const visit = clusterPinVisitKind(house, now, opts?.addressReveal);
   if (visit === "closed") return "closed";
   if (visit === "break") return "break";
   return candyPinDot(house) ?? "out";

@@ -8,7 +8,8 @@ import { PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { cn } from "@/lib/utils";
-import { isHoursNightOver, isHoursNotYetOpen, isOnBreak } from "@/lib/hours";
+import { useCatalog } from "@/hooks/use-catalog";
+import { isHouseClosedBeforeOpening, isHoursNightOver, isOnBreak } from "@/lib/hours";
 import {
   effectiveVisit,
   isOwnerFrozen,
@@ -80,6 +81,7 @@ export function HouseTags({
   large?: boolean;
 }) {
   const now = useAppNow();
+  const { catalog } = useCatalog();
   const treats = house.treats ?? [];
   const withTreats = { treats, treatStock: house.treatStock };
   const scare = house.scareLevel ?? "mild";
@@ -87,11 +89,10 @@ export function HouseTags({
   const gluten = markedGlutenFree(withTreats);
   const glutenOut = gluten && treatLevel(withTreats, "glutenFree") === "out";
   const undecorated = resolveDecorLevel(house) === "none";
-  const eveningMin = now.getHours() * 60 + now.getMinutes();
   const closedInsteadOfCandy =
     effectiveVisit(house) === "closed" ||
     isHoursNightOver(house, now) ||
-    (eveningMin >= 17 * 60 && isHoursNotYetOpen(house, now));
+    isHouseClosedBeforeOpening(house, now, catalog?.eventSettings?.addressReveal);
   const pausedInsteadOfCandy =
     !closedInsteadOfCandy &&
     (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now));

@@ -34,7 +34,15 @@ import {
   type LatLng,
 } from "@/lib/route";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
-import { isClosingSoon, isHoursNightOver, isHoursNotYetOpen, isOnBreak, isOpeningSoon } from "@/lib/hours";
+import { useCatalog } from "@/hooks/use-catalog";
+import {
+  isClosingSoon,
+  isHouseClosedBeforeOpening,
+  isHoursNightOver,
+  isOnBreak,
+  isOpeningSoon,
+} from "@/lib/hours";
+import type { AddressRevealSchedule } from "@/lib/types";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
@@ -94,10 +102,14 @@ function attr(value: string) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
-function pinVisitKind(house: PublicHouse, now: Date): "closed" | "break" | null {
+function pinVisitKind(
+  house: PublicHouse,
+  now: Date,
+  addressReveal?: AddressRevealSchedule,
+): "closed" | "break" | null {
   if (effectiveVisit(house) === "closed") return "closed";
   if (isHoursNightOver(house, now)) return "closed";
-  if (isHoursNotYetOpen(house, now)) return "closed";
+  if (isHouseClosedBeforeOpening(house, now, addressReveal)) return "closed";
   if (isOwnerFrozen(house, now.getTime()) || isOnBreak(house, now)) return "break";
   return null;
 }
@@ -110,9 +122,14 @@ function pinSkippedMark() {
   return `<b class="pin-status is-skipped" aria-label="דילגתי">${SKIP_ICON_SVG}</b>`;
 }
 
-function pinStatusMark(house: PublicHouse, now: Date, skipped = false) {
+function pinStatusMark(
+  house: PublicHouse,
+  now: Date,
+  addressReveal: AddressRevealSchedule | undefined,
+  skipped = false,
+) {
   if (skipped) return pinSkippedMark();
-  const visit = pinVisitKind(house, now);
+  const visit = pinVisitKind(house, now, addressReveal);
   if (visit === "closed") {
     return `<b class="pin-status is-closed" aria-label="סגור"></b>`;
   }
@@ -138,6 +155,7 @@ function pinClusterIconHtml(houses: PublicHouse[]) {
 function clusterAptDotsHtml(
   houses: PublicHouse[],
   now: Date,
+  addressReveal: AddressRevealSchedule | undefined,
   matchedIds?: ReadonlySet<string>,
   skippedIds?: ReadonlySet<string>,
   /** School campus shows candy/skip even for a single booth. */
@@ -151,7 +169,7 @@ function clusterAptDotsHtml(
       if (skippedIds?.has(house.id)) {
         return `<i class="pin-apt-dot is-skipped${filteredClass}"></i>`;
       }
-      const visit = pinVisitKind(house, now);
+      const visit = pinVisitKind(house, now, addressReveal);
       if (visit === "closed") return `<i class="pin-apt-dot is-closed${filteredClass}"></i>`;
       if (visit === "break") return `<i class="pin-apt-dot is-break${filteredClass}"></i>`;
       const dot = candyPinDot(house) ?? "out";
@@ -179,7 +197,7 @@ function housePinHtml(
   const filteredClass = extras?.filteredOut ? " is-filtered-out" : "";
   const { hoursSoonClass: hoursClass, ringHtml } = mapPinRingDecorForHouse(house, now, gemCtx);
   const face = pinFaceKind(house);
-  const visit = pinVisitKind(house, now);
+  const visit = pinVisitKind(house, now, gemCtx.addressReveal);
   const bareClass = face === "bare" ? " is-undecorated" : "";
   const visitedClass = extras?.visited ? " is-visited" : "";
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
@@ -199,7 +217,7 @@ function housePinHtml(
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, extras?.skipped)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal, extras?.skipped)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
@@ -270,7 +288,7 @@ function clusterIcon(
   const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
   const pinStyleAttr = schoolCampus ? ` style="background:${pinFill}"` : "";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${clusterKindClass}${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, matchedIds, skippedIds, schoolCampus)}</div>`,
+    `<div class="house-pin is-building${clusterKindClass}${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
@@ -765,14 +783,17 @@ export function HouseMap({
   showGemPinRings = false,
   gemAnchorEdit = null,
 }: Props) {
+  const { catalog } = useCatalog();
+  const addressRevealSchedule = catalog?.eventSettings?.addressReveal;
   const gemHouseIds = useMemo(() => gemMapHouseIdSet(gemAnchorHouses), [gemAnchorHouses]);
   const gemPinRingCtx = useMemo(
     (): MapGemPinRingContext => ({
       showGemRings: showGemPinRings,
       gemHouseIds,
       isCollected: isGemCollected ?? (() => true),
+      addressReveal: addressRevealSchedule,
     }),
-    [showGemPinRings, gemHouseIds, isGemCollected],
+    [showGemPinRings, gemHouseIds, isGemCollected, addressRevealSchedule],
   );
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),

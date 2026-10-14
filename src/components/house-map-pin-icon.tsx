@@ -1,6 +1,7 @@
 "use client";
 
 import { SkipIcon } from "@/components/skip-icon";
+import { useCatalog } from "@/hooks/use-catalog";
 import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { pinBackgroundFill } from "@/lib/pin-colors";
@@ -25,9 +26,11 @@ export function HouseMapPinIcon({
   visited?: boolean;
   className?: string;
 }) {
+  const { catalog } = useCatalog();
+  const addressReveal = catalog?.eventSettings?.addressReveal;
   const decorated = isDecorated(house);
-  const visit = clusterPinVisitKind(house, now);
-  const status = clusterPinStatus(house, now, { skipped });
+  const visit = clusterPinVisitKind(house, now, addressReveal);
+  const status = clusterPinStatus(house, now, { skipped, addressReveal });
   const closingSoon = isClosingSoon(house, now) && !visit;
   const openingSoon =
     isOpeningSoon(house, now) &&
