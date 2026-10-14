@@ -58,7 +58,11 @@ export function useNeighborhoodRoute({
   onBeforeEnter: () => void;
 }) {
   const [routeMode, setRouteMode] = useState(() => readRouteMode());
-  const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
+  const [pinnedRoute, setPinnedRouteState] = useState<WalkingRoute | null>(null);
+  const setPinnedRoute = useCallback((route: WalkingRoute | null) => {
+    setPinnedRouteState(route);
+    setRouteSessionPlan(route);
+  }, []);
   const [routeSessionDisplayOrders, setRouteSessionDisplayOrders] =
     useState<Map<string, number> | null>(null);
   /** Full tour geometry for map/list progress — updates on skip/rebuild, not on in-order visits. */
@@ -84,8 +88,10 @@ export function useNeighborhoodRoute({
   }, [routeCandidates, accessibleOnly, origin]);
 
   const pinCurrentRoute = useCallback(() => {
+    if (!filterRoute) return;
     setPinnedRoute(filterRoute);
-  }, [filterRoute]);
+    setRouteSessionDisplayOrders(captureRouteDisplayOrders(filterRoute));
+  }, [filterRoute, setPinnedRoute]);
 
   const clearPendingRouteGps = useCallback(() => {
     pendingRouteGps.current = false;
@@ -94,20 +100,22 @@ export function useNeighborhoodRoute({
   useEffect(() => {
     if (!routeMode || !pendingRouteGps.current || !gps) return;
     pendingRouteGps.current = false;
-    setPinnedRoute((current) => {
+    setPinnedRouteState((current) => {
       const base = current ?? filterRoute;
       if (!base) return filterRoute;
-      return refreshWalkingRoute(base, { lat: gps.lat, lng: gps.lng }, {
+      const refreshed = refreshWalkingRoute(base, { lat: gps.lat, lng: gps.lng }, {
         startedFrom: "gps",
         accessible: accessibleOnly,
         originLabel: origin.label,
       });
+      setRouteSessionPlan(refreshed);
+      return refreshed;
     });
   }, [routeMode, gps, filterRoute, accessibleOnly, origin.label]);
 
   useEffect(() => {
     if (!routeMode || pendingRouteGps.current) return;
-    setPinnedRoute((current) => {
+    setPinnedRouteState((current) => {
       if (!current) return current;
       const routeOptions = {
         accessible: accessibleOnly,
@@ -115,35 +123,47 @@ export function useNeighborhoodRoute({
         originLabel: origin.label,
       };
       if (shouldReoptimizeRoute(current, origin)) {
-        return buildWalkingRoute(routeCandidates, originPoint(origin), routeOptions);
+        const reoptimized = buildWalkingRoute(routeCandidates, originPoint(origin), routeOptions);
+        setRouteSessionPlan(reoptimized);
+        return reoptimized;
       }
 
       const context = { ...filterContext, skippedIds };
       const candidateIds = new Set(routeCandidates.map((house) => house.id));
       const currentStopIds = current.stops.map((stop) => stop.house.id);
-      const hasNewCandidates = routeCandidates.some((house) => !currentStopIds.includes(house.id));
       const visitedSet = new Set(filterContext.visitedIds);
-      const hasRemovedStops = currentStopIds.some(
+      /** Visited stops stay on the pinned tour — only skip/filter may remove them. */
+      const stopLostFromRoute = currentStopIds.some(
         (id) => !candidateIds.has(id) && !visitedSet.has(id),
       );
-
-      if (!hasNewCandidates && !hasRemovedStops) {
-        if (current.accessible === accessibleOnly) return current;
-        const trimmed = trimWalkingRouteToVisible(current, candidateIds);
-        if (!trimmed) return null;
-        return refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
+      const visibleForTrim = new Set(candidateIds);
+      for (const stop of current.stops) {
+        for (const house of stop.houses) {
+          if (visitedSet.has(house.id)) visibleForTrim.add(house.id);
+        }
       }
 
-      return rebuildRouteAfterSkipChange(
+      if (!stopLostFromRoute) {
+        if (current.accessible === accessibleOnly) return current;
+        const trimmed = trimWalkingRouteToVisible(current, visibleForTrim);
+        if (!trimmed) return null;
+        const refreshed = refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
+        setRouteSessionPlan(refreshed);
+        return refreshed;
+      }
+
+      const rebuilt = rebuildRouteAfterSkipChange(
         current,
         houses,
         filters,
         context,
         skippedIds,
-        hasNewCandidates,
+        false,
         originPoint(origin),
         routeOptions,
       );
+      setRouteSessionPlan(rebuilt);
+      return rebuilt;
     });
   }, [
     routeMode,
@@ -175,14 +195,6 @@ export function useNeighborhoodRoute({
     }
     lastVisitedCountRef.current = visitedIds.length;
   }, [routeMode, visitedIds.length]);
-
-  useEffect(() => {
-    if (!routeMode) {
-      setRouteSessionPlan(null);
-      return;
-    }
-    if (pinnedRoute) setRouteSessionPlan(pinnedRoute);
-  }, [routeMode, pinnedRoute]);
 
   useEffect(() => {
     if (!routeMode || !pinnedRoute) return;

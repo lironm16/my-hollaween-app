@@ -78,7 +78,7 @@ export function buildRouteListItems(options: {
               : distanceLabel(house.id, stop.fromPreviousMeters),
         skipped,
         legDone,
-        doneCollapsed: visited && !skipped && stopDone && stopIdx < prefixStopCount,
+        doneCollapsed: visited && !skipped && stopIdx < prefixStopCount && stopDone,
       });
     });
     stopIdx += 1;

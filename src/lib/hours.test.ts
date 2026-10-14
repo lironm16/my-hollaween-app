@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   houseOpenDuringVisitWindow,
   hoursStatus,
+  isHouseClosedBeforeOpening,
   isOpenDuringCustomVisitForFilter,
   isOpenNowForFilter,
   isAddHouseOpen,
@@ -31,6 +32,23 @@ describe("isAddHouseOpen", () => {
       isAddHouseOpen(new Date(2026, 9, 31, 18, 0, 0, 0), { isAdmin: false }),
       false,
     );
+  });
+});
+
+describe("isHouseClosedBeforeOpening", () => {
+  const house = { openFrom: "17:00", openTo: "21:00", visit: "come" as const };
+  const schedule = { hour: 12, minute: 0 };
+
+  it("waits until address reveal clock on event night", () => {
+    const beforeReveal = new Date(2026, 9, 31, 11, 30, 0, 0);
+    const afterRevealBeforeOpen = new Date(2026, 9, 31, 16, 0, 0, 0);
+    assert.equal(isHouseClosedBeforeOpening(house, beforeReveal, schedule), false);
+    assert.equal(isHouseClosedBeforeOpening(house, afterRevealBeforeOpen, schedule), true);
+  });
+
+  it("does not apply before Halloween", () => {
+    const dayBefore = new Date(2026, 9, 30, 18, 0, 0, 0);
+    assert.equal(isHouseClosedBeforeOpening(house, dayBefore, schedule), false);
   });
 });
 

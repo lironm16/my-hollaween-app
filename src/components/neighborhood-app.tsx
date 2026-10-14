@@ -848,16 +848,13 @@ export function NeighborhoodApp({
         selection.clearListFocus();
       }
       if (!routeMode) return;
-      const plan = routeSessionPlan ?? pinnedRoute;
+      const plan = routeSessionPlan ?? pinnedRoute ?? activeRoute ?? filterRoute;
+      const priorVisitedIds = marking
+        ? visits.visitedIds.filter((item) => item !== id)
+        : visits.visitedIds;
       const inOrder =
         plan &&
-        isInOrderRouteVisit(
-          plan,
-          id,
-          visits.visitedIds,
-          skips.skippedIds,
-          marking,
-        );
+        isInOrderRouteVisit(plan, id, priorVisitedIds, nextSkippedIds, marking);
       if (inOrder) return;
       applyRouteAfterSkipChange(nextSkippedIds, !marking, nextVisitedIds);
     },
@@ -866,8 +863,10 @@ export function NeighborhoodApp({
       routeMode,
       routeSessionPlan,
       pinnedRoute,
+      activeRoute,
+      filterRoute,
       selection.clearListFocus,
-      skips.skippedIds,
+      skips,
       visits,
     ],
   );
@@ -943,22 +942,21 @@ export function NeighborhoodApp({
     includeNew: boolean,
     nextVisitedIds: string[] = filterContext.visitedIds,
   ) {
-    setPinnedRoute(
-      rebuildRouteAfterSkipChange(
-        pinnedRoute,
-        houses,
-        filters,
-        { ...filterContext, visitedIds: nextVisitedIds },
-        nextSkippedIds,
-        includeNew,
-        { lat: origin.lat, lng: origin.lng },
-        {
-          accessible: accessibleOnly,
-          startedFrom: origin.kind,
-          originLabel: origin.label,
-        },
-      ),
+    const rebuilt = rebuildRouteAfterSkipChange(
+      pinnedRoute,
+      houses,
+      filters,
+      { ...filterContext, visitedIds: nextVisitedIds },
+      nextSkippedIds,
+      includeNew,
+      { lat: origin.lat, lng: origin.lng },
+      {
+        accessible: accessibleOnly,
+        startedFrom: origin.kind,
+        originLabel: origin.label,
+      },
     );
+    setPinnedRoute(rebuilt);
   }
 
   useEffect(() => {
