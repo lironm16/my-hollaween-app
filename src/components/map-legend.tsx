@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { SkipIcon } from "@/components/skip-icon";
-import { PinGlyph } from "@/components/pin-glyph";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { GEM_MAP_LEGEND_OPEN_HE, GEM_MAP_LEGEND_SECTION_HE } from "@/lib/gem-hunt-copy";
@@ -72,9 +71,13 @@ function SwatchPin({
           : {
               background: school
                 ? undefined
-                : poi
-                  ? PIN_BACKGROUND.poi.decorated
-                  : PIN_BACKGROUND.house.decorated,
+                : bare
+                  ? poi
+                    ? PIN_BACKGROUND.poi.undecorated
+                    : PIN_BACKGROUND.house.undecorated
+                  : poi
+                    ? PIN_BACKGROUND.poi.decorated
+                    : PIN_BACKGROUND.house.decorated,
             }
       }
       aria-hidden
@@ -97,7 +100,8 @@ function SwatchPin({
       {!gemRing && hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
       {!gemRing && hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
       {scare || bare ? (
-        <PinGlyph src={scareSrc} kind={poi ? "poi" : "house"} />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="pin-scare" src={scareSrc} alt="" />
       ) : null}
       {multi && multiClusterKind ? <BuildingClusterPinArt kind={multiClusterKind} /> : null}
       {school ? (

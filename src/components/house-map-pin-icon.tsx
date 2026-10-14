@@ -3,7 +3,6 @@
 import { SkipIcon } from "@/components/skip-icon";
 import { useCatalog } from "@/hooks/use-catalog";
 import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status";
-import { PinGlyph } from "@/components/pin-glyph";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { effectiveVisit, isDecorated } from "@/lib/house-state";
@@ -66,10 +65,8 @@ export function HouseMapPinIcon({
       {!skipped && (status === "plenty" || status === "low" || status === "out") ? (
         <b className={`pin-status is-${status}`} />
       ) : null}
-      <PinGlyph
-        src={pinScareSrc(house, decorated ? scare : "mild")}
-        kind={isPoiHouse(house) ? "poi" : "house"}
-      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="pin-scare" src={pinScareSrc(house, decorated ? scare : "mild")} alt="" />
     </div>
   );
 }

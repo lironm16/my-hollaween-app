@@ -1,8 +1,4 @@
-import { pinGlyphHtml } from "@/lib/pin-glyph-html";
-import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
-
-const MIXED_CLUSTER_GHOST_SRC = "/icons/pin-scare-mild.png";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import type { PublicHouse } from "@/lib/types";
 
@@ -70,16 +66,5 @@ export function pinBuildingClusterIconHtml(houses: PublicHouse[]) {
   const kind = buildingClusterIconKind(houses);
   if (!kind) return "";
   const { src, src2x, width, height } = CLUSTER_ICON[kind];
-  if (kind === "mixed") {
-    const ghostEsc = MIXED_CLUSTER_GHOST_SRC.replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/</g, "&lt;");
-    const poiEsc = POI_PIN_FACE_SRC.replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/</g, "&lt;");
-    return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind} pin-cluster-mixed-glyphs" aria-hidden="true">${pinGlyphHtml(MIXED_CLUSTER_GHOST_SRC, "cluster-houses", ghostEsc)}${pinGlyphHtml(POI_PIN_FACE_SRC, "cluster-businesses", poiEsc)}</span>`;
-  }
-  const glyphKind = kind === "houses" ? "cluster-houses" : "cluster-businesses";
-  const srcEsc = src.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-  return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind}" aria-hidden="true">${pinGlyphHtml(src, glyphKind, srcEsc)}</span>`;
+  return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind}" aria-hidden="true"><img class="pin-cluster-art" src="${src}" srcset="${src} 1x, ${src2x} 2x" width="${width}" height="${height}" alt="" decoding="async" /></span>`;
 }

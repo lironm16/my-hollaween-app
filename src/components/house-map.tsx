@@ -50,7 +50,6 @@ import {
 } from "@/lib/hours";
 import type { AddressRevealSchedule } from "@/lib/types";
 import { pinScareSrc } from "@/lib/pin-faces";
-import { pinGlyphHtml } from "@/lib/pin-glyph-html";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
 import { clusterBadgeHouses, clusterHousesByAddress, type HouseCluster } from "@/lib/house-clusters";
@@ -179,8 +178,7 @@ function pinStatusMark(
 function pinFaceHtml(house: PublicHouse) {
   const level = pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild";
   const src = pinScareSrc(house, level);
-  const kind = effectiveHouseKind(house) === "poi" ? "poi" : "house";
-  return pinGlyphHtml(src, kind, attr(src));
+  return `<img class="pin-scare" src="${attr(src)}" alt="" />`;
 }
 
 function pinClusterIconHtml(houses: PublicHouse[]) {

@@ -619,7 +619,7 @@
   width: 56px;
   height: 56px;
   border-radius: 999px;
-  background: #fff7ed !important;
+  background: #6d28d9 !important;
   border: 4px solid transparent;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
@@ -769,117 +769,36 @@
   flex-shrink: 0;
 }
 
-.house-pin .pin-scare,
-.house-pin .pin-glyph-stack {
-  position: relative;
-  z-index: 1;
+.house-pin .pin-scare {
   display: block;
-  width: 51px !important;
-  height: 51px !important;
-  max-width: 51px !important;
-  max-height: 51px !important;
-  flex-shrink: 0;
-  pointer-events: none;
-  isolation: isolate;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #fff7ed;
-}
-
-.pin-glyph-stack .pin-glyph-faces {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
+  width: 92% !important;
+  height: 92% !important;
+  max-width: 92% !important;
+  max-height: 92% !important;
   object-fit: contain;
   object-position: center;
-  filter: url(#hw-pin-inner-white);
-  mix-blend-mode: normal;
+  position: relative;
+  z-index: 1;
   pointer-events: none;
-}
-
-/* Brand fill under PNG; darken blend keeps eyes/mouth black. */
-.pin-glyph {
-  position: absolute;
-  inset: 0;
-  background-color: #6d28d9;
-  -webkit-mask-image: var(--pin-glyph-mask);
-  mask-image: var(--pin-glyph-mask);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-.pin-glyph-poi,
-.pin-glyph-cluster-businesses {
-  background-color: #f97316;
-}
-
-.pin-glyph-cluster-houses {
-  background-color: #6d28d9;
-}
-
-.house-pin.is-cluster-ellipse .pin-cluster-icon .pin-glyph-stack {
-  width: 58px !important;
-  height: 58px !important;
-  max-width: 58px !important;
-  max-height: 58px !important;
-}
-
-.pin-cluster-mixed-glyphs {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  width: 58px !important;
-  height: 58px !important;
-}
-
-.pin-cluster-mixed-glyphs .pin-glyph-stack {
-  width: 26px !important;
-  height: 26px !important;
-  max-width: 26px !important;
-  max-height: 26px !important;
-  flex-shrink: 0;
-}
-
-.pin-cluster-icon:not(.pin-cluster-mixed-glyphs) .pin-glyph-stack {
-  width: 36px !important;
-  height: 28px !important;
-  max-width: 36px !important;
-  max-height: 28px !important;
-}
-
-.house-pin.is-cluster-ellipse .pin-cluster-mixed-glyphs .pin-glyph-stack {
-  width: 26px !important;
-  height: 26px !important;
-  max-width: 26px !important;
-  max-height: 26px !important;
 }
 
 .house-pin.is-undecorated {
-  background: #fff7ed !important;
-  border-color: transparent;
+  background: #94a3b8 !important;
 }
 
-.house-pin.is-undecorated .pin-glyph {
-  background-color: #94a3b8;
+.house-pin.is-poi {
+  background: #f97316 !important;
 }
 
-.house-pin.is-poi .pin-scare,
-.house-pin.is-poi .pin-glyph-stack {
-  width: 49px !important;
-  height: 49px !important;
-  max-width: 49px !important;
-  max-height: 49px !important;
+.house-pin.is-poi.is-undecorated {
+  background: #78716c !important;
+}
+
+.house-pin.is-poi .pin-scare {
+  width: 88% !important;
+  height: 88% !important;
+  max-width: 88% !important;
+  max-height: 88% !important;
 }
 
 .house-pin.is-practice {
@@ -1036,11 +955,22 @@
   transform: translateX(-50%);
 }
 
-.house-pin.is-cluster-houses,
-.house-pin.is-cluster-businesses,
+.house-pin.is-cluster-houses {
+  background: #6d28d9 !important;
+}
+
+.house-pin.is-cluster-businesses {
+  background: #f97316 !important;
+}
+
 .house-pin.is-cluster-mixed {
-  background: #fff7ed !important;
-  border-color: transparent;
+  background: linear-gradient(
+    to right,
+    #6d28d9 0%,
+    #6d28d9 50%,
+    #f97316 50%,
+    #f97316 100%
+  ) !important;
 }
 
 .house-pin.pin-tour-ring {
@@ -1127,16 +1057,7 @@
 }
 
 .house-pin.is-origin {
-  background: #fff7ed !important;
-  border-color: transparent;
-  box-shadow:
-    0 0 0 3px #a855f7,
-    0 2px 6px rgba(0, 0, 0, 0.55);
-}
-
-.house-pin.is-origin span {
-  color: #a855f7;
-  font-size: 28px;
+  background: #f97316 !important;
 }
 
 .is-origin-pick .pumpkin-pin-icon:not(.is-origin-pin) {

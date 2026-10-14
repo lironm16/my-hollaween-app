@@ -83,16 +83,8 @@ describe("pinBuildingClusterIconHtml", () => {
     const houses = [house("a"), house("b")];
     const html = pinBuildingClusterIconHtml(houses);
     assert.match(html, /pin-cluster-houses/);
-    assert.match(html, /pin-glyph-cluster-houses/);
+    assert.match(html, /pin-cluster-art/);
     assert.match(html, /pin-cluster-ghosts\.png/);
-  });
-
-  it("renders mixed clusters as purple ghost + orange pumpkin glyphs", () => {
-    const houses = [house("h1"), { ...house("p1"), kind: "poi" as const }];
-    const html = pinBuildingClusterIconHtml(houses);
-    assert.match(html, /pin-cluster-mixed-glyphs/);
-    assert.match(html, /pin-glyph-cluster-houses/);
-    assert.match(html, /pin-glyph-cluster-businesses/);
   });
 
   it("tags all cluster pins with the shared horizontal ellipse class", () => {

@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Rubik, Creepster, Rubik_Wet_Paint } from "next/font/google";
 import Script from "next/script";
-import { PinSvgFilters } from "@/components/pin-svg-filters";
 import { Providers } from "@/components/providers";
 import { HalloweenFxGate } from "@/components/halloween-fx-gate";
 import { RehearsalBoot } from "@/components/rehearsal-boot";
@@ -78,7 +77,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="relative h-full overflow-hidden font-sans">
         <Script src="/boot.js" strategy="beforeInteractive" />
-        <PinSvgFilters />
         <HalloweenFxGate />
         <RehearsalBoot />
         <Providers>{children}</Providers>

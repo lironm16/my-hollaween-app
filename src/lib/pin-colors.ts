@@ -1,22 +1,16 @@
 import { effectiveHouseKind } from "@/lib/house-kind";
 import type { PublicHouse } from "@/lib/types";
 
-export const PIN_INTERIOR = "#fff7ed";
-
-/** Former decorated pin disc fills — now the ghost / pumpkin glyph colors on white discs. */
-export const PIN_GHOST_PURPLE = "#6d28d9";
-export const PIN_PUMPKIN_ORANGE = "#f97316";
-export const PIN_UNDECORATED_GLYPH = "#94a3b8";
-
-/** White disc; glyph color from {@link PIN_GHOST_PURPLE} / {@link PIN_PUMPKIN_ORANGE}. */
+/** Pin circle fills — kept away from candy/scare greens, ambers, and reds. */
 export const PIN_BACKGROUND = {
   house: {
-    decorated: PIN_INTERIOR,
-    undecorated: PIN_INTERIOR,
+    decorated: "#6d28d9",
+    undecorated: "#94a3b8",
   },
   poi: {
-    decorated: PIN_INTERIOR,
-    undecorated: PIN_INTERIOR,
+    /** Vivid orange — pops against house purple; warmer/brighter than candy-low amber. */
+    decorated: "#f97316",
+    undecorated: "#78716c",
   },
 } as const;
 
