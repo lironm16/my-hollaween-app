@@ -703,6 +703,8 @@ type Props = {
   routeLine?: LatLng[] | null;
   routeLineSegments?: { points: [LatLng, LatLng]; done: boolean }[] | null;
   approachLegDone?: boolean;
+  /** Dashed origin spur aims at the next unvisited tour stop (not always stop 1). */
+  approachTarget?: LatLng | null;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Pinned stop numbers for visited/skipped houses still shown on the map in route mode. */
   routeSessionDisplayOrders?: Map<string, number> | null;
@@ -763,6 +765,7 @@ export function HouseMap({
   routeLine = null,
   routeLineSegments = null,
   approachLegDone = false,
+  approachTarget = null,
   routeStops = null,
   routeSessionDisplayOrders = null,
   routeStart = null,
@@ -871,14 +874,15 @@ export function HouseMap({
   const useSegmentRoute = routeSegmentLines.length > 0;
   const approachPositions = useMemo(() => {
     const first = routeStops?.[0];
+    const target = approachTarget ?? (first ? { lat: first.lat, lng: first.lng } : null);
     const start = routeStart ?? userLocation;
-    if (!start || !first) return null;
-    if (!shouldShowRouteApproach(start, first, routeStartedFrom)) return null;
+    if (!start || !target) return null;
+    if (!shouldShowRouteApproach(start, target, routeStartedFrom)) return null;
     return [
       [start.lat, start.lng] as [number, number],
-      [first.lat, first.lng] as [number, number],
+      [target.lat, target.lng] as [number, number],
     ];
-  }, [routeStart, userLocation, routeStops, routeStartedFrom]);
+  }, [routeStart, userLocation, routeStops, approachTarget, routeStartedFrom]);
   const { tiles, ready: tilesReady } = useMapTiles();
   useEffect(() => {
     postMapTileCacheConfig();

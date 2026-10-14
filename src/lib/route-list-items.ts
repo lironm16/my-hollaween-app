@@ -4,7 +4,7 @@ import { distanceMeters } from "@/lib/geo";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import type { PublicHouse } from "@/lib/types";
 import { routeDisplayOrder } from "@/lib/route-display-order";
-import { stopIsDone } from "@/lib/route-session-progress";
+import { routeSegmentShouldDraw, stopIsDone } from "@/lib/route-session-progress";
 import type { WalkingRoute } from "@/lib/route";
 
 export type RouteListItemInput = {
@@ -16,6 +16,8 @@ export type RouteListItemInput = {
   doneCollapsed?: boolean;
   /** Connector line before this card uses the “done” color. */
   legDone?: boolean;
+  /** Hide connector when stop is skipped or off-path (orphan visit). */
+  legHidden?: boolean;
   /** Off-plan visit shown after the tour (legacy compact). */
   visitedTail?: boolean;
   distanceM?: number;
@@ -68,6 +70,10 @@ export function buildRouteListItems(options: {
           : prevStop
             ? stopIsDone(prevStop, visitedSet, skippedSet) && stopIsDone(stop, visitedSet, skippedSet)
             : false;
+      const legHidden =
+        houseIndex === 0 && stopIdx > 0
+          ? !routeSegmentShouldDraw(route, stopIdx, visitedSet, skippedSet)
+          : false;
       const legDone =
         houseIndex > 0 ? visited : stopIdx === 0 ? visited : legFromPrevStopDone;
       items.push({
@@ -81,6 +87,7 @@ export function buildRouteListItems(options: {
               : distanceLabel(house.id, stop.fromPreviousMeters),
         skipped,
         legDone,
+        legHidden,
         doneCollapsed: visited && !skipped,
       });
     });

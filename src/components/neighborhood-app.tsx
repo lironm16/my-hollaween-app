@@ -44,6 +44,7 @@ import { RouteList } from "@/components/route-list";
 import { buildRouteListItems } from "@/lib/route-list-items";
 import {
   approachLegDone,
+  nextApproachStopPoint,
   stopForHouse,
   stopHasRemainingActive,
 } from "@/lib/route-session-progress";
@@ -1168,6 +1169,10 @@ export function NeighborhoodApp({
     routePlan && routeMode
       ? approachLegDone(routePlan, visits.visitedIds, skips.skippedIds)
       : false;
+  const routeApproachTarget =
+    routePlan && routeMode
+      ? nextApproachStopPoint(routePlan, visits.visitedIds, skips.skippedIds)
+      : null;
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
@@ -1620,6 +1625,7 @@ export function NeighborhoodApp({
                     routeMode && !originPick.originPickActive ? routeLineSegments : null
                   }
                   approachLegDone={routeMode && routeApproachDone}
+                  approachTarget={routeMode && !originPick.originPickActive ? routeApproachTarget : null}
                   routeStart={routeMode ? origin : null}
                   routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                   visitedIds={visits.visitedIds}

@@ -4,7 +4,7 @@ import { buildWalkingRouteOrdered } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 import {
   approachLegDone,
-  routePrefixStopCount,
+  nextUnvisitedStopIndex,
   routeProgressSegments,
   stopHasRemainingActive,
 } from "@/lib/route-session-progress";
@@ -43,7 +43,7 @@ function stub(id: string, lat: number, lng: number): PublicHouse {
 }
 
 describe("routeProgressSegments", () => {
-  it("greens a leg when both endpoint stops are done, even with a gap earlier", () => {
+  it("hides legs to an orphan visit until bridged by adjacent done stops", () => {
     const houses = [
       stub("a", 32.091, 34.801),
       stub("b", 32.092, 34.802),
@@ -51,17 +51,14 @@ describe("routeProgressSegments", () => {
     ];
     const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
     assert.ok(route);
-    const segments = routeProgressSegments(route, ["c"], []);
-    assert.equal(segments.length, 2);
-    assert.equal(segments[0]!.done, false);
-    assert.equal(segments[1]!.done, false);
-
-    const both = routeProgressSegments(route, ["b", "c"], []);
-    assert.equal(both[0]!.done, false);
-    assert.equal(both[1]!.done, true);
+    assert.equal(routeProgressSegments(route, ["c"], []).length, 1);
+    assert.equal(routeProgressSegments(route, ["c"], [])[0]!.done, false);
+    const bridged = routeProgressSegments(route, ["b", "c"], []);
+    assert.equal(bridged.length, 1);
+    assert.equal(bridged[0]!.done, true);
   });
 
-  it("greens leg 1→2 after visiting stops 1 and 2 in order", () => {
+  it("removes legs through a skipped stop", () => {
     const houses = [
       stub("a", 32.091, 34.801),
       stub("b", 32.092, 34.802),
@@ -69,42 +66,44 @@ describe("routeProgressSegments", () => {
     ];
     const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
     assert.ok(route);
-    assert.equal(routeProgressSegments(route, ["a"], [])[0]!.done, false);
-    assert.equal(routeProgressSegments(route, ["a", "b"], [])[0]!.done, true);
+    assert.equal(routeProgressSegments(route, [], ["b"]).length, 0);
   });
 });
 
-describe("stopHasRemainingActive", () => {
-  it("still has active houses when only one apartment is skipped", () => {
+describe("nextUnvisitedStopIndex", () => {
+  it("targets the first open stop after completed prefix", () => {
     const route = buildWalkingRouteOrdered(
-      [stub("a", 32.091, 34.801)],
+      [stub("a", 32.091, 34.801), stub("b", 32.092, 34.802)],
       { lat: 32.09, lng: 34.81 },
     );
     assert.ok(route);
-    const stop = {
-      ...route.stops[0]!,
-      houses: [stub("apt1", 32.091, 34.801), stub("apt2", 32.091, 34.801)],
-    };
-    assert.equal(stopHasRemainingActive(stop, ["apt1"], ["apt2"]), true);
-    assert.equal(stopHasRemainingActive(stop, ["apt1"], []), true);
-    assert.equal(stopHasRemainingActive(stop, ["apt1", "apt2"], []), false);
+    assert.equal(nextUnvisitedStopIndex(route, [], []), 0);
+    assert.equal(nextUnvisitedStopIndex(route, ["a"], []), 1);
+    assert.equal(nextUnvisitedStopIndex(route, ["a", "b"], []), null);
   });
 });
 
 describe("approachLegDone", () => {
-  it("follows first stop completion", () => {
-    const route = buildWalkingRouteOrdered([stub("a", 32.091, 34.801)], { lat: 32.09, lng: 34.81 });
+  it("is green once the prefix before the next target is complete", () => {
+    const route = buildWalkingRouteOrdered(
+      [stub("a", 32.091, 34.801), stub("b", 32.092, 34.802)],
+      { lat: 32.09, lng: 34.81 },
+    );
     assert.ok(route);
     assert.equal(approachLegDone(route, [], []), false);
     assert.equal(approachLegDone(route, ["a"], []), true);
   });
 });
 
-describe("routePrefixStopCount", () => {
-  it("counts a contiguous visited prefix", () => {
-    const houses = [stub("a", 32.091, 34.801), stub("b", 32.092, 34.802), stub("c", 32.093, 34.803)];
-    const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
+describe("stopHasRemainingActive", () => {
+  it("still has active houses when only one apartment is skipped", () => {
+    const route = buildWalkingRouteOrdered([stub("a", 32.091, 34.801)], { lat: 32.09, lng: 34.81 });
     assert.ok(route);
-    assert.equal(routePrefixStopCount(route, ["a", "b"], []), 2);
+    const stop = {
+      ...route.stops[0]!,
+      houses: [stub("apt1", 32.091, 34.801), stub("apt2", 32.091, 34.801)],
+    };
+    assert.equal(stopHasRemainingActive(stop, [], ["apt2"]), true);
+    assert.equal(stopHasRemainingActive(stop, ["apt1"], ["apt2"]), false);
   });
 });

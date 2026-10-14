@@ -17,6 +17,7 @@ export type RouteListItem = {
   skipped: boolean;
   doneCollapsed?: boolean;
   legDone?: boolean;
+  legHidden?: boolean;
   visitedTail?: boolean;
   distanceM?: number;
 };
@@ -165,7 +166,7 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped, doneCollapsed, legDone, visitedTail, distanceM }, i) => {
+        {items.map(({ house, order, hop, skipped, doneCollapsed, legDone, legHidden, visitedTail, distanceM }, i) => {
           const showSkippedHeading =
             skipped && !doneCollapsed && (i === 0 || !items[i - 1]!.skipped);
           const showVisitedHeading =
@@ -186,7 +187,7 @@ export function RouteList({
               {showSkippedHeading && !doneCollapsed ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
-              <RouteLeg label={hop || undefined} done={legDone} />
+              {legHidden ? null : <RouteLeg label={hop || undefined} done={legDone} />}
               {doneCollapsed ? (
                 <RouteListCollapsedHouse
                   house={house}
