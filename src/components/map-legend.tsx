@@ -64,7 +64,7 @@ function SwatchPin({
         gemRing === "sparkle" && "is-gem-ring-sparkle",
         gemRing === "diamond" && "is-gem-ring-diamond",
         bare && "is-undecorated",
-        visited && "is-visited",
+        visited && !skipped && "is-visited",
       )}
       style={
         multi && multiClusterKind

@@ -1,4 +1,4 @@
-/** Build a map/legend glyph colored with exact brand purple/orange (former pin disc fills). */
+/** Build a map/legend glyph: brand fill (#6d28d9 / #f97316) with black eyes/mouth from the PNG. */
 
 export type PinGlyphKind = "house" | "poi" | "cluster-houses" | "cluster-businesses";
 
@@ -19,7 +19,8 @@ export function pinGlyphClass(kind: PinGlyphKind): string {
   }
 }
 
-export function pinGlyphHtml(src: string, kind: PinGlyphKind): string {
+export function pinGlyphHtml(src: string, kind: PinGlyphKind, srcAttr?: string): string {
   const safe = maskUrl(src);
-  return `<span class="${pinGlyphClass(kind)}" style="--pin-glyph-mask:url('${safe}')" aria-hidden="true"></span>`;
+  const imgSrc = srcAttr ?? src.replace(/"/g, "&quot;").replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  return `<span class="pin-glyph-stack" aria-hidden="true"><span class="${pinGlyphClass(kind)}" style="--pin-glyph-mask:url('${safe}')"></span><img class="pin-glyph-faces" src="${imgSrc}" alt="" decoding="async" /></span>`;
 }

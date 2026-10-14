@@ -71,5 +71,6 @@ export function pinBuildingClusterIconHtml(houses: PublicHouse[]) {
     return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind}" aria-hidden="true"><img class="pin-cluster-art" src="${src}" srcset="${src} 1x, ${src2x} 2x" width="${width}" height="${height}" alt="" decoding="async" /></span>`;
   }
   const glyphKind = kind === "houses" ? "cluster-houses" : "cluster-businesses";
-  return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind}" aria-hidden="true">${pinGlyphHtml(src, glyphKind)}</span>`;
+  const srcEsc = src.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  return `<span class="pin-cluster-icon pin-cluster-duo pin-cluster-${kind}" aria-hidden="true">${pinGlyphHtml(src, glyphKind, srcEsc)}</span>`;
 }

@@ -180,7 +180,7 @@ function pinFaceHtml(house: PublicHouse) {
   const level = pinFaceKind(house) === "scare" ? (house.scareLevel ?? "mild") : "mild";
   const src = pinScareSrc(house, level);
   const kind = effectiveHouseKind(house) === "poi" ? "poi" : "house";
-  return pinGlyphHtml(src, kind);
+  return pinGlyphHtml(src, kind, attr(src));
 }
 
 function pinClusterIconHtml(houses: PublicHouse[]) {
@@ -731,7 +731,7 @@ const ClusterMarker = memo(function ClusterMarker({
               : openingSoon
                 ? 320
                 : cluster.houses.length > 1
-                  ? 200
+                  ? 480
                   : 0
       }
       eventHandlers={eventHandlers}
