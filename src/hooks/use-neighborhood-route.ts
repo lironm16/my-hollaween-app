@@ -7,7 +7,7 @@ import {
   trimWalkingRouteToVisible,
   type WalkingRoute,
 } from "@/lib/route";
-import { rebuildRouteAfterSkipChange, routeCandidateHouses } from "@/lib/route-changes";
+import { rebuildRouteAfterFilterChange, routeCandidateHouses } from "@/lib/route-changes";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
@@ -137,28 +137,32 @@ export function useNeighborhoodRoute({
 
       const context = { ...filterContext, skippedIds };
       const candidateIds = new Set(routeCandidates.map((house) => house.id));
-      const currentStopIds = current.stops.map((stop) => stop.house.id);
+      const currentStopIds = new Set(current.stops.map((stop) => stop.house.id));
       /** Only filter changes remove stops — visit/skip are progress, not route membership. */
-      const stopLostFromRoute = currentStopIds.some((id) => !candidateIds.has(id));
+      const stopLostFromRoute = [...currentStopIds].some((id) => !candidateIds.has(id));
+      const filterAddsStops = routeCandidates.some((house) => !currentStopIds.has(house.id));
       const visibleForTrim = candidateIds;
 
-      if (!stopLostFromRoute) {
+      if (!stopLostFromRoute && !filterAddsStops) {
         if (current.accessible === accessibleOnly) return current;
         const trimmed = trimWalkingRouteToVisible(current, visibleForTrim);
         if (!trimmed) return null;
-        return refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
+        const refreshed = refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
+        setRouteSessionPlan(refreshed);
+        return refreshed;
       }
 
-      return rebuildRouteAfterSkipChange(
+      const rebuilt = rebuildRouteAfterFilterChange(
         current,
         houses,
         filters,
         context,
-        skippedIds,
-        false,
+        filterAddsStops,
         originPoint(origin),
         routeOptions,
       );
+      setRouteSessionPlan(rebuilt);
+      return rebuilt;
     });
   }, [
     routeMode,

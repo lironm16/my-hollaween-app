@@ -16,6 +16,7 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
+import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -117,7 +118,11 @@ function SwatchPin({
           />
         </span>
       ) : null}
-      {skipped ? <b className="pin-status is-skipped" aria-hidden /> : null}
+      {skipped ? (
+        <b className="pin-status is-skipped" aria-hidden>
+          <SkipIcon className="pin-skip-icon" />
+        </b>
+      ) : null}
       {!skipped && closed ? <b className="pin-status is-closed" /> : null}
       {!skipped && onBreak ? <b className="pin-status is-break" /> : null}
       {!skipped && candy ? <b className={`pin-status is-${candy}`} /> : null}

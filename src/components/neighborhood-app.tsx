@@ -704,6 +704,7 @@ export function NeighborhoodApp({
     routeMode,
     pinnedRoute,
     setPinnedRoute,
+    commitSessionPlan,
     origin,
     skippedIds: skips.skippedIds,
     now,
