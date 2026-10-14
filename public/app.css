@@ -5888,6 +5888,7 @@ svg.leaflet-zoom-animated {
   background: transparent !important;
   border: none !important;
   overflow: visible !important;
+  isolation: isolate;
 }
 .house-pin-stack,
 .house-pin-fan {
@@ -5913,6 +5914,7 @@ svg.leaflet-zoom-animated {
   position: relative;
   display: grid;
   place-items: center;
+  isolation: isolate;
   width: 56px;
   height: 56px;
   border-radius: 999px;
@@ -6063,22 +6065,29 @@ svg.leaflet-zoom-animated {
 }
 .house-pin .pin-scare,
 .house-pin .pin-glyph-stack {
-  display: block;
-  width: 92% !important;
-  height: 92% !important;
-  max-width: 92% !important;
-  max-height: 92% !important;
   position: relative;
   z-index: 1;
-  pointer-events: none;
+  display: block;
+  width: 51px !important;
+  height: 51px !important;
+  max-width: 51px !important;
+  max-height: 51px !important;
   flex-shrink: 0;
+  pointer-events: none;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #fff7ed;
 }
 .pin-glyph-stack .pin-glyph-faces {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
   display: block;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   object-position: center;
   mix-blend-mode: darken;
@@ -6119,10 +6128,10 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.is-poi .pin-scare,
 .house-pin.is-poi .pin-glyph-stack {
-  width: 88% !important;
-  height: 88% !important;
-  max-width: 88% !important;
-  max-height: 88% !important;
+  width: 49px !important;
+  height: 49px !important;
+  max-width: 49px !important;
+  max-height: 49px !important;
 }
 .house-pin.is-practice {
   background: linear-gradient(165deg, #0f766e 0%, #0d9488 55%, #14b8a6 100%) !important;
@@ -6813,6 +6822,7 @@ svg.leaflet-zoom-animated {
   display: block;
   overflow: visible;
   isolation: isolate;
+  contain: layout style;
 }
 .house-pin-route.is-cluster-shell {
   width: 62px;

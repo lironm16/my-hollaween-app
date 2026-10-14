@@ -586,6 +586,7 @@
   background: transparent !important;
   border: none !important;
   overflow: visible !important;
+  isolation: isolate;
 }
 
 .house-pin-stack,
@@ -614,6 +615,7 @@
   position: relative;
   display: grid;
   place-items: center;
+  isolation: isolate;
   width: 56px;
   height: 56px;
   border-radius: 999px;
@@ -769,25 +771,33 @@
 
 .house-pin .pin-scare,
 .house-pin .pin-glyph-stack {
-  display: block;
-  width: 92% !important;
-  height: 92% !important;
-  max-width: 92% !important;
-  max-height: 92% !important;
   position: relative;
   z-index: 1;
-  pointer-events: none;
+  display: block;
+  width: 51px !important;
+  height: 51px !important;
+  max-width: 51px !important;
+  max-height: 51px !important;
   flex-shrink: 0;
+  pointer-events: none;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #fff7ed;
 }
 
 .pin-glyph-stack .pin-glyph-faces {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
   display: block;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   object-position: center;
+  /* Blend only inside isolated stack (white + fill), not map tiles behind marker. */
   mix-blend-mode: darken;
   pointer-events: none;
 }
@@ -816,11 +826,18 @@
   background-color: #6d28d9;
 }
 
+.house-pin.is-cluster-ellipse .pin-cluster-icon .pin-glyph-stack {
+  width: 58px !important;
+  height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+}
+
 .pin-cluster-icon .pin-glyph-stack {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
+  width: 36px !important;
+  height: 28px !important;
+  max-width: 36px !important;
+  max-height: 28px !important;
 }
 
 .house-pin.is-undecorated {
@@ -834,10 +851,10 @@
 
 .house-pin.is-poi .pin-scare,
 .house-pin.is-poi .pin-glyph-stack {
-  width: 88% !important;
-  height: 88% !important;
-  max-width: 88% !important;
-  max-height: 88% !important;
+  width: 49px !important;
+  height: 49px !important;
+  max-width: 49px !important;
+  max-height: 49px !important;
 }
 
 .house-pin.is-practice {
@@ -1627,6 +1644,7 @@
   display: block;
   overflow: visible;
   isolation: isolate;
+  contain: layout style;
 }
 
 /* Fixed frame so route badges / tour rings never push cluster candy dots. */
