@@ -1,4 +1,4 @@
-/** Build a map/legend glyph: brand fill (#6d28d9 / #f97316) with black eyes/mouth from the PNG. */
+/** Build a map/legend glyph: brand fill (#6d28d9 / #f97316) + white eyes/mouth via SVG filter. */
 
 export type PinGlyphKind = "house" | "poi" | "cluster-houses" | "cluster-businesses";
 

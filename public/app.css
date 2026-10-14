@@ -850,6 +850,9 @@
     width: 100%;
     height: 100%;
   }
+  .h-0 {
+    height: 0px;
+  }
   .h-0\.5 {
     height: calc(var(--spacing) * 0.5);
   }
@@ -1041,6 +1044,9 @@
   }
   .w-\(--anchor-width\) {
     width: var(--anchor-width);
+  }
+  .w-0 {
+    width: 0px;
   }
   .w-4 {
     width: calc(var(--spacing) * 4);
@@ -6090,7 +6096,8 @@ svg.leaflet-zoom-animated {
   max-height: 100%;
   object-fit: contain;
   object-position: center;
-  mix-blend-mode: darken;
+  filter: url(#hw-pin-inner-white);
+  mix-blend-mode: normal;
   pointer-events: none;
 }
 .pin-glyph {
@@ -6113,11 +6120,39 @@ svg.leaflet-zoom-animated {
 .pin-glyph-cluster-houses {
   background-color: #6d28d9;
 }
-.pin-cluster-icon .pin-glyph-stack {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
+.house-pin.is-cluster-ellipse .pin-cluster-icon .pin-glyph-stack {
+  width: 58px !important;
+  height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+}
+.pin-cluster-mixed-glyphs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 58px !important;
+  height: 58px !important;
+}
+.pin-cluster-mixed-glyphs .pin-glyph-stack {
+  width: 26px !important;
+  height: 26px !important;
+  max-width: 26px !important;
+  max-height: 26px !important;
+  flex-shrink: 0;
+}
+.pin-cluster-icon:not(.pin-cluster-mixed-glyphs) .pin-glyph-stack {
+  width: 36px !important;
+  height: 28px !important;
+  max-width: 36px !important;
+  max-height: 28px !important;
+}
+.house-pin.is-cluster-ellipse .pin-cluster-mixed-glyphs .pin-glyph-stack {
+  width: 26px !important;
+  height: 26px !important;
+  max-width: 26px !important;
+  max-height: 26px !important;
 }
 .house-pin.is-undecorated {
   background: #fff7ed !important;

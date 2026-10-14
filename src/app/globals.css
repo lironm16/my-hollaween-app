@@ -797,8 +797,8 @@
   max-height: 100%;
   object-fit: contain;
   object-position: center;
-  /* Blend only inside isolated stack (white + fill), not map tiles behind marker. */
-  mix-blend-mode: darken;
+  filter: url(#hw-pin-inner-white);
+  mix-blend-mode: normal;
   pointer-events: none;
 }
 
@@ -833,11 +833,36 @@
   max-height: 58px !important;
 }
 
-.pin-cluster-icon .pin-glyph-stack {
+.pin-cluster-mixed-glyphs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 58px !important;
+  height: 58px !important;
+}
+
+.pin-cluster-mixed-glyphs .pin-glyph-stack {
+  width: 26px !important;
+  height: 26px !important;
+  max-width: 26px !important;
+  max-height: 26px !important;
+  flex-shrink: 0;
+}
+
+.pin-cluster-icon:not(.pin-cluster-mixed-glyphs) .pin-glyph-stack {
   width: 36px !important;
   height: 28px !important;
   max-width: 36px !important;
   max-height: 28px !important;
+}
+
+.house-pin.is-cluster-ellipse .pin-cluster-mixed-glyphs .pin-glyph-stack {
+  width: 26px !important;
+  height: 26px !important;
+  max-width: 26px !important;
+  max-height: 26px !important;
 }
 
 .house-pin.is-undecorated {
