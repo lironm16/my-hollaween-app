@@ -265,7 +265,7 @@ function clusterIcon(
         selected: selectedHere,
         filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
         visitedIds,
-        skippedIds,
+        skippedIds: skippedIds ? [...skippedIds] : [],
         routeModeActive,
       }),
       routeOrder,
