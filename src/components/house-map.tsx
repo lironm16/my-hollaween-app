@@ -939,11 +939,6 @@ export function HouseMap({
       [target.lat, target.lng] as [number, number],
     ];
   }, [routeStart, userLocation, routeStops, approachTarget, routeStartedFrom]);
-  const approachTone = useMemo((): TourLegTone => {
-    const firstId = routeStops?.[0]?.id;
-    if (!firstId) return routeModeActive ? "open-route" : "open-idle";
-    return tourLegTone(firstId, new Set(visitedIds), skippedIdSet, routeModeActive);
-  }, [routeStops, visitedIds, skippedIdSet, routeModeActive]);
   const { tiles, ready: tilesReady } = useMapTiles();
   useEffect(() => {
     postMapTileCacheConfig();
@@ -1057,14 +1052,11 @@ export function HouseMap({
           />
         ) : null}
         {!pickMode && approachPositions ? (
-          (() => {
-            const approachColors = tourLegStrokeColors(approachTone);
-            return (
           <>
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: approachColors.shadow,
+                color: ROUTE_ORIGIN_PURPLE_SHADOW,
                 weight: 6,
                 opacity: 0.35,
                 dashArray: "8 9",
@@ -1077,7 +1069,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: approachColors.stroke,
+                color: ROUTE_ORIGIN_PURPLE,
                 weight: 4,
                 opacity: 0.9,
                 dashArray: "8 9",
@@ -1088,18 +1080,14 @@ export function HouseMap({
               interactive={false}
             />
           </>
-            );
-          })()
         ) : null}
         {!pickMode && useSegmentRoute
-          ? routeSegmentLines.map((segment, index) => {
-              const segmentColors = tourLegStrokeColors(segment.tone);
-              return (
+          ? routeSegmentLines.map((segment, index) => (
               <Fragment key={`route-seg-${index}`}>
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: segmentColors.shadow,
+                    color: ROUTE_ORIGIN_PURPLE_SHADOW,
                     weight: 8,
                     opacity: 0.4,
                     lineCap: "round",
@@ -1111,7 +1099,7 @@ export function HouseMap({
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: segmentColors.stroke,
+                    color: ROUTE_ORIGIN_PURPLE,
                     weight: 5,
                     opacity: 1,
                     lineCap: "round",
@@ -1121,19 +1109,15 @@ export function HouseMap({
                   interactive={false}
                 />
               </Fragment>
-              );
-            })
+            ))
           : null}
         {!pickMode && !useSegmentRoute && routePositions ? (
-          (() => {
-            const fallbackColors = tourLegStrokeColors("open-route");
-            return (
           <>
             <Polyline
               key={`route-shadow-${routePositions.length}-${routePositions[0]?.join(",")}`}
               positions={routePositions}
               pathOptions={{
-                color: fallbackColors.shadow,
+                color: ROUTE_ORIGIN_PURPLE_SHADOW,
                 weight: 8,
                 opacity: 0.4,
                 lineCap: "round",
@@ -1146,7 +1130,7 @@ export function HouseMap({
               key={`route-line-${routePositions.length}-${routePositions[0]?.join(",")}`}
               positions={routePositions}
               pathOptions={{
-                color: fallbackColors.stroke,
+                color: ROUTE_ORIGIN_PURPLE,
                 weight: 5,
                 opacity: 1,
                 lineCap: "round",
@@ -1156,8 +1140,6 @@ export function HouseMap({
               interactive={false}
             />
           </>
-            );
-          })()
         ) : null}
         {!pickMode && gemAnchorEdit ? <MapGemAnchorEditLayer {...gemAnchorEdit} /> : null}
         {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHouses.length > 0 ? (

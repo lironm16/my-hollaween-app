@@ -5917,7 +5917,7 @@ svg.leaflet-zoom-animated {
   height: 56px;
   border-radius: 999px;
   background: #6d28d9 !important;
-  border: 4px solid #fff7ed;
+  border: 4px solid #6d28d9;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
   overflow: visible;
@@ -6075,12 +6075,18 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.is-undecorated {
   background: #94a3b8 !important;
+  border-color: #94a3b8;
 }
 .house-pin.is-poi {
   background: #f97316 !important;
+  border-color: #f97316;
 }
 .house-pin.is-poi.is-undecorated {
   background: #78716c !important;
+  border-color: #78716c;
+}
+.house-pin.is-poi:not(.is-undecorated) .pin-scare {
+  filter: sepia(1) saturate(4.5) hue-rotate(-12deg) brightness(1.08);
 }
 .house-pin.is-poi .pin-scare {
   width: 88% !important;
@@ -6222,9 +6228,14 @@ svg.leaflet-zoom-animated {
 }
 .house-pin.is-cluster-houses {
   background: #6d28d9 !important;
+  border-color: #6d28d9;
 }
 .house-pin.is-cluster-businesses {
   background: #f97316 !important;
+  border-color: #f97316;
+}
+.house-pin.is-cluster-businesses .pin-cluster-art {
+  filter: sepia(1) saturate(4.5) hue-rotate(-12deg) brightness(1.08);
 }
 .house-pin.is-cluster-mixed {
   background: linear-gradient(
@@ -6234,6 +6245,7 @@ svg.leaflet-zoom-animated {
     #f97316 50%,
     #f97316 100%
   ) !important;
+  border-color: #6d28d9;
 }
 .house-pin.is-route-ring {
   border-color: #f97316;
