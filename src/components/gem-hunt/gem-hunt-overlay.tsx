@@ -969,13 +969,7 @@ export function GemHuntOverlay({
       {showHuntUi && phase !== "collecting" && showLegacyFooter && !hideFooterChrome ? (
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
           {repeatFoundBanner ? (
-            <p
-              className={cn(
-                "gem-hunt-overlay__found-again-banner",
-                phase === "collecting" && "is-exploding",
-              )}
-              role="status"
-            >
+            <p className="gem-hunt-overlay__found-again-banner" role="status">
               {repeatFoundBannerHe}
             </p>
           ) : null}

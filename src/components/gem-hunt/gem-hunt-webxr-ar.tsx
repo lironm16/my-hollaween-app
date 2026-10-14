@@ -592,13 +592,13 @@ export function GemHuntWebXrAr({
       : null;
   const hideHuntHintControls =
     sessionActive &&
-    phase === "visible" &&
+    phase === "placed" &&
     inOnsiteBand &&
     (showArGem || showTellMeCenterGem);
   const repeatFoundBanner =
     repeatFoundBannerHe &&
     inOnsiteBand &&
-    (phase === "visible" || phase === "collecting") &&
+    (phase === "placed" || phase === "collecting") &&
     (showArGem || showTellMeCenterGem || phase === "collecting");
 
   useEffect(() => {
