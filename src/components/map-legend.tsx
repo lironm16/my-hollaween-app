@@ -71,13 +71,9 @@ function SwatchPin({
           : {
               background: school
                 ? undefined
-                : bare
-                  ? poi
-                    ? PIN_BACKGROUND.poi.undecorated
-                    : PIN_BACKGROUND.house.undecorated
-                  : poi
-                    ? PIN_BACKGROUND.poi.decorated
-                    : PIN_BACKGROUND.house.decorated,
+                : poi
+                  ? PIN_BACKGROUND.poi.decorated
+                  : PIN_BACKGROUND.house.decorated,
             }
       }
       aria-hidden

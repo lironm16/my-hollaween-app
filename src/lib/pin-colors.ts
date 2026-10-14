@@ -7,11 +7,11 @@ export const PIN_INTERIOR = "#fff7ed";
 export const PIN_BACKGROUND = {
   house: {
     decorated: PIN_INTERIOR,
-    undecorated: "#94a3b8",
+    undecorated: PIN_INTERIOR,
   },
   poi: {
     decorated: PIN_INTERIOR,
-    undecorated: "#78716c",
+    undecorated: PIN_INTERIOR,
   },
 } as const;
 
