@@ -160,9 +160,8 @@ export function GemAnchorPlaceDialog({
   const mapDistanceLine = useMemo(() => {
     const parts = [`${distanceM} מ׳ מהבית`];
     if (accuracyM != null) parts.push(`דיוק GPS ~${accuracyM} מ׳`);
-    if (dirty) parts.push("לא נשמר");
     return parts.join(" · ");
-  }, [distanceM, accuracyM, dirty]);
+  }, [distanceM, accuracyM]);
 
   async function send(method: "PUT" | "DELETE", body: Record<string, unknown>) {
     setSaving(true);
