@@ -1,21 +1,56 @@
 import { formatDisplayAddress, formatMapsAddress } from "@/lib/config";
+import type { ResolvedOrigin } from "@/lib/distance-origin";
 import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
 import { houseShareSlug } from "@/lib/ids";
 import { houseHeadline } from "@/lib/labels";
+import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
+
+/** When false, Google Maps should use the device’s live GPS (no origin param). */
+export function mapsNavigateUsesExplicitOrigin(origin: ResolvedOrigin) {
+  return origin.kind !== "gps" || !origin.fromGps;
+}
+
+type HouseMapsDestination =
+  | { kind: "address"; query: string }
+  | { kind: "coords"; lat: number; lng: number };
+
+function houseMapsDestination(house: PublicHouse): HouseMapsDestination | null {
+  const query = formatMapsAddress(house).trim();
+  if (query) return { kind: "address", query };
+  if (!isDeviceCachePinHouse(house) && Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
+    return { kind: "coords", lat: house.lat, lng: house.lng };
+  }
+  return null;
+}
 
 /** Strip invisible bidi marks that break iOS link detection when copying share text. */
 function stripBidiMarks(text: string) {
   return text.replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, "");
 }
 
-export function houseMapsUrl(house: PublicHouse) {
-  const query = formatMapsAddress(house).trim();
-  if (query) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&travelmode=walking`;
+export function houseMapsUrl(house: PublicHouse, options?: { origin?: ResolvedOrigin }) {
+  const destination = houseMapsDestination(house);
+  const origin = options?.origin;
+  const originPoint = origin ? { lat: origin.lat, lng: origin.lng } : null;
+  if (originPoint && origin && mapsNavigateUsesExplicitOrigin(origin) && destination) {
+    if (destination.kind === "coords") {
+      return googleMapsNavigateUrl(originPoint, { lat: destination.lat, lng: destination.lng });
+    }
+    const params = new URLSearchParams({
+      api: "1",
+      travelmode: "walking",
+      dir_action: "navigate",
+      origin: `${originPoint.lat},${originPoint.lng}`,
+      destination: destination.query,
+    });
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
   }
-  if (!isDeviceCachePinHouse(house) && Number.isFinite(house.lat) && Number.isFinite(house.lng)) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}&travelmode=walking`;
+  if (destination?.kind === "address") {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination.query)}&travelmode=walking`;
+  }
+  if (destination?.kind === "coords") {
+    return `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}&travelmode=walking`;
   }
   return `https://www.google.com/maps/dir/?api=1&travelmode=walking`;
 }
