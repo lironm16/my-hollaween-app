@@ -4,7 +4,6 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
-import { SkipIcon } from "@/components/skip-icon";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
 import { GEM_MAP_LEGEND_OPEN_HE, GEM_MAP_LEGEND_SECTION_HE } from "@/lib/gem-hunt-copy";
@@ -118,11 +117,7 @@ function SwatchPin({
           />
         </span>
       ) : null}
-      {skipped ? (
-        <b className="pin-status is-skipped" aria-hidden>
-          <SkipIcon className="pin-skip-icon" />
-        </b>
-      ) : null}
+      {skipped ? <b className="pin-status is-skipped" aria-hidden /> : null}
       {!skipped && closed ? <b className="pin-status is-closed" /> : null}
       {!skipped && onBreak ? <b className="pin-status is-break" /> : null}
       {!skipped && candy ? <b className={`pin-status is-${candy}`} /> : null}
