@@ -898,6 +898,7 @@ export function NeighborhoodApp({
       distanceLabel,
       distanceAllowed: addressReveal.distanceAllowed,
       sessionDisplayOrders: routeSessionDisplayOrders,
+      routeModeActive: true,
     });
   }, [
     routeMode,
@@ -1103,6 +1104,7 @@ export function NeighborhoodApp({
     routeMode,
     visits.visitedIds,
     skips.skippedIds,
+    routeMode,
   );
   const routeApproachTarget =
     routePlan && routeMode ? firstRouteStopPoint(routePlan) : null;

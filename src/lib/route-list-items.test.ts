@@ -214,8 +214,7 @@ describe("buildRouteListItems", () => {
       distanceAllowed: () => true,
     });
     const b = items.find((item) => item.house.id === "b");
-    assert.equal(b?.legSkipped, true);
-    assert.equal(b?.legDone, false);
+    assert.equal(b?.legTone, "skipped");
   });
 
   it("includes skipped tail houses not on the route", () => {

@@ -58,23 +58,37 @@ export function routePrefixStopCount(
   return count;
 }
 
+export type TourLegTone = "visited" | "skipped" | "open-route" | "open-idle";
+
 export type RouteProgressSegment = {
   points: [LatLng, LatLng];
-  /** Green leg leading onto a visited stop/house. */
+  tone: TourLegTone;
+  /** @deprecated Use tone */
   done: boolean;
-  /** Gray leg leading onto a skipped stop/house. */
+  /** @deprecated Use tone */
   skipped?: boolean;
 };
 
-/** Color of the connector onto this house (list legs and map segments use the same rules). */
+/** Connector / pin-ring color onto this house — shared by list legs and map lines. */
+export function tourLegTone(
+  houseId: string,
+  visitedIds: ReadonlySet<string>,
+  skippedIds: ReadonlySet<string>,
+  routeModeActive: boolean,
+): TourLegTone {
+  if (skippedIds.has(houseId)) return "skipped";
+  if (visitedIds.has(houseId)) return "visited";
+  return routeModeActive ? "open-route" : "open-idle";
+}
+
+/** @deprecated Prefer {@link tourLegTone} */
 export function legStyleForHouse(
   houseId: string,
   visitedIds: ReadonlySet<string>,
   skippedIds: ReadonlySet<string>,
 ): { legDone: boolean; legSkipped: boolean } {
-  if (skippedIds.has(houseId)) return { legDone: false, legSkipped: true };
-  if (visitedIds.has(houseId)) return { legDone: true, legSkipped: false };
-  return { legDone: false, legSkipped: false };
+  const tone = tourLegTone(houseId, visitedIds, skippedIds, false);
+  return { legDone: tone === "visited", legSkipped: tone === "skipped" };
 }
 
 /** Stop-to-stop legs for the full pinned tour; color by the destination stop’s lead house. */
@@ -82,6 +96,7 @@ export function routeProgressSegments(
   route: WalkingRoute,
   visitedIds: readonly string[],
   skippedIds: readonly string[],
+  routeModeActive = true,
   samePointMeters = 12,
 ): RouteProgressSegment[] {
   const visited = new Set(visitedIds);
@@ -93,15 +108,28 @@ export function routeProgressSegments(
     const a = stopPoint(prev);
     const b = stopPoint(curr);
     if (distanceMeters(a, b) < samePointMeters) continue;
-    const targetId = curr.house.id;
-    const style = legStyleForHouse(targetId, visited, skipped);
+    const tone = tourLegTone(curr.house.id, visited, skipped, routeModeActive);
     segments.push({
       points: [a, b],
-      done: style.legDone,
-      skipped: style.legSkipped,
+      tone,
+      done: tone === "visited",
+      skipped: tone === "skipped",
     });
   }
   return segments;
+}
+
+export function tourLegStrokeColors(tone: TourLegTone): { shadow: string; stroke: string } {
+  switch (tone) {
+    case "visited":
+      return { shadow: ROUTE_VISITED_GREEN_SHADOW, stroke: ROUTE_VISITED_GREEN };
+    case "skipped":
+      return { shadow: ROUTE_SKIPPED_GRAY_SHADOW, stroke: ROUTE_SKIPPED_GRAY };
+    case "open-route":
+      return { shadow: "#9a3412", stroke: "#f97316" };
+    case "open-idle":
+      return { shadow: "#78716c", stroke: "#fff7ed" };
+  }
 }
 
 export function firstRouteStopPoint(route: WalkingRoute): LatLng | null {

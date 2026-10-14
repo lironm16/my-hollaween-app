@@ -53,7 +53,17 @@ export type ClusterTourRingDecor = {
   styleAttr: string;
 };
 
-/** HTML class + inline style for building cluster tour ring (border, not fill). */
+/** HTML class + inline style for tour progress ring on any map pin (border, not fill). */
+export function pinTourRingDecor(
+  houses: PublicHouse[],
+  visitedIds: readonly string[],
+  skippedIds: readonly string[],
+  routeModeActive: boolean,
+): ClusterTourRingDecor {
+  return clusterTourRingDecor(houses, visitedIds, skippedIds, routeModeActive);
+}
+
+/** @deprecated Use {@link pinTourRingDecor} */
 export function clusterTourRingDecor(
   houses: PublicHouse[],
   visitedIds: readonly string[],

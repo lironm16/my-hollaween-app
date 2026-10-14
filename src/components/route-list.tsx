@@ -9,6 +9,7 @@ import { houseHeadline } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import type { TourLegTone } from "@/lib/route-session-progress";
 
 export type RouteListItem = {
   house: PublicHouse;
@@ -18,17 +19,38 @@ export type RouteListItem = {
   doneCollapsed?: boolean;
   legDone?: boolean;
   legSkipped?: boolean;
+  legTone?: TourLegTone;
   visitedTail?: boolean;
   distanceM?: number;
 };
 
-function RouteLeg({ label }: { label?: string }) {
+function routeLegClass(tone: TourLegTone = "open-route") {
+  return `route-list-leg-line--${tone}`;
+}
+
+function RouteLeg({ label, tone = "open-route" }: { label?: string; tone?: TourLegTone }) {
   return (
     <div className={cn("route-list-leg", !label && "route-list-leg--line-only")}>
-      <span className="route-list-leg-line" aria-hidden="true" />
-      {label ? <span className="route-list-leg-label">{label}</span> : null}
+      <span className={cn("route-list-leg-line", routeLegClass(tone))} aria-hidden="true" />
+      {label ? (
+        <span className={cn("route-list-leg-label", `route-list-leg-label--${tone}`)}>{label}</span>
+      ) : null}
     </div>
   );
+}
+
+function houseFrameClass(tone: TourLegTone, skipped: boolean, doneCollapsed: boolean) {
+  if (doneCollapsed) return skipped ? "route-list-house--skipped" : "route-list-house--done";
+  switch (tone) {
+    case "visited":
+      return "route-list-house--done";
+    case "skipped":
+      return "route-list-house--skipped";
+    case "open-idle":
+      return "route-list-house--idle";
+    default:
+      return "";
+  }
 }
 
 function RouteListCollapsedHouse({
@@ -151,7 +173,8 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped, doneCollapsed, visitedTail, distanceM }, i) => {
+        {items.map(({ house, order, hop, skipped, doneCollapsed, legTone, visitedTail, distanceM }, i) => {
+          const tone = legTone ?? (skipped ? "skipped" : "open-route");
           const showSkippedHeading =
             skipped && !doneCollapsed && !visitedTail && (i === 0 || !items[i - 1]!.skipped);
           const showVisitedHeading =
@@ -172,7 +195,7 @@ export function RouteList({
               {showSkippedHeading && !doneCollapsed ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
-              <RouteLeg label={hop || undefined} />
+              <RouteLeg label={hop || undefined} tone={tone} />
               {doneCollapsed ? (
                 <RouteListCollapsedHouse
                   house={house}
@@ -193,7 +216,7 @@ export function RouteList({
                 <div
                   className={cn(
                     "route-list-house",
-                    skipped && "route-list-house--skipped",
+                    houseFrameClass(tone, skipped, false),
                   )}
                 >
                   <HouseCard

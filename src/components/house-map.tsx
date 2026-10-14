@@ -33,11 +33,8 @@ import {
   stripApproachFromRouteLine,
   type LatLng,
 } from "@/lib/route";
-import { clusterTourRingDecor } from "@/lib/map-cluster-tour-fill";
-import {
-  ROUTE_ORIGIN_PURPLE,
-  ROUTE_ORIGIN_PURPLE_SHADOW,
-} from "@/lib/route-session-progress";
+import { pinTourRingDecor } from "@/lib/map-cluster-tour-fill";
+import { tourLegStrokeColors, tourLegTone, type TourLegTone } from "@/lib/route-session-progress";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { useCatalog } from "@/hooks/use-catalog";
 import {
@@ -183,9 +180,10 @@ function housePinHtml(
     houseId?: string;
     extraClass?: string;
     extraStyle?: string;
-    visited?: boolean;
     filteredOut?: boolean;
-    skipped?: boolean;
+    visitedIds?: readonly string[];
+    skippedIds?: readonly string[];
+    routeModeActive?: boolean;
   },
 ) {
   const selectedClass = extras?.selected ? " is-selected" : "";
@@ -194,12 +192,17 @@ function housePinHtml(
   const face = pinFaceKind(house);
   const visit = pinVisitKind(house, now, gemCtx.addressReveal);
   const bareClass = face === "bare" ? " is-undecorated" : "";
-  const visitedClass = extras?.visited ? " is-visited" : "";
-  const skippedClass = extras?.skipped && !extras?.visited ? " is-skipped" : "";
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = pinBackgroundFill(house, face !== "bare");
-  const styleAttr = ` style="${extras?.extraStyle ? `${extras.extraStyle};background:${fill}` : `background:${fill}`}"`;
+  const tourRing = pinTourRingDecor(
+    [house],
+    extras?.visitedIds ?? [],
+    extras?.skippedIds ? [...extras.skippedIds] : [],
+    extras?.routeModeActive ?? false,
+  );
+  const ringStyle = tourRing.styleAttr.match(/style="([^"]*)"/)?.[1] ?? "";
+  const styleAttr = ` style="background:${fill}${extras?.extraStyle ? `;${extras.extraStyle}` : ""}${ringStyle ? `;${ringStyle}` : ""}"`;
   const label =
     visit === "closed"
       ? 'aria-label="סגור"'
@@ -213,7 +216,7 @@ function housePinHtml(
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${visitedClass}${skippedClass}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${tourRing.classSuffix}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
@@ -260,9 +263,10 @@ function clusterIcon(
     const wrapped = wrapRoutePin(
       housePinHtml(only, now, gemCtx, {
         selected: selectedHere,
-        visited: visitedIds.includes(only.id),
         filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
-        skipped: skippedIds?.has(only.id),
+        visitedIds,
+        skippedIds,
+        routeModeActive,
       }),
       routeOrder,
     );
@@ -282,13 +286,16 @@ function clusterIcon(
   const pinFill = "#6d28d9";
   const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
   const tourHouses = clusterBadgeHouses(houses);
-  const tourRing = clusterTourRingDecor(
+  const tourRing = pinTourRingDecor(
     tourHouses,
     visitedIds,
     skippedIds ? [...skippedIds] : [],
     routeModeActive,
   );
-  const pinStyleAttr = schoolCampus ? ` style="background:${pinFill}"` : tourRing.styleAttr;
+  const ringStyle = tourRing.styleAttr.match(/style="([^"]*)"/)?.[1] ?? "";
+  const pinStyleAttr = schoolCampus
+    ? ` style="background:${pinFill}${ringStyle ? `;${ringStyle}` : ""}"`
+    : ` style="background:#fff7ed${ringStyle ? `;${ringStyle}` : ""}"`;
   const wrapped = wrapRoutePin(
     `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
@@ -704,7 +711,12 @@ type Props = {
   locating?: boolean;
   onLocate?: () => void;
   routeLine?: LatLng[] | null;
-  routeLineSegments?: { points: [LatLng, LatLng]; done: boolean; skipped?: boolean }[] | null;
+  routeLineSegments?: {
+    points: [LatLng, LatLng];
+    tone?: TourLegTone;
+    done: boolean;
+    skipped?: boolean;
+  }[] | null;
   /** Dashed purple origin spur — always to tour stop 1 when set. */
   approachTarget?: LatLng | null;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
@@ -868,8 +880,7 @@ export function HouseMap({
   const routeSegmentLines = useMemo(
     () =>
       routeLineSegments?.map((segment) => ({
-        done: segment.done,
-        skipped: segment.skipped,
+        tone: segment.tone ?? (segment.skipped ? "skipped" : segment.done ? "visited" : "open-route"),
         positions: segment.points.map(
           (point) => [point.lat, point.lng] as [number, number],
         ),
@@ -888,6 +899,11 @@ export function HouseMap({
       [target.lat, target.lng] as [number, number],
     ];
   }, [routeStart, userLocation, routeStops, approachTarget, routeStartedFrom]);
+  const approachTone = useMemo((): TourLegTone => {
+    const firstId = routeStops?.[0]?.id;
+    if (!firstId) return routeModeActive ? "open-route" : "open-idle";
+    return tourLegTone(firstId, new Set(visitedIds), skippedIdSet, routeModeActive);
+  }, [routeStops, visitedIds, skippedIdSet, routeModeActive]);
   const { tiles, ready: tilesReady } = useMapTiles();
   useEffect(() => {
     postMapTileCacheConfig();
@@ -1001,11 +1017,14 @@ export function HouseMap({
           />
         ) : null}
         {!pickMode && approachPositions ? (
+          (() => {
+            const approachColors = tourLegStrokeColors(approachTone);
+            return (
           <>
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: ROUTE_ORIGIN_PURPLE_SHADOW,
+                color: approachColors.shadow,
                 weight: 6,
                 opacity: 0.35,
                 dashArray: "8 9",
@@ -1018,7 +1037,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: ROUTE_ORIGIN_PURPLE,
+                color: approachColors.stroke,
                 weight: 4,
                 opacity: 0.9,
                 dashArray: "8 9",
@@ -1029,14 +1048,18 @@ export function HouseMap({
               interactive={false}
             />
           </>
+            );
+          })()
         ) : null}
         {!pickMode && useSegmentRoute
-          ? routeSegmentLines.map((segment, index) => (
+          ? routeSegmentLines.map((segment, index) => {
+              const segmentColors = tourLegStrokeColors(segment.tone);
+              return (
               <Fragment key={`route-seg-${index}`}>
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: ROUTE_ORIGIN_PURPLE_SHADOW,
+                    color: segmentColors.shadow,
                     weight: 8,
                     opacity: 0.4,
                     lineCap: "round",
@@ -1048,7 +1071,7 @@ export function HouseMap({
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: ROUTE_ORIGIN_PURPLE,
+                    color: segmentColors.stroke,
                     weight: 5,
                     opacity: 1,
                     lineCap: "round",
@@ -1058,15 +1081,19 @@ export function HouseMap({
                   interactive={false}
                 />
               </Fragment>
-            ))
+              );
+            })
           : null}
         {!pickMode && !useSegmentRoute && routePositions ? (
+          (() => {
+            const fallbackColors = tourLegStrokeColors("open-route");
+            return (
           <>
             <Polyline
               key={`route-shadow-${routePositions.length}-${routePositions[0]?.join(",")}`}
               positions={routePositions}
               pathOptions={{
-                color: ROUTE_ORIGIN_PURPLE_SHADOW,
+                color: fallbackColors.shadow,
                 weight: 8,
                 opacity: 0.4,
                 lineCap: "round",
@@ -1079,7 +1106,7 @@ export function HouseMap({
               key={`route-line-${routePositions.length}-${routePositions[0]?.join(",")}`}
               positions={routePositions}
               pathOptions={{
-                color: ROUTE_ORIGIN_PURPLE,
+                color: fallbackColors.stroke,
                 weight: 5,
                 opacity: 1,
                 lineCap: "round",
@@ -1089,6 +1116,8 @@ export function HouseMap({
               interactive={false}
             />
           </>
+            );
+          })()
         ) : null}
         {!pickMode && gemAnchorEdit ? <MapGemAnchorEditLayer {...gemAnchorEdit} /> : null}
         {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHouses.length > 0 ? (

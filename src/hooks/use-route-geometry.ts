@@ -10,11 +10,12 @@ export function useRouteGeometry(
   enabled: boolean,
   visitedIds: readonly string[] = [],
   skippedIds: readonly string[] = [],
+  routeModeActive = true,
 ) {
   const segments = useMemo((): RouteProgressSegment[] => {
     if (!enabled || !route || route.stops.length < 2) return [];
-    return routeProgressSegments(route, visitedIds, skippedIds);
-  }, [enabled, route, visitedIds, skippedIds]);
+    return routeProgressSegments(route, visitedIds, skippedIds, routeModeActive);
+  }, [enabled, route, visitedIds, skippedIds, routeModeActive]);
 
   const line = useMemo(() => {
     if (segments.length === 0) return null;

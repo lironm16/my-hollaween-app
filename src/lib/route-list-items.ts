@@ -4,7 +4,7 @@ import { distanceMeters } from "@/lib/geo";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import type { PublicHouse } from "@/lib/types";
 import { routeDisplayOrder } from "@/lib/route-display-order";
-import { legStyleForHouse } from "@/lib/route-session-progress";
+import { type TourLegTone, tourLegTone } from "@/lib/route-session-progress";
 import type { WalkingRoute } from "@/lib/route";
 
 export type RouteListItemInput = {
@@ -14,9 +14,10 @@ export type RouteListItemInput = {
   skipped: boolean;
   /** Visited — collapsed green row (any order). */
   doneCollapsed?: boolean;
-  /** Connector line before this card uses the “done” color. */
+  legTone?: TourLegTone;
+  /** @deprecated Use legTone */
   legDone?: boolean;
-  /** Connector before this card uses skipped gray when leading into a skipped stop/house. */
+  /** @deprecated Use legTone */
   legSkipped?: boolean;
   /** Off-plan visit shown after the tour (legacy compact). */
   visitedTail?: boolean;
@@ -34,6 +35,7 @@ export function buildRouteListItems(options: {
   distanceAllowed: (houseId: string) => boolean;
   /** Pinned 1…N for this route session; stops keep numbers after visits until route mode exits. */
   sessionDisplayOrders?: Map<string, number> | null;
+  routeModeActive?: boolean;
 }): RouteListItemInput[] {
   const {
     route,
@@ -45,6 +47,7 @@ export function buildRouteListItems(options: {
     distanceLabel,
     distanceAllowed,
     sessionDisplayOrders,
+    routeModeActive = false,
   } = options;
 
   const routeIds = routeHouseIds(route);
@@ -63,7 +66,7 @@ export function buildRouteListItems(options: {
       const allowed = distanceAllowed(house.id);
       const skipped = skippedSet.has(house.id);
       const visited = visitedSet.has(house.id);
-      const { legDone, legSkipped } = legStyleForHouse(house.id, visitedSet, skippedSet);
+      const legTone = tourLegTone(house.id, visitedSet, skippedSet, routeModeActive);
       items.push({
         house,
         order: routeDisplayOrder(house.id, stop.order, sessionDisplayOrders),
@@ -74,8 +77,9 @@ export function buildRouteListItems(options: {
               ? "אותו המיקום"
               : distanceLabel(house.id, stop.fromPreviousMeters),
         skipped,
-        legDone,
-        legSkipped,
+        legTone,
+        legDone: legTone === "visited",
+        legSkipped: legTone === "skipped",
         doneCollapsed: visited || skipped,
       });
     });
