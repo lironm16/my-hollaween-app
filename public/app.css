@@ -6235,6 +6235,32 @@ svg.leaflet-zoom-animated {
     #f97316 100%
   ) !important;
 }
+.house-pin.is-building.is-route-ring {
+  border-color: #f97316;
+}
+.house-pin.is-building.pin-tour-ring {
+  border-color: transparent;
+}
+.house-pin.is-building.pin-tour-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 4px;
+  background: var(--pin-tour-ring);
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+.house-pin.is-building.pin-tour-ring > * {
+  position: relative;
+  z-index: 1;
+}
 .house-pin.is-cluster-ellipse .pin-cluster-icon.pin-cluster-duo {
   width: 58px;
   height: 58px;
@@ -9340,7 +9366,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   width: 3px;
   flex-shrink: 0;
   border-radius: 999px;
-  background: #f97316;
+  background: #a855f7;
 }
 .route-list-leg-line--done {
   background: #059669;
@@ -9352,7 +9378,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   align-self: center;
   font-size: 1rem;
   font-weight: 600;
-  color: #fdba74;
+  color: #c4b5fd;
 }
 .route-list-leg-label--done {
   color: #6ee7b7;

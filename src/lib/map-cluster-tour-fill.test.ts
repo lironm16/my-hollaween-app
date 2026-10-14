@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { clusterTourBackgroundStyle } from "@/lib/map-cluster-tour-fill";
+import {
+  clusterTourRingDecor,
+  clusterTourRingGradient,
+} from "@/lib/map-cluster-tour-fill";
 import type { PublicHouse } from "@/lib/types";
 
 function stub(id: string): PublicHouse {
@@ -36,24 +39,35 @@ function stub(id: string): PublicHouse {
   };
 }
 
-describe("clusterTourBackgroundStyle", () => {
-  it("returns null when every house is still open", () => {
-    const style = clusterTourBackgroundStyle([stub("a"), stub("b")], [], []);
-    assert.equal(style, null);
+describe("clusterTourRingGradient", () => {
+  it("returns null when idle and every house is open", () => {
+    assert.equal(clusterTourRingGradient([stub("a"), stub("b")], [], [], false), null);
   });
 
-  it("splits two houses into half/half slices", () => {
-    const style = clusterTourBackgroundStyle([stub("a"), stub("b")], ["a"], ["b"]);
-    assert.ok(style);
-    assert.match(style!, /conic-gradient/);
-    assert.match(style!, /#059669 0% 50%/);
-    assert.match(style!, /#64748b 50% 100%/);
+  it("uses orange for all-open clusters while route mode is on", () => {
+    const gradient = clusterTourRingGradient([stub("a")], [], [], true);
+    assert.match(gradient!, /#f97316/);
   });
 
-  it("uses white for open and gray for skipped in a pair", () => {
-    const style = clusterTourBackgroundStyle([stub("a"), stub("b")], [], ["b"]);
-    assert.ok(style);
-    assert.match(style!, /#fff7ed 0% 50%/);
-    assert.match(style!, /#64748b 50% 100%/);
+  it("splits visit/skip on the ring with white open slices off-route", () => {
+    const gradient = clusterTourRingGradient([stub("a"), stub("b")], ["a"], ["b"], false);
+    assert.ok(gradient);
+    assert.match(gradient!, /#059669 0% 50%/);
+    assert.match(gradient!, /#64748b 50% 100%/);
+  });
+
+  it("uses orange instead of white for open slices in route mode", () => {
+    const gradient = clusterTourRingGradient([stub("a"), stub("b")], [], ["b"], true);
+    assert.ok(gradient);
+    assert.match(gradient!, /#f97316 0% 50%/);
+    assert.match(gradient!, /#64748b 50% 100%/);
+  });
+});
+
+describe("clusterTourRingDecor", () => {
+  it("uses tour ring styling when route is on and cluster is untouched", () => {
+    const decor = clusterTourRingDecor([stub("a")], [], [], true);
+    assert.equal(decor.classSuffix, " pin-tour-ring");
+    assert.match(decor.styleAttr, /#f97316/);
   });
 });

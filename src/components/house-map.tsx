@@ -33,7 +33,11 @@ import {
   stripApproachFromRouteLine,
   type LatLng,
 } from "@/lib/route";
-import { clusterTourBackgroundStyle } from "@/lib/map-cluster-tour-fill";
+import { clusterTourRingDecor } from "@/lib/map-cluster-tour-fill";
+import {
+  ROUTE_ORIGIN_PURPLE,
+  ROUTE_ORIGIN_PURPLE_SHADOW,
+} from "@/lib/route-session-progress";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { useCatalog } from "@/hooks/use-catalog";
 import {
@@ -233,6 +237,7 @@ function clusterIcon(
   filteredOut = false,
   matchedIds?: ReadonlySet<string>,
   skippedIds?: ReadonlySet<string>,
+  routeModeActive = false,
 ) {
   const houses = cluster.houses;
   const only = houses[0];
@@ -277,18 +282,15 @@ function clusterIcon(
   const pinFill = "#6d28d9";
   const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
   const tourHouses = clusterBadgeHouses(houses);
-  const tourFill = clusterTourBackgroundStyle(
+  const tourRing = clusterTourRingDecor(
     tourHouses,
     visitedIds,
     skippedIds ? [...skippedIds] : [],
+    routeModeActive,
   );
-  const pinStyleAttr = tourFill
-    ? ` style="${tourFill}"`
-    : schoolCampus
-      ? ` style="background:${pinFill}"`
-      : "";
+  const pinStyleAttr = schoolCampus ? ` style="background:${pinFill}"` : tourRing.styleAttr;
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${clusterKindClass}${campusClass}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
+    `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
@@ -542,6 +544,7 @@ const ClusterMarker = memo(function ClusterMarker({
   matchedIds,
   matchedIdsKey,
   gemPinRingCtx,
+  routeModeActive,
 }: {
   cluster: HouseCluster;
   selectedId?: string | null;
@@ -555,6 +558,7 @@ const ClusterMarker = memo(function ClusterMarker({
   matchedIds?: ReadonlySet<string>;
   matchedIdsKey?: string;
   gemPinRingCtx: MapGemPinRingContext;
+  routeModeActive?: boolean;
 }) {
   const tick = useMinuteTick();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
@@ -581,6 +585,7 @@ const ClusterMarker = memo(function ClusterMarker({
       routeOrder ?? "",
       visitedKey,
       skippedKey,
+      routeModeActive ? "1" : "0",
       filteredOut ? "1" : "0",
       matchedIdsKey ?? "",
       gemRingKey,
@@ -596,6 +601,7 @@ const ClusterMarker = memo(function ClusterMarker({
         filteredOut,
         matchedIds,
         skippedIds,
+        routeModeActive,
       ),
     );
   }, [
@@ -605,6 +611,7 @@ const ClusterMarker = memo(function ClusterMarker({
     routeOrder,
     visitedKey,
     skippedKey,
+    routeModeActive,
     filteredOut,
     matchedIdsKey,
     matchedIds,
@@ -739,6 +746,8 @@ type Props = {
   showGemPinRings?: boolean;
   /** Owner/admin gem placement — draggable demon around the selected house. */
   gemAnchorEdit?: GemAnchorEditState | null;
+  /** Tour mode — cluster ring uses orange for open slices instead of white. */
+  routeModeActive?: boolean;
 };
 
 export function HouseMap({
@@ -787,6 +796,7 @@ export function HouseMap({
   isGemCollected,
   showGemPinRings = false,
   gemAnchorEdit = null,
+  routeModeActive = false,
 }: Props) {
   const { catalog } = useCatalog();
   const addressRevealSchedule = catalog?.eventSettings?.addressReveal;
@@ -995,7 +1005,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: "#7c2d12",
+                color: ROUTE_ORIGIN_PURPLE_SHADOW,
                 weight: 6,
                 opacity: 0.35,
                 dashArray: "8 9",
@@ -1008,7 +1018,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: "#fdba74",
+                color: ROUTE_ORIGIN_PURPLE,
                 weight: 4,
                 opacity: 0.9,
                 dashArray: "8 9",
@@ -1026,7 +1036,7 @@ export function HouseMap({
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: "#9a3412",
+                    color: ROUTE_ORIGIN_PURPLE_SHADOW,
                     weight: 8,
                     opacity: 0.4,
                     lineCap: "round",
@@ -1038,7 +1048,7 @@ export function HouseMap({
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: "#f97316",
+                    color: ROUTE_ORIGIN_PURPLE,
                     weight: 5,
                     opacity: 1,
                     lineCap: "round",
@@ -1056,7 +1066,7 @@ export function HouseMap({
               key={`route-shadow-${routePositions.length}-${routePositions[0]?.join(",")}`}
               positions={routePositions}
               pathOptions={{
-                color: "#9a3412",
+                color: ROUTE_ORIGIN_PURPLE_SHADOW,
                 weight: 8,
                 opacity: 0.4,
                 lineCap: "round",
@@ -1069,7 +1079,7 @@ export function HouseMap({
               key={`route-line-${routePositions.length}-${routePositions[0]?.join(",")}`}
               positions={routePositions}
               pathOptions={{
-                color: "#f97316",
+                color: ROUTE_ORIGIN_PURPLE,
                 weight: 5,
                 opacity: 1,
                 lineCap: "round",
@@ -1118,6 +1128,7 @@ export function HouseMap({
                   (found, house) => found ?? routeOrderById.get(house.id),
                   undefined,
                 )}
+                routeModeActive={routeModeActive}
               />
             );
           })}
