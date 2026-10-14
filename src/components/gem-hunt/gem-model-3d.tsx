@@ -77,7 +77,7 @@ function fitCameraToPivot(
 function fitCameraToBoundingSphere(
   camera: THREE.PerspectiveCamera,
   pivot: THREE.Object3D,
-  padding = 1.38,
+  padding = 1.22,
   orbit?: OrbitControls | null,
 ) {
   const box = new THREE.Box3().setFromObject(pivot);

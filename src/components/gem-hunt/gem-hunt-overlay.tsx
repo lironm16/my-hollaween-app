@@ -574,13 +574,15 @@ export function GemHuntOverlay({
 
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
-  const collectBanner =
-    phase === "collecting"
+  const inOnsiteBand = sim || canCollectNow;
+  const repeatFoundBannerHe = repeatVisit ? `מצאתם שוב את ${gemLabelHe(monsterId)}` : null;
+  const topCollectBanner =
+    phase === "collecting" && !repeatVisit
       ? campusSession
         ? GEM_FOUND_CHEER_HE
         : albumRevealNewFriend
           ? GEM_COLLECT_NEW_HE
-          : `מצאתם שוב את ${gemLabelHe(monsterId)}`
+          : null
       : null;
 
   function handleClose() {
@@ -610,7 +612,24 @@ export function GemHuntOverlay({
     arPinGuideMode && canCollectNow && gemWorldPinVisible(pinDisplay ?? pinPlacement, huntBandM);
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
   /** Show when anchor bearing is in the camera cone — gated by activeGemHuntMeters(). */
-  const showWorldGemSprite = gemWorldPinVisible(pinDisplay ?? pinPlacement, huntBandM);
+  const encounterForcesCenter =
+    inOnsiteBand &&
+    !userDismissedCenterGem &&
+    encounterMode &&
+    (encounterPhase === "encounter" ||
+      encounterPhase.startsWith("resolve") ||
+      encounterPhase === "reward");
+  const gemAtCenter =
+    inOnsiteBand &&
+    !userDismissedCenterGem &&
+    (centerReveal ||
+      encounterForcesCenter ||
+      (encounterMode &&
+        (encounterPhase === "approach" || encounterPhase === "encounter")) ||
+      (!encounterMode && gemVisible) ||
+      (campusSession && (canCollectNow || sim)));
+  const showWorldGemSprite =
+    !gemAtCenter && gemWorldPinVisible(pinDisplay ?? pinPlacement, huntBandM);
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =
@@ -649,12 +668,6 @@ export function GemHuntOverlay({
       headingStatus === "denied" ||
       headingStatus === "idle" ||
       heading == null);
-  const encounterForcesCenter =
-    !userDismissedCenterGem &&
-    encounterMode &&
-    (encounterPhase === "encounter" ||
-      encounterPhase.startsWith("resolve") ||
-      encounterPhase === "reward");
   const showNavArrow = encounterMode
     ? encounterPhase === "approach" &&
       hintPanel === "nav" &&
@@ -667,11 +680,6 @@ export function GemHuntOverlay({
       huntArrowDeg != null &&
       liveLoc != null &&
       !sim;
-
-  const gemAtCenter =
-    centerReveal ||
-    encounterForcesCenter ||
-    (campusSession && (canCollectNow || sim));
 
   const campusTapCollect =
     campusSession && phase === "visible" && (canCollectNow || sim || encounterCollectLatchedRef.current);
@@ -705,6 +713,12 @@ export function GemHuntOverlay({
   }, [encounterMode, encounterPhase, gemAtCenter, offerEncounterCollect, canTapCollect, handleCollect]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
+  const hideHuntHintControls = showHuntGem && phase === "visible" && inOnsiteBand;
+  const repeatFoundBanner =
+    repeatFoundBannerHe &&
+    inOnsiteBand &&
+    (phase === "visible" || phase === "collecting") &&
+    (showHuntGem || phase === "collecting");
 
   const gemEncounterWiggle =
     encounterPhase === "resolve-hit" ||
@@ -738,17 +752,30 @@ export function GemHuntOverlay({
       setHintPanel(null);
       return;
     }
-    if (centerReveal || gemAtCenter) {
+    if (!inOnsiteBand && (centerReveal || gemAtCenter)) {
       setUserDismissedCenterGem(true);
       if (encounterMode && encounterPhase === "encounter") {
         setEncounterPhase("approach");
       }
+      setCenterReveal(false);
     }
-    setCenterReveal(false);
     const ok = await requestGemHuntOrientationPermission({ force: true });
     if (ok) setCompassRetry((n) => n + 1);
     setHintPanel("nav");
-  }, [hintPanel, centerReveal, gemAtCenter, encounterMode, encounterPhase, setEncounterPhase]);
+  }, [
+    hintPanel,
+    centerReveal,
+    gemAtCenter,
+    encounterMode,
+    encounterPhase,
+    inOnsiteBand,
+    setEncounterPhase,
+  ]);
+
+  useEffect(() => {
+    if (sim || canCollectNow) return;
+    setCenterReveal(false);
+  }, [canCollectNow, sim]);
 
   function retryCamera() {
     setCameraError(null);
@@ -788,7 +815,7 @@ export function GemHuntOverlay({
         </div>
       ) : null}
       <div className="gem-hunt-overlay__shade" aria-hidden />
-      {collectBanner ? (
+      {topCollectBanner ? (
         <p
           className={cn(
             "gem-hunt-overlay__collect-banner",
@@ -796,7 +823,7 @@ export function GemHuntOverlay({
           )}
           role="status"
         >
-          {collectBanner}
+          {topCollectBanner}
         </p>
       ) : null}
       {encounterMode ? (
@@ -841,6 +868,14 @@ export function GemHuntOverlay({
 
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
+      ) : null}
+      {phase === "collecting" && repeatFoundBannerHe ? (
+        <p
+          className="gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--collect is-exploding"
+          role="status"
+        >
+          {repeatFoundBannerHe}
+        </p>
       ) : null}
 
       {showHuntUi ? (
@@ -904,7 +939,7 @@ export function GemHuntOverlay({
                 spinWhileCollect={false}
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
-                zoom={centerReveal && gemAtCenter ? GEM_TELL_ME_CENTER_ZOOM : 1}
+                zoom={gemAtCenter ? GEM_TELL_ME_CENTER_ZOOM : 1}
                 celebrateVariant={collectDanceIndex}
                 onInspectTap={
                   campusQuickTapGem
@@ -933,6 +968,17 @@ export function GemHuntOverlay({
 
       {showHuntUi && phase !== "collecting" && showLegacyFooter && !hideFooterChrome ? (
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
+          {repeatFoundBanner ? (
+            <p
+              className={cn(
+                "gem-hunt-overlay__found-again-banner",
+                phase === "collecting" && "is-exploding",
+              )}
+              role="status"
+            >
+              {repeatFoundBannerHe}
+            </p>
+          ) : null}
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
               {tellMeButton.showRangeError ? (
@@ -994,36 +1040,38 @@ export function GemHuntOverlay({
                   {GEM_CAMPUS_TAP_SAVE_HE}
                 </button>
               ) : null}
-                <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
-                  <button
-                    type="button"
-                    className={cn(
-                      "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
-                      hintPanel === "nav" && "is-active",
-                    )}
-                    aria-pressed={hintPanel === "nav"}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void toggleHintPanel();
-                    }}
-                  >
-                    <span className="gem-hunt-overlay__hint-btn-label">
-                      <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                      <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
-                    </span>
-                  </button>
-                  {!encounterMode || showEncounterFooter ? (
-                    <GemHuntTellMeButton
-                      centerReveal={centerReveal}
-                      readyHighlight={tellMeButton.readyHighlight}
+                {!hideHuntHintControls ? (
+                  <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
+                    <button
+                      type="button"
+                      className={cn(
+                        "gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact",
+                        hintPanel === "nav" && "is-active",
+                      )}
+                      aria-pressed={hintPanel === "nav"}
+                      onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
-                        tellMeButton.onTellMeClick();
+                        void toggleHintPanel();
                       }}
-                    />
-                  ) : null}
-                </div>
+                    >
+                      <span className="gem-hunt-overlay__hint-btn-label">
+                        <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
+                        <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+                      </span>
+                    </button>
+                    {!encounterMode || showEncounterFooter ? (
+                      <GemHuntTellMeButton
+                        centerReveal={centerReveal}
+                        readyHighlight={tellMeButton.readyHighlight}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          tellMeButton.onTellMeClick();
+                        }}
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
             </div>
           </div>
         </footer>

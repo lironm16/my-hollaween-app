@@ -157,6 +157,35 @@ describe("buildRouteListItems", () => {
     assert.equal(items[1]!.hop, "");
   });
 
+  it("lists visited tail when active stops are empty after route completion", () => {
+    const houses = [stub("a"), stub("b")];
+    const emptyRoute = buildWalkingRouteOrdered([], { lat: 32.09, lng: 34.81 });
+    assert.equal(emptyRoute, null);
+    const completedRoute = {
+      stops: [],
+      totalMeters: 0,
+      totalMinutes: 0,
+      startedFrom: "neighborhood" as const,
+      origin: { lat: 32.09, lng: 34.81 },
+      accessible: false,
+    };
+    const items = buildRouteListItems({
+      route: completedRoute,
+      catalogHouses: houses,
+      houseSet: "real",
+      visitedIds: ["a", "b"],
+      skippedIds: [],
+      origin: { lat: 32.09, lng: 34.81 },
+      distanceLabel: () => "hop",
+      distanceAllowed: () => true,
+    });
+    assert.equal(items.filter((item) => !item.visitedTail).length, 0);
+    assert.deepEqual(
+      items.filter((item) => item.visitedTail).map((item) => item.house.id),
+      ["a", "b"],
+    );
+  });
+
   it("includes skipped tail houses not on the route", () => {
     const houses = [stub("a"), stub("b")];
     const route = buildWalkingRouteOrdered([houses[0]!], { lat: 32.09, lng: 34.81 });

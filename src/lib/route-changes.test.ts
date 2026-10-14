@@ -165,6 +165,32 @@ describe("rebuildRouteAfterSkipChange", () => {
     );
   });
 
+  it("keeps an empty active route when every stop was visited (list tail still renders)", () => {
+    const origin = { lat: 32.0919, lng: 34.8112 };
+    const only = stub("only", { lat: 32.09195, lng: 34.81125 });
+    const route = buildWalkingRouteOrdered([only], origin);
+    assert.ok(route);
+    const context = {
+      houseSet: "real" as const,
+      likedIds: [],
+      visitedIds: ["only"],
+      skippedIds: [],
+      now: new Date("2026-10-31T18:00:00"),
+    };
+    const rebuilt = rebuildRouteAfterSkipChange(
+      route,
+      [only],
+      baseFilters,
+      context,
+      [],
+      false,
+      origin,
+    );
+    assert.ok(rebuilt);
+    assert.equal(rebuilt!.stops.length, 0);
+    assert.equal(rebuilt!.startedFrom, route!.startedFrom);
+  });
+
   it("inserts restored houses at the best stop order, not always last", () => {
     const origin = { lat: 32.0919, lng: 34.8112 };
     const near = stub("near", { lat: 32.09195, lng: 34.81125, address: "חרוזים 8, חרוזים" });

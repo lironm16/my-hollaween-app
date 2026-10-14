@@ -66,7 +66,7 @@ export const GEM_FACING_TOLERANCE_DEG = 60;
 /** Guaranteed gem reveal after this many seconds of panning in range. */
 export const GEM_SCAN_REVEAL_SECONDS = 5;
 /** «גלה לי» center view — inspect360 framing leaves wide orbit margins, so zoom in (iOS + Android DOM overlay). */
-export const GEM_TELL_ME_CENTER_ZOOM = 1.45;
+export const GEM_TELL_ME_CENTER_ZOOM = 1.58;
 /** Guaranteed gem reveal after this much pan rotation (degrees). */
 export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */

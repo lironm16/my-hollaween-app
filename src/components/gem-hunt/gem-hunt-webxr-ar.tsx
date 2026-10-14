@@ -515,15 +515,19 @@ export function GemHuntWebXrAr({
       setHintPanel(null);
       return;
     }
-    if (centerReveal || tellMeRevealActive) {
+    const inOnsiteBand = simulateInRange || canCollectNow || inWebXrHuntBand;
+    if (!inOnsiteBand && (centerReveal || tellMeRevealActive)) {
       setUserDismissedCenterGem(true);
       if (encounterMode && encounterPhase === "encounter") {
         setEncounterPhase("approach");
       }
+      setCenterReveal(false);
     }
     placeAssistRef.current.forceOnce = false;
     placeAssistRef.current.fast = false;
-    setCenterReveal(false);
+    if (!simulateInRange && !canCollectNow && !inWebXrHuntBand) {
+      setCenterReveal(false);
+    }
     const ok = await requestGemHuntOrientationPermission({ force: true });
     if (ok) setCompassRetry((n) => n + 1);
     setHintPanel("nav");
@@ -534,6 +538,9 @@ export function GemHuntWebXrAr({
     encounterMode,
     encounterPhase,
     setEncounterPhase,
+    canCollectNow,
+    inWebXrHuntBand,
+    simulateInRange,
   ]);
 
   const activateTellMe = useCallback(() => {
@@ -573,14 +580,26 @@ export function GemHuntWebXrAr({
     geoLockMode === "pending" &&
     GEM_WEBXR_GEO_PLACEMENT_ENABLED;
 
-  const collectBanner =
-    phase === "collecting"
+  const inOnsiteBand = simulateInRange || canCollectNow || inWebXrHuntBand;
+  const repeatFoundBannerHe = repeatVisit ? `מצאתם שוב את ${gemLabelHe(monsterId)}` : null;
+  const topCollectBanner =
+    phase === "collecting" && !repeatVisit
       ? campusSession
         ? GEM_FOUND_CHEER_HE
         : albumRevealNewFriend
           ? GEM_COLLECT_NEW_HE
-          : `מצאתם שוב את ${gemLabelHe(monsterId)}`
+          : null
       : null;
+  const hideHuntHintControls =
+    sessionActive &&
+    phase === "visible" &&
+    inOnsiteBand &&
+    (showArGem || showTellMeCenterGem);
+  const repeatFoundBanner =
+    repeatFoundBannerHe &&
+    inOnsiteBand &&
+    (phase === "visible" || phase === "collecting") &&
+    (showArGem || showTellMeCenterGem || phase === "collecting");
 
   useEffect(() => {
     const host = hostRef.current;
@@ -1121,7 +1140,7 @@ export function GemHuntWebXrAr({
         <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn pointer-events-auto" />
       </header>
 
-      {collectBanner ? (
+      {topCollectBanner ? (
         <p
           className={cn(
             "gem-hunt-overlay__collect-banner",
@@ -1129,12 +1148,20 @@ export function GemHuntWebXrAr({
           )}
           role="status"
         >
-          {collectBanner}
+          {topCollectBanner}
         </p>
       ) : null}
 
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
+      ) : null}
+      {phase === "collecting" && repeatFoundBannerHe ? (
+        <p
+          className="gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--collect is-exploding"
+          role="status"
+        >
+          {repeatFoundBannerHe}
+        </p>
       ) : null}
 
       <div ref={hostRef} className="gem-hunt-webxr__host" />
@@ -1203,6 +1230,11 @@ export function GemHuntWebXrAr({
         className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt gem-hunt-webxr__footer"
         dir="rtl"
       >
+        {repeatFoundBanner && phase !== "collecting" ? (
+          <p className="gem-hunt-overlay__found-again-banner" role="status">
+            {repeatFoundBannerHe}
+          </p>
+        ) : null}
         {error ? (
           <p className="gem-hunt-webxr__error" role="alert">
             {error} — עוברים למצב מצלמה…
@@ -1263,7 +1295,7 @@ export function GemHuntWebXrAr({
                 sessionActive && "is-hidden",
               )}
             />
-            {showSessionFooter ? (
+            {showSessionFooter && !hideHuntHintControls ? (
               <div className="gem-hunt-overlay__footer-controls">
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button

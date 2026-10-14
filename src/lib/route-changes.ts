@@ -206,6 +206,19 @@ export function rebuildRouteAfterSkipChange(
     nextSkippedIds,
     includeNew,
   );
+  if (routeHouses.length === 0) {
+    if (!route) return null;
+    return {
+      ...route,
+      stops: [],
+      totalMeters: 0,
+      totalMinutes: 0,
+      origin,
+      startedFrom: options?.startedFrom ?? route.startedFrom,
+      originLabel: options?.originLabel ?? route.originLabel,
+      accessible: Boolean(options?.accessible ?? route.accessible),
+    };
+  }
   if (includeNew) {
     return buildWalkingRoute(routeHouses, origin, options);
   }
@@ -268,6 +281,19 @@ export function rebuildRouteAfterFilterChange(
     context,
     includeNew,
   );
+  if (routeHouses.length === 0) {
+    if (!route) return null;
+    return {
+      ...route,
+      stops: [],
+      totalMeters: 0,
+      totalMinutes: 0,
+      origin,
+      startedFrom: options?.startedFrom ?? route.startedFrom,
+      originLabel: options?.originLabel ?? route.originLabel,
+      accessible: Boolean(options?.accessible ?? route.accessible),
+    };
+  }
   if (includeNew) {
     return buildWalkingRoute(routeHouses, origin, options);
   }
