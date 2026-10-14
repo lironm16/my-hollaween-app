@@ -1,14 +1,16 @@
 import { effectiveHouseKind } from "@/lib/house-kind";
 import type { PublicHouse } from "@/lib/types";
 
-/** Pin circle fills — ghost purple / pumpkin orange; PNG faces keep black details. */
+export const PIN_INTERIOR = "#fff7ed";
+
+/** White disc; ghost/pumpkin color comes from the PNG art (and light tints). */
 export const PIN_BACKGROUND = {
   house: {
-    decorated: "#6d28d9",
+    decorated: PIN_INTERIOR,
     undecorated: "#94a3b8",
   },
   poi: {
-    decorated: "#f97316",
+    decorated: PIN_INTERIOR,
     undecorated: "#78716c",
   },
 } as const;

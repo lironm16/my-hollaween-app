@@ -617,8 +617,8 @@
   width: 56px;
   height: 56px;
   border-radius: 999px;
-  background: #6d28d9 !important;
-  border: 4px solid #6d28d9;
+  background: #fff7ed !important;
+  border: 4px solid transparent;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   opacity: 1;
   overflow: visible;
@@ -780,23 +780,31 @@
   pointer-events: none;
 }
 
+/* Cream PNG glyphs → purple ghost / orange pumpkin on white disc (black face details stay dark). */
+.house-pin:not(.is-poi):not(.is-undecorated) .pin-scare {
+  filter: sepia(1) saturate(5.5) hue-rotate(238deg) brightness(0.9);
+}
+
+.house-pin.is-poi:not(.is-undecorated) .pin-scare {
+  filter: sepia(1) saturate(9) hue-rotate(358deg) brightness(0.95);
+}
+
+.house-pin.is-cluster-houses .pin-cluster-art {
+  filter: sepia(1) saturate(5.5) hue-rotate(238deg) brightness(0.9);
+}
+
+.house-pin.is-cluster-businesses .pin-cluster-art {
+  filter: sepia(1) saturate(9) hue-rotate(358deg) brightness(0.95);
+}
+
 .house-pin.is-undecorated {
   background: #94a3b8 !important;
   border-color: #94a3b8;
 }
 
-.house-pin.is-poi {
-  background: #f97316 !important;
-  border-color: #f97316;
-}
-
 .house-pin.is-poi.is-undecorated {
   background: #78716c !important;
   border-color: #78716c;
-}
-
-.house-pin.is-poi:not(.is-undecorated) .pin-scare {
-  filter: sepia(1) saturate(4.5) hue-rotate(-12deg) brightness(1.08);
 }
 
 .house-pin.is-poi .pin-scare {
@@ -960,33 +968,11 @@
   transform: translateX(-50%);
 }
 
-.house-pin.is-cluster-houses {
-  background: #6d28d9 !important;
-  border-color: #6d28d9;
-}
-
-.house-pin.is-cluster-businesses {
-  background: #f97316 !important;
-  border-color: #f97316;
-}
-
-.house-pin.is-cluster-businesses .pin-cluster-art {
-  filter: sepia(1) saturate(4.5) hue-rotate(-12deg) brightness(1.08);
-}
-
+.house-pin.is-cluster-houses,
+.house-pin.is-cluster-businesses,
 .house-pin.is-cluster-mixed {
-  background: linear-gradient(
-    to right,
-    #6d28d9 0%,
-    #6d28d9 50%,
-    #f97316 50%,
-    #f97316 100%
-  ) !important;
-  border-color: #6d28d9;
-}
-
-.house-pin.is-route-ring {
-  border-color: #f97316;
+  background: #fff7ed !important;
+  border-color: transparent;
 }
 
 .house-pin.pin-tour-ring {
@@ -1073,7 +1059,16 @@
 }
 
 .house-pin.is-origin {
-  background: #f97316 !important;
+  background: #fff7ed !important;
+  border-color: transparent;
+  box-shadow:
+    0 0 0 3px #a855f7,
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.house-pin.is-origin span {
+  color: #a855f7;
+  font-size: 28px;
 }
 
 .is-origin-pick .pumpkin-pin-icon:not(.is-origin-pin) {
@@ -1564,7 +1559,7 @@
   height: 26px;
   margin-left: -13px;
   background: #fff7ed;
-  border: 2px solid #ea580c;
+  border: 2px solid #a855f7;
   border-radius: 999px;
 }
 
@@ -1577,8 +1572,8 @@
   height: 12px;
   margin-left: -6px;
   background: #fff7ed;
-  border-right: 2px solid #ea580c;
-  border-bottom: 2px solid #ea580c;
+  border-right: 2px solid #a855f7;
+  border-bottom: 2px solid #a855f7;
   transform: rotate(45deg);
 }
 
@@ -1589,7 +1584,7 @@
   place-items: center;
   width: 26px;
   height: 26px;
-  color: #9a3412;
+  color: #7e22ce;
   font-size: 14px;
   font-weight: 900;
   line-height: 1;

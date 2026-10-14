@@ -77,8 +77,5 @@ export function clusterTourRingDecor(
       styleAttr: ` style="--pin-tour-ring:${gradient}"`,
     };
   }
-  if (routeModeActive) {
-    return { classSuffix: " is-route-ring", styleAttr: "" };
-  }
   return { classSuffix: "", styleAttr: "" };
 }

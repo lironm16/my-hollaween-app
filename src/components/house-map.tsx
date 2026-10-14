@@ -93,10 +93,10 @@ function routeBadgeHtml(order: number) {
 }
 
 function wrapRoutePin(html: string, routeOrder?: number) {
-  if (!routeOrder) return { html, extraH: 0 };
+  const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
   return {
     extraH: 0,
-    html: `<div class="house-pin-route">${html}${routeBadgeHtml(routeOrder)}</div>`,
+    html: `<div class="house-pin-route">${html}${badge}</div>`,
   };
 }
 
@@ -122,7 +122,8 @@ function leafletPinLayout(options: {
       iconAnchor: [pinBox / 2, pinBox / 2],
     };
   }
-  const badgePad = options.routeOrder ? ROUTE_BADGE_ABOVE : 0;
+  /** Fixed slot so route mode toggle does not shift geographic anchor. */
+  const badgePad = ROUTE_BADGE_ABOVE;
   const bottomPad = options.aptDots ? APT_DOTS_BELOW : 4;
   const h = badgePad + PIN_DISC + bottomPad;
   const anchorY = badgePad + PIN_DISC / 2;
@@ -276,6 +277,8 @@ function clusterIcon(
   routeModeActive = false,
 ) {
   const houses = cluster.houses;
+  const onTourRoute = routeOrder != null;
+  const decorRouteMode = routeModeActive && onTourRoute;
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
   const selectedClass = selectedHere ? " is-selected" : "";
@@ -300,11 +303,11 @@ function clusterIcon(
         filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
         visitedIds,
         skippedIds: skippedIds ? [...skippedIds] : [],
-        routeModeActive,
+        routeModeActive: decorRouteMode,
       }),
       routeOrder,
     );
-    const layout = leafletPinLayout({ routeOrder });
+    const layout = leafletPinLayout({ routeOrder, aptDots: false });
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${filterClass}${hoursClass}`,
       html: wrapped.html,
@@ -325,7 +328,7 @@ function clusterIcon(
     tourHouses,
     visitedIds,
     skippedIds ? [...skippedIds] : [],
-    routeModeActive,
+    decorRouteMode,
   );
   const ringStyle = tourRing.styleAttr.match(/style="([^"]*)"/)?.[1] ?? "";
   const pinStyleAttr = schoolCampus
@@ -360,11 +363,12 @@ const pickIcon = L.divIcon({
   iconAnchor: [PIN_BOX / 2, PIN_DISC / 2],
 });
 
+const originLayout = leafletPinLayout({ aptDots: false });
 const originIcon = L.divIcon({
   className: "pumpkin-pin-icon is-origin-pin",
-  html: `<div class="house-pin is-origin" aria-label="נקודת התחלה"><span>📍</span></div>`,
-  iconSize: [PIN_BOX, PIN_BOX + 4],
-  iconAnchor: [PIN_BOX / 2, PIN_BOX],
+  html: `<div class="house-pin-route"><div class="house-pin is-origin" aria-label="נקודת התחלה"><span>📍</span></div></div>`,
+  iconSize: originLayout.iconSize,
+  iconAnchor: originLayout.iconAnchor,
 });
 
 const youAreHereIcon = L.divIcon({
@@ -1179,7 +1183,10 @@ export function HouseMap({
                   (found, house) => found ?? routeOrderById.get(house.id),
                   undefined,
                 )}
-                routeModeActive={routeModeActive}
+                routeModeActive={
+                  routeModeActive &&
+                  cluster.houses.some((house) => routeOrderById.has(house.id))
+                }
               />
             );
           })}
