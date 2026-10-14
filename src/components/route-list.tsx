@@ -22,28 +22,11 @@ export type RouteListItem = {
   distanceM?: number;
 };
 
-function RouteLeg({ label, done, skipped }: { label?: string; done?: boolean; skipped?: boolean }) {
+function RouteLeg({ label }: { label?: string }) {
   return (
     <div className={cn("route-list-leg", !label && "route-list-leg--line-only")}>
-      <span
-        className={cn(
-          "route-list-leg-line",
-          done && "route-list-leg-line--done",
-          skipped && "route-list-leg-line--skipped",
-        )}
-        aria-hidden="true"
-      />
-      {label ? (
-        <span
-          className={cn(
-            "route-list-leg-label",
-            done && "route-list-leg-label--done",
-            skipped && "route-list-leg-label--skipped",
-          )}
-        >
-          {label}
-        </span>
-      ) : null}
+      <span className="route-list-leg-line" aria-hidden="true" />
+      {label ? <span className="route-list-leg-label">{label}</span> : null}
     </div>
   );
 }
@@ -168,7 +151,7 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped, doneCollapsed, legDone, legSkipped, visitedTail, distanceM }, i) => {
+        {items.map(({ house, order, hop, skipped, doneCollapsed, visitedTail, distanceM }, i) => {
           const showSkippedHeading =
             skipped && !doneCollapsed && !visitedTail && (i === 0 || !items[i - 1]!.skipped);
           const showVisitedHeading =
@@ -189,7 +172,7 @@ export function RouteList({
               {showSkippedHeading && !doneCollapsed ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
-              <RouteLeg label={hop || undefined} done={legDone} skipped={legSkipped} />
+              <RouteLeg label={hop || undefined} />
               {doneCollapsed ? (
                 <RouteListCollapsedHouse
                   house={house}

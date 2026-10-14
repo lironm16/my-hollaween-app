@@ -33,14 +33,7 @@ import {
   stripApproachFromRouteLine,
   type LatLng,
 } from "@/lib/route";
-import {
-  ROUTE_ORIGIN_PURPLE,
-  ROUTE_ORIGIN_PURPLE_SHADOW,
-  ROUTE_SKIPPED_GRAY,
-  ROUTE_SKIPPED_GRAY_SHADOW,
-  ROUTE_VISITED_GREEN,
-  ROUTE_VISITED_GREEN_SHADOW,
-} from "@/lib/route-session-progress";
+import { clusterTourBackgroundStyle } from "@/lib/map-cluster-tour-fill";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { useCatalog } from "@/hooks/use-catalog";
 import {
@@ -167,10 +160,6 @@ function clusterAptDotsHtml(
     .map((house) => {
       const filteredClass =
         matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
-      if (skippedIds?.has(house.id)) {
-        const dot = candyPinDot(house) ?? "out";
-        return `<i class="pin-apt-dot is-${dot} is-skipped${filteredClass}"></i>`;
-      }
       const visit = pinVisitKind(house, now, addressReveal);
       if (visit === "closed") return `<i class="pin-apt-dot is-closed${filteredClass}"></i>`;
       if (visit === "break") return `<i class="pin-apt-dot is-break${filteredClass}"></i>`;
@@ -250,8 +239,6 @@ function clusterIcon(
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
   const selectedClass = selectedHere ? " is-selected" : "";
   const filterClass = filteredOut ? " is-filtered-out" : "";
-  const allVisited = houses.length > 0 && houses.every((house) => visitedIds.includes(house.id));
-
   if (!only) {
     const wrapped = wrapRoutePin("", routeOrder);
     return L.divIcon({
@@ -289,9 +276,19 @@ function clusterIcon(
   const clusterLabel = attr(clusterPinAriaLabel(houses));
   const pinFill = "#6d28d9";
   const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
-  const pinStyleAttr = schoolCampus ? ` style="background:${pinFill}"` : "";
+  const tourHouses = clusterBadgeHouses(houses);
+  const tourFill = clusterTourBackgroundStyle(
+    tourHouses,
+    visitedIds,
+    skippedIds ? [...skippedIds] : [],
+  );
+  const pinStyleAttr = tourFill
+    ? ` style="${tourFill}"`
+    : schoolCampus
+      ? ` style="background:${pinFill}"`
+      : "";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${clusterKindClass}${campusClass}${allVisited ? " is-visited" : ""}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
+    `<div class="house-pin is-building${clusterKindClass}${campusClass}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
   );
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
@@ -998,7 +995,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: ROUTE_ORIGIN_PURPLE_SHADOW,
+                color: "#7c2d12",
                 weight: 6,
                 opacity: 0.35,
                 dashArray: "8 9",
@@ -1011,7 +1008,7 @@ export function HouseMap({
             <Polyline
               positions={approachPositions}
               pathOptions={{
-                color: ROUTE_ORIGIN_PURPLE,
+                color: "#fdba74",
                 weight: 4,
                 opacity: 0.9,
                 dashArray: "8 9",
@@ -1024,25 +1021,14 @@ export function HouseMap({
           </>
         ) : null}
         {!pickMode && useSegmentRoute
-          ? routeSegmentLines.map((segment, index) => {
-              const shadow = segment.skipped
-                ? ROUTE_SKIPPED_GRAY_SHADOW
-                : segment.done
-                  ? ROUTE_VISITED_GREEN_SHADOW
-                  : "#9a3412";
-              const stroke = segment.skipped
-                ? ROUTE_SKIPPED_GRAY
-                : segment.done
-                  ? ROUTE_VISITED_GREEN
-                  : "#f97316";
-              return (
+          ? routeSegmentLines.map((segment, index) => (
               <Fragment key={`route-seg-${index}`}>
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: shadow,
+                    color: "#9a3412",
                     weight: 8,
-                    opacity: segment.done || segment.skipped ? 0.45 : 0.4,
+                    opacity: 0.4,
                     lineCap: "round",
                     lineJoin: "round",
                   }}
@@ -1052,7 +1038,7 @@ export function HouseMap({
                 <Polyline
                   positions={segment.positions}
                   pathOptions={{
-                    color: stroke,
+                    color: "#f97316",
                     weight: 5,
                     opacity: 1,
                     lineCap: "round",
@@ -1062,8 +1048,7 @@ export function HouseMap({
                   interactive={false}
                 />
               </Fragment>
-              );
-            })
+            ))
           : null}
         {!pickMode && !useSegmentRoute && routePositions ? (
           <>

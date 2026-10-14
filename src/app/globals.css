@@ -1490,10 +1490,6 @@
   height: 22px;
 }
 
-.pin-apt-dot.is-skipped {
-  box-shadow: 0 0 0 2px #64748b;
-}
-
 .house-pin.house-pin-dot .pin-status {
   width: 14px;
   height: 14px;
