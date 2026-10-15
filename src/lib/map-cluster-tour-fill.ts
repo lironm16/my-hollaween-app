@@ -4,15 +4,11 @@ const TOUR_VISITED = "#059669";
 const TOUR_SKIPPED = "#64748b";
 const TOUR_OPEN_ROUTE = "#f97316";
 const TOUR_OPEN_IDLE = "#fff7ed";
-/** Cluster units disagree (e.g. one visited, rest open) — light tan/brown, not gem yellow or route orange. */
+/** Every unit visited or skipped, with both outcomes present — finished mixed cluster. */
 export const TOUR_CLUSTER_MIXED = "#411900";
 
-export function clusterHasMixedUnitStates(counts: ClusterProgressCounts): boolean {
-  let kinds = 0;
-  if (counts.visited > 0) kinds += 1;
-  if (counts.skipped > 0) kinds += 1;
-  if (counts.open > 0) kinds += 1;
-  return kinds >= 2;
+export function clusterIsFinishedVisitSkipMix(counts: ClusterProgressCounts): boolean {
+  return counts.open === 0 && counts.visited > 0 && counts.skipped > 0;
 }
 
 export function clusterTourMixedRingGradient(): string {
@@ -54,18 +50,18 @@ export function clusterRouteStopBadgeProgress(
 ): ClusterRouteStopBadgeProgress {
   if (houses.length === 0) return "open";
   const counts = clusterProgressCounts(houses, visitedIds, skippedIds);
-  if (houses.length > 1 && clusterHasMixedUnitStates(counts)) return "mixed";
   if (counts.open > 0) return "open";
   if (counts.visited === houses.length) return "visited";
   if (counts.skipped === houses.length) return "skipped";
+  if (houses.length > 1 && clusterIsFinishedVisitSkipMix(counts)) return "mixed";
   return "open";
 }
 
 /**
- * Cluster tour ring — green / gray / tan mix / white-or-orange:
- * - Units in more than one state (visit/skip/open mix) → light brown as soon as they diverge.
- * - Else all open → white (idle) or orange (route mode).
- * - Else all visited → green; all skipped → gray.
+ * Cluster tour ring — green / gray / brown mix / white-or-orange:
+ * - Any open unit → white (idle) or orange (route mode).
+ * - All visited → green; all skipped → gray.
+ * - All handled with both visits and skips → brown (#411900).
  */
 export function clusterTourRingGradient(
   houses: PublicHouse[],
@@ -75,10 +71,6 @@ export function clusterTourRingGradient(
 ): string | null {
   if (houses.length === 0) return null;
   const counts = clusterProgressCounts(houses, visitedIds, skippedIds);
-
-  if (houses.length > 1 && clusterHasMixedUnitStates(counts)) {
-    return clusterTourMixedRingGradient();
-  }
 
   if (counts.open > 0) {
     if (counts.open === houses.length && !routeModeActive) return null;
@@ -91,6 +83,9 @@ export function clusterTourRingGradient(
   }
   if (counts.skipped === houses.length) {
     return `conic-gradient(from -90deg, ${TOUR_SKIPPED} 0% 100%)`;
+  }
+  if (houses.length > 1 && clusterIsFinishedVisitSkipMix(counts)) {
+    return clusterTourMixedRingGradient();
   }
 
   return null;

@@ -7,7 +7,7 @@ import {
   solidTourRingColor,
   clusterTourRingGradient,
   clusterTourMixedRingGradient,
-  clusterHasMixedUnitStates,
+  clusterIsFinishedVisitSkipMix,
   TOUR_CLUSTER_MIXED,
 } from "@/lib/map-cluster-tour-fill";
 import type { PublicHouse } from "@/lib/types";
@@ -89,10 +89,10 @@ describe("clusterTourRingGradient", () => {
     assert.equal(gradient, clusterTourMixedRingGradient());
   });
 
-  it("uses brown as soon as one unit is visited and others are open", () => {
+  it("uses route orange when one unit is visited and others are still open", () => {
     const houses = Array.from({ length: 10 }, (_, i) => stub(`u${i}`));
     const gradient = clusterTourRingGradient(houses, ["u0"], [], true);
-    assert.equal(gradient, clusterTourMixedRingGradient());
+    assert.match(gradient!, /#f97316 0% 100%/);
   });
 
   it("uses open color only when every unit is still open", () => {
@@ -101,16 +101,11 @@ describe("clusterTourRingGradient", () => {
   });
 });
 
-describe("clusterHasMixedUnitStates", () => {
-  it("is true when visit, skip, and open mix", () => {
-    assert.equal(
-      clusterHasMixedUnitStates({ visited: 1, skipped: 1, open: 1 }),
-      true,
-    );
-  });
-
-  it("is false when all units share one state", () => {
-    assert.equal(clusterHasMixedUnitStates({ visited: 2, skipped: 0, open: 0 }), false);
+describe("clusterIsFinishedVisitSkipMix", () => {
+  it("is true only when every unit is visited or skipped and both kinds exist", () => {
+    assert.equal(clusterIsFinishedVisitSkipMix({ visited: 1, skipped: 1, open: 0 }), true);
+    assert.equal(clusterIsFinishedVisitSkipMix({ visited: 1, skipped: 1, open: 1 }), false);
+    assert.equal(clusterIsFinishedVisitSkipMix({ visited: 2, skipped: 0, open: 0 }), false);
   });
 });
 
@@ -142,9 +137,9 @@ describe("clusterTourRingDecor", () => {
 });
 
 describe("clusterRouteStopBadgeProgress", () => {
-  it("uses mixed when inner units disagree", () => {
+  it("uses mixed only when all units are visited or skipped with both outcomes", () => {
     const houses = [stub("a"), stub("b")];
-    assert.equal(clusterRouteStopBadgeProgress(houses, ["a"], []), "mixed");
+    assert.equal(clusterRouteStopBadgeProgress(houses, ["a"], []), "open");
     assert.equal(clusterRouteStopBadgeProgress(houses, ["a", "b"], []), "visited");
     assert.equal(clusterRouteStopBadgeProgress(houses, ["a"], ["b"]), "mixed");
   });

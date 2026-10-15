@@ -459,6 +459,7 @@ export function MapHouseSheet({
                 gemCollected={gemCollected}
                 liked={liked}
                 skipMetaFor={actionContext.skipMetaFor}
+                hideListPin={usesSchoolCampusClusterChrome(clusterHouses)}
                 onSelect={(id) => onSelectClusterHouse?.(id)}
               />
             </div>

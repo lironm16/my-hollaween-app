@@ -202,6 +202,7 @@ export function ClusterHouseList({
   liked,
   skipMetaFor,
   onSelect,
+  hideListPin,
 }: {
   houses: PublicHouse[];
   selectedId?: string | null;
@@ -213,6 +214,8 @@ export function ClusterHouseList({
   liked?: (id: string) => boolean;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   onSelect: (id: string) => void;
+  /** School campus list — booth number only, no duplicate castle pin. */
+  hideListPin?: boolean;
 }) {
   const clusterNow = now ?? new Date();
   const addressReveal = useAddressReveal();
@@ -240,15 +243,17 @@ export function ClusterHouseList({
             >
               {slot}
             </span>
-            <span className="cluster-house-list-pin-wrap shrink-0" dir="ltr">
-              <HouseMapPinIcon
-                house={item}
-                now={clusterNow}
-                skipped={skipped?.(item.id)}
-                filteredOut={filteredOut?.(item.id)}
-                visited={visited?.(item.id)}
-              />
-            </span>
+            {!hideListPin ? (
+              <span className="cluster-house-list-pin-wrap shrink-0" dir="ltr">
+                <HouseMapPinIcon
+                  house={item}
+                  now={clusterNow}
+                  skipped={skipped?.(item.id)}
+                  filteredOut={filteredOut?.(item.id)}
+                  visited={visited?.(item.id)}
+                />
+              </span>
+            ) : null}
             <span className="min-w-0 flex-1">
               <span className="block line-clamp-2 font-medium [overflow-wrap:anywhere]">
                 <HouseTitleMarkers liked={liked?.(item.id)} gemCollected={gemCollected?.(item.id)} />
