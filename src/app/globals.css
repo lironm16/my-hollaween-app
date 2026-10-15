@@ -1682,14 +1682,14 @@
 }
 
 .route-stop-pin.is-mixed-done::before {
-  background: #411900;
-  border-color: #2a1000;
+  background: #e08543;
+  border-color: #b8652a;
 }
 
 .route-stop-pin.is-mixed-done::after {
-  background: #411900;
-  border-right-color: #2a1000;
-  border-bottom-color: #2a1000;
+  background: #e08543;
+  border-right-color: #b8652a;
+  border-bottom-color: #b8652a;
 }
 
 .route-stop-pin.is-visited .route-stop-num,

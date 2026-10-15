@@ -5,7 +5,7 @@ const TOUR_SKIPPED = "#64748b";
 const TOUR_OPEN_ROUTE = "#f97316";
 const TOUR_OPEN_IDLE = "#fff7ed";
 /** Every unit visited or skipped, with both outcomes present — finished mixed cluster. */
-export const TOUR_CLUSTER_MIXED = "#411900";
+export const TOUR_CLUSTER_MIXED = "#e08543";
 
 export function clusterIsFinishedVisitSkipMix(counts: ClusterProgressCounts): boolean {
   return counts.open === 0 && counts.visited > 0 && counts.skipped > 0;
@@ -61,7 +61,7 @@ export function clusterRouteStopBadgeProgress(
  * Cluster tour ring — green / gray / brown mix / white-or-orange:
  * - Any open unit → white (idle) or orange (route mode).
  * - All visited → green; all skipped → gray.
- * - All handled with both visits and skips → brown (#411900).
+ * - All handled with both visits and skips → amber mix (#e08543).
  */
 export function clusterTourRingGradient(
   houses: PublicHouse[],
