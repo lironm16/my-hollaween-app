@@ -4,11 +4,19 @@ const TOUR_VISITED = "#059669";
 const TOUR_SKIPPED = "#64748b";
 const TOUR_OPEN_ROUTE = "#f97316";
 const TOUR_OPEN_IDLE = "#fff7ed";
-/** Cluster done with both visits and skips — harvest gold (candy-corn; not route orange or map cyan). */
-export const TOUR_MIXED_COMPLETE = "#eab308";
+/** Cluster units disagree (e.g. one visited, rest open) — light tan/brown, not gem yellow or route orange. */
+export const TOUR_CLUSTER_MIXED = "#d4b896";
+
+export function clusterHasMixedUnitStates(counts: ClusterProgressCounts): boolean {
+  let kinds = 0;
+  if (counts.visited > 0) kinds += 1;
+  if (counts.skipped > 0) kinds += 1;
+  if (counts.open > 0) kinds += 1;
+  return kinds >= 2;
+}
 
 export function clusterTourMixedRingGradient(): string {
-  return `conic-gradient(from -90deg, ${TOUR_MIXED_COMPLETE} 0% 100%)`;
+  return `conic-gradient(from -90deg, ${TOUR_CLUSTER_MIXED} 0% 100%)`;
 }
 
 export type ClusterRouteStopBadgeProgress = "open" | "visited" | "skipped" | "mixed";
@@ -45,18 +53,19 @@ export function clusterRouteStopBadgeProgress(
   skippedIds: readonly string[],
 ): ClusterRouteStopBadgeProgress {
   if (houses.length === 0) return "open";
-  const { visited, skipped, open } = clusterProgressCounts(houses, visitedIds, skippedIds);
-  if (open > 0) return "open";
-  if (visited === houses.length) return "visited";
-  if (skipped === houses.length) return "skipped";
-  return "mixed";
+  const counts = clusterProgressCounts(houses, visitedIds, skippedIds);
+  if (houses.length > 1 && clusterHasMixedUnitStates(counts)) return "mixed";
+  if (counts.open > 0) return "open";
+  if (counts.visited === houses.length) return "visited";
+  if (counts.skipped === houses.length) return "skipped";
+  return "open";
 }
 
 /**
- * Cluster tour ring — green / gray / gold mix / white-or-orange:
- * - Any “open” house (neither visited nor skipped) → solid white (idle) or orange (route mode).
- * - Else all visited → solid green; all skipped → solid gray.
- * - Else visited+skipped only → solid harvest gold.
+ * Cluster tour ring — green / gray / tan mix / white-or-orange:
+ * - Units in more than one state (visit/skip/open mix) → light brown as soon as they diverge.
+ * - Else all open → white (idle) or orange (route mode).
+ * - Else all visited → green; all skipped → gray.
  */
 export function clusterTourRingGradient(
   houses: PublicHouse[],
@@ -65,23 +74,26 @@ export function clusterTourRingGradient(
   routeModeActive: boolean,
 ): string | null {
   if (houses.length === 0) return null;
-  const { visited, skipped, open } = clusterProgressCounts(houses, visitedIds, skippedIds);
+  const counts = clusterProgressCounts(houses, visitedIds, skippedIds);
 
-  if (open > 0) {
-    if (open === houses.length && !routeModeActive) return null;
+  if (houses.length > 1 && clusterHasMixedUnitStates(counts)) {
+    return clusterTourMixedRingGradient();
+  }
+
+  if (counts.open > 0) {
+    if (counts.open === houses.length && !routeModeActive) return null;
     const openColor = routeModeActive ? TOUR_OPEN_ROUTE : TOUR_OPEN_IDLE;
     return `conic-gradient(from -90deg, ${openColor} 0% 100%)`;
   }
 
-  if (visited === houses.length) {
+  if (counts.visited === houses.length) {
     return `conic-gradient(from -90deg, ${TOUR_VISITED} 0% 100%)`;
   }
-  if (skipped === houses.length) {
+  if (counts.skipped === houses.length) {
     return `conic-gradient(from -90deg, ${TOUR_SKIPPED} 0% 100%)`;
   }
 
-  if (visited + skipped === 0) return null;
-  return clusterTourMixedRingGradient();
+  return null;
 }
 
 export type ClusterTourRingDecor = {

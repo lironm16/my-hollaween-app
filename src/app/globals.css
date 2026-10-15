@@ -1657,14 +1657,14 @@
 }
 
 .route-stop-pin.is-mixed-done::before {
-  background: #eab308;
-  border-color: #a16207;
+  background: #d4b896;
+  border-color: #8b7355;
 }
 
 .route-stop-pin.is-mixed-done::after {
-  background: #eab308;
-  border-right-color: #a16207;
-  border-bottom-color: #a16207;
+  background: #d4b896;
+  border-right-color: #8b7355;
+  border-bottom-color: #8b7355;
 }
 
 .route-stop-pin.is-visited .route-stop-num,
@@ -3419,8 +3419,35 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .cluster-house-list-row {
-  min-height: 4.5rem;
+  min-height: 4.75rem;
   overflow: visible;
+}
+
+.cluster-house-list-arrival,
+.cluster-house-list-skip-text {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.cluster-house-list-arrival {
+  color: #ddd6fe;
+}
+
+.cluster-house-list-skip-text {
+  color: #cbd5e1;
+}
+
+.cluster-house-list-skip-icon {
+  width: 1.375rem !important;
+  height: 1.375rem !important;
+  min-width: 1.375rem;
+  min-height: 1.375rem;
+}
+
+.cluster-house-list-skip-icon svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .cluster-house-list-pin-wrap {

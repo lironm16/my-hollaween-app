@@ -14,6 +14,7 @@ import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 import { skipReturnPreviewLine } from "@/lib/skip-return-preview";
+import { SkipSign } from "@/components/visit-marks";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { cn } from "@/lib/utils";
 
@@ -224,7 +225,7 @@ export function ClusterHouseList({
           <button
             type="button"
             className={cn(
-              "cluster-house-list-row flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base ring-1 transition-colors",
+              "cluster-house-list-row flex w-full items-center gap-3 rounded-xl px-3 py-3 text-start text-base ring-1 transition-colors",
               item.id === selectedId
                 ? "bg-[#261536] text-orange-50 ring-orange-400/50"
                 : "bg-[#1d1028] text-orange-50 ring-orange-500/25 hover:bg-[#261536]",
@@ -253,13 +254,19 @@ export function ClusterHouseList({
                 {houseHeadline(item)}
               </span>
               {addressReveal.visibleArrival(item) ? (
-                <span className="mt-0.5 block truncate text-sm text-violet-300/90">
+                <span className="cluster-house-list-arrival mt-1 block [overflow-wrap:anywhere]">
                   {addressReveal.visibleArrival(item)}
                 </span>
               ) : null}
               {skipped?.(item.id) ? (
-                <span className="mt-0.5 block truncate text-sm text-slate-300">
-                  {skipReturnPreviewLine(skipMetaFor?.(item.id)) ?? "דילגתם"}
+                <span
+                  className="cluster-house-list-skip mt-1 flex min-w-0 items-center gap-2"
+                  dir="rtl"
+                >
+                  <SkipSign className="cluster-house-list-skip-icon shrink-0" />
+                  <span className="cluster-house-list-skip-text min-w-0 flex-1 [overflow-wrap:anywhere]">
+                    {skipReturnPreviewLine(skipMetaFor?.(item.id)) ?? "דילגתם"}
+                  </span>
                 </span>
               ) : null}
             </span>

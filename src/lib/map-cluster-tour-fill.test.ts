@@ -7,7 +7,8 @@ import {
   solidTourRingColor,
   clusterTourRingGradient,
   clusterTourMixedRingGradient,
-  TOUR_MIXED_COMPLETE,
+  clusterHasMixedUnitStates,
+  TOUR_CLUSTER_MIXED,
 } from "@/lib/map-cluster-tour-fill";
 import type { PublicHouse } from "@/lib/types";
 
@@ -75,27 +76,41 @@ describe("clusterTourRingGradient", () => {
     assert.match(gradient!, /#64748b 0% 100%/);
   });
 
-  it("uses harvest gold when visit and skip both present and none open", () => {
+  it("uses light brown when visit and skip both present and none open", () => {
     const gradient = clusterTourRingGradient([stub("a"), stub("b")], ["a"], ["b"], false);
     assert.equal(gradient, clusterTourMixedRingGradient());
-    assert.match(gradient!, new RegExp(`${TOUR_MIXED_COMPLETE} 0% 100%`));
+    assert.match(gradient!, new RegExp(`${TOUR_CLUSTER_MIXED} 0% 100%`));
   });
 
-  it("uses same gold ring for nine visited and one skipped", () => {
+  it("uses brown when nine visited and one skipped", () => {
     const houses = Array.from({ length: 10 }, (_, i) => stub(`u${i}`));
     const visited = houses.slice(0, 9).map((h) => h.id);
     const gradient = clusterTourRingGradient(houses, visited, ["u9"], false);
     assert.equal(gradient, clusterTourMixedRingGradient());
   });
 
-  it("uses open color when any house is still open", () => {
-    const gradient = clusterTourRingGradient([stub("a"), stub("b")], ["a"], [], true);
-    assert.match(gradient!, /#f97316 0% 100%/);
+  it("uses brown as soon as one unit is visited and others are open", () => {
+    const houses = Array.from({ length: 10 }, (_, i) => stub(`u${i}`));
+    const gradient = clusterTourRingGradient(houses, ["u0"], [], true);
+    assert.equal(gradient, clusterTourMixedRingGradient());
   });
 
-  it("uses white open ring off-route when any house is open", () => {
-    const gradient = clusterTourRingGradient([stub("a"), stub("b")], ["a"], [], false);
-    assert.match(gradient!, /#fff7ed 0% 100%/);
+  it("uses open color only when every unit is still open", () => {
+    const gradient = clusterTourRingGradient([stub("a"), stub("b")], [], [], true);
+    assert.match(gradient!, /#f97316 0% 100%/);
+  });
+});
+
+describe("clusterHasMixedUnitStates", () => {
+  it("is true when visit, skip, and open mix", () => {
+    assert.equal(
+      clusterHasMixedUnitStates({ visited: 1, skipped: 1, open: 1 }),
+      true,
+    );
+  });
+
+  it("is false when all units share one state", () => {
+    assert.equal(clusterHasMixedUnitStates({ visited: 2, skipped: 0, open: 0 }), false);
   });
 });
 
@@ -119,17 +134,17 @@ describe("clusterTourRingDecor", () => {
     assert.match(decor.styleAttr, /--pin-tour-ring-color:#f97316/);
   });
 
-  it("uses solid gold mixed ring when visit and skip both present", () => {
+  it("uses solid brown mixed ring when visit and skip both present", () => {
     const decor = clusterTourRingDecor([stub("a"), stub("b")], ["a"], ["b"], true);
     assert.equal(decor.classSuffix, " pin-tour-ring pin-tour-ring-solid");
-    assert.match(decor.styleAttr, new RegExp(`--pin-tour-ring-color:${TOUR_MIXED_COMPLETE}`));
+    assert.match(decor.styleAttr, new RegExp(`--pin-tour-ring-color:${TOUR_CLUSTER_MIXED}`));
   });
 });
 
 describe("clusterRouteStopBadgeProgress", () => {
-  it("stays open until every unit is visited or skipped", () => {
+  it("uses mixed when inner units disagree", () => {
     const houses = [stub("a"), stub("b")];
-    assert.equal(clusterRouteStopBadgeProgress(houses, ["a"], []), "open");
+    assert.equal(clusterRouteStopBadgeProgress(houses, ["a"], []), "mixed");
     assert.equal(clusterRouteStopBadgeProgress(houses, ["a", "b"], []), "visited");
     assert.equal(clusterRouteStopBadgeProgress(houses, ["a"], ["b"]), "mixed");
   });
