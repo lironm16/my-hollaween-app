@@ -2,10 +2,10 @@
 
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { SkipSign } from "@/components/visit-marks";
 import {
   metaRestoreTriggers,
   primaryRestoreTriggerFromSnapshot,
+  skipReturnActiveLabel,
   skipReturnOfferEligible,
   skipReturnOfferLabel,
   skipReturnRuleActive,
@@ -40,7 +40,9 @@ export function SkipReturnSection({
 
   if (!skipReturnOfferEligible(meta) || !displayTrigger) return null;
 
-  const label = skipReturnOfferLabel(displayTrigger);
+  const label = active
+    ? skipReturnActiveLabel(displayTrigger)
+    : skipReturnOfferLabel(displayTrigger);
 
   return (
     <div
@@ -51,7 +53,6 @@ export function SkipReturnSection({
       role="status"
     >
       <div className="route-skipped-main min-w-0">
-        <SkipSign className="size-8 shrink-0" />
         <RestoreWhenIcon trigger={displayTrigger} />
         <span className="route-skipped-name text-base font-medium text-violet-100">{label}</span>
       </div>
@@ -67,7 +68,7 @@ export function SkipReturnSection({
         )}
         onClick={active ? onRevokeRule : onApprove}
       >
-        {active ? "ביטול" : "עדכן"}
+        {active ? "ביטול" : "הוסף תנאי"}
       </Button>
     </div>
   );
