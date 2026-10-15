@@ -179,6 +179,39 @@ export function temporaryRestoreWhenLabel(trigger: TemporaryRestoreTriggerId) {
   return "יש ממתקים";
 }
 
+/** One-line copy for the house card (auto return condition at skip time). */
+export function skipReturnAutoDisplayLabel(meta: SkippedHouseMeta) {
+  const triggers = metaRestoreTriggers(meta);
+  if (!meta.temporary || triggers.length === 0) return null;
+  if (triggers.includes("not-open") && triggers.includes("candy-out")) {
+    return "כשהבית פתוח ויש ממתקים";
+  }
+  if (triggers.includes("not-open")) return "כשהבית פתוח";
+  if (triggers.includes("candy-out")) return "כשיש ממתקים";
+  return null;
+}
+
+export function skipRestoreUndoPromptMessage(house: PublicHouse, meta: SkippedHouseMeta) {
+  const name = houseHeadline(house);
+  const triggers = metaRestoreTriggers(meta);
+  if (triggers.includes("not-open") && triggers.includes("candy-out")) {
+    return `${name} — דילגתם כשהבית היה סגור ובלי ממתקים. עכשיו הוא פתוח ויש ממתקים. לבטל את הדילוג?`;
+  }
+  if (triggers.includes("not-open")) {
+    return `${name} — דילגתם כשהבית לא היה פתוח. עכשיו הוא פתוח. לבטל את הדילוג?`;
+  }
+  if (triggers.includes("candy-out")) {
+    return `${name} — דילגתם כשלא היו ממתקים. עכשיו יש ממתקים. לבטל את הדילוג?`;
+  }
+  return `${name} — התנאי להחזרה התקיים. לבטל את הדילוג?`;
+}
+
+export function defaultRestoreTriggersFromSnapshot(
+  statusKey: string,
+): TemporaryRestoreTriggerId[] {
+  return temporaryRestoreOptionsFromSnapshot(statusKey);
+}
+
 /** Whether the house was closed or out of candy when the skip was recorded. */
 export function skipSnapshotHadCandyOutOrClosed(statusKey: string) {
   const [visit, frozen, breakStatus, hoursOpen, candy] = statusKey.split("|");
@@ -190,7 +223,12 @@ export function skipSnapshotHadCandyOutOrClosed(statusKey: string) {
 }
 
 export function skipReturnSectionVisible(meta: SkippedHouseMeta | undefined) {
-  return Boolean(meta && skipSnapshotHadCandyOutOrClosed(meta.statusKey));
+  return Boolean(
+    meta &&
+      meta.temporary &&
+      metaRestoreTriggers(meta).length > 0 &&
+      skipSnapshotHadCandyOutOrClosed(meta.statusKey),
+  );
 }
 
 /** Temporary auto-restore still runs silently unless candy or closed status triggered the skip. */

@@ -9,7 +9,6 @@ import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { SkipReturnSection } from "@/components/skip-return-section";
-import type { TemporaryRestoreTriggerId } from "@/lib/skip-reasons";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
@@ -31,8 +30,6 @@ export function HouseCard({
   onRestoreRoute,
   skipped = false,
   skipMeta,
-  onSaveSkipRestore,
-  onClearSkipRestore,
   canEdit = false,
   editCode,
   showVisitPoster = false,
@@ -68,8 +65,6 @@ export function HouseCard({
   onRestoreRoute?: () => void;
   skipped?: boolean;
   skipMeta?: SkippedHouseMeta;
-  onSaveSkipRestore?: (triggers: TemporaryRestoreTriggerId[]) => void;
-  onClearSkipRestore?: () => void;
   canEdit?: boolean;
   editCode?: string;
   showVisitPoster?: boolean;
@@ -114,8 +109,6 @@ export function HouseCard({
     onRestoreRoute,
     skipped,
     skipMeta,
-    onSaveSkipRestore,
-    onClearSkipRestore,
     canEdit: mayEdit,
     editCode: mayEdit ? editCode : undefined,
     showVisitPoster: mayEdit && showVisitPoster,
@@ -171,14 +164,7 @@ export function HouseCard({
             className={cn(catalogRemoved && "shrink-0 self-center")}
           />
         </div>
-        {skipped && skipMeta && onSaveSkipRestore && onClearSkipRestore ? (
-          <SkipReturnSection
-            house={displayHouse}
-            meta={skipMeta}
-            onSave={onSaveSkipRestore}
-            onClear={onClearSkipRestore}
-          />
-        ) : null}
+        {skipped && skipMeta ? <SkipReturnSection meta={skipMeta} /> : null}
         <HouseDetails
           house={house}
           distanceM={distanceM}

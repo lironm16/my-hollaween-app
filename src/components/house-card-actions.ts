@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
-import type { TemporaryRestoreTriggerId } from "@/lib/skip-reasons";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import type { PublicHouse } from "@/lib/types";
 import type { ComponentProps } from "react";
@@ -42,8 +41,6 @@ export type HouseCardActionContext = {
   /** Owner/admin ⋮ «מיקום השדון» — only shown on houses this device may edit. */
   onPlaceGem?: (house: PublicHouse) => void;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
-  onSaveSkipRestore?: (id: string, triggers: TemporaryRestoreTriggerId[]) => void;
-  onClearSkipRestore?: (id: string) => void;
   editingId?: string | null;
 };
 
@@ -73,10 +70,6 @@ export function houseCardPropsFor(
     gemCollected: ctx.gemCollected?.(id),
     skipped: isSkipped,
     skipMeta: ctx.skipMetaFor?.(id),
-    onSaveSkipRestore: ctx.onSaveSkipRestore
-      ? (triggers) => ctx.onSaveSkipRestore!(id, triggers)
-      : undefined,
-    onClearSkipRestore: ctx.onClearSkipRestore ? () => ctx.onClearSkipRestore!(id) : undefined,
     onToggleLike:
       viewOnlyRemoved || !ctx.onToggleLike ? undefined : () => ctx.onToggleLike!(id),
     onToggleVisited:

@@ -155,7 +155,13 @@ import {
   type SharedRoutePayload,
 } from "@/lib/route-share";
 import { useRouteStatusAlerts } from "@/hooks/use-route-status-alerts";
-import { skipStatusSnapshot, type SkipReasonId } from "@/lib/skip-reasons";
+import {
+  defaultRestoreTriggersFromSnapshot,
+  skipStatusSnapshot,
+  type SkipReasonId,
+} from "@/lib/skip-reasons";
+import { useSkipRestoreUndoPrompt } from "@/hooks/use-skip-restore-undo-prompt";
+import { SkipRestoreUndoDialog } from "@/components/skip-restore-undo-dialog";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import {
   dismissVisitSkipConflictPrompt,
@@ -898,10 +904,14 @@ export function NeighborhoodApp({
 
   function applySkipHouse(house: PublicHouse) {
     const wasSkipped = skips.skipped(house.id);
+    const statusKey = skipStatusSnapshot(house, now, filters);
+    const restoreTriggers = defaultRestoreTriggersFromSnapshot(statusKey);
+    const temporary = restoreTriggers.length > 0;
     const meta = {
-      reason: "other" as SkipReasonId,
-      temporary: false,
-      statusKey: skipStatusSnapshot(house, now, filters),
+      reason: (restoreTriggers[0] ?? "other") as SkipReasonId,
+      temporary,
+      restoreTriggers: temporary ? restoreTriggers : undefined,
+      statusKey,
       skippedAt: wasSkipped ? (skips.meta(house.id)?.skippedAt ?? new Date().toISOString()) : new Date().toISOString(),
     };
     const nextSkippedIds = wasSkipped
@@ -1022,9 +1032,23 @@ export function NeighborhoodApp({
   /** Restore one skipped house — no route-change prompt (explicit user action). */
   function handleRestoreHouse(id: string) {
     if (!skips.skipped(id)) return;
-    const nextSkippedIds = skips.skippedIds.filter((item) => item !== id);
     skips.unskip(id);
   }
+
+  const skipRestoreUndoPrompt = useSkipRestoreUndoPrompt({
+    houses,
+    skippedIds: skips.skippedIds,
+    metaFor: skips.meta,
+    filters,
+    now,
+  });
+  const skipRestorePromptHouse = skipRestoreUndoPrompt.promptHouseId
+    ? houses.find((item) => item.id === skipRestoreUndoPrompt.promptHouseId)
+    : null;
+  const skipRestorePromptMeta = skipRestorePromptHouse
+    ? skips.meta(skipRestorePromptHouse.id)
+    : undefined;
+
   const { line: routeLine, segments: routeLineSegments } = useRouteGeometry(
     routePlan,
     routeMode,
@@ -1264,27 +1288,6 @@ export function NeighborhoodApp({
             )
         : undefined,
       skipMetaFor: (id) => skips.meta(id),
-      onSaveSkipRestore: (id, triggers) => {
-        const prev = skips.meta(id);
-        if (!prev) return;
-        skips.update(id, {
-          ...prev,
-          temporary: triggers.length > 0,
-          restoreTriggers: triggers,
-          reason: triggers[0] ?? prev.reason,
-        });
-      },
-      onClearSkipRestore: (id) => {
-        const prev = skips.meta(id);
-        if (!prev) return;
-        skips.update(id, {
-          ...prev,
-          temporary: false,
-          restoreTriggers: [],
-          reason: "other",
-        });
-        skips.clearSkipReasonUserData(id);
-      },
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
@@ -1692,6 +1695,18 @@ export function NeighborhoodApp({
         />
       ) : null}
       {gemPlacerDialog}
+      {skipRestorePromptHouse && skipRestorePromptMeta ? (
+        <SkipRestoreUndoDialog
+          house={skipRestorePromptHouse}
+          meta={skipRestorePromptMeta}
+          open
+          onConfirmUnskip={() => {
+            handleRestoreHouse(skipRestorePromptHouse.id);
+            skipRestoreUndoPrompt.clearPrompt();
+          }}
+          onDismiss={skipRestoreUndoPrompt.dismissPrompt}
+        />
+      ) : null}
       {gemResetHouse || gemResetCluster ? (
         <GemResetConfirmDialog
           open

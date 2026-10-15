@@ -16,6 +16,7 @@ import {
   temporaryRestoreReasonMet,
   temporarySkipRestoreMet,
   temporaryRestoreOptionsFromSnapshot,
+  skipReturnAutoDisplayLabel,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -251,6 +252,31 @@ describe("temporaryRestoreAlertText", () => {
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
       /משפחת לוין חזר לרשימה — הבית פתוח ויש ממתקים/,
+    );
+  });
+});
+
+describe("skipReturnAutoDisplayLabel", () => {
+  it("uses one combined line when both triggers apply", () => {
+    assert.equal(
+      skipReturnAutoDisplayLabel({
+        reason: "not-open",
+        temporary: true,
+        restoreTriggers: ["not-open", "candy-out"],
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      "כשהבית פתוח ויש ממתקים",
+    );
+    assert.equal(
+      skipReturnAutoDisplayLabel({
+        reason: "not-open",
+        temporary: true,
+        restoreTriggers: ["not-open"],
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      "כשהבית פתוח",
     );
   });
 });
