@@ -353,7 +353,7 @@ function clusterIcon(
         routeModeActive: decorRouteMode,
       }),
       routeOrder,
-      "",
+      " is-single-shell",
       routeBadgeProgressForCluster([only], visitedIds, skippedIds),
     );
     const layout = leafletPinLayout({ routeOrder, aptDots: false });
@@ -384,7 +384,7 @@ function clusterIcon(
     : ringStyle
       ? ` style="${ringStyle}"`
       : "";
-  const clusterShell = schoolCampus ? "" : " is-cluster-shell";
+  const clusterShell = schoolCampus ? " is-school-shell" : " is-cluster-shell";
   const wrapped = wrapRoutePin(
     `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
