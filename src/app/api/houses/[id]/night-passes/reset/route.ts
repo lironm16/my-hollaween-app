@@ -28,9 +28,9 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   if (!outcome.ok) {
     return NextResponse.json({ error: "קוד המשפחה לא נמצא." }, { status: 404, headers: NO_STORE });
   }
-  await updateByEditCode(house.id, house.editCode, { editCode: outcome.record.code });
+  await updateByEditCode(house.id, house.editCode, { editCode: outcome.newCode });
   return NextResponse.json(
-    { ok: true, access: houseAccessView(outcome.record, null) },
+    { ok: true, access: houseAccessView(outcome.record, outcome.newCode, null) },
     { headers: NO_STORE },
   );
 }

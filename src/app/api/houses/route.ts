@@ -66,11 +66,11 @@ export async function POST(request: Request) {
             houseId: house.house.id,
             name,
             phone,
-            preferredCode: house.house.editCode,
             priorToken: cookie?.token ?? null,
+            priorSessionId: cookie?.sessionId ?? null,
           });
           if (outcome.ok) {
-            await setNightPassCookie(outcome.record.id, outcome.token);
+            await setNightPassCookie(outcome.record.id, outcome.token, outcome.sessionId);
             deviceConnected = true;
           }
         } catch {

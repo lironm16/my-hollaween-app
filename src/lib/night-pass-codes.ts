@@ -45,8 +45,15 @@ export function formatHouseAccessCode(code: string) {
   return code.length === HOUSE_ACCESS_CODE_LENGTH ? code : formatNightPassCode(code);
 }
 
+/** Legacy — pass docs keyed by code before house-scoped ids. */
 export function passIdForCode(code: string) {
   return createHash("sha256").update(`hw-night-pass:${code}`).digest("hex").slice(0, 32);
+}
+
+/** Stable pass document id — survives family code reset; code lives only on the house. */
+export function passIdForHouse(houseId: string) {
+  const id = houseId.trim();
+  return createHash("sha256").update(`hw-house-access:${id}`).digest("hex").slice(0, 32);
 }
 
 export function hashNightPassToken(token: string) {

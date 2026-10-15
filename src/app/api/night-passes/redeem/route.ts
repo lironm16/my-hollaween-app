@@ -4,8 +4,9 @@ import {
   normalizeHolderName,
   normalizeIsraeliMobile,
   normalizeNightPassCode,
-  passIdForCode,
+  passIdForHouse,
 } from "@/lib/night-pass-codes";
+import { getHouseByAccessCode } from "@/lib/store";
 import { redeemNightPass } from "@/lib/night-pass-service";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
@@ -40,19 +41,22 @@ export async function POST(request: Request) {
   if (!code) {
     return fail(404, "invalid", "קוד המשפחה לא נמצא. בדקו שכל 4 התווים נכונים.");
   }
-  if (!(await rateLimitShared(`night-pass-code:${passIdForCode(code)}`, 10, WINDOW_MS))) {
+  const house = await getHouseByAccessCode(code);
+  if (house && !(await rateLimitShared(`night-pass-house:${passIdForHouse(house.id)}`, 10, WINDOW_MS))) {
     return fail(429, "rate", "יותר מדי ניסיונות לקוד הזה. נסו שוב מאוחר יותר.");
   }
 
   const cookie = await readNightPassCookie();
-  const priorToken =
-    cookie && cookie.passId === passIdForCode(code) ? cookie.token : null;
+  const passId = house ? passIdForHouse(house.id) : null;
+  const samePass = passId && cookie?.passId === passId;
+  const priorToken = samePass ? cookie.token : null;
+  const priorSessionId = samePass ? cookie.sessionId : null;
 
-  const outcome = await redeemNightPass({ code, name, phone, priorToken });
+  const outcome = await redeemNightPass({ code, name, phone, priorToken, priorSessionId });
   if (!outcome.ok) {
     return fail(404, "invalid", "קוד המשפחה לא נמצא. בדקו שכל 4 התווים נכונים.");
   }
-  await setNightPassCookie(outcome.record.id, outcome.token);
+  await setNightPassCookie(outcome.record.id, outcome.token, outcome.sessionId);
   try {
     await grantOwnerHouse(outcome.record.houseId);
   } catch {

@@ -1,3 +1,4 @@
+import { normalizeNightPassCode } from "@/lib/night-pass-codes";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import {
   canonicalHouseId,
@@ -114,6 +115,14 @@ export async function getHouse(id: string): Promise<House | undefined> {
   const found = findHouseIn((await loadDb()).houses, id);
   if (found) return found;
   return findHouseIn((await loadDb(true)).houses, id);
+}
+
+/** Resolve the single family / edit code to a house row. */
+export async function getHouseByAccessCode(rawCode: unknown): Promise<House | undefined> {
+  const code = normalizeNightPassCode(rawCode);
+  if (!code) return undefined;
+  const houses = await getAllHouses();
+  return houses.find((house) => normalizeNightPassCode(house.editCode) === code);
 }
 
 function nextPublicId(db: { houses: House[] }, kind: HouseInput["kind"]) {

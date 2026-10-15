@@ -31,7 +31,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const house = await getHouse(id);
   if (!house) return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404, headers: NO_STORE });
   const [record, devicePass] = await Promise.all([
-    ensureHouseAccess(house.id, house.editCode?.trim() || undefined),
+    ensureHouseAccess(house.id),
     currentNightPass(),
   ]);
   const cookie = await readNightPassCookie();
@@ -39,9 +39,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     devicePass && devicePass.houseId === house.id && cookie?.passId === devicePass.id
       ? cookie.token
       : null;
-  const access = houseAccessView(record, token);
+  const access = houseAccessView(
+    record,
+    house.editCode,
+    token,
+    cookie?.passId === devicePass?.id ? cookie.sessionId : null,
+  );
   const thisDeviceRegistered = access.devices.some((d) => d.isThisDevice);
-  const slots = [nightPassSlotView(record, admin)];
+  const slots = [nightPassSlotView(record, house.editCode, admin)];
   return NextResponse.json(
     {
       enabled: settings.enabled,

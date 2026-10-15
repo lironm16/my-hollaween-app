@@ -18,6 +18,8 @@ export type NightPassEvent = {
 };
 
 export type HouseAccessSession = {
+  /** Stable device slot id — cookie may reference this for re-register. */
+  sessionId: string;
   tokenHash: string;
   registeredAt: string;
   holderName: string;
@@ -25,15 +27,15 @@ export type HouseAccessSession = {
 };
 
 export type NightPassRecord = {
-  /** Lookup id derived from the code (see passIdForCode). */
+  /** Stable id from passIdForHouse(houseId). Legacy rows may use passIdForCode. */
   id: string;
   houseId: string;
-  /** Unified pool — one family code, up to four device sessions. */
+  /** Unified pool — up to four device sessions; family code is house.editCode only. */
   model?: "unified";
   sessions?: HouseAccessSession[];
   slot?: NightPassSlot;
-  /** Shown to the house owner so it can be shared again. Never sent to visitors. */
-  code: string;
+  /** @deprecated Duplicated house.editCode — omitted on new records. */
+  code?: string;
   status?: "unused" | "active";
   holderName?: string | null;
   holderPhone?: string | null;

@@ -16,18 +16,28 @@ import type { NightPassViewer } from "@/lib/types";
 const COOKIE = "hw_pass";
 const MAX_AGE = 60 * 60 * 24 * 120;
 
-export async function readNightPassCookie(): Promise<{ passId: string; token: string } | null> {
+export async function readNightPassCookie(): Promise<{
+  passId: string;
+  sessionId?: string;
+  token: string;
+} | null> {
   const jar = await cookies();
   const raw = jar.get(COOKIE)?.value;
   if (!raw) return null;
-  const dot = raw.indexOf(".");
-  if (dot <= 0) return null;
-  return { passId: raw.slice(0, dot), token: raw.slice(dot + 1) };
+  const parts = raw.split(".");
+  if (parts.length === 2 && parts[0] && parts[1]) {
+    return { passId: parts[0], token: parts[1] };
+  }
+  if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+    return { passId: parts[0], sessionId: parts[1], token: parts[2] };
+  }
+  return null;
 }
 
-export async function setNightPassCookie(passId: string, token: string) {
+export async function setNightPassCookie(passId: string, token: string, sessionId?: string) {
   const jar = await cookies();
-  jar.set(COOKIE, `${passId}.${token}`, {
+  const value = sessionId ? `${passId}.${sessionId}.${token}` : `${passId}.${token}`;
+  jar.set(COOKIE, value, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",

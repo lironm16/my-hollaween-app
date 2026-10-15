@@ -13,7 +13,7 @@ async function copyText(text: string, ok: string) {
   }
 }
 
-/** Share the family edit code — house id is not needed for in-card editing. */
+/** Share the single family code — edit unlock and device registration. */
 export function CodesCopy({
   editCode,
   hideLabel = false,
@@ -32,7 +32,7 @@ export function CodesCopy({
     >
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
-          {!hideLabel ? <p className="text-base text-violet-300">קוד עריכה</p> : null}
+          {!hideLabel ? <p className="text-base text-violet-300">קוד משפחה</p> : null}
           <p className="truncate text-center font-mono text-xl tracking-wide text-orange-200">
             {editCode}
           </p>
@@ -41,7 +41,7 @@ export function CodesCopy({
           type="button"
           size="sm"
           variant="outline"
-          onClick={() => void copyText(editCode, "קוד העריכה הועתק")}
+          onClick={() => void copyText(editCode, "קוד המשפחה הועתק")}
         >
           <Copy className="size-3.5" />
           העתיקו
