@@ -4,15 +4,21 @@ import { cn } from "@/lib/utils";
 export function ImpDemonCameraIcon({
   className,
   signalActive = false,
+  variant = "default",
 }: {
   className?: string;
   /** Pulse when within hunt range of a visible uncollected gem. */
   signalActive?: boolean;
+  /** `fab` / `quick` fill the control like HousePlus / heart icons. */
+  variant?: "default" | "quick" | "fab";
 }) {
   return (
     <span
       className={cn(
-        "imp-demon-camera-icon inline-flex size-8 shrink-0 items-center justify-center overflow-hidden",
+        "imp-demon-camera-icon inline-flex shrink-0 items-center justify-center",
+        variant === "default" && "size-8",
+        variant === "quick" && "size-8 max-h-full max-w-full",
+        variant === "fab" && "size-8",
         signalActive && "is-signal-active",
         className,
       )}
@@ -22,7 +28,11 @@ export function ImpDemonCameraIcon({
       <img
         src="/icons/demon-camera-hunt.png"
         alt=""
-        className="size-[92%] max-h-full max-w-full object-contain object-center"
+        className={cn(
+          "object-contain object-center",
+          variant === "default" && "size-full max-h-full max-w-full",
+          (variant === "quick" || variant === "fab") && "imp-demon-camera-icon__fill",
+        )}
         decoding="async"
       />
     </span>

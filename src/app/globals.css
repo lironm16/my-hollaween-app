@@ -3641,6 +3641,19 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   color: #ddd6fe;
 }
 
+.imp-demon-camera-icon__fill {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  transform: scale(1.32);
+  transform-origin: center;
+}
+
+.map-demon-cam-fab .imp-demon-camera-icon__fill {
+  transform: scale(1.18);
+}
+
 .house-action-menu {
   position: relative;
   display: flex;

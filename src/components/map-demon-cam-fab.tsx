@@ -5,8 +5,9 @@ import { useAddHouseFabVisible } from "@/hooks/use-add-house-fab-visible";
 import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
+/** Match {@link MapAddHouseFab} outer geometry (size-14 circle). */
 const fabBase =
-  "map-demon-cam-fab inline-flex size-14 shrink-0 items-center justify-center rounded-full p-0.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]";
+  "map-demon-cam-fab inline-flex size-14 shrink-0 items-center justify-center rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.45)]";
 
 /** Same map corner as {@link MapAddHouseFab} — visible when add-house FAB is hidden and gem hunt UI is on. */
 export function MapDemonCamFab({
@@ -30,7 +31,7 @@ export function MapDemonCamFab({
       className={cn(
         fabBase,
         active
-          ? "bg-orange-500 text-white ring-1 ring-orange-300/50"
+          ? "bg-orange-500 text-white ring-1 ring-orange-300/50 hover:bg-orange-400"
           : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25 hover:bg-[#261536]",
         nearSignal && "is-gem-near",
       )}
@@ -42,7 +43,7 @@ export function MapDemonCamFab({
         onToggle();
       }}
     >
-      <ImpDemonCameraIcon signalActive={nearSignal} className="size-8 max-h-full max-w-full" />
+      <ImpDemonCameraIcon variant="fab" signalActive={nearSignal} />
     </button>
   );
 }

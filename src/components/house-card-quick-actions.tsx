@@ -145,9 +145,9 @@ export function HouseCardQuickActions({
           }}
         >
           {gemCollected ? (
-            <ImpMenuActiveGlyph className={QUICK_ICON_CLASS} />
+            <ImpMenuActiveGlyph className={QUICK_ACTIVE_ICON_CLASS} />
           ) : (
-            <ImpDemonCameraIcon className={QUICK_ICON_CLASS} />
+            <ImpDemonCameraIcon variant="quick" className={QUICK_ICON_CLASS} />
           )}
         </button>
       ) : null}
