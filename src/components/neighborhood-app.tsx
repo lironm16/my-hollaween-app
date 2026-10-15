@@ -37,7 +37,6 @@ import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { buildRouteListItems } from "@/lib/route-list-items";
-import { nextApproachStopPoint } from "@/lib/route-session-progress";
 import { routeDisplayOrder } from "@/lib/route-display-order";
 import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
 import { LikeCheer } from "@/components/like-cheer";
@@ -1033,10 +1032,6 @@ export function NeighborhoodApp({
     skips.skippedIds,
     routeMode,
   );
-  const routeApproachTarget =
-    routePlan && routeMode
-      ? nextApproachStopPoint(routePlan, visits.visitedIds, skips.skippedIds)
-      : null;
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
@@ -1496,7 +1491,6 @@ export function NeighborhoodApp({
                   routeLineSegments={
                     routeMode && !originPick.originPickActive ? routeLineSegments : null
                   }
-                  approachTarget={routeMode && !originPick.originPickActive ? routeApproachTarget : null}
                   routeStart={routeMode ? origin : null}
                   routeStartedFrom={routeMode && activeRoute ? activeRoute.startedFrom : null}
                   visitedIds={visits.visitedIds}

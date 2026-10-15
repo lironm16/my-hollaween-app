@@ -798,7 +798,6 @@ type Props = {
     skipped?: boolean;
   }[] | null;
   /** Dashed purple origin spur — always to tour stop 1 when set. */
-  approachTarget?: LatLng | null;
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Pinned stop numbers for visited/skipped houses still shown on the map in route mode. */
   routeSessionDisplayOrders?: Map<string, number> | null;
@@ -860,7 +859,6 @@ export function HouseMap({
   onLocate,
   routeLine = null,
   routeLineSegments = null,
-  approachTarget = null,
   routeStops = null,
   routeSessionDisplayOrders = null,
   routeStart = null,
@@ -963,17 +961,6 @@ export function HouseMap({
     [routeLineSegments],
   );
   const useSegmentRoute = routeSegmentLines.length > 0;
-  const approachPositions = useMemo(() => {
-    const first = routeStops?.[0];
-    const target = approachTarget ?? (first ? { lat: first.lat, lng: first.lng } : null);
-    const start = routeStart ?? userLocation;
-    if (!start || !target) return null;
-    if (!shouldShowRouteApproach(start, target, routeStartedFrom)) return null;
-    return [
-      [start.lat, start.lng] as [number, number],
-      [target.lat, target.lng] as [number, number],
-    ];
-  }, [routeStart, userLocation, routeStops, approachTarget, routeStartedFrom]);
   const { tiles, ready: tilesReady } = useMapTiles();
   useEffect(() => {
     postMapTileCacheConfig();
@@ -1085,36 +1072,6 @@ export function HouseMap({
             icon={originIcon}
             zIndexOffset={850}
           />
-        ) : null}
-        {!pickMode && approachPositions ? (
-          <>
-            <Polyline
-              positions={approachPositions}
-              pathOptions={{
-                color: ROUTE_ORIGIN_PURPLE_SHADOW,
-                weight: 6,
-                opacity: 0.35,
-                dashArray: "8 9",
-                lineCap: "round",
-                lineJoin: "round",
-              }}
-              smoothFactor={0}
-              interactive={false}
-            />
-            <Polyline
-              positions={approachPositions}
-              pathOptions={{
-                color: ROUTE_ORIGIN_PURPLE,
-                weight: 4,
-                opacity: 0.9,
-                dashArray: "8 9",
-                lineCap: "round",
-                lineJoin: "round",
-              }}
-              smoothFactor={0}
-              interactive={false}
-            />
-          </>
         ) : null}
         {!pickMode && useSegmentRoute
           ? routeSegmentLines.map((segment, index) => (

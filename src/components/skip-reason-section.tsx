@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SkipIcon } from "@/components/skip-icon";
 import {
   SKIP_REASON_CATEGORIES,
   skipReasonCategoryLabel,
+  skipReasonPreview,
   type SkipReasonCategory,
 } from "@/lib/skip-reason-categories";
 import { cn } from "@/lib/utils";
@@ -33,37 +35,31 @@ export function SkipReasonSection({
   onSave: (payload: { category: SkipReasonCategory; note: string }) => void;
   onDelete: () => void;
 }) {
-  const fieldId = useId();
   const selectId = useId();
   const [editing, setEditing] = useState(false);
   const [draftCategory, setDraftCategory] = useState<SkipReasonCategory | "">(category ?? "");
-  const [draftNote, setDraftNote] = useState(note ?? "");
 
   const hasSaved = Boolean(category);
+  const preview = skipReasonPreview(category, note);
 
   useEffect(() => {
-    if (!editing) {
-      setDraftCategory(category ?? "");
-      setDraftNote(note ?? "");
-    }
-  }, [category, note, editing]);
+    if (!editing) setDraftCategory(category ?? "");
+  }, [category, editing]);
 
   function save() {
     if (!draftCategory) return;
-    onSave({ category: draftCategory, note: draftNote.trim() });
+    onSave({ category: draftCategory, note: note?.trim() ?? "" });
     setEditing(false);
   }
 
   function cancel() {
     setDraftCategory(category ?? "");
-    setDraftNote(note ?? "");
     setEditing(false);
   }
 
   function handleDelete() {
     onDelete();
     setDraftCategory("");
-    setDraftNote("");
     setEditing(false);
   }
 
@@ -72,11 +68,11 @@ export function SkipReasonSection({
       <div className="skip-reason-section">
         <button
           type="button"
-          className="skip-reason-add flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-500/45 bg-[#1a1028]/60 px-3 py-2.5 text-base text-violet-200 hover:border-orange-500/40 hover:bg-orange-500/5"
+          className="skip-reason-add flex w-full items-center justify-start gap-2 rounded-lg px-1 py-1.5 text-base text-violet-200 hover:text-orange-100"
           onClick={() => setEditing(true)}
         >
-          <Plus className="size-4 shrink-0" aria-hidden />
-          הוספת סיבת דילוג
+          <SkipIcon className="size-5 shrink-0 text-orange-400" aria-hidden />
+          <span>הוסף תנאי להחזרה</span>
         </button>
       </div>
     );
@@ -84,10 +80,11 @@ export function SkipReasonSection({
 
   if (editing) {
     return (
-      <div className="skip-reason-section space-y-2.5 rounded-xl border border-slate-500/45 bg-[#1a1028]/90 px-3 py-2.5">
-        <label htmlFor={selectId} className="block text-right text-sm font-medium text-violet-200">
-          סיבת דילוג
-        </label>
+      <div className="skip-reason-section space-y-2 rounded-xl border border-slate-500/40 bg-[#1a1028]/90 px-3 py-2.5">
+        <div className="flex items-center gap-2 text-violet-200">
+          <SkipIcon className="size-5 shrink-0 text-orange-400" aria-hidden />
+          <span className="text-base font-medium">הוסף תנאי להחזרה</span>
+        </div>
         <div className="relative">
           <select
             id={selectId}
@@ -116,19 +113,6 @@ export function SkipReasonSection({
             </span>
           ) : null}
         </div>
-        <label htmlFor={fieldId} className="block text-right text-sm text-violet-300">
-          הערה (אופציונלי)
-        </label>
-        <textarea
-          id={fieldId}
-          dir="rtl"
-          rows={compact ? 2 : 3}
-          maxLength={240}
-          value={draftNote}
-          onChange={(event) => setDraftNote(event.target.value)}
-          className="skip-reason-comment w-full resize-none rounded-lg border border-slate-500/55 bg-[#160b20] px-3 py-2 text-right text-base text-violet-50 outline-none focus:ring-2 focus:ring-orange-500/35"
-          placeholder="פרטים נוספים…"
-        />
         <div className="flex flex-wrap justify-start gap-2">
           <Button
             type="button"
@@ -139,67 +123,47 @@ export function SkipReasonSection({
           >
             שמירה
           </Button>
-          {hasSaved ? (
-            <Button type="button" size="sm" variant="outline" className="h-9" onClick={cancel}>
-              ביטול
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-9"
-              onClick={() => {
-                setDraftCategory("");
-                setDraftNote("");
-                setEditing(false);
-              }}
-            >
-              ביטול
-            </Button>
-          )}
+          <Button type="button" size="sm" variant="outline" className="h-9" onClick={cancel}>
+            ביטול
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="skip-reason-section rounded-xl border border-slate-500/45 bg-[#1a1028]/80 px-3 py-3">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <div className="flex items-center justify-center gap-2">
-          {category ? <SkipReasonOptionIcon category={category} /> : null}
-          <span className="text-base font-medium text-violet-100">
-            {category ? skipReasonCategoryLabel(category) : null}
-          </span>
-        </div>
-        {note?.trim() ? (
-          <p
-            className={cn(
-              "w-full text-violet-200",
-              compact ? "truncate text-sm" : "whitespace-pre-wrap text-base leading-relaxed",
-            )}
-          >
-            {note.trim()}
-          </p>
-        ) : null}
-        <div className="flex items-center justify-center gap-1 pt-0.5">
-          <button
-            type="button"
-            className="inline-flex size-9 items-center justify-center rounded-lg text-violet-300 hover:bg-violet-500/10 hover:text-orange-100"
-            aria-label="עריכה"
-            onClick={() => setEditing(true)}
-          >
-            <Pencil className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            className="inline-flex size-9 items-center justify-center rounded-lg text-violet-300 hover:bg-red-950/50 hover:text-red-200"
-            aria-label="מחיקת הסיבה"
-            onClick={handleDelete}
-          >
-            <Trash2 className="size-4" aria-hidden />
-          </button>
-        </div>
+    <div className="skip-reason-section py-0.5">
+      <div className="flex min-w-0 items-center gap-2 text-right">
+        <SkipIcon className="size-4 shrink-0 text-orange-400/90" aria-hidden />
+        {category ? <SkipReasonOptionIcon category={category} /> : null}
+        <span
+          className={cn(
+            "min-w-0 flex-1 truncate text-base text-violet-100",
+            compact && "text-sm",
+          )}
+          title={preview}
+        >
+          {category ? skipReasonCategoryLabel(category) : preview}
+          {note?.trim() ? (
+            <span className="text-violet-300/90">{` · ${note.trim()}`}</span>
+          ) : null}
+        </span>
+        <button
+          type="button"
+          className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-violet-300 hover:bg-violet-500/10 hover:text-orange-100"
+          aria-label="עריכה"
+          onClick={() => setEditing(true)}
+        >
+          <Pencil className="size-3.5" aria-hidden />
+        </button>
+        <button
+          type="button"
+          className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-violet-300 hover:bg-red-950/50 hover:text-red-200"
+          aria-label="מחיקת תנאי להחזרה"
+          onClick={handleDelete}
+        >
+          <Trash2 className="size-3.5" aria-hidden />
+        </button>
       </div>
     </div>
   );
