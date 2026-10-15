@@ -2,10 +2,13 @@ import type { PublicHouse } from "@/lib/types";
 
 const TOUR_VISITED = "#059669";
 const TOUR_SKIPPED = "#64748b";
-/** Cluster finished with both visits and skips — one solid ring (split green/gray is hard to read on the map). */
-export const TOUR_MIXED_DONE = "#38bdf8";
 const TOUR_OPEN_ROUTE = "#f97316";
 const TOUR_OPEN_IDLE = "#fff7ed";
+
+/** Alternating visit/skip stripes — reads as “done with mix” without a third accent color. */
+export function clusterTourMixedRingGradient(): string {
+  return `repeating-conic-gradient(from -90deg, ${TOUR_VISITED} 0deg 42deg, ${TOUR_SKIPPED} 42deg 84deg)`;
+}
 
 export type ClusterRouteStopBadgeProgress = "open" | "visited" | "skipped" | "mixed";
 
@@ -49,10 +52,10 @@ export function clusterRouteStopBadgeProgress(
 }
 
 /**
- * Cluster tour ring — green / gray / sky / white-or-orange:
+ * Cluster tour ring — green / gray / striped mix / white-or-orange:
  * - Any “open” house (neither visited nor skipped) → solid white (idle) or orange (route mode).
  * - Else all visited → solid green; all skipped → solid gray.
- * - Else visited+skipped only → solid sky (“done with mix”).
+ * - Else visited+skipped only → green/gray stripe ring.
  */
 export function clusterTourRingGradient(
   houses: PublicHouse[],
@@ -77,7 +80,7 @@ export function clusterTourRingGradient(
   }
 
   if (visited + skipped === 0) return null;
-  return `conic-gradient(from -90deg, ${TOUR_MIXED_DONE} 0% 100%)`;
+  return clusterTourMixedRingGradient();
 }
 
 export type ClusterTourRingDecor = {
@@ -119,8 +122,9 @@ export function clusterTourRingDecor(
         styleAttr: ` style="--pin-tour-ring-color:${solid}"`,
       };
     }
+    const mixedStripes = gradient.startsWith("repeating-conic-gradient");
     return {
-      classSuffix: " pin-tour-ring",
+      classSuffix: mixedStripes ? " pin-tour-ring pin-tour-ring-mixed" : " pin-tour-ring",
       styleAttr: ` style="--pin-tour-ring:${gradient}"`,
     };
   }

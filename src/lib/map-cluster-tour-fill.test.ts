@@ -6,7 +6,7 @@ import {
   clusterTourRingDecor,
   solidTourRingColor,
   clusterTourRingGradient,
-  TOUR_MIXED_DONE,
+  clusterTourMixedRingGradient,
 } from "@/lib/map-cluster-tour-fill";
 import type { PublicHouse } from "@/lib/types";
 
@@ -74,16 +74,19 @@ describe("clusterTourRingGradient", () => {
     assert.match(gradient!, /#64748b 0% 100%/);
   });
 
-  it("uses solid mixed-done color when visit and skip both present and none open", () => {
+  it("uses green/gray stripe ring when visit and skip both present and none open", () => {
     const gradient = clusterTourRingGradient([stub("a"), stub("b")], ["a"], ["b"], false);
-    assert.match(gradient!, new RegExp(`${TOUR_MIXED_DONE} 0% 100%`));
+    assert.equal(gradient, clusterTourMixedRingGradient());
+    assert.match(gradient!, /repeating-conic-gradient/);
+    assert.match(gradient!, /#059669/);
+    assert.match(gradient!, /#64748b/);
   });
 
-  it("uses mixed-done for nine visited and one skipped", () => {
+  it("uses same stripe ring for nine visited and one skipped", () => {
     const houses = Array.from({ length: 10 }, (_, i) => stub(`u${i}`));
     const visited = houses.slice(0, 9).map((h) => h.id);
     const gradient = clusterTourRingGradient(houses, visited, ["u9"], false);
-    assert.match(gradient!, new RegExp(`${TOUR_MIXED_DONE} 0% 100%`));
+    assert.equal(gradient, clusterTourMixedRingGradient());
   });
 
   it("uses open color when any house is still open", () => {
@@ -117,10 +120,11 @@ describe("clusterTourRingDecor", () => {
     assert.match(decor.styleAttr, /--pin-tour-ring-color:#f97316/);
   });
 
-  it("uses solid mixed-done ring when visit and skip both present", () => {
+  it("uses striped mixed ring when visit and skip both present", () => {
     const decor = clusterTourRingDecor([stub("a"), stub("b")], ["a"], ["b"], true);
-    assert.equal(decor.classSuffix, " pin-tour-ring pin-tour-ring-solid");
-    assert.match(decor.styleAttr, new RegExp(`--pin-tour-ring-color:${TOUR_MIXED_DONE}`));
+    assert.equal(decor.classSuffix, " pin-tour-ring pin-tour-ring-mixed");
+    assert.match(decor.styleAttr, /--pin-tour-ring:repeating-conic-gradient/);
+    assert.doesNotMatch(decor.classSuffix, /pin-tour-ring-solid/);
   });
 });
 
