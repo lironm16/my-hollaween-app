@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
     if (!isServer) {
       // Client must never resolve the `node:` scheme (Webpack dev throws UnhandledSchemeError).
       config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/^node:crypto$/, (resource) => {
+        new webpack.NormalModuleReplacementPlugin(/^node:crypto$/, (resource: { request: string }) => {
           resource.request = "crypto";
         }),
       );
