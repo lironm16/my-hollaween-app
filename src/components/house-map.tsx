@@ -123,11 +123,15 @@ function wrapRoutePin(
   routeOrder?: number,
   shellClass = "",
   badgeProgress: RouteStopBadgeProgress = "open",
+  slotSize?: { w: number; h: number },
 ) {
   const badge = routeOrder ? routeBadgeHtml(routeOrder, badgeProgress) : "";
+  const sizeAttr = slotSize
+    ? ` style="width:${slotSize.w}px;height:${slotSize.h}px"`
+    : "";
   return {
     extraH: 0,
-    html: `<div class="house-pin-route${shellClass}">${html}${badge}</div>`,
+    html: `<div class="house-pin-route${shellClass}"${sizeAttr}>${html}${badge}</div>`,
   };
 }
 
@@ -135,6 +139,8 @@ const PIN_BOX = 62;
 const SCHOOL_CAMPUS_PIN_BOX = 88;
 /** Matches `.house-pin` width/height in CSS. */
 const PIN_DISC = 56;
+/** `.house-pin.is-school-campus` disc size in CSS. */
+const SCHOOL_DISC = 76;
 /** `.house-pin.is-cluster-ellipse` disc size in CSS. */
 const CLUSTER_DISC = 66;
 const APT_DOTS_BELOW = 20;
@@ -155,7 +161,7 @@ function leafletPinLayout(options: {
     const h = badgePad + pinBox + 22 + (options.aptDots ? APT_DOTS_BELOW : 0);
     return {
       iconSize: [pinBox, h],
-      iconAnchor: [pinBox / 2, badgePad + pinBox / 2],
+      iconAnchor: [pinBox / 2, badgePad + SCHOOL_DISC / 2],
     };
   }
   const discH = options.clusterEllipse ? CLUSTER_DISC : PIN_DISC;
@@ -344,6 +350,7 @@ function clusterIcon(
   const schoolCampus = clusterIsSchoolCampus(houses);
   if (houses.length <= 1 && !schoolCampus) {
     const { hoursSoonClass: hoursClass } = mapPinRingDecorForHouse(only, now, gemCtx);
+    const layout = leafletPinLayout({ routeOrder, aptDots: false });
     const wrapped = wrapRoutePin(
       housePinHtml(only, now, gemCtx, {
         selected: selectedHere,
@@ -355,8 +362,8 @@ function clusterIcon(
       routeOrder,
       " is-single-shell",
       routeBadgeProgressForCluster([only], visitedIds, skippedIds),
+      { w: layout.iconSize[0], h: layout.iconSize[1] },
     );
-    const layout = leafletPinLayout({ routeOrder, aptDots: false });
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${filterClass}${hoursClass}`,
       html: wrapped.html,
@@ -385,12 +392,15 @@ function clusterIcon(
       ? ` style="${ringStyle}"`
       : "";
   const clusterShell = schoolCampus ? " is-school-shell" : " is-cluster-shell";
-  const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
-    routeOrder,
-    clusterShell,
-    badgeProgress,
+  const aptDotsHtml = clusterAptDotsHtml(
+    houses,
+    now,
+    gemCtx.addressReveal,
+    matchedIds,
+    skippedIds,
+    schoolCampus,
   );
+  const pinDiscHtml = `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${schoolCampus ? "" : aptDotsHtml}</div>`;
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
   const aptDots = schoolCampus || houses.length > 1;
   const layout = leafletPinLayout({
@@ -400,6 +410,13 @@ function clusterIcon(
     schoolCampus,
     clusterEllipse: !schoolCampus && houses.length > 1,
   });
+  const wrapped = wrapRoutePin(
+    schoolCampus ? `${pinDiscHtml}${aptDotsHtml}` : pinDiscHtml,
+    routeOrder,
+    clusterShell,
+    badgeProgress,
+    { w: layout.iconSize[0], h: layout.iconSize[1] },
+  );
   return L.divIcon({
     className: `pumpkin-pin-icon pumpkin-pin-building${schoolCampus ? " pumpkin-pin-school" : ""}${selectedClass}${filterClass}${clusterRing.hoursSoonClass}`,
     html: wrapped.html,
