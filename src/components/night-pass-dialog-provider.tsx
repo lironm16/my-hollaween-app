@@ -16,8 +16,6 @@ import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
 import { NightPassesCard } from "@/components/night-passes-card";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { readNightPassState } from "@/lib/night-pass-client";
-import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
-
 type NightPassDialogContextValue = {
   openRegister: (initialCode?: string, inviteToken?: string) => void;
   openOwnerPasses: (houseId: string) => void;
@@ -62,7 +60,6 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
         title="מכשיר מחובר"
-        subtitle={NIGHT_PASS_REGISTER_SUBTITLE}
       >
         <NightPassRegisterPanel
           key={registerOpen ? registerCode || "open" : "closed"}

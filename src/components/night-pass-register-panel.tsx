@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
+import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/night-pass-codes";
+import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
 import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
 import { cn } from "@/lib/utils";
 
@@ -144,6 +146,7 @@ export function NightPassRegisterPanel({
         void submit();
       }}
     >
+      <p className="text-base leading-relaxed text-violet-100">{NIGHT_PASS_REGISTER_SUBTITLE}</p>
       {iosTab ? (
         <p className="rounded-xl bg-amber-950/60 p-3 text-sm text-amber-100 ring-1 ring-amber-500/25">
           באייפון: הירשמו מתוך האפליקציה אם הוספתם אותה למסך הבית.
@@ -155,7 +158,7 @@ export function NightPassRegisterPanel({
         </p>
       ) : (
         <div className="space-y-1.5">
-          <Label htmlFor="pass-code">קוד משפחה (4 תווים)</Label>
+          <Label htmlFor="pass-code">קוד עריכה ({HOUSE_ACCESS_CODE_LENGTH} תווים)</Label>
           <Input
             id="pass-code"
             value={code}
@@ -164,7 +167,7 @@ export function NightPassRegisterPanel({
             autoCapitalize="characters"
             autoComplete="one-time-code"
             placeholder="K7QM"
-            maxLength={6}
+            maxLength={HOUSE_ACCESS_CODE_LENGTH}
             className="h-11 bg-[#12081a] text-center font-mono text-lg tracking-widest"
           />
         </div>
