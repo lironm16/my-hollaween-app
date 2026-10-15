@@ -1584,6 +1584,72 @@
   line-height: 1;
 }
 
+.route-stop-pin.is-visited::before {
+  background: #059669;
+  border-color: #047857;
+}
+
+.route-stop-pin.is-visited::after {
+  background: #059669;
+  border-right-color: #047857;
+  border-bottom-color: #047857;
+}
+
+.route-stop-pin.is-skipped::before {
+  background: #64748b;
+  border-color: #475569;
+}
+
+.route-stop-pin.is-skipped::after {
+  background: #64748b;
+  border-right-color: #475569;
+  border-bottom-color: #475569;
+}
+
+.route-stop-pin.is-visited .route-stop-num,
+.route-stop-pin.is-skipped .route-stop-num {
+  color: #fff7ed;
+}
+
+.skip-reason-option-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1.5px solid #fff7ed;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+.skip-reason-option-icon.is-closed {
+  background: #e11d48;
+  position: relative;
+}
+
+.skip-reason-option-icon.is-closed::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 5px;
+  border-radius: 1px;
+  background: #fff;
+  transform: translateY(-50%);
+}
+
+.skip-reason-option-icon.is-candy-out {
+  background-color: #b91c1c;
+  background-image: url("/icons/pin-candy.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 86%;
+}
+
+.skip-reason-option-icon.is-other {
+  background: #64748b;
+}
+
 .house-pin-route {
   position: relative;
   display: block;

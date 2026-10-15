@@ -88,12 +88,32 @@ function mapTileUrl(tiles: MapTilesConfig): string {
   );
 }
 
-function routeBadgeHtml(order: number) {
-  return `<span class="route-stop-pin" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
+type RouteStopBadgeProgress = "open" | "visited" | "skipped";
+
+function routeBadgeHtml(order: number, progress: RouteStopBadgeProgress = "open") {
+  const progressClass =
+    progress === "visited" ? " is-visited" : progress === "skipped" ? " is-skipped" : "";
+  return `<span class="route-stop-pin${progressClass}" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
 }
 
-function wrapRoutePin(html: string, routeOrder?: number, shellClass = "") {
-  const badge = routeOrder ? routeBadgeHtml(routeOrder) : "";
+function routeBadgeProgressForHouse(
+  houseId: string | undefined,
+  visitedIds: readonly string[],
+  skippedIds?: ReadonlySet<string>,
+): RouteStopBadgeProgress {
+  if (!houseId) return "open";
+  if (skippedIds?.has(houseId)) return "skipped";
+  if (visitedIds.includes(houseId)) return "visited";
+  return "open";
+}
+
+function wrapRoutePin(
+  html: string,
+  routeOrder?: number,
+  shellClass = "",
+  badgeProgress: RouteStopBadgeProgress = "open",
+) {
+  const badge = routeOrder ? routeBadgeHtml(routeOrder, badgeProgress) : "";
   return {
     extraH: 0,
     html: `<div class="house-pin-route${shellClass}">${html}${badge}</div>`,
@@ -279,16 +299,18 @@ function clusterIcon(
   matchedIds?: ReadonlySet<string>,
   skippedIds?: ReadonlySet<string>,
   routeModeActive = false,
+  routeHouseId?: string,
 ) {
   const houses = cluster.houses;
   const onTourRoute = routeOrder != null;
   const decorRouteMode = routeModeActive && onTourRoute;
+  const badgeProgress = routeBadgeProgressForHouse(routeHouseId, visitedIds, skippedIds);
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
   const selectedClass = selectedHere ? " is-selected" : "";
   const filterClass = filteredOut ? " is-filtered-out" : "";
   if (!only) {
-    const wrapped = wrapRoutePin("", routeOrder);
+    const wrapped = wrapRoutePin("", routeOrder, "", badgeProgress);
     const layout = leafletPinLayout({ routeOrder });
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${filterClass}`,
@@ -310,6 +332,8 @@ function clusterIcon(
         routeModeActive: decorRouteMode,
       }),
       routeOrder,
+      "",
+      routeBadgeProgressForHouse(routeHouseId ?? only.id, visitedIds, skippedIds),
     );
     const layout = leafletPinLayout({ routeOrder, aptDots: false });
     return L.divIcon({
@@ -344,6 +368,7 @@ function clusterIcon(
     `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,
     clusterShell,
+    badgeProgress,
   );
   const pinBox = schoolCampus ? SCHOOL_CAMPUS_PIN_BOX : PIN_BOX;
   const aptDots = schoolCampus || houses.length > 1;
@@ -595,6 +620,7 @@ const ClusterMarker = memo(function ClusterMarker({
   onSelect,
   onClose,
   routeOrder,
+  routeHouseId,
   visitedIds,
   skippedIds,
   filteredOut,
@@ -609,6 +635,7 @@ const ClusterMarker = memo(function ClusterMarker({
   onSelect?: (house: PublicHouse, opts?: { clusterOverview?: boolean }) => void;
   onClose?: () => void;
   routeOrder?: number;
+  routeHouseId?: string;
   visitedIds: string[];
   skippedIds?: ReadonlySet<string>;
   filteredOut?: boolean;
@@ -640,6 +667,7 @@ const ClusterMarker = memo(function ClusterMarker({
       selectedId ?? "",
       tick,
       routeOrder ?? "",
+      routeHouseId ?? "",
       visitedKey,
       skippedKey,
       routeModeActive ? "1" : "0",
@@ -659,6 +687,7 @@ const ClusterMarker = memo(function ClusterMarker({
         matchedIds,
         skippedIds,
         routeModeActive,
+        routeHouseId,
       ),
     );
   }, [
@@ -666,6 +695,7 @@ const ClusterMarker = memo(function ClusterMarker({
     selectedId,
     tick,
     routeOrder,
+    routeHouseId,
     visitedKey,
     skippedKey,
     routeModeActive,
@@ -1189,6 +1219,7 @@ export function HouseMap({
                   (found, house) => found ?? routeOrderById.get(house.id),
                   undefined,
                 )}
+                routeHouseId={cluster.houses.find((house) => routeOrderById.has(house.id))?.id}
                 routeModeActive={
                   routeModeActive &&
                   cluster.houses.some((house) => routeOrderById.has(house.id))

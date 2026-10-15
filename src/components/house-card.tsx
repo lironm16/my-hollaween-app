@@ -8,8 +8,8 @@ import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
-import { HouseSkippedBanner } from "@/components/house-skipped-banner";
 import { SkipReasonSection } from "@/components/skip-reason-section";
+import type { SkipReasonCategory } from "@/lib/skip-reason-categories";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
@@ -31,9 +31,10 @@ export function HouseCard({
   onRestoreRoute,
   skipped = false,
   skipMeta,
+  skipCategory,
   skipNote,
-  onSaveSkipNote,
-  onDeleteSkipNote,
+  onSaveSkipReason,
+  onDeleteSkipReason,
   canEdit = false,
   editCode,
   showVisitPoster = false,
@@ -69,9 +70,10 @@ export function HouseCard({
   onRestoreRoute?: () => void;
   skipped?: boolean;
   skipMeta?: SkippedHouseMeta;
+  skipCategory?: SkipReasonCategory;
   skipNote?: string;
-  onSaveSkipNote?: (note: string) => void;
-  onDeleteSkipNote?: () => void;
+  onSaveSkipReason?: (payload: { category: SkipReasonCategory; note: string }) => void;
+  onDeleteSkipReason?: () => void;
   canEdit?: boolean;
   editCode?: string;
   showVisitPoster?: boolean;
@@ -116,9 +118,10 @@ export function HouseCard({
     onRestoreRoute,
     skipped,
     skipMeta,
+    skipCategory,
     skipNote,
-    onSaveSkipNote,
-    onDeleteSkipNote,
+    onSaveSkipReason,
+    onDeleteSkipReason,
     canEdit: mayEdit,
     editCode: mayEdit ? editCode : undefined,
     showVisitPoster: mayEdit && showVisitPoster,
@@ -174,17 +177,15 @@ export function HouseCard({
             className={cn(catalogRemoved && "shrink-0 self-center")}
           />
         </div>
-        {skipped ? (
-          <div className="mb-2 space-y-2">
-            <HouseSkippedBanner onRestore={onRestoreRoute} />
-            {onSaveSkipNote && onDeleteSkipNote ? (
-              <SkipReasonSection
-                note={skipNote}
-                compact={!expanded}
-                onSave={onSaveSkipNote}
-                onDelete={onDeleteSkipNote}
-              />
-            ) : null}
+        {skipped && onSaveSkipReason && onDeleteSkipReason ? (
+          <div className="mb-2">
+            <SkipReasonSection
+              category={skipCategory}
+              note={skipNote}
+              compact={!expanded}
+              onSave={onSaveSkipReason}
+              onDelete={onDeleteSkipReason}
+            />
           </div>
         ) : null}
         <HouseDetails

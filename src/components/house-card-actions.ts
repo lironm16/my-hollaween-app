@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import type { SkipReasonCategory } from "@/lib/skip-reason-categories";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import type { PublicHouse } from "@/lib/types";
 import type { ComponentProps } from "react";
@@ -41,9 +42,13 @@ export type HouseCardActionContext = {
   /** Owner/admin ⋮ «מיקום השדון» — only shown on houses this device may edit. */
   onPlaceGem?: (house: PublicHouse) => void;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
+  skipCategoryFor?: (id: string) => SkipReasonCategory | undefined;
   skipNoteFor?: (id: string) => string | undefined;
-  onSaveSkipNote?: (id: string, note: string) => void;
-  onDeleteSkipNote?: (id: string) => void;
+  onSaveSkipReason?: (
+    id: string,
+    payload: { category: SkipReasonCategory; note: string },
+  ) => void;
+  onDeleteSkipReason?: (id: string) => void;
   editingId?: string | null;
 };
 
@@ -73,9 +78,12 @@ export function houseCardPropsFor(
     gemCollected: ctx.gemCollected?.(id),
     skipped: isSkipped,
     skipMeta: ctx.skipMetaFor?.(id),
+    skipCategory: ctx.skipCategoryFor?.(id),
     skipNote: ctx.skipNoteFor?.(id),
-    onSaveSkipNote: ctx.onSaveSkipNote ? (note: string) => ctx.onSaveSkipNote!(id, note) : undefined,
-    onDeleteSkipNote: ctx.onDeleteSkipNote ? () => ctx.onDeleteSkipNote!(id) : undefined,
+    onSaveSkipReason: ctx.onSaveSkipReason
+      ? (payload) => ctx.onSaveSkipReason!(id, payload)
+      : undefined,
+    onDeleteSkipReason: ctx.onDeleteSkipReason ? () => ctx.onDeleteSkipReason!(id) : undefined,
     onToggleLike:
       viewOnlyRemoved || !ctx.onToggleLike ? undefined : () => ctx.onToggleLike!(id),
     onToggleVisited:

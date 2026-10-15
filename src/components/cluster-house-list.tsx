@@ -13,6 +13,8 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
+import { skipReasonPreview } from "@/lib/skip-reason-categories";
+import type { SkipReasonCategory } from "@/lib/skip-reason-categories";
 import { cn } from "@/lib/utils";
 
 const SWIPE_THRESHOLD_PX = 56;
@@ -196,6 +198,8 @@ export function ClusterHouseList({
   visited,
   gemCollected,
   liked,
+  skipCategoryFor,
+  skipNoteFor,
   onSelect,
 }: {
   houses: PublicHouse[];
@@ -206,6 +210,8 @@ export function ClusterHouseList({
   visited?: (id: string) => boolean;
   gemCollected?: (id: string) => boolean;
   liked?: (id: string) => boolean;
+  skipCategoryFor?: (id: string) => SkipReasonCategory | undefined;
+  skipNoteFor?: (id: string) => string | undefined;
   onSelect: (id: string) => void;
 }) {
   const clusterNow = now ?? new Date();
@@ -250,6 +256,12 @@ export function ClusterHouseList({
               {addressReveal.visibleArrival(item) ? (
                 <span className="mt-0.5 block truncate text-sm text-violet-300/90">
                   {addressReveal.visibleArrival(item)}
+                </span>
+              ) : null}
+              {skipped?.(item.id) ? (
+                <span className="mt-0.5 block truncate text-sm text-slate-300">
+                  {skipReasonPreview(skipCategoryFor?.(item.id), skipNoteFor?.(item.id)) ||
+                    "דילגתם — הוסיפו סיבה בכרטיס הדירה"}
                 </span>
               ) : null}
             </span>

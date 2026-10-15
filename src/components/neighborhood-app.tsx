@@ -157,6 +157,7 @@ import {
 } from "@/lib/route-share";
 import { useRouteStatusAlerts } from "@/hooks/use-route-status-alerts";
 import { skipStatusSnapshot, type SkipReasonId } from "@/lib/skip-reasons";
+import { normalizeSkipReasonCategory } from "@/lib/skip-reason-categories";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import {
   dismissVisitSkipConflictPrompt,
@@ -1267,9 +1268,30 @@ export function NeighborhoodApp({
             )
         : undefined,
       skipMetaFor: (id) => skips.meta(id),
+      skipCategoryFor: (id) =>
+        skips.skipped(id) ? normalizeSkipReasonCategory(skips.meta(id)?.reason) : undefined,
       skipNoteFor: (id) => skips.note(id),
-      onSaveSkipNote: (id, note) => skips.saveNote(id, note),
-      onDeleteSkipNote: (id) => skips.clearNote(id),
+      onSaveSkipReason: (id, payload) => {
+        const prev = skips.meta(id);
+        const meta = {
+          reason: payload.category as SkipReasonId,
+          temporary: false,
+          statusKey:
+            prev?.statusKey ??
+            (() => {
+              const house = houses.find((item) => item.id === id);
+              return house ? skipStatusSnapshot(house, now, filters) : "";
+            })(),
+          skippedAt: prev?.skippedAt ?? new Date().toISOString(),
+        };
+        if (prev) skips.update(id, meta);
+        skips.saveNote(id, payload.note);
+      },
+      onDeleteSkipReason: (id) => {
+        skips.clearNote(id);
+        const prev = skips.meta(id);
+        if (prev) skips.update(id, { ...prev, reason: "other", temporary: false });
+      },
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
