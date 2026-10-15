@@ -6299,6 +6299,21 @@ svg.leaflet-zoom-animated {
   position: relative;
   z-index: 1;
 }
+.house-pin.is-school-campus.pin-tour-ring {
+  width: 76px;
+  height: 76px;
+  box-sizing: border-box;
+  border-color: #fff7ed;
+}
+.house-pin.is-school-campus.pin-tour-ring-solid {
+  border-color: #fff7ed;
+  box-shadow: 0 0 0 4px var(--pin-tour-ring-color, #f97316),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
+.house-pin.is-school-campus.pin-tour-ring::before {
+  inset: -8px;
+  padding: 4px;
+}
 .house-pin.is-cluster-ellipse .pin-cluster-icon.pin-cluster-duo {
   width: 58px;
   height: 58px;
