@@ -89,7 +89,7 @@ export function ClusterHouseNav({
           </button>
         </div>
       </div>
-      <p className="cluster-house-nav-hint">החלקה לצדדים לבית הקודם או הבא</p>
+      <p className="cluster-house-nav-hint">החלקה שמאלה לבית הבא, ימינה לקודם</p>
     </div>
   );
 }
@@ -134,12 +134,13 @@ export function ClusterHouseSwipeArea({
       const dx = event.clientX - start.x;
       const dy = event.clientY - start.y;
       if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) <= Math.abs(dy)) return;
-      if (dx > 0 && canPrev) {
-        onPrev();
-        return;
-      }
+      /* Swipe left → next booth, swipe right → previous (matches hint + RTL pager). */
       if (dx < 0 && canNext) {
         onNext();
+        return;
+      }
+      if (dx > 0 && canPrev) {
+        onPrev();
       }
     },
     [canNext, canPrev, onNext, onPrev],

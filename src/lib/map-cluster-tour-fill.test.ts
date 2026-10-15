@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   clusterProgressCounts,
+  clusterRouteStopBadgeProgress,
   clusterTourRingDecor,
   solidTourRingColor,
   clusterTourRingGradient,
+  TOUR_MIXED_DONE,
 } from "@/lib/map-cluster-tour-fill";
 import type { PublicHouse } from "@/lib/types";
 
@@ -72,18 +74,16 @@ describe("clusterTourRingGradient", () => {
     assert.match(gradient!, /#64748b 0% 100%/);
   });
 
-  it("splits visit/skip by count when no open houses remain", () => {
+  it("uses solid mixed-done color when visit and skip both present and none open", () => {
     const gradient = clusterTourRingGradient([stub("a"), stub("b")], ["a"], ["b"], false);
-    assert.match(gradient!, /#059669 0% 50%/);
-    assert.match(gradient!, /#64748b 50% 100%/);
+    assert.match(gradient!, new RegExp(`${TOUR_MIXED_DONE} 0% 100%`));
   });
 
-  it("uses proportional green/gray for nine visited and one skipped", () => {
+  it("uses mixed-done for nine visited and one skipped", () => {
     const houses = Array.from({ length: 10 }, (_, i) => stub(`u${i}`));
     const visited = houses.slice(0, 9).map((h) => h.id);
     const gradient = clusterTourRingGradient(houses, visited, ["u9"], false);
-    assert.match(gradient!, /#059669 0% 90%/);
-    assert.match(gradient!, /#64748b 90% 100%/);
+    assert.match(gradient!, new RegExp(`${TOUR_MIXED_DONE} 0% 100%`));
   });
 
   it("uses open color when any house is still open", () => {
@@ -117,10 +117,18 @@ describe("clusterTourRingDecor", () => {
     assert.match(decor.styleAttr, /--pin-tour-ring-color:#f97316/);
   });
 
-  it("uses masked ring for split visited/skipped progress", () => {
+  it("uses solid mixed-done ring when visit and skip both present", () => {
     const decor = clusterTourRingDecor([stub("a"), stub("b")], ["a"], ["b"], true);
-    assert.equal(decor.classSuffix, " pin-tour-ring");
-    assert.match(decor.styleAttr, /--pin-tour-ring:/);
-    assert.doesNotMatch(decor.classSuffix, /pin-tour-ring-solid/);
+    assert.equal(decor.classSuffix, " pin-tour-ring pin-tour-ring-solid");
+    assert.match(decor.styleAttr, new RegExp(`--pin-tour-ring-color:${TOUR_MIXED_DONE}`));
+  });
+});
+
+describe("clusterRouteStopBadgeProgress", () => {
+  it("stays open until every unit is visited or skipped", () => {
+    const houses = [stub("a"), stub("b")];
+    assert.equal(clusterRouteStopBadgeProgress(houses, ["a"], []), "open");
+    assert.equal(clusterRouteStopBadgeProgress(houses, ["a", "b"], []), "visited");
+    assert.equal(clusterRouteStopBadgeProgress(houses, ["a"], ["b"]), "mixed");
   });
 });

@@ -1656,8 +1656,20 @@
   border-bottom-color: #475569;
 }
 
+.route-stop-pin.is-mixed-done::before {
+  background: #38bdf8;
+  border-color: #0284c7;
+}
+
+.route-stop-pin.is-mixed-done::after {
+  background: #38bdf8;
+  border-right-color: #0284c7;
+  border-bottom-color: #0284c7;
+}
+
 .route-stop-pin.is-visited .route-stop-num,
-.route-stop-pin.is-skipped .route-stop-num {
+.route-stop-pin.is-skipped .route-stop-num,
+.route-stop-pin.is-mixed-done .route-stop-num {
   color: #fff7ed;
 }
 

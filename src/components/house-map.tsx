@@ -33,7 +33,11 @@ import {
   stripApproachFromRouteLine,
   type LatLng,
 } from "@/lib/route";
-import { pinTourRingDecor } from "@/lib/map-cluster-tour-fill";
+import {
+  clusterRouteStopBadgeProgress,
+  pinTourRingDecor,
+  type ClusterRouteStopBadgeProgress,
+} from "@/lib/map-cluster-tour-fill";
 import {
   ROUTE_ORIGIN_PURPLE,
   ROUTE_ORIGIN_PURPLE_SHADOW,
@@ -88,23 +92,30 @@ function mapTileUrl(tiles: MapTilesConfig): string {
   );
 }
 
-type RouteStopBadgeProgress = "open" | "visited" | "skipped";
+type RouteStopBadgeProgress = ClusterRouteStopBadgeProgress;
 
 function routeBadgeHtml(order: number, progress: RouteStopBadgeProgress = "open") {
   const progressClass =
-    progress === "visited" ? " is-visited" : progress === "skipped" ? " is-skipped" : "";
+    progress === "visited"
+      ? " is-visited"
+      : progress === "skipped"
+        ? " is-skipped"
+        : progress === "mixed"
+          ? " is-mixed-done"
+          : "";
   return `<span class="route-stop-pin${progressClass}" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
 }
 
-function routeBadgeProgressForHouse(
-  houseId: string | undefined,
+function routeBadgeProgressForCluster(
+  houses: PublicHouse[],
   visitedIds: readonly string[],
   skippedIds?: ReadonlySet<string>,
 ): RouteStopBadgeProgress {
-  if (!houseId) return "open";
-  if (skippedIds?.has(houseId)) return "skipped";
-  if (visitedIds.includes(houseId)) return "visited";
-  return "open";
+  return clusterRouteStopBadgeProgress(
+    houses,
+    visitedIds,
+    skippedIds ? [...skippedIds] : [],
+  );
 }
 
 function wrapRoutePin(
@@ -314,7 +325,7 @@ function clusterIcon(
   const houses = cluster.houses;
   const onTourRoute = routeOrder != null;
   const decorRouteMode = routeModeActive && onTourRoute;
-  const badgeProgress = routeBadgeProgressForHouse(routeHouseId, visitedIds, skippedIds);
+  const badgeProgress = routeBadgeProgressForCluster(houses, visitedIds, skippedIds);
   const only = houses[0];
   const selectedHere = Boolean(selectedId && houses.some((house) => house.id === selectedId));
   const selectedClass = selectedHere ? " is-selected" : "";
@@ -343,7 +354,7 @@ function clusterIcon(
       }),
       routeOrder,
       "",
-      routeBadgeProgressForHouse(routeHouseId ?? only.id, visitedIds, skippedIds),
+      routeBadgeProgressForCluster([only], visitedIds, skippedIds),
     );
     const layout = leafletPinLayout({ routeOrder, aptDots: false });
     return L.divIcon({

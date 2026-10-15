@@ -2,8 +2,12 @@ import type { PublicHouse } from "@/lib/types";
 
 const TOUR_VISITED = "#059669";
 const TOUR_SKIPPED = "#64748b";
+/** Cluster finished with both visits and skips — one solid ring (split green/gray is hard to read on the map). */
+export const TOUR_MIXED_DONE = "#38bdf8";
 const TOUR_OPEN_ROUTE = "#f97316";
 const TOUR_OPEN_IDLE = "#fff7ed";
+
+export type ClusterRouteStopBadgeProgress = "open" | "visited" | "skipped" | "mixed";
 
 export type ClusterProgressCounts = {
   visited: number;
@@ -30,11 +34,25 @@ export function clusterProgressCounts(
   return { visited: visitedN, skipped: skippedN, open: openN };
 }
 
+/** Route stop badge on multi-unit cluster pins — matches {@link clusterTourRingGradient} completion rules. */
+export function clusterRouteStopBadgeProgress(
+  houses: PublicHouse[],
+  visitedIds: readonly string[],
+  skippedIds: readonly string[],
+): ClusterRouteStopBadgeProgress {
+  if (houses.length === 0) return "open";
+  const { visited, skipped, open } = clusterProgressCounts(houses, visitedIds, skippedIds);
+  if (open > 0) return "open";
+  if (visited === houses.length) return "visited";
+  if (skipped === houses.length) return "skipped";
+  return "mixed";
+}
+
 /**
- * Cluster tour ring — 3 colors only (green / gray / white-or-orange):
+ * Cluster tour ring — green / gray / sky / white-or-orange:
  * - Any “open” house (neither visited nor skipped) → solid white (idle) or orange (route mode).
  * - Else all visited → solid green; all skipped → solid gray.
- * - Else visited+skipped only → green/gray split by count (e.g. 9 visited + 1 skipped → 90% / 10%).
+ * - Else visited+skipped only → solid sky (“done with mix”).
  */
 export function clusterTourRingGradient(
   houses: PublicHouse[],
@@ -58,10 +76,8 @@ export function clusterTourRingGradient(
     return `conic-gradient(from -90deg, ${TOUR_SKIPPED} 0% 100%)`;
   }
 
-  const progress = visited + skipped;
-  if (progress === 0) return null;
-  const visitedPct = (100 * visited) / progress;
-  return `conic-gradient(from -90deg, ${TOUR_VISITED} 0% ${visitedPct}%, ${TOUR_SKIPPED} ${visitedPct}% 100%)`;
+  if (visited + skipped === 0) return null;
+  return `conic-gradient(from -90deg, ${TOUR_MIXED_DONE} 0% 100%)`;
 }
 
 export type ClusterTourRingDecor = {
