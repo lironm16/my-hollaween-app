@@ -236,11 +236,11 @@ function EditPageContent() {
                 id="edit-code"
                 value={editCode}
                 onChange={(event) => setEditCode(event.target.value)}
-                inputMode="numeric"
+                autoCapitalize="characters"
                 autoComplete="one-time-code"
-                placeholder="6 ספרות"
-                className="h-10 bg-[#12081a] tracking-widest"
-                maxLength={12}
+                placeholder="4 תווים"
+                className="h-10 bg-[#12081a] font-mono tracking-widest"
+                maxLength={4}
               />
               <Button
                 type="button"
