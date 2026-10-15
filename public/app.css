@@ -7942,7 +7942,9 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 @media (prefers-reduced-motion: reduce) {
   .app-toolbar__btn.is-gem-near,
-  .imp-demon-camera-icon.is-signal-active img {
+  .imp-demon-camera-icon.is-signal-active img,
+  .map-demon-cam-fab.is-near,
+  .map-demon-cam-fab.is-near .imp-demon-camera-icon__fill {
     animation: none;
   }
 }
@@ -7964,6 +7966,98 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
   appearance: none;
   border: 0;
+}
+.map-demon-cam-fab {
+  background: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    #fffbeb 32%,
+    #fde68a 68%,
+    #fbbf24 100%
+  );
+  color: #7c2d12;
+  box-shadow: 0 0 0 2px rgb(251 146 60 / 0.92),
+    0 5px 0 rgb(180 83 9 / 0.42),
+    0 10px 22px rgb(0 0 0 / 0.38),
+    inset 0 2px 0 rgb(255 255 255 / 0.9),
+    inset 0 -4px 10px rgb(251 191 36 / 0.38);
+  transition: transform 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.map-demon-cam-fab.is-active {
+  background: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    #ecfdf5 38%,
+    #a7f3d0 72%,
+    #34d399 100%
+  );
+  box-shadow: 0 0 0 2px rgb(52 211 153 / 0.95),
+    0 5px 0 rgb(5 150 105 / 0.4),
+    0 10px 22px rgb(0 0 0 / 0.35),
+    inset 0 2px 0 rgb(255 255 255 / 0.88),
+    inset 0 -4px 10px rgb(52 211 153 / 0.35);
+}
+.map-demon-cam-fab:active:not(.is-near) {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 2px rgb(251 146 60 / 0.92),
+    0 2px 0 rgb(180 83 9 / 0.32),
+    0 5px 12px rgb(0 0 0 / 0.32),
+    inset 0 2px 0 rgb(255 255 255 / 0.88),
+    inset 0 -3px 8px rgb(251 191 36 / 0.32);
+}
+.map-demon-cam-fab.is-active:active:not(.is-near) {
+  box-shadow: 0 0 0 2px rgb(52 211 153 / 0.95),
+    0 2px 0 rgb(5 150 105 / 0.3),
+    0 5px 12px rgb(0 0 0 / 0.3),
+    inset 0 2px 0 rgb(255 255 255 / 0.85),
+    inset 0 -3px 8px rgb(52 211 153 / 0.3);
+}
+.map-demon-cam-fab.is-near {
+  animation: map-gem-fab-near-beckon 1.35s ease-in-out infinite;
+}
+.map-demon-cam-fab.is-near .imp-demon-camera-icon__fill {
+  animation: map-gem-fab-icon-beckon 1.35s ease-in-out infinite;
+}
+@keyframes map-gem-fab-near-beckon {
+  0%,
+  100% {
+    transform: scale(1) translateY(0);
+    box-shadow: 0 0 0 2px rgb(253 224 71 / 0.75),
+      0 5px 0 rgb(180 83 9 / 0.42),
+      0 10px 18px rgb(0 0 0 / 0.35),
+      0 0 16px rgb(251 191 36 / 0.55),
+      inset 0 2px 0 rgb(255 255 255 / 0.9),
+      inset 0 -4px 10px rgb(251 191 36 / 0.38);
+  }
+  40% {
+    transform: scale(1.1) translateY(-6px);
+    box-shadow: 0 0 0 3px rgb(253 224 71 / 0.95),
+      0 8px 0 rgb(180 83 9 / 0.35),
+      0 14px 28px rgb(0 0 0 / 0.4),
+      0 0 28px rgb(251 191 36 / 0.95),
+      inset 0 2px 0 rgb(255 255 255 / 0.95),
+      inset 0 -4px 10px rgb(251 191 36 / 0.45);
+  }
+  62% {
+    transform: scale(1.14) translateY(-8px);
+    box-shadow: 0 0 0 4px rgb(254 240 138 / 1),
+      0 9px 0 rgb(180 83 9 / 0.32),
+      0 16px 32px rgb(0 0 0 / 0.42),
+      0 0 36px rgb(252 211 77 / 1),
+      inset 0 2px 0 rgb(255 255 255 / 1),
+      inset 0 -4px 12px rgb(251 191 36 / 0.5);
+  }
+}
+@keyframes map-gem-fab-icon-beckon {
+  0%,
+  100% {
+    transform: scale(1.18);
+  }
+  40%,
+  62% {
+    transform: scale(1.28);
+  }
 }
 .gem-anchor-place-map__pin {
   width: 44px;
@@ -8613,11 +8707,11 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   height: 100%;
   max-width: none;
   max-height: none;
-  transform: scale(1.22);
+  transform: scale(1.32);
   transform-origin: center;
 }
 .map-demon-cam-fab .imp-demon-camera-icon__fill {
-  transform: scale(1.12);
+  transform: scale(1.18);
 }
 .house-action-menu {
   position: relative;
