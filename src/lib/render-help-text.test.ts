@@ -20,6 +20,11 @@ test("renderHelpText renders **strong** emphasis", () => {
   assert.notEqual(node, "בתים ש**עוברים** את הסינון");
 });
 
+test("renderHelpText converts legacy <<labels>> to strong", () => {
+  const node = renderHelpText("לחצו על <<קוד עריכה>>");
+  assert.ok(node && typeof node === "object");
+});
+
 test("renderHelpText mixes plain labels and emphasis", () => {
   const node = renderHelpText("לחצו איפוס על **רק** אלה");
   assert.notEqual(node, "לחצו איפוס על **רק** אלה");

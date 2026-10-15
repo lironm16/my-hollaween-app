@@ -37,10 +37,16 @@ function renderLine(text: string, keyPrefix: string): ReactNode {
   return <Fragment>{parts}</Fragment>;
 }
 
+/** Legacy help copy used «<<label>>» — treat as **strong**. */
+function normalizeHelpEmphasis(text: string): string {
+  return text.replace(/<<([^>]+)>>/g, "**$1**");
+}
+
 /** Split copy on optional **strong** / *em* markers. */
 export function renderHelpText(text: string): ReactNode {
-  const lines = text.split("\n");
-  if (lines.length === 1) return renderLine(text, "line");
+  const normalized = normalizeHelpEmphasis(text);
+  const lines = normalized.split("\n");
+  if (lines.length === 1) return renderLine(normalized, "line");
 
   return (
     <Fragment>
