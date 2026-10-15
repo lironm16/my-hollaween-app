@@ -13,7 +13,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged, rememberPublishedHouse } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
 import { refreshNightPassState } from "@/lib/night-pass-client";
-import { shareHouseAccessInvite } from "@/lib/nav-links";
 import { publishHouse } from "@/lib/publish-house";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { senderPushEndpoint } from "@/lib/push-client";
@@ -109,39 +108,54 @@ export default function AddPage() {
             {nightPass.enabled ? (
               <section className="space-y-3 rounded-xl bg-emerald-950/40 p-4 ring-1 ring-emerald-500/25">
                 <h2 className="text-center text-lg font-medium text-emerald-100">
-                  המכשיר שלך מחובר (1/4)
+                  יש לכם 4 מכשירים לאירוע
                 </h2>
-                <p className="text-center text-sm text-emerald-100/90">
-                  מפה, כתובות ועריכה — פתוחים במכשיר הזה. שלחו הזמנה לשאר המשפחה.
-                </p>
-                <Button
-                  type="button"
-                  className="w-full bg-emerald-600 text-white hover:bg-emerald-500"
-                  onClick={() => void shareHouseAccessInvite(done.house).then((r) => {
-                    if (r === "shared") toast.success("ההזמנה נשלחה");
-                    else if (r === "copied") toast.success("קישור ההזמנה הועתק");
-                    else if (r === "failed") toast.error("שליחת ההזמנה נכשלה");
-                  })}
-                >
-                  שלח הזמנה
-                </Button>
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
                   onClick={() => openOwnerPasses(done.id)}
                 >
-                  נהל מכשירים
+                  חבר מכשירים
                 </Button>
+                <Link
+                  href="/help/event-device-owner"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "w-full text-emerald-200/90 hover:bg-emerald-950/40",
+                  )}
+                >
+                  מדריך חיבור מכשירים (עם תמונות)
+                </Link>
               </section>
             ) : null}
             <section className="space-y-2 rounded-xl bg-black/35 p-4 ring-1 ring-orange-500/20">
-              <h2 className="text-center text-lg font-medium text-orange-200">קוד משפחה (גיבוי)</h2>
+              <h2 className="text-center text-lg font-medium text-orange-200">קוד עריכה</h2>
               <p className="text-center text-sm text-violet-300">
-                למי שלא יכול לפתוח קישור — 4 תווים, גם לעריכה וגם למפה.
+                לעריכת הבית מהמכשיר הזה — נשמר אוטומטית אחרי ההוספה.
               </p>
               <CodesCopy editCode={done.editCode} hideLabel />
             </section>
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/help/share-edit-code"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+                )}
+              >
+                איך לשתף קוד עריכה?
+              </Link>
+              <Link
+                href="/help/edit-code"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+                )}
+              >
+                איבדתם את קוד העריכה?
+              </Link>
+            </div>
             <div className="flex flex-wrap gap-2">
               <Link
                 href={`/?focus=${encodeURIComponent(done.id)}`}
