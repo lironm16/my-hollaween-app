@@ -190,13 +190,8 @@ export function primaryRestoreTriggerFromSnapshot(
 }
 
 export function skipReturnOfferLabel(trigger: TemporaryRestoreTriggerId) {
-  if (trigger === "candy-out") return "בטל דילוג כשמלאי הממתקים חוזר";
-  return "בטל דילוג כשהבית ייפתח";
-}
-
-export function skipReturnActiveLabel(trigger: TemporaryRestoreTriggerId) {
-  if (trigger === "candy-out") return "דילוג יבוטל כשמלאי הממתקים חוזר";
-  return "דילוג יבוטל כשהבית ייפתח";
+  if (trigger === "candy-out") return "החזר כשמלאי הממתקים חוזר";
+  return "החזר כשהבית ייפתח";
 }
 
 export function skipReturnOfferLabelFromSnapshot(statusKey: string) {
@@ -212,7 +207,7 @@ export function skipReturnRuleActive(meta: SkippedHouseMeta) {
 export function skipReturnAutoDisplayLabel(meta: SkippedHouseMeta) {
   if (!skipReturnRuleActive(meta)) return null;
   const trigger = metaRestoreTriggers(meta)[0];
-  return trigger ? skipReturnActiveLabel(trigger) : null;
+  return trigger ? skipReturnOfferLabel(trigger) : null;
 }
 
 export function skipRestoreUndoPromptMessage(house: PublicHouse, meta: SkippedHouseMeta) {

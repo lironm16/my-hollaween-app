@@ -280,7 +280,7 @@ describe("skipReturnAutoDisplayLabel", () => {
         statusKey: "x",
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
-      "דילוג יבוטל כשמלאי הממתקים חוזר",
+      "החזר כשמלאי הממתקים חוזר",
     );
     assert.equal(
       skipReturnAutoDisplayLabel({

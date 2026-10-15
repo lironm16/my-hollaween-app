@@ -1686,12 +1686,6 @@
   .border-transparent {
     border-color: transparent;
   }
-  .border-violet-400\/35 {
-    border-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 35%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-violet-400) 35%, transparent);
-    }
-  }
   .border-violet-400\/55 {
     border-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 55%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -4069,6 +4063,10 @@
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .focus-visible\:ring-2:focus-visible {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .focus-visible\:ring-3:focus-visible {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -4081,6 +4079,12 @@
     --tw-ring-color: var(--destructive);
     @supports (color: color-mix(in lab, red, red)) {
       --tw-ring-color: color-mix(in oklab, var(--destructive) 20%, transparent);
+    }
+  }
+  .focus-visible\:ring-orange-500\/40:focus-visible {
+    --tw-ring-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-orange-500) 40%, transparent);
     }
   }
   .focus-visible\:ring-ring\/50:focus-visible {
