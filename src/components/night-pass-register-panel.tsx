@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
-import { HOUSE_ACCESS_CODE_LENGTH, NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
+import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
 import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
 import { cn } from "@/lib/utils";
 
@@ -157,7 +157,7 @@ export function NightPassRegisterPanel({
         </p>
       ) : (
         <div className="space-y-1.5">
-          <Label htmlFor="pass-code">קוד עריכה ({HOUSE_ACCESS_CODE_LENGTH} תווים)</Label>
+          <Label htmlFor="pass-code">קוד עריכה (4 תווים)</Label>
           <Input
             id="pass-code"
             value={code}
@@ -166,7 +166,7 @@ export function NightPassRegisterPanel({
             autoCapitalize="characters"
             autoComplete="one-time-code"
             placeholder="K7QM"
-            maxLength={HOUSE_ACCESS_CODE_LENGTH}
+            maxLength={4}
             className="h-11 bg-[#12081a] text-center font-mono text-lg tracking-widest"
           />
         </div>

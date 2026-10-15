@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { adminPassword } from "@/lib/admin";
 import { canonicalHouseId, sameHouseId } from "@/lib/ids";

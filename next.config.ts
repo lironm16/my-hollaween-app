@@ -26,12 +26,17 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ["web-push"],
   turbopack: {},
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
+      // Client must never resolve the `node:` scheme (Webpack dev throws UnhandledSchemeError).
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^node:crypto$/, (resource) => {
+          resource.request = "crypto";
+        }),
+      );
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
         crypto: false,
-        "node:crypto": false,
       };
     }
     return config;

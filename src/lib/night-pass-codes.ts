@@ -1,4 +1,4 @@
-import { createHash, randomInt } from "node:crypto";
+import { createHash, randomInt } from "crypto";
 import { HOUSE_ACCESS_CODE_LENGTH, houseAccessCodeAlphabet } from "@/lib/house-access-code";
 
 export {

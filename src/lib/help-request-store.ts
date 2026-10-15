@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID } from "crypto";
 import type { HelpRequestSubmitInput, StoredHelpRequest } from "@/lib/help-request-schema";
 import { formatHelpRequestPlain } from "@/lib/help-request-format";
 import { helpRequestEmailConfigured, notifyHelpRequestEmail } from "@/lib/help-request-email";

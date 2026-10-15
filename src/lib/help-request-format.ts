@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash } from "crypto";
 import {
   HELP_REQUEST_PLATFORM_LABELS,
   HELP_REQUEST_ROLE_LABELS,

@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash } from "crypto";
 import { cert, getApp, getApps, initializeApp, type ServiceAccount } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 
