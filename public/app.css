@@ -6299,10 +6299,6 @@ svg.leaflet-zoom-animated {
   position: relative;
   z-index: 1;
 }
-.house-pin.pin-tour-ring-mixed:not(.pin-tour-ring-solid)::before {
-  inset: -5px;
-  padding: 5px;
-}
 .house-pin.is-school-campus.pin-tour-ring {
   width: 76px;
   height: 76px;
@@ -6317,10 +6313,6 @@ svg.leaflet-zoom-animated {
 .house-pin.is-school-campus.pin-tour-ring::before {
   inset: -8px;
   padding: 4px;
-}
-.house-pin.is-school-campus.pin-tour-ring-mixed::before {
-  inset: -10px;
-  padding: 5px;
 }
 .house-pin.is-cluster-ellipse .pin-cluster-icon.pin-cluster-duo {
   width: 58px;
@@ -6852,26 +6844,20 @@ svg.leaflet-zoom-animated {
   border-bottom-color: #475569;
 }
 .route-stop-pin.is-mixed-done::before {
-  background: repeating-conic-gradient(
-    from -90deg,
-    #059669 0deg 45deg,
-    #64748b 45deg 90deg
-  );
-  border-color: #fff7ed;
+  background: #eab308;
+  border-color: #a16207;
 }
 .route-stop-pin.is-mixed-done::after {
-  background: repeating-linear-gradient(
-    135deg,
-    #059669 0 3px,
-    #64748b 3px 6px
-  );
-  border-right-color: #475569;
-  border-bottom-color: #047857;
+  background: #eab308;
+  border-right-color: #a16207;
+  border-bottom-color: #a16207;
 }
 .route-stop-pin.is-visited .route-stop-num,
-.route-stop-pin.is-skipped .route-stop-num,
-.route-stop-pin.is-mixed-done .route-stop-num {
+.route-stop-pin.is-skipped .route-stop-num {
   color: #fff7ed;
+}
+.route-stop-pin.is-mixed-done .route-stop-num {
+  color: #1c0e24;
 }
 .skip-reason-option-icon {
   display: block;

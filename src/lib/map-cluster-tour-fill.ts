@@ -4,10 +4,11 @@ const TOUR_VISITED = "#059669";
 const TOUR_SKIPPED = "#64748b";
 const TOUR_OPEN_ROUTE = "#f97316";
 const TOUR_OPEN_IDLE = "#fff7ed";
+/** Cluster done with both visits and skips — harvest gold (candy-corn; not route orange or map cyan). */
+export const TOUR_MIXED_COMPLETE = "#eab308";
 
-/** Alternating visit/skip stripes — reads as “done with mix” without a third accent color. */
 export function clusterTourMixedRingGradient(): string {
-  return `repeating-conic-gradient(from -90deg, ${TOUR_VISITED} 0deg 42deg, ${TOUR_SKIPPED} 42deg 84deg)`;
+  return `conic-gradient(from -90deg, ${TOUR_MIXED_COMPLETE} 0% 100%)`;
 }
 
 export type ClusterRouteStopBadgeProgress = "open" | "visited" | "skipped" | "mixed";
@@ -52,10 +53,10 @@ export function clusterRouteStopBadgeProgress(
 }
 
 /**
- * Cluster tour ring — green / gray / striped mix / white-or-orange:
+ * Cluster tour ring — green / gray / gold mix / white-or-orange:
  * - Any “open” house (neither visited nor skipped) → solid white (idle) or orange (route mode).
  * - Else all visited → solid green; all skipped → solid gray.
- * - Else visited+skipped only → green/gray stripe ring.
+ * - Else visited+skipped only → solid harvest gold.
  */
 export function clusterTourRingGradient(
   houses: PublicHouse[],
@@ -122,9 +123,8 @@ export function clusterTourRingDecor(
         styleAttr: ` style="--pin-tour-ring-color:${solid}"`,
       };
     }
-    const mixedStripes = gradient.startsWith("repeating-conic-gradient");
     return {
-      classSuffix: mixedStripes ? " pin-tour-ring pin-tour-ring-mixed" : " pin-tour-ring",
+      classSuffix: " pin-tour-ring",
       styleAttr: ` style="--pin-tour-ring:${gradient}"`,
     };
   }

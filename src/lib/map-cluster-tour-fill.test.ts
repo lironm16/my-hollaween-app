@@ -7,6 +7,7 @@ import {
   solidTourRingColor,
   clusterTourRingGradient,
   clusterTourMixedRingGradient,
+  TOUR_MIXED_COMPLETE,
 } from "@/lib/map-cluster-tour-fill";
 import type { PublicHouse } from "@/lib/types";
 
@@ -74,15 +75,13 @@ describe("clusterTourRingGradient", () => {
     assert.match(gradient!, /#64748b 0% 100%/);
   });
 
-  it("uses green/gray stripe ring when visit and skip both present and none open", () => {
+  it("uses harvest gold when visit and skip both present and none open", () => {
     const gradient = clusterTourRingGradient([stub("a"), stub("b")], ["a"], ["b"], false);
     assert.equal(gradient, clusterTourMixedRingGradient());
-    assert.match(gradient!, /repeating-conic-gradient/);
-    assert.match(gradient!, /#059669/);
-    assert.match(gradient!, /#64748b/);
+    assert.match(gradient!, new RegExp(`${TOUR_MIXED_COMPLETE} 0% 100%`));
   });
 
-  it("uses same stripe ring for nine visited and one skipped", () => {
+  it("uses same gold ring for nine visited and one skipped", () => {
     const houses = Array.from({ length: 10 }, (_, i) => stub(`u${i}`));
     const visited = houses.slice(0, 9).map((h) => h.id);
     const gradient = clusterTourRingGradient(houses, visited, ["u9"], false);
@@ -120,11 +119,10 @@ describe("clusterTourRingDecor", () => {
     assert.match(decor.styleAttr, /--pin-tour-ring-color:#f97316/);
   });
 
-  it("uses striped mixed ring when visit and skip both present", () => {
+  it("uses solid gold mixed ring when visit and skip both present", () => {
     const decor = clusterTourRingDecor([stub("a"), stub("b")], ["a"], ["b"], true);
-    assert.equal(decor.classSuffix, " pin-tour-ring pin-tour-ring-mixed");
-    assert.match(decor.styleAttr, /--pin-tour-ring:repeating-conic-gradient/);
-    assert.doesNotMatch(decor.classSuffix, /pin-tour-ring-solid/);
+    assert.equal(decor.classSuffix, " pin-tour-ring pin-tour-ring-solid");
+    assert.match(decor.styleAttr, new RegExp(`--pin-tour-ring-color:${TOUR_MIXED_COMPLETE}`));
   });
 });
 
