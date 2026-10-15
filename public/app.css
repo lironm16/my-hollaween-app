@@ -6213,6 +6213,29 @@ svg.leaflet-zoom-animated {
   -webkit-transform: translateY(-2%);
   transform-origin: center center;
 }
+@supports (-webkit-appearance: none) {
+  .house-pin.is-school-campus .pin-school-art {
+    flex: 1 1 auto;
+    align-self: stretch;
+    justify-self: stretch;
+  }
+  .house-pin.is-school-campus .pin-school-castle-img {
+    width: 96%;
+    height: 96%;
+    max-width: 96%;
+    max-height: 96%;
+    min-width: 56px;
+    min-height: 48px;
+    -webkit-transform: translate3d(0, -2%, 0) scale(1.06);
+    transform: translate3d(0, -2%, 0) scale(1.06);
+  }
+  .house-pin.is-school-campus .pin-school-castle-svg {
+    width: 88%;
+    max-height: 88%;
+    -webkit-transform: translate3d(0, -5%, 0) scale(1.1);
+    transform: translate3d(0, -5%, 0) scale(1.1);
+  }
+}
 .house-pin.is-school-campus .pin-school-castle-svg {
   width: 84%;
   max-height: 84%;
@@ -6306,9 +6329,8 @@ svg.leaflet-zoom-animated {
   border-color: #fff7ed;
 }
 .house-pin.is-school-campus.pin-tour-ring-solid {
-  border-color: #fff7ed;
-  box-shadow: 0 0 0 4px var(--pin-tour-ring-color, #f97316),
-    0 2px 6px rgba(0, 0, 0, 0.55);
+  border-color: var(--pin-tour-ring-color, #f97316);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
 }
 .house-pin.is-school-campus.pin-tour-ring::before {
   inset: -8px;
@@ -9538,6 +9560,26 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   flex: 1;
   font-size: 1rem;
   font-weight: 600;
+}
+.route-list-collapsed-skip-note {
+  margin-top: 0.35rem;
+}
+.route-list-collapsed-skip-text {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #ddd6fe;
+  text-align: start;
+}
+.route-list-collapsed-skip-icon {
+  width: 1.375rem !important;
+  height: 1.375rem !important;
+  min-width: 1.375rem;
+  min-height: 1.375rem;
+}
+.route-list-collapsed-skip-icon svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 .route-list-collapsed-chevron {
   size: 1.25rem;

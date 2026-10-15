@@ -13,7 +13,7 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
-import { skipReturnPreviewLine } from "@/lib/skip-return-preview";
+import { skipReturnActivePreviewLine } from "@/lib/skip-return-preview";
 import { SkipSign } from "@/components/visit-marks";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { cn } from "@/lib/utils";
@@ -220,6 +220,7 @@ export function ClusterHouseList({
     <ul className="cluster-house-list space-y-2">
       {houses.map((item, index) => {
         const slot = boothNumberForHouse(item) ?? index + 1;
+        const skipLine = skipReturnActivePreviewLine(skipMetaFor?.(item.id));
         return (
         <li key={item.id}>
           <button
@@ -258,14 +259,14 @@ export function ClusterHouseList({
                   {addressReveal.visibleArrival(item)}
                 </span>
               ) : null}
-              {skipped?.(item.id) ? (
+              {skipLine ? (
                 <span
                   className="cluster-house-list-skip mt-1 flex min-w-0 items-center gap-2"
                   dir="rtl"
                 >
                   <SkipSign className="cluster-house-list-skip-icon shrink-0" />
                   <span className="cluster-house-list-skip-text min-w-0 flex-1 [overflow-wrap:anywhere]">
-                    {skipReturnPreviewLine(skipMetaFor?.(item.id)) ?? "דילגתם"}
+                    {skipLine}
                   </span>
                 </span>
               ) : null}

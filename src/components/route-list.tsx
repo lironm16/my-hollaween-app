@@ -8,7 +8,8 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import type { PublicHouse } from "@/lib/types";
-import { skipReturnPreviewLine } from "@/lib/skip-return-preview";
+import { skipReturnActivePreviewLine } from "@/lib/skip-return-preview";
+import { SkipSign } from "@/components/visit-marks";
 import { cn } from "@/lib/utils";
 import type { TourLegTone } from "@/lib/route-session-progress";
 
@@ -88,8 +89,11 @@ function RouteListCollapsedHouse({
         <span className="min-w-0 flex-1 text-right">
           <span className="route-list-collapsed-title block">{houseHeadline(house)}</span>
           {!expanded && skipped && skipPreview ? (
-            <span className="route-list-collapsed-skip-note block truncate text-sm text-violet-300">
-              {skipPreview}
+            <span className="route-list-collapsed-skip-note flex min-w-0 items-center gap-2" dir="rtl">
+              <SkipSign className="route-list-collapsed-skip-icon shrink-0" />
+              <span className="route-list-collapsed-skip-text min-w-0 flex-1 truncate">
+                {skipPreview}
+              </span>
             </span>
           ) : null}
         </span>
@@ -207,7 +211,10 @@ export function RouteList({
                   actionContext={actionContext}
                   skipped={skipped}
                   skipPreview={
-                    skipped ? skipReturnPreviewLine(actionContext.skipMetaFor?.(house.id)) ?? undefined : undefined
+                    skipped
+                      ? skipReturnActivePreviewLine(actionContext.skipMetaFor?.(house.id)) ??
+                        undefined
+                      : undefined
                   }
                   expanded={expandedIds.has(house.id)}
                   onToggle={() =>
