@@ -1421,6 +1421,10 @@ export function NeighborhoodApp({
             onOpenRouteUpdates={
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
+            gemMapToggleEnabled={gemUi}
+            gemMapVisible={mapDiamondsVisible}
+            gemNearSignal={mapGemNearSignal}
+            onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
           />
         </div>
       ) : null}

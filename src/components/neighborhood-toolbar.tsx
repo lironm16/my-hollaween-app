@@ -1,6 +1,6 @@
 "use client";
 
-import { ImpDemonCameraIcon } from "@/components/imp-demon-camera-icon";
+import { GemDiamondIcon } from "@/components/gem-diamond-icon";
 import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
 import { List, MapPinned, Route } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
@@ -136,10 +136,7 @@ export function NeighborhoodToolbar({
               gemNearSignal && "is-gem-near",
             )}
           >
-            <ImpDemonCameraIcon
-              signalActive={gemNearSignal}
-              className="size-7 max-h-full max-w-full"
-            />
+            <GemDiamondIcon active={gemMapVisible} className="size-6 max-h-full max-w-full" />
           </button>
         ) : null}
         <button
