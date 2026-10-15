@@ -11,10 +11,7 @@ import { rebuildRouteAfterFilterChange, routeCandidateHouses } from "@/lib/route
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
-import {
-  captureRouteDisplayOrders,
-  mergeRouteDisplayOrders,
-} from "@/lib/route-display-order";
+import { captureRouteDisplayOrders } from "@/lib/route-display-order";
 import { readRouteMode, writeRouteMode } from "@/lib/route-mode";
 import type { PublicHouse } from "@/lib/types";
 
@@ -65,21 +62,14 @@ export function useNeighborhoodRoute({
   const setPinnedRoute = useCallback((route: WalkingRoute | null) => {
     setPinnedRouteState(route);
   }, []);
-  const commitSessionPlan = useCallback(
-    (route: WalkingRoute | null, options?: { mergeDisplayOrders?: boolean }) => {
-      setRouteSessionPlan(route);
-      if (!route) {
-        setRouteSessionDisplayOrders(null);
-        return;
-      }
-      setRouteSessionDisplayOrders((prev) =>
-        options?.mergeDisplayOrders
-          ? mergeRouteDisplayOrders(prev, route)
-          : captureRouteDisplayOrders(route),
-      );
-    },
-    [],
-  );
+  const commitSessionPlan = useCallback((route: WalkingRoute | null) => {
+    setRouteSessionPlan(route);
+    if (!route) {
+      setRouteSessionDisplayOrders(null);
+      return;
+    }
+    setRouteSessionDisplayOrders(captureRouteDisplayOrders(route));
+  }, []);
   const [routeSessionDisplayOrders, setRouteSessionDisplayOrders] =
     useState<Map<string, number> | null>(null);
   /** Full tour geometry for map/list progress — updates on skip/rebuild, not on in-order visits. */
@@ -177,7 +167,7 @@ export function useNeighborhoodRoute({
       );
       setRouteSessionPlan(rebuilt);
       if (rebuilt) {
-        setRouteSessionDisplayOrders((prev) => mergeRouteDisplayOrders(prev, rebuilt));
+        setRouteSessionDisplayOrders(captureRouteDisplayOrders(rebuilt));
       }
       return rebuilt;
     });

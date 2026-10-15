@@ -19,18 +19,3 @@ export function routeDisplayOrder(
   if (!sessionOrders) return fallbackOrder;
   return sessionOrders.get(houseId) ?? fallbackOrder;
 }
-
-/** Keep pinned stop numbers; assign rebuild order only for houses new to the tour. */
-export function mergeRouteDisplayOrders(
-  prev: Map<string, number> | null | undefined,
-  route: WalkingRoute,
-): Map<string, number> {
-  const next = new Map<string, number>();
-  for (const stop of route.stops) {
-    for (const house of stop.houses) {
-      const kept = prev?.get(house.id);
-      next.set(house.id, kept ?? stop.order);
-    }
-  }
-  return next;
-}

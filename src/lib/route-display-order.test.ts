@@ -2,11 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { PublicHouse } from "@/lib/types";
 import type { WalkingRoute } from "@/lib/route";
-import {
-  captureRouteDisplayOrders,
-  mergeRouteDisplayOrders,
-  routeDisplayOrder,
-} from "@/lib/route-display-order";
+import { captureRouteDisplayOrders, routeDisplayOrder } from "@/lib/route-display-order";
 
 function route(stops: { id: string; order: number }[]): WalkingRoute {
   return {
@@ -53,22 +49,17 @@ describe("route display order session", () => {
     assert.equal(routeDisplayOrder("c", afterVisit.stops[1]!.order, session), 3);
   });
 
-  it("merge keeps old numbers and assigns new stops from rebuild", () => {
-    const session = captureRouteDisplayOrders(
-      route([
-        { id: "a", order: 1 },
-        { id: "b", order: 2 },
-      ]),
-    );
-    const merged = mergeRouteDisplayOrders(
-      session,
+  it("recaptures sequential numbers after filter membership changes", () => {
+    const afterFilter = captureRouteDisplayOrders(
       route([
         { id: "b", order: 1 },
         { id: "c", order: 2 },
       ]),
     );
-    assert.equal(merged.get("b"), 2);
-    assert.equal(merged.get("c"), 2);
+    assert.equal(afterFilter.get("b"), 1);
+    assert.equal(afterFilter.get("c"), 2);
+    const values = [...afterFilter.values()].sort((a, b) => a - b);
+    assert.deepEqual(values, [1, 2]);
   });
 
   it("falls back to rebuild order for houses not in the session snapshot", () => {
