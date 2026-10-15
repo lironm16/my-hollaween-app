@@ -31,11 +31,6 @@ import { useNightPass } from "@/hooks/use-night-pass";
 import { adminSeesAllHouses } from "@/lib/night-pass-client";
 import { RouteChangeBanner, routeChangeBannerMessage } from "@/components/route-change-banner";
 import { RouteChangesSheet } from "@/components/route-changes-sheet";
-import { TempSkipRestoreAlerts } from "@/components/temp-skip-restore-alert";
-import {
-  emitTempSkipRestoreAlert,
-  useTempSkipRestoreAlerts,
-} from "@/hooks/use-temp-skip-restore-alerts";
 import { EventCountdownGate } from "@/components/event-countdown-gate";
 import { NeighborhoodToolbar } from "@/components/neighborhood-toolbar";
 import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
@@ -44,7 +39,6 @@ import { RouteList } from "@/components/route-list";
 import { buildRouteListItems } from "@/lib/route-list-items";
 import { firstRouteStopPoint } from "@/lib/route-session-progress";
 import { routeDisplayOrder } from "@/lib/route-display-order";
-import { SkipHouseDialog } from "@/components/skip-house-dialog";
 import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
 import { LikeCheer } from "@/components/like-cheer";
 import { RouteCompleteCheer } from "@/components/route-complete-cheer";
@@ -162,15 +156,7 @@ import {
   type SharedRoutePayload,
 } from "@/lib/route-share";
 import { useRouteStatusAlerts } from "@/hooks/use-route-status-alerts";
-import {
-  availableTemporaryRestoreOptions,
-  skipStatusSnapshot,
-  shouldEmitTemporarySkipRestoreAlert,
-  temporaryRestoreAlertText,
-  temporarySkipRestoreMet,
-  type TemporaryRestoreTriggerId,
-  type SkipReasonId,
-} from "@/lib/skip-reasons";
+import { skipStatusSnapshot, type SkipReasonId } from "@/lib/skip-reasons";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import {
   dismissVisitSkipConflictPrompt,
@@ -299,14 +285,12 @@ export function NeighborhoodApp({
   const { accessibleOnly } = filters;
 
   const [askedLocation, setAskedLocation] = useState(false);
-  const [skipDialogHouse, setSkipDialogHouse] = useState<PublicHouse | null>(null);
   const [visitSkipConflict, setVisitSkipConflict] = useState<{
     kind: "visit" | "skip" | "visit-all" | "skip-all";
     house: PublicHouse;
     cluster?: boolean;
     clusterHouses?: PublicHouse[];
   } | null>(null);
-  const { alerts: tempRestoreAlerts, dismiss: dismissTempRestoreAlert } = useTempSkipRestoreAlerts();
   const likes = useLikedHouses();
   const visits = useVisitedHouses();
   const skips = useSkippedHouses();
@@ -915,31 +899,6 @@ export function NeighborhoodApp({
     routeSessionDisplayOrders,
   ]);
 
-  useEffect(() => {
-    const houseById = new Map(housesForSkipCount.map((house) => [house.id, house]));
-    const toRestore = skips.skippedIds.filter((id) => {
-      const meta = skips.meta(id);
-      if (!meta?.temporary) return false;
-      const house = houseById.get(id);
-      if (!house) return false;
-      return temporarySkipRestoreMet(house, meta, now, filters);
-    });
-    if (toRestore.length === 0) return;
-    for (const id of toRestore) {
-      const house = houseById.get(id);
-      const meta = skips.meta(id);
-      if (!house || !meta) continue;
-      if (shouldEmitTemporarySkipRestoreAlert(meta)) {
-        emitTempSkipRestoreAlert({
-          id,
-          message: temporaryRestoreAlertText(house, meta),
-        });
-      }
-    }
-    const nextSkippedIds = skips.skippedIds.filter((id) => !toRestore.includes(id));
-    for (const id of toRestore) skips.unskip(id);
-  }, [routeMode, housesForSkipCount, now, filters, skips.skippedIds.join("\0")]);
-
   function applySkipHouse(
     house: PublicHouse,
     reason: SkipReasonId,
@@ -962,17 +921,10 @@ export function NeighborhoodApp({
     } else {
       skips.skip(house.id, meta);
     }
-    skips.clearNote(house.id);
   }
 
   function proceedWithSkipHouse(house: PublicHouse) {
-    const editing = skips.skipped(house.id);
-    const canTempSkip = availableTemporaryRestoreOptions(house, now, filters).length > 0;
-    if (!editing && !canTempSkip) {
-      applySkipHouse(house, "other", false);
-      return;
-    }
-    setSkipDialogHouse(house);
+    applySkipHouse(house, "other", false);
   }
 
   function handleSkipHouse(id: string) {
@@ -1074,24 +1026,6 @@ export function NeighborhoodApp({
       return;
     }
     proceedWithSkipHouse(pending.house);
-  }
-
-  function confirmSkipHouse(
-    reason: SkipReasonId,
-    temporary: boolean,
-    restoreTriggers: TemporaryRestoreTriggerId[],
-  ) {
-    const house = skipDialogHouse;
-    if (!house) return;
-    setSkipDialogHouse(null);
-    applySkipHouse(house, reason, temporary, restoreTriggers);
-  }
-
-  function unskipFromDialog() {
-    const house = skipDialogHouse;
-    if (!house) return;
-    setSkipDialogHouse(null);
-    handleRestoreHouse(house.id);
   }
 
   /** Restore one skipped house — no route-change prompt (explicit user action). */
@@ -1217,7 +1151,6 @@ export function NeighborhoodApp({
           filtersOpen ||
           routeAlerts.sheetOpen ||
           originPick.originPickerOpen ||
-          skipDialogHouse ||
           visitSkipConflict ||
           editFlow.flow,
       ),
@@ -1229,7 +1162,6 @@ export function NeighborhoodApp({
       originPick.originPickerOpen,
       filtersOpen,
       routeAlerts.sheetOpen,
-      skipDialogHouse,
       visitSkipConflict,
       editFlow.flow,
     ],
@@ -1343,6 +1275,9 @@ export function NeighborhoodApp({
             )
         : undefined,
       skipMetaFor: (id) => skips.meta(id),
+      skipNoteFor: (id) => skips.note(id),
+      onSaveSkipNote: (id, note) => skips.saveNote(id, note),
+      onDeleteSkipNote: (id) => skips.clearNote(id),
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [
@@ -1490,14 +1425,6 @@ export function NeighborhoodApp({
         hasCachedHouses={houses.length > 0}
       />
       <NightPassBanner houseSet={activeHouseSet} />
-      <TempSkipRestoreAlerts
-        alerts={tempRestoreAlerts}
-        onFocusHouse={(id) => {
-          dismissTempRestoreAlert(id);
-          openOnMap(id);
-        }}
-        onDismiss={dismissTempRestoreAlert}
-      />
       {routeMode &&
       routeAlerts.changes.length > 0 &&
       !routeAlerts.bannerDismissed &&
@@ -1728,18 +1655,6 @@ export function NeighborhoodApp({
           stopCount={routeSharePrompt.stopIds.length}
           onAccept={acceptSharedRoute}
           onDecline={declineSharedRoute}
-        />
-      ) : null}
-      {skipDialogHouse ? (
-        <SkipHouseDialog
-          open
-          house={skipDialogHouse}
-          filters={filters}
-          now={now}
-          existingMeta={skips.meta(skipDialogHouse.id)}
-          onConfirm={confirmSkipHouse}
-          onUnskip={skips.skipped(skipDialogHouse.id) ? unskipFromDialog : undefined}
-          onCancel={() => setSkipDialogHouse(null)}
         />
       ) : null}
       {visitSkipConflict ? (

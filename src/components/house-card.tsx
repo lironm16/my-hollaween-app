@@ -8,6 +8,8 @@ import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { HouseDetails } from "@/components/house-details";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
+import { HouseSkippedBanner } from "@/components/house-skipped-banner";
+import { SkipReasonSection } from "@/components/skip-reason-section";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
@@ -29,6 +31,9 @@ export function HouseCard({
   onRestoreRoute,
   skipped = false,
   skipMeta,
+  skipNote,
+  onSaveSkipNote,
+  onDeleteSkipNote,
   canEdit = false,
   editCode,
   showVisitPoster = false,
@@ -64,6 +69,9 @@ export function HouseCard({
   onRestoreRoute?: () => void;
   skipped?: boolean;
   skipMeta?: SkippedHouseMeta;
+  skipNote?: string;
+  onSaveSkipNote?: (note: string) => void;
+  onDeleteSkipNote?: () => void;
   canEdit?: boolean;
   editCode?: string;
   showVisitPoster?: boolean;
@@ -108,6 +116,9 @@ export function HouseCard({
     onRestoreRoute,
     skipped,
     skipMeta,
+    skipNote,
+    onSaveSkipNote,
+    onDeleteSkipNote,
     canEdit: mayEdit,
     editCode: mayEdit ? editCode : undefined,
     showVisitPoster: mayEdit && showVisitPoster,
@@ -163,6 +174,19 @@ export function HouseCard({
             className={cn(catalogRemoved && "shrink-0 self-center")}
           />
         </div>
+        {skipped ? (
+          <div className="mb-2 space-y-2">
+            <HouseSkippedBanner onRestore={onRestoreRoute} />
+            {onSaveSkipNote && onDeleteSkipNote ? (
+              <SkipReasonSection
+                note={skipNote}
+                compact={!expanded}
+                onSave={onSaveSkipNote}
+                onDelete={onDeleteSkipNote}
+              />
+            ) : null}
+          </div>
+        ) : null}
         <HouseDetails
           house={house}
           distanceM={distanceM}

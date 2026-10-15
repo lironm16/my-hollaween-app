@@ -52,6 +52,7 @@ function RouteListCollapsedHouse({
   order,
   actionContext,
   skipped,
+  skipNote,
   expanded,
   onToggle,
 }: {
@@ -59,6 +60,7 @@ function RouteListCollapsedHouse({
   order: number;
   actionContext: HouseCardActionContext;
   skipped: boolean;
+  skipNote?: string;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -82,7 +84,14 @@ function RouteListCollapsedHouse({
             {order}
           </span>
         ) : null}
-        <span className="route-list-collapsed-title">{houseHeadline(house)}</span>
+        <span className="min-w-0 flex-1 text-right">
+          <span className="route-list-collapsed-title block">{houseHeadline(house)}</span>
+          {!expanded && skipped && skipNote ? (
+            <span className="route-list-collapsed-skip-note block truncate text-sm text-violet-300">
+              {skipNote}
+            </span>
+          ) : null}
+        </span>
         <ChevronDown className={cn("route-list-collapsed-chevron", expanded && "is-open")} />
       </button>
       {expanded ? (
@@ -196,6 +205,7 @@ export function RouteList({
                   order={order}
                   actionContext={actionContext}
                   skipped={skipped}
+                  skipNote={actionContext.skipNoteFor?.(house.id)}
                   expanded={expandedIds.has(house.id)}
                   onToggle={() =>
                     setExpandedIds((prev) => {

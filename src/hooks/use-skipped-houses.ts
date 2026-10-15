@@ -20,14 +20,19 @@ export function useSkippedHouses() {
     typeof window === "undefined" ? [] : loadSkippedIds(),
   );
 
+  const [notesTick, setNotesTick] = useState(0);
+
   useEffect(() => {
     const read = () => setIds(loadSkippedIds());
+    const readNotes = () => setNotesTick((n) => n + 1);
     read();
     window.addEventListener("storage", read);
     window.addEventListener("hw-skipped-changed", read);
+    window.addEventListener("hw-skip-notes-changed", readNotes);
     return () => {
       window.removeEventListener("storage", read);
       window.removeEventListener("hw-skipped-changed", read);
+      window.removeEventListener("hw-skip-notes-changed", readNotes);
     };
   }, []);
 
@@ -45,7 +50,10 @@ export function useSkippedHouses() {
       return next;
     },
     meta: (id: string) => getSkippedMeta(id),
-    note: (id: string) => getSkipNote(id),
+    note: (id: string) => {
+      void notesTick;
+      return getSkipNote(id);
+    },
     saveNote: (id: string, note: string) => saveSkipNote(id, note),
     clearNote: (id: string) => clearSkipNote(id),
     unskip: (id: string) => {

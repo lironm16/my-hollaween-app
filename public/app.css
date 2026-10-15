@@ -1275,6 +1275,9 @@
   .resize {
     resize: both;
   }
+  .resize-none {
+    resize: none;
+  }
   .scroll-my-1 {
     scroll-margin-block: var(--spacing);
   }
@@ -1745,6 +1748,15 @@
   }
   .bg-\[\#1a1028\] {
     background-color: #1a1028;
+  }
+  .bg-\[\#1a1028\]\/60 {
+    background-color: color-mix(in oklab, #1a1028 60%, transparent);
+  }
+  .bg-\[\#1a1028\]\/80 {
+    background-color: color-mix(in oklab, #1a1028 80%, transparent);
+  }
+  .bg-\[\#1a1028\]\/90 {
+    background-color: color-mix(in oklab, #1a1028 90%, transparent);
   }
   .bg-\[\#1a2433\] {
     background-color: #1a2433;
@@ -2710,6 +2722,9 @@
   }
   .whitespace-pre-line {
     white-space: pre-line;
+  }
+  .whitespace-pre-wrap {
+    white-space: pre-wrap;
   }
   .text-\[\#1c0e24\] {
     color: #1c0e24;
@@ -3780,6 +3795,14 @@
     width: calc(var(--spacing) * 0.5);
   }
   @media (hover: hover) {
+    .hover\:border-orange-500\/40:hover {
+      border-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 40%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:border-orange-500\/40:hover {
+        border-color: color-mix(in oklab, var(--color-orange-500) 40%, transparent);
+      }
+    }
     .hover\:border-violet-300\/70:hover {
       border-color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 70%, transparent);
     }
@@ -3932,6 +3955,14 @@
         background-color: color-mix(in oklab, var(--color-red-950) 40%, transparent);
       }
     }
+    .hover\:bg-red-950\/50:hover {
+      background-color: color-mix(in srgb, oklch(25.8% 0.092 26.042) 50%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-red-950\/50:hover {
+        background-color: color-mix(in oklab, var(--color-red-950) 50%, transparent);
+      }
+    }
     .hover\:bg-violet-500\/10:hover {
       background-color: color-mix(in srgb, oklch(60.6% 0.25 292.717) 10%, transparent);
     }
@@ -3962,6 +3993,9 @@
     }
     .hover\:text-orange-200:hover {
       color: var(--color-orange-200);
+    }
+    .hover\:text-red-200:hover {
+      color: var(--color-red-200);
     }
     .hover\:text-violet-100:hover {
       color: var(--color-violet-100);
@@ -6813,7 +6847,7 @@ svg.leaflet-zoom-animated {
 .house-pin-route .route-stop-pin {
   position: absolute;
   left: 50%;
-  top: 4px;
+  top: -14px;
   bottom: auto;
   z-index: 20;
   margin: 0;

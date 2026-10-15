@@ -465,11 +465,17 @@ export function saveSkipNote(id: string, note: string) {
     if (notes[id]) {
       delete notes[id];
       saveSkipNotes(notes);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("hw-skip-notes-changed"));
+      }
     }
     return;
   }
   notes[id] = clean;
   saveSkipNotes(notes);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skip-notes-changed"));
+  }
 }
 
 export function clearSkipNote(id: string) {
@@ -519,7 +525,6 @@ export function unskipHouse(id: string): string[] {
     delete all[id];
     saveSkippedMeta(all);
   }
-  clearSkipNote(id);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("hw-skipped-changed"));
   }
