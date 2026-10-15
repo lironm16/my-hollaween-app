@@ -913,10 +913,8 @@
 }
 
 .house-pin.is-school-campus .pin-apt-dots {
-  z-index: 12;
+  z-index: 6;
   bottom: -22px;
-  left: 0;
-  right: 0;
 }
 
 .house-pin.is-school-campus .pin-school-castle-img {
@@ -1061,14 +1059,9 @@
   mask-composite: exclude;
 }
 
-.house-pin.pin-tour-ring > *:not(.pin-apt-dots) {
+.house-pin.pin-tour-ring > * {
   position: relative;
   z-index: 1;
-}
-
-.house-pin.pin-tour-ring > .pin-apt-dots {
-  position: absolute;
-  z-index: 12;
 }
 
 /* School campus — keep full 76px disc + castle; tour ring sits outside the white rim. */
@@ -1689,14 +1682,14 @@
 }
 
 .route-stop-pin.is-mixed-done::before {
-  background: #7a6342;
-  border-color: #5c4d35;
+  background: #d4b896;
+  border-color: #8b7355;
 }
 
 .route-stop-pin.is-mixed-done::after {
-  background: #7a6342;
-  border-right-color: #5c4d35;
-  border-bottom-color: #5c4d35;
+  background: #d4b896;
+  border-right-color: #8b7355;
+  border-bottom-color: #8b7355;
 }
 
 .route-stop-pin.is-visited .route-stop-num,
