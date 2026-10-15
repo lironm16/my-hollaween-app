@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { parseHouseAccessInviteToken } from "@/lib/house-access-invite";
-import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/night-pass-codes";
+import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-code";
 import { registerHouseAccessDevice } from "@/lib/night-pass-service";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";

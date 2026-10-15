@@ -1,3 +1,4 @@
+import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { adminPassword } from "@/lib/admin";
 import { canonicalHouseId } from "@/lib/ids";

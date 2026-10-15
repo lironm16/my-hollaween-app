@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { maskPhone } from "@/lib/night-pass-codes";
+import { maskPhone } from "@/lib/house-access-code";
 import { houseAccessSessionForDevice } from "@/lib/night-pass-service";
 import {
   describeNightPassLost,

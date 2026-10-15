@@ -4,7 +4,7 @@ import {
   normalizeHolderName,
   normalizeIsraeliMobile,
   normalizeNightPassCode,
-} from "@/lib/night-pass-codes";
+} from "@/lib/house-access-code";
 import { ownerMayEdit } from "@/lib/owner-session";
 import { getHouseByAccessCode } from "@/lib/store";
 

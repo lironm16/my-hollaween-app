@@ -1,3 +1,4 @@
+import "server-only";
 import { cookies } from "next/headers";
 import { isAdmin } from "@/lib/admin";
 import { isAddressRevealed } from "@/lib/address-reveal";

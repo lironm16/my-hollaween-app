@@ -1,3 +1,6 @@
+/** Same as {@link HOUSE_ACCESS_CODE_LENGTH} in house-access-code — safe for client UI. */
+export const HOUSE_ACCESS_CODE_LENGTH = 4;
+
 export const NIGHT_PASS_REGISTER_SUBTITLE =
   "קיבלתם קוד כניסה? הירשמו כדי לראות כתובות בתים פרטיים ביום החשיפה";
 

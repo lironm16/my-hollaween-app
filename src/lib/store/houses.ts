@@ -1,4 +1,4 @@
-import { normalizeNightPassCode } from "@/lib/night-pass-codes";
+import { normalizeNightPassCode } from "@/lib/house-access-code";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import {
   canonicalHouseId,

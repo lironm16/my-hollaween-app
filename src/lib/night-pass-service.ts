@@ -1,3 +1,4 @@
+import "server-only";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import {
   formatHouseAccessCode,

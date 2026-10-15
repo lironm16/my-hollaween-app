@@ -4,8 +4,8 @@ import {
   normalizeHolderName,
   normalizeIsraeliMobile,
   normalizeNightPassCode,
-  passIdForHouse,
-} from "@/lib/night-pass-codes";
+} from "@/lib/house-access-code";
+import { passIdForHouse } from "@/lib/night-pass-codes";
 import { getHouseByAccessCode } from "@/lib/store";
 import { redeemNightPass } from "@/lib/night-pass-service";
 import { grantOwnerHouse } from "@/lib/owner-session";

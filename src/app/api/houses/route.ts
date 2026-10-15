@@ -8,7 +8,7 @@ import { loadDb } from "@/lib/store/core";
 import { toEditorHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
-import { normalizeIsraeliMobile } from "@/lib/night-pass-codes";
+import { normalizeIsraeliMobile } from "@/lib/house-access-code";
 import { registerHouseAccessDevice } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { grantOwnerHouse } from "@/lib/owner-session";
