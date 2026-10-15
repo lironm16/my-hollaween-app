@@ -404,8 +404,6 @@ export function NeighborhoodApp({
 
   const housesForFilters = useMemo(() => stripPracticeHouses(mapListHouses), [mapListHouses]);
 
-  const housesForSkipCount = displayHouses;
-
   const filterContext = useMemo(
     () => ({
       houseSet: activeHouseSet,
@@ -899,17 +897,11 @@ export function NeighborhoodApp({
     routeSessionDisplayOrders,
   ]);
 
-  function applySkipHouse(
-    house: PublicHouse,
-    reason: SkipReasonId,
-    temporary: boolean,
-    restoreTriggers: TemporaryRestoreTriggerId[] = [],
-  ) {
+  function applySkipHouse(house: PublicHouse) {
     const wasSkipped = skips.skipped(house.id);
     const meta = {
-      reason,
-      temporary,
-      restoreTriggers: temporary && restoreTriggers.length > 0 ? restoreTriggers : undefined,
+      reason: "other" as SkipReasonId,
+      temporary: false,
       statusKey: skipStatusSnapshot(house, now, filters),
       skippedAt: wasSkipped ? (skips.meta(house.id)?.skippedAt ?? new Date().toISOString()) : new Date().toISOString(),
     };
@@ -924,7 +916,7 @@ export function NeighborhoodApp({
   }
 
   function proceedWithSkipHouse(house: PublicHouse) {
-    applySkipHouse(house, "other", false);
+    applySkipHouse(house);
   }
 
   function handleSkipHouse(id: string) {
@@ -941,7 +933,7 @@ export function NeighborhoodApp({
   function applyClusterSkipAll(houses: PublicHouse[]) {
     for (const item of houses) {
       if (skips.skipped(item.id)) continue;
-      applySkipHouse(item, "other", false);
+      applySkipHouse(item);
     }
   }
 

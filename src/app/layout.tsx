@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { Rubik, Creepster, Rubik_Wet_Paint } from "next/font/google";
 import Script from "next/script";
@@ -58,7 +59,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   const themeCss = getInlineThemeCss();
   return (
     <html
