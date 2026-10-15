@@ -1682,14 +1682,14 @@
 }
 
 .route-stop-pin.is-mixed-done::before {
-  background: #d4b896;
-  border-color: #8b7355;
+  background: #411900;
+  border-color: #2a1000;
 }
 
 .route-stop-pin.is-mixed-done::after {
-  background: #d4b896;
-  border-right-color: #8b7355;
-  border-bottom-color: #8b7355;
+  background: #411900;
+  border-right-color: #2a1000;
+  border-bottom-color: #2a1000;
 }
 
 .route-stop-pin.is-visited .route-stop-num,
@@ -1698,7 +1698,7 @@
 }
 
 .route-stop-pin.is-mixed-done .route-stop-num {
-  color: #1c0e24;
+  color: #fff7ed;
 }
 
 .skip-reason-option-icon {

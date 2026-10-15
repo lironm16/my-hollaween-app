@@ -5,7 +5,7 @@ const TOUR_SKIPPED = "#64748b";
 const TOUR_OPEN_ROUTE = "#f97316";
 const TOUR_OPEN_IDLE = "#fff7ed";
 /** Cluster units disagree (e.g. one visited, rest open) — light tan/brown, not gem yellow or route orange. */
-export const TOUR_CLUSTER_MIXED = "#d4b896";
+export const TOUR_CLUSTER_MIXED = "#411900";
 
 export function clusterHasMixedUnitStates(counts: ClusterProgressCounts): boolean {
   let kinds = 0;
