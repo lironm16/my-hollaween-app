@@ -8,7 +8,7 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseHeadline } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import type { PublicHouse } from "@/lib/types";
-import { skipReasonPreview } from "@/lib/skip-reason-categories";
+import { skipReturnPreviewLine } from "@/lib/skip-return-preview";
 import { cn } from "@/lib/utils";
 import type { TourLegTone } from "@/lib/route-session-progress";
 
@@ -207,12 +207,7 @@ export function RouteList({
                   actionContext={actionContext}
                   skipped={skipped}
                   skipPreview={
-                    skipped
-                      ? skipReasonPreview(
-                          actionContext.skipCategoryFor?.(house.id),
-                          actionContext.skipNoteFor?.(house.id),
-                        ) || undefined
-                      : undefined
+                    skipped ? skipReturnPreviewLine(actionContext.skipMetaFor?.(house.id)) ?? undefined : undefined
                   }
                   expanded={expandedIds.has(house.id)}
                   onToggle={() =>

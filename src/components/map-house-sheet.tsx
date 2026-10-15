@@ -458,8 +458,7 @@ export function MapHouseSheet({
                 visited={visited}
                 gemCollected={gemCollected}
                 liked={liked}
-                skipCategoryFor={actionContext.skipCategoryFor}
-                skipNoteFor={actionContext.skipNoteFor}
+                skipMetaFor={actionContext.skipMetaFor}
                 onSelect={(id) => onSelectClusterHouse?.(id)}
               />
             </div>

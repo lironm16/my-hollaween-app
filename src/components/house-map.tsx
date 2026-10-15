@@ -797,11 +797,9 @@ type Props = {
     done: boolean;
     skipped?: boolean;
   }[] | null;
-  /** Dashed purple origin spur — always to tour stop 1 when set. */
   routeStops?: { id: string; order: number; lat: number; lng: number }[] | null;
   /** Pinned stop numbers for visited/skipped houses still shown on the map in route mode. */
   routeSessionDisplayOrders?: Map<string, number> | null;
-  /** Walking-route start (GPS / custom / neighborhood) for the dashed approach. */
   routeStart?: LatLng | null;
   routeStartedFrom?: "gps" | "neighborhood" | "custom" | null;
   visitedIds?: string[];

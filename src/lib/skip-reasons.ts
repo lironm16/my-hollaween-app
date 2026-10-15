@@ -156,6 +156,29 @@ export function temporaryRestoreAlertText(house: PublicHouse, meta: SkippedHouse
   return `${name} חזר לרשימה`;
 }
 
+/** Restore triggers that applied at skip time (from statusKey snapshot). */
+export function temporaryRestoreOptionsFromSnapshot(
+  statusKey: string,
+): TemporaryRestoreTriggerId[] {
+  const options: TemporaryRestoreTriggerId[] = [];
+  const [visit, frozen, breakStatus, hoursOpen, candy] = statusKey.split("|");
+  if (
+    visit === "closed" ||
+    frozen === "frozen" ||
+    breakStatus === "break" ||
+    hoursOpen === "closed-hours"
+  ) {
+    options.push("not-open");
+  }
+  if (candy === "out") options.push("candy-out");
+  return options;
+}
+
+export function temporaryRestoreWhenLabel(trigger: TemporaryRestoreTriggerId) {
+  if (trigger === "not-open") return "הבית פתוח";
+  return "יש ממתקים";
+}
+
 /** Whether the house was closed or out of candy when the skip was recorded. */
 export function skipSnapshotHadCandyOutOrClosed(statusKey: string) {
   const [visit, frozen, breakStatus, hoursOpen, candy] = statusKey.split("|");
@@ -164,6 +187,10 @@ export function skipSnapshotHadCandyOutOrClosed(statusKey: string) {
   if (hoursOpen === "closed-hours") return true;
   if (candy === "out") return true;
   return false;
+}
+
+export function skipReturnSectionVisible(meta: SkippedHouseMeta | undefined) {
+  return Boolean(meta && skipSnapshotHadCandyOutOrClosed(meta.statusKey));
 }
 
 /** Temporary auto-restore still runs silently unless candy or closed status triggered the skip. */

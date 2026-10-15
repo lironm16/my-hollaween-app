@@ -1264,21 +1264,25 @@ export function NeighborhoodApp({
             )
         : undefined,
       skipMetaFor: (id) => skips.meta(id),
-      skipCategoryFor: (id) => (skips.skipped(id) ? skips.skipCategory(id) : undefined),
-      skipNoteFor: (id) => skips.note(id),
-      onSaveSkipReason: (id, payload) => {
-        skips.saveSkipCategory(id, payload.category);
-        skips.saveNote(id, payload.note);
+      onSaveSkipRestore: (id, triggers) => {
         const prev = skips.meta(id);
-        if (prev) {
-          skips.update(id, {
-            ...prev,
-            reason: payload.category as SkipReasonId,
-            temporary: false,
-          });
-        }
+        if (!prev) return;
+        skips.update(id, {
+          ...prev,
+          temporary: triggers.length > 0,
+          restoreTriggers: triggers,
+          reason: triggers[0] ?? prev.reason,
+        });
       },
-      onDeleteSkipReason: (id) => {
+      onClearSkipRestore: (id) => {
+        const prev = skips.meta(id);
+        if (!prev) return;
+        skips.update(id, {
+          ...prev,
+          temporary: false,
+          restoreTriggers: [],
+          reason: "other",
+        });
         skips.clearSkipReasonUserData(id);
       },
       editingId: editFlow.flow?.house.id ?? null,

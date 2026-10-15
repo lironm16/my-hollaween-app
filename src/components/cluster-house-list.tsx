@@ -13,8 +13,8 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
-import { skipReasonPreview } from "@/lib/skip-reason-categories";
-import type { SkipReasonCategory } from "@/lib/skip-reason-categories";
+import { skipReturnPreviewLine } from "@/lib/skip-return-preview";
+import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { cn } from "@/lib/utils";
 
 const SWIPE_THRESHOLD_PX = 56;
@@ -198,8 +198,7 @@ export function ClusterHouseList({
   visited,
   gemCollected,
   liked,
-  skipCategoryFor,
-  skipNoteFor,
+  skipMetaFor,
   onSelect,
 }: {
   houses: PublicHouse[];
@@ -210,8 +209,7 @@ export function ClusterHouseList({
   visited?: (id: string) => boolean;
   gemCollected?: (id: string) => boolean;
   liked?: (id: string) => boolean;
-  skipCategoryFor?: (id: string) => SkipReasonCategory | undefined;
-  skipNoteFor?: (id: string) => string | undefined;
+  skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   onSelect: (id: string) => void;
 }) {
   const clusterNow = now ?? new Date();
@@ -260,8 +258,7 @@ export function ClusterHouseList({
               ) : null}
               {skipped?.(item.id) ? (
                 <span className="mt-0.5 block truncate text-sm text-slate-300">
-                  {skipReasonPreview(skipCategoryFor?.(item.id), skipNoteFor?.(item.id)) ||
-                    "דילגתם — הוסיפו סיבה בכרטיס הדירה"}
+                  {skipReturnPreviewLine(skipMetaFor?.(item.id)) ?? "דילגתם"}
                 </span>
               ) : null}
             </span>

@@ -58,7 +58,6 @@
     --color-rose-300: oklch(81% 0.117 11.638);
     --color-rose-500: oklch(64.5% 0.246 16.439);
     --color-slate-300: oklch(86.9% 0.022 252.894);
-    --color-slate-500: oklch(55.4% 0.046 257.417);
     --color-zinc-100: oklch(96.7% 0.001 286.375);
     --color-zinc-900: oklch(21% 0.006 285.885);
     --color-stone-200: oklch(92.3% 0.003 48.717);
@@ -1288,9 +1287,6 @@
   .list-disc {
     list-style-type: disc;
   }
-  .appearance-none {
-    appearance: none;
-  }
   .auto-rows-min {
     grid-auto-rows: min-content;
   }
@@ -1687,18 +1683,6 @@
       border-color: color-mix(in oklab, var(--color-red-500) 35%, transparent);
     }
   }
-  .border-slate-500\/40 {
-    border-color: color-mix(in srgb, oklch(55.4% 0.046 257.417) 40%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-slate-500) 40%, transparent);
-    }
-  }
-  .border-slate-500\/50 {
-    border-color: color-mix(in srgb, oklch(55.4% 0.046 257.417) 50%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-slate-500) 50%, transparent);
-    }
-  }
   .border-transparent {
     border-color: transparent;
   }
@@ -1761,9 +1745,6 @@
   }
   .bg-\[\#1a1028\] {
     background-color: #1a1028;
-  }
-  .bg-\[\#1a1028\]\/90 {
-    background-color: color-mix(in oklab, #1a1028 90%, transparent);
   }
   .bg-\[\#1a2433\] {
     background-color: #1a2433;
@@ -2515,9 +2496,6 @@
   .pr-6 {
     padding-right: calc(var(--spacing) * 6);
   }
-  .pr-11 {
-    padding-right: calc(var(--spacing) * 11);
-  }
   .pb-0\.5 {
     padding-bottom: calc(var(--spacing) * 0.5);
   }
@@ -2550,9 +2528,6 @@
   }
   .pb-\[max\(1rem\,env\(safe-area-inset-bottom\,0px\)\)\] {
     padding-bottom: max(1rem, env(safe-area-inset-bottom,0px));
-  }
-  .pl-3 {
-    padding-left: calc(var(--spacing) * 3);
   }
   .text-center {
     text-align: center;
@@ -4078,12 +4053,6 @@
   .focus\:ring-2:focus {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
-  .focus\:ring-orange-500\/35:focus {
-    --tw-ring-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 35%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      --tw-ring-color: color-mix(in oklab, var(--color-orange-500) 35%, transparent);
-    }
   }
   .focus\:outline-none:focus {
     --tw-outline-style: none;
@@ -6872,6 +6841,27 @@ svg.leaflet-zoom-animated {
 }
 .skip-reason-option-icon.is-other {
   background: #64748b;
+}
+.skip-restore-when-icon {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 2px solid #fff7ed;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+.skip-restore-when-icon.is-open {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.skip-restore-when-icon.is-candy {
+  background-color: #16a34a;
+  background-image: url("/icons/pin-candy.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 86%;
 }
 .house-pin-route {
   position: relative;

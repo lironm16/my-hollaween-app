@@ -15,6 +15,7 @@ import {
   temporaryRestoreAlertText,
   temporaryRestoreReasonMet,
   temporarySkipRestoreMet,
+  temporaryRestoreOptionsFromSnapshot,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -251,6 +252,16 @@ describe("temporaryRestoreAlertText", () => {
       }),
       /משפחת לוין חזר לרשימה — הבית פתוח ויש ממתקים/,
     );
+  });
+});
+
+describe("temporaryRestoreOptionsFromSnapshot", () => {
+  it("lists triggers that applied when the skip was recorded", () => {
+    assert.deepEqual(
+      temporaryRestoreOptionsFromSnapshot("open|active|active|closed-hours|out"),
+      ["not-open", "candy-out"],
+    );
+    assert.deepEqual(temporaryRestoreOptionsFromSnapshot("open|active|active|open|plenty"), []);
   });
 });
 
