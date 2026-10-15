@@ -13,6 +13,9 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
+import { skipReturnActivePreviewLine } from "@/lib/skip-return-preview";
+import { SkipSign } from "@/components/visit-marks";
+import type { SkippedHouseMeta } from "@/lib/offline-db";
 import { cn } from "@/lib/utils";
 
 const SWIPE_THRESHOLD_PX = 56;
@@ -87,7 +90,7 @@ export function ClusterHouseNav({
           </button>
         </div>
       </div>
-      <p className="cluster-house-nav-hint">החלקה לצדדים לבית הקודם או הבא</p>
+      <p className="cluster-house-nav-hint">החלקה שמאלה לבית הבא, ימינה לקודם</p>
     </div>
   );
 }
@@ -132,12 +135,13 @@ export function ClusterHouseSwipeArea({
       const dx = event.clientX - start.x;
       const dy = event.clientY - start.y;
       if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) <= Math.abs(dy)) return;
-      if (dx > 0 && canPrev) {
-        onPrev();
-        return;
-      }
+      /* Swipe left → next booth, swipe right → previous (matches hint + RTL pager). */
       if (dx < 0 && canNext) {
         onNext();
+        return;
+      }
+      if (dx > 0 && canPrev) {
+        onPrev();
       }
     },
     [canNext, canPrev, onNext, onPrev],
@@ -196,7 +200,9 @@ export function ClusterHouseList({
   visited,
   gemCollected,
   liked,
+  skipMetaFor,
   onSelect,
+  hideListPin,
 }: {
   houses: PublicHouse[];
   selectedId?: string | null;
@@ -206,7 +212,10 @@ export function ClusterHouseList({
   visited?: (id: string) => boolean;
   gemCollected?: (id: string) => boolean;
   liked?: (id: string) => boolean;
+  skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   onSelect: (id: string) => void;
+  /** School campus list — booth number only, no duplicate castle pin. */
+  hideListPin?: boolean;
 }) {
   const clusterNow = now ?? new Date();
   const addressReveal = useAddressReveal();
@@ -214,12 +223,13 @@ export function ClusterHouseList({
     <ul className="cluster-house-list space-y-2">
       {houses.map((item, index) => {
         const slot = boothNumberForHouse(item) ?? index + 1;
+        const skipLine = skipReturnActivePreviewLine(skipMetaFor?.(item.id));
         return (
         <li key={item.id}>
           <button
             type="button"
             className={cn(
-              "cluster-house-list-row flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base ring-1 transition-colors",
+              "cluster-house-list-row flex w-full items-center gap-3 rounded-xl px-3 py-3 text-start text-base ring-1 transition-colors",
               item.id === selectedId
                 ? "bg-[#261536] text-orange-50 ring-orange-400/50"
                 : "bg-[#1d1028] text-orange-50 ring-orange-500/25 hover:bg-[#261536]",
@@ -233,23 +243,36 @@ export function ClusterHouseList({
             >
               {slot}
             </span>
-            <span className="cluster-house-list-pin-wrap shrink-0" dir="ltr">
-              <HouseMapPinIcon
-                house={item}
-                now={clusterNow}
-                skipped={skipped?.(item.id)}
-                filteredOut={filteredOut?.(item.id)}
-                visited={visited?.(item.id)}
-              />
-            </span>
+            {!hideListPin ? (
+              <span className="cluster-house-list-pin-wrap shrink-0" dir="ltr">
+                <HouseMapPinIcon
+                  house={item}
+                  now={clusterNow}
+                  skipped={skipped?.(item.id)}
+                  filteredOut={filteredOut?.(item.id)}
+                  visited={visited?.(item.id)}
+                />
+              </span>
+            ) : null}
             <span className="min-w-0 flex-1">
               <span className="block line-clamp-2 font-medium [overflow-wrap:anywhere]">
                 <HouseTitleMarkers liked={liked?.(item.id)} gemCollected={gemCollected?.(item.id)} />
                 {houseHeadline(item)}
               </span>
               {addressReveal.visibleArrival(item) ? (
-                <span className="mt-0.5 block truncate text-sm text-violet-300/90">
+                <span className="cluster-house-list-arrival mt-1 block [overflow-wrap:anywhere]">
                   {addressReveal.visibleArrival(item)}
+                </span>
+              ) : null}
+              {skipLine ? (
+                <span
+                  className="cluster-house-list-skip mt-1 flex min-w-0 items-center gap-2"
+                  dir="rtl"
+                >
+                  <SkipSign className="cluster-house-list-skip-icon shrink-0" />
+                  <span className="cluster-house-list-skip-text min-w-0 flex-1 [overflow-wrap:anywhere]">
+                    {skipLine}
+                  </span>
                 </span>
               ) : null}
             </span>

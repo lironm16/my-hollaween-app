@@ -31,14 +31,18 @@ export function RouteShareImportDialog({
             אצל מי ששיתף — בלי קשר למיקום שלכם.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex-col gap-2 sm:flex-row-reverse sm:justify-start">
-          <Button type="button" className="bg-orange-500 text-black hover:bg-orange-400" onClick={onAccept}>
+        <DialogFooter className="flex flex-row gap-2 border-0 bg-transparent p-0">
+          <Button
+            type="button"
+            className="min-h-11 flex-1 bg-orange-500 text-black hover:bg-orange-400"
+            onClick={onAccept}
+          >
             החלפת מסלול
           </Button>
           <Button
             type="button"
             variant="outline"
-            className="border-violet-500/40 text-violet-100"
+            className="min-h-11 flex-1 border-violet-500/40 text-violet-100"
             onClick={onDecline}
           >
             לא עכשיו

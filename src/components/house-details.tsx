@@ -20,7 +20,8 @@ import { formatHoursLabel } from "@/lib/hours";
 import { houseAddedMetaLine } from "@/lib/house-meta";
 import { houseHeadline } from "@/lib/labels";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
-import { houseMapsUrl, houseSharePath } from "@/lib/nav-links";
+import { useHouseMapsUrl } from "@/hooks/use-house-maps-url";
+import { houseSharePath } from "@/lib/nav-links";
 import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { EditorHouse, PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
@@ -323,6 +324,7 @@ export function HouseDetails({
   clusterBoothTag?: string | null;
 }) {
   const addressReveal = useAddressReveal();
+  const mapsUrl = useHouseMapsUrl(house);
   const { admin } = useAdminSession();
   const { previewAsUser } = useGemPreviewAsUser();
   const viewHouse = useAdminHouseFields(house) ?? house;
@@ -553,7 +555,7 @@ export function HouseDetails({
         <div className="flex flex-wrap gap-2 pt-1">
           {showMaps ? (
             <a
-              href={houseMapsUrl(house)}
+              href={mapsUrl}
               target="_blank"
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}

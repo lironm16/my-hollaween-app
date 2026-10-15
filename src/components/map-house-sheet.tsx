@@ -86,6 +86,9 @@ export function MapHouseSheet({
   const draggingRef = useRef(false);
   const sheetOpenRef = useRef(false);
   const detailHeightLockedRef = useRef(false);
+  /** Keeps cluster list/detail sheet height when switching overview ↔ unit card. */
+  const clusterSheetHeightRef = useRef<number | null>(null);
+  const clusterSheetKeyRef = useRef("");
   const [dragH, setDragH] = useState<number | null>(null);
   const [sheetH, setSheetH] = useState<number | null>(null);
   const [fitH, setFitH] = useState<number | null>(null);
@@ -144,44 +147,55 @@ export function MapHouseSheet({
     return Math.min(cap, Math.max(72, Math.ceil(chromeH + contentH)));
   }
 
-  function publishSheetHeight(h: number) {
+  function publishSheetHeight(h: number, rememberClusterHeight = false) {
     document.documentElement.style.setProperty("--map-sheet-h", `${h}px`);
     window.dispatchEvent(new CustomEvent("hw-map-sheet", { detail: { height: h } }));
+    if (rememberClusterHeight && h > 0) clusterSheetHeightRef.current = h;
   }
 
   useLayoutEffect(() => {
+    if (clusterKey !== clusterSheetKeyRef.current) {
+      clusterSheetKeyRef.current = clusterKey;
+      clusterSheetHeightRef.current = null;
+    }
     const wasOpen = (sheetRef.current?.getBoundingClientRect().height ?? 0) > 0;
+    const currentH = wasOpen ? (sheetRef.current?.getBoundingClientRect().height ?? 0) : 0;
     setDragH(null);
     if (!wasOpen) {
       setFitH(null);
       setOpenH(0);
       sheetOpenRef.current = false;
       detailHeightLockedRef.current = false;
-    } else {
-      // Keep the sheet at its current height while swapping houses/clusters.
-      detailHeightLockedRef.current = false;
+      clusterSheetHeightRef.current = null;
+    } else if (clusterShell && clusterDetail && currentH > 0) {
+      clusterSheetHeightRef.current = currentH;
+      detailHeightLockedRef.current = true;
     }
     scrollSheetContentTop();
     if (overview) {
-      const cap = measureOverviewHeight();
+      const cap = Math.max(
+        clusterSheetHeightRef.current ?? 0,
+        measureOverviewHeight(),
+      );
       naturalH.current = cap;
       setSheetH(cap);
+      clusterSheetHeightRef.current = cap;
       document.documentElement.style.setProperty("--map-cluster-sheet-h", `${cap}px`);
-      publishSheetHeight(cap);
+      publishSheetHeight(cap, true);
+      detailHeightLockedRef.current = false;
       return;
     }
-    const currentH = wasOpen ? (sheetRef.current?.getBoundingClientRect().height ?? 0) : 0;
     setSheetH(null);
     document.documentElement.style.removeProperty("--map-cluster-sheet-h");
     if (currentH > 0) {
       setOpenH(currentH);
-      publishSheetHeight(currentH);
+      publishSheetHeight(currentH, clusterShell);
     }
-  }, [clusterKey, overview, clusterHouses.length]);
+  }, [clusterKey, overview, clusterHouses.length, clusterShell, clusterDetail]);
 
   useLayoutEffect(() => {
     if (overview) return;
-    if (detailHeightLockedRef.current) {
+    if (detailHeightLockedRef.current || clusterDetail) {
       scrollSheetContentTop();
       return;
     }
@@ -325,6 +339,7 @@ export function MapHouseSheet({
       return;
     }
     setSheetH(h);
+    if (clusterShell) clusterSheetHeightRef.current = h;
   }
 
   function onHeightTransitionEnd(event: React.TransitionEvent<HTMLDivElement>) {
@@ -443,6 +458,8 @@ export function MapHouseSheet({
                 visited={visited}
                 gemCollected={gemCollected}
                 liked={liked}
+                skipMetaFor={actionContext.skipMetaFor}
+                hideListPin={usesSchoolCampusClusterChrome(clusterHouses)}
                 onSelect={(id) => onSelectClusterHouse?.(id)}
               />
             </div>

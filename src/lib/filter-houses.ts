@@ -12,7 +12,6 @@ import {
   isAfterHoursForFilter,
   isClosingSoonForFilter,
   isHoursNightOver,
-  isHoursNotYetOpen,
   isNotYetOpenForFilter,
   isOnBreakForFilter,
   isOpenDuringCustomVisitForFilter,
@@ -24,17 +23,22 @@ import { houseMatchesLocationKind } from "@/lib/house-kind";
 import { effectiveVisit, isDecorated, offersSensitivity } from "@/lib/house-state";
 import { houseMatchesSet, type HouseSet } from "@/lib/house-set";
 import type { HouseFiltersState } from "@/lib/offline-db";
-import { CANDY_TONE_IDS, SCARE_LEVELS, type PublicHouse } from "@/lib/types";
+import { isHouseClosedBeforeOpening } from "@/lib/hours";
+import { CANDY_TONE_IDS, SCARE_LEVELS, type AddressRevealSchedule, type PublicHouse } from "@/lib/types";
 
 export function isHouseOwnerClosed(house: PublicHouse) {
   return effectiveVisit(house) === "closed";
 }
 
-export function isHouseClosedForDisplay(house: PublicHouse, now: Date) {
+export function isHouseClosedForDisplay(
+  house: PublicHouse,
+  now: Date,
+  addressReveal?: AddressRevealSchedule,
+) {
   return (
     isHouseOwnerClosed(house) ||
     isHoursNightOver(house, now) ||
-    isHoursNotYetOpen(house, now)
+    isHouseClosedBeforeOpening(house, now, addressReveal)
   );
 }
 

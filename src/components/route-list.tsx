@@ -1,19 +1,27 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { MapPin, Navigation } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, MapPin, Navigation } from "lucide-react";
 import { HouseCard } from "@/components/house-card";
 import { houseCardPropsFor, type HouseCardActionContext } from "@/components/house-card-actions";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { houseHeadline } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import type { PublicHouse } from "@/lib/types";
+import { skipReturnActivePreviewLine } from "@/lib/skip-return-preview";
+import { SkipSign } from "@/components/visit-marks";
 import { cn } from "@/lib/utils";
+import type { TourLegTone } from "@/lib/route-session-progress";
 
 export type RouteListItem = {
   house: PublicHouse;
   order: number;
   hop: string;
   skipped: boolean;
+  doneCollapsed?: boolean;
+  legDone?: boolean;
+  legSkipped?: boolean;
+  legTone?: TourLegTone;
   visitedTail?: boolean;
   distanceM?: number;
 };
@@ -23,6 +31,79 @@ function RouteLeg({ label }: { label?: string }) {
     <div className={cn("route-list-leg", !label && "route-list-leg--line-only")}>
       <span className="route-list-leg-line" aria-hidden="true" />
       {label ? <span className="route-list-leg-label">{label}</span> : null}
+    </div>
+  );
+}
+
+function houseFrameClass(tone: TourLegTone, skipped: boolean, doneCollapsed: boolean) {
+  if (doneCollapsed) return skipped ? "route-list-house--skipped" : "route-list-house--done";
+  switch (tone) {
+    case "visited":
+      return "route-list-house--done";
+    case "skipped":
+      return "route-list-house--skipped";
+    case "open-idle":
+      return "route-list-house--idle";
+    default:
+      return "";
+  }
+}
+
+function RouteListCollapsedHouse({
+  house,
+  order,
+  actionContext,
+  skipped,
+  skipPreview,
+  expanded,
+  onToggle,
+}: {
+  house: PublicHouse;
+  order: number;
+  actionContext: HouseCardActionContext;
+  skipped: boolean;
+  skipPreview?: string;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const barProps = houseCardPropsFor(house, actionContext, { index: order > 0 ? order : undefined });
+  return (
+    <div
+      className={cn(
+        "route-list-house route-list-house--collapsed",
+        skipped && "route-list-house--skipped",
+        !skipped && "route-list-house--done",
+      )}
+    >
+      <button
+        type="button"
+        className="route-list-collapsed-trigger"
+        aria-expanded={expanded}
+        onClick={onToggle}
+      >
+        {order > 0 ? (
+          <span className="route-list-collapsed-order" aria-hidden="true">
+            {order}
+          </span>
+        ) : null}
+        <span className="min-w-0 flex-1 text-right">
+          <span className="route-list-collapsed-title block">{houseHeadline(house)}</span>
+          {!expanded && skipped && skipPreview ? (
+            <span className="route-list-collapsed-skip-note flex min-w-0 items-center gap-2" dir="rtl">
+              <SkipSign className="route-list-collapsed-skip-icon shrink-0" />
+              <span className="route-list-collapsed-skip-text min-w-0 flex-1 truncate">
+                {skipPreview}
+              </span>
+            </span>
+          ) : null}
+        </span>
+        <ChevronDown className={cn("route-list-collapsed-chevron", expanded && "is-open")} />
+      </button>
+      {expanded ? (
+        <div className="route-list-collapsed-body">
+          <HouseCard {...barProps} expanded hideHoursBanner />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -48,6 +129,7 @@ export function RouteList({
 }) {
   const focusRef = useRef<HTMLLIElement | null>(null);
   const addressReveal = useAddressReveal();
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     if (!focusId) return;
@@ -69,7 +151,7 @@ export function RouteList({
         {gpsAction}
         <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
         <p className="mt-2 text-base">
-          שנו סינון כדי לראות בתים במסלול. בתים שכבר סימנתם כביקור לא נכללים במסלול.
+          שנו סינון כדי לראות בתים במסלול.
         </p>
       </div>
     );
@@ -80,9 +162,9 @@ export function RouteList({
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
       <ol className="route-list">
-        <li className="route-list-card">
+        <li className="route-list-card route-list-card--origin">
           <div className="flex items-start gap-3">
-            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black">
+            <span className="route-list-origin-mark" aria-hidden="true">
               <MapPin className="size-4" strokeWidth={2.4} />
             </span>
             <div className="min-w-0 flex-1">
@@ -99,36 +181,66 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped, visitedTail, distanceM }, i) => {
-          const showSkippedHeading = skipped && (i === 0 || !items[i - 1]!.skipped);
+        {items.map(({ house, order, hop, skipped, doneCollapsed, legTone, visitedTail, distanceM }, i) => {
+          const tone = legTone ?? (skipped ? "skipped" : "open-route");
+          const showSkippedHeading =
+            skipped && !doneCollapsed && !visitedTail && (i === 0 || !items[i - 1]!.skipped);
           const showVisitedHeading =
             visitedTail && (i === 0 || !items[i - 1]?.visitedTail);
-          const isTail = skipped || visitedTail;
           return (
             <li
               key={house.id}
               ref={house.id === focusId ? focusRef : undefined}
               className={cn(
                 house.id === focusId && "house-list-focus",
-                skipped && "route-list-skipped",
+                skipped && !doneCollapsed && "route-list-skipped",
                 visitedTail && "route-list-visited",
               )}
             >
               {showVisitedHeading ? (
-                <p className="route-list-visited-heading">ביקרתם</p>
+                <p className="route-list-visited-heading">ביקרתם (מחוץ למסלול)</p>
               ) : null}
-              {showSkippedHeading ? (
+              {showSkippedHeading && !doneCollapsed ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}
               <RouteLeg label={hop || undefined} />
-              <div className="route-list-house">
-                <HouseCard
-                  {...houseCardPropsFor(house, actionContext, {
-                    index: order > 0 ? order : undefined,
-                    distanceM: addressReveal.distanceAllowed(house.id) ? distanceM : undefined,
-                  })}
+              {doneCollapsed ? (
+                <RouteListCollapsedHouse
+                  house={house}
+                  order={order}
+                  actionContext={actionContext}
+                  skipped={skipped}
+                  skipPreview={
+                    skipped
+                      ? skipReturnActivePreviewLine(actionContext.skipMetaFor?.(house.id)) ??
+                        undefined
+                      : undefined
+                  }
+                  expanded={expandedIds.has(house.id)}
+                  onToggle={() =>
+                    setExpandedIds((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(house.id)) next.delete(house.id);
+                      else next.add(house.id);
+                      return next;
+                    })
+                  }
                 />
-              </div>
+              ) : (
+                <div
+                  className={cn(
+                    "route-list-house",
+                    houseFrameClass(tone, skipped, false),
+                  )}
+                >
+                  <HouseCard
+                    {...houseCardPropsFor(house, actionContext, {
+                      index: order > 0 ? order : undefined,
+                      distanceM: addressReveal.distanceAllowed(house.id) ? distanceM : undefined,
+                    })}
+                  />
+                </div>
+              )}
             </li>
           );
         })}

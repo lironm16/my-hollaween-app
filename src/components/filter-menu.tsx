@@ -94,20 +94,20 @@ export function FiltersSheet({
         <SheetFooter className="shrink-0 flex-row gap-2 border-t border-orange-500/15 bg-[#12081a] p-4">
           <Button
             type="button"
+            className="flex-1 bg-orange-500 text-black hover:bg-orange-400"
+            disabled={saveDisabled}
+            onClick={onSave}
+          >
+            {resultCount !== undefined ? `הצג תוצאות (${resultCount})` : "הצג תוצאות"}
+          </Button>
+          <Button
+            type="button"
             variant="outline"
             className="flex-1"
             disabled={activeCount === 0}
             onClick={onClear}
           >
             איפוס
-          </Button>
-          <Button
-            type="button"
-            className="flex-1 bg-orange-500 text-black hover:bg-orange-400"
-            disabled={saveDisabled}
-            onClick={onSave}
-          >
-            {resultCount !== undefined ? `הצג תוצאות (${resultCount})` : "הצג תוצאות"}
           </Button>
         </SheetFooter>
       </SheetContent>

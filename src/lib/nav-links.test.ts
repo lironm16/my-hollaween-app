@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { formatMapsAddress } from "@/lib/config";
-import { houseMapsUrl, houseSharePath, houseSharePayload, houseShareUrl } from "@/lib/nav-links";
+import {
+  houseMapsUrl,
+  houseSharePath,
+  houseSharePayload,
+  houseShareUrl,
+  mapsNavigateUsesExplicitOrigin,
+} from "@/lib/nav-links";
+import { neighborhoodOrigin } from "@/lib/distance-origin";
 import type { PublicHouse } from "@/lib/types";
 
 function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
@@ -72,6 +79,28 @@ describe("houseMapsUrl", () => {
       stub({ address: "", lat: 32.09, lng: 34.8, deviceCachePin: true }),
     );
     assert.doesNotMatch(url, /destination=32\.09,34\.8/);
+  });
+
+  it("includes map-chosen origin when distance start is not live GPS", () => {
+    const origin = neighborhoodOrigin();
+    assert.ok(mapsNavigateUsesExplicitOrigin(origin));
+    const url = new URL(houseMapsUrl(stub(), { origin }));
+    assert.equal(url.searchParams.get("dir_action"), "navigate");
+    assert.match(url.searchParams.get("origin") ?? "", new RegExp(`${origin.lat},${origin.lng}`));
+    assert.ok(url.searchParams.get("destination"));
+  });
+
+  it("omits origin when start is live GPS", () => {
+    const origin = {
+      kind: "gps" as const,
+      lat: 32.09,
+      lng: 34.8,
+      label: "מיקום נוכחי",
+      fromGps: true,
+    };
+    assert.equal(mapsNavigateUsesExplicitOrigin(origin), false);
+    const url = new URL(houseMapsUrl(stub(), { origin }));
+    assert.equal(url.searchParams.get("origin"), null);
   });
 });
 

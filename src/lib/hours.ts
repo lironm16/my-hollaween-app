@@ -1,11 +1,13 @@
+import { isAddressRevealed } from "@/lib/address-reveal";
 import { appNow } from "@/lib/app-clock";
 import { config } from "@/lib/config";
 import {
   addHouseCutoffDate,
   addHouseCutoffScheduleFromDb,
   defaultAddHouseCutoffSchedule,
+  mergeAddressRevealSchedule,
 } from "@/lib/event-settings";
-import type { AddHouseCutoffSchedule, VisitState } from "@/lib/types";
+import type { AddHouseCutoffSchedule, AddressRevealSchedule, VisitState } from "@/lib/types";
 import { effectiveVisit, isFrozen } from "@/lib/house-state";
 
 export type HoursWindow = { from: string; to: string };
@@ -350,6 +352,20 @@ export function isHoursNotYetOpen(house: HoursSource, now = appNow()) {
   const from = parseClockMinutes(windows[0]!.from);
   if (from === null) return false;
   return minutesNow(now) < from;
+}
+
+/**
+ * Closed pin / candy swap on event night: after the public address-reveal clock, before the house opens.
+ * Uses reveal *schedule time* only — not `canViewHouseLocationDetails` (admins/owners would bypass too early).
+ */
+export function isHouseClosedBeforeOpening(
+  house: HoursSource,
+  now = appNow(),
+  addressReveal?: AddressRevealSchedule,
+) {
+  if (eventNightRelation(now) !== 0) return false;
+  if (!isAddressRevealed(now, mergeAddressRevealSchedule(addressReveal))) return false;
+  return isHoursNotYetOpen(house, now);
 }
 
 /** Open / not-yet / closing-soon — only on the Halloween event night. */

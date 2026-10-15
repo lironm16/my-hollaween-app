@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { houseNeedsLocationHydration } from "@/lib/device-catalog-cache";
-import { houseWithLocationPolicy, visitorAddressRevealContext } from "@/lib/address-reveal";
-import { appNow } from "@/lib/app-clock";
+import { houseWithLocationPolicy } from "@/lib/address-reveal";
+import { visitorPreviewAddressRevealContext } from "@/lib/visitor-preview-address";
+import { useCatalog } from "@/hooks/use-catalog";
 import { notifyHouseDetailLoaded } from "@/lib/fetch-public-house";
 import {
   fetchPublicHouseSession,
@@ -13,27 +14,19 @@ import {
 } from "@/lib/house-detail-session-cache";
 import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
-import { loadOwnedHouses } from "@/lib/offline-db";
-import { nightPassAudience, readNightPassState } from "@/lib/night-pass-client";
 import type { PublicHouse } from "@/lib/types";
 
 const LOADING_DELAY_MS = 400;
 
-function applyPreviewPolicy(detail: PublicHouse): PublicHouse {
-  if (!readGemPreviewAsUser()) return detail;
-  const now = appNow();
-  return houseWithLocationPolicy(
-    detail,
-    visitorAddressRevealContext(
-      now,
-      loadOwnedHouses().map((row) => row.id),
-      undefined,
-      nightPassAudience(readNightPassState()),
-    ),
-  );
-}
-
 export function useServerHouseDetail(house: PublicHouse | null) {
+  const { catalog } = useCatalog();
+  const applyPreviewPolicy = (detail: PublicHouse): PublicHouse => {
+    if (!readGemPreviewAsUser()) return detail;
+    return houseWithLocationPolicy(
+      detail,
+      visitorPreviewAddressRevealContext(catalog?.eventSettings?.addressReveal),
+    );
+  };
   const [resolved, setResolved] = useState<PublicHouse | null>(() =>
     house ? readSessionHouseDetail(house.id, house.updatedAt) ?? house : null,
   );

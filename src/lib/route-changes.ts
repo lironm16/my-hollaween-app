@@ -50,14 +50,7 @@ export function routeCandidateHouses(
   context: RouteChangeContext,
 ) {
   const visible = filterHouses(houses, filters, context);
-  const skipped = new Set(context.skippedIds);
-  const visited = new Set(context.visitedIds);
-  return visible.filter((house) => {
-    if (isPracticeHouse(house)) return false;
-    if (skipped.has(house.id)) return false;
-    if (visited.has(house.id)) return false;
-    return true;
-  });
+  return visible.filter((house) => !isPracticeHouse(house));
 }
 
 export function whyRemovedFromRoute(
@@ -122,28 +115,11 @@ export function diffRouteBySkippedIds(
     routeCandidateHouses(houses, filters, nextContext).map((house) => house.id),
   );
 
-  const removed: RouteChangeEntry[] = [];
-  for (const id of newlySkipped) {
-    if (!currentIds.has(id)) continue;
-    const house = houses.find((item) => item.id === id);
-    removed.push({
-      name: houseLabel(house, id),
-      reason: "דילגתם על הבית",
-    });
-  }
-
-  const added: RouteChangeEntry[] = [];
-  for (const id of restored) {
-    if (currentIds.has(id)) continue;
-    const house = houses.find((item) => item.id === id);
-    if (!house || !nextCandidateIds.has(id)) continue;
-    added.push({
-      name: house.name,
-      reason: whyAddedToRoute(house, filters, nextContext),
-    });
-  }
-
-  return { removed, added };
+  /** Skip/restore is progress state only — houses stay on the pinned tour until filters change. */
+  void newlySkipped;
+  void restored;
+  void nextCandidateIds;
+  return { removed: [], added: [] };
 }
 
 export function routeHousesAfterSkipChange(
@@ -157,8 +133,6 @@ export function routeHousesAfterSkipChange(
   const nextContext = { ...context, skippedIds: nextSkippedIds };
   const nextVisible = filterHouses(houses, filters, context);
   const visibleIds = new Set(nextVisible.map((house) => house.id));
-  const skipped = new Set(nextSkippedIds);
-  const visited = new Set(context.visitedIds);
   const routeHouses: PublicHouse[] = [];
   const seen = new Set<string>();
 
@@ -166,8 +140,6 @@ export function routeHousesAfterSkipChange(
     for (const house of stop.houses) {
       const fresh = nextVisible.find((item) => item.id === house.id);
       if (!fresh || !visibleIds.has(house.id) || seen.has(house.id)) continue;
-      if (skipped.has(house.id)) continue;
-      if (visited.has(house.id)) continue;
       routeHouses.push(fresh);
       seen.add(house.id);
     }
@@ -206,7 +178,16 @@ export function rebuildRouteAfterSkipChange(
     nextSkippedIds,
     includeNew,
   );
-  if (routeHouses.length === 0) {
+  const routeStopIds = new Set<string>();
+  for (const stop of route?.stops ?? []) {
+    for (const house of stop.houses) routeStopIds.add(house.id);
+  }
+  const skipped = new Set(nextSkippedIds);
+  const visited = new Set(context.visitedIds);
+  const routeStopsAllDone =
+    routeStopIds.size > 0 &&
+    [...routeStopIds].every((id) => visited.has(id) || skipped.has(id));
+  if (routeStopsAllDone || routeHouses.length === 0) {
     if (!route) return null;
     return {
       ...route,
@@ -234,8 +215,6 @@ export function routeHousesAfterFilterChange(
 ): PublicHouse[] {
   const nextVisible = filterHouses(houses, nextFilters, context);
   const visibleIds = new Set(nextVisible.map((house) => house.id));
-  const skipped = new Set(context.skippedIds);
-  const visited = new Set(context.visitedIds);
   const routeHouses: PublicHouse[] = [];
   const seen = new Set<string>();
 
@@ -243,8 +222,6 @@ export function routeHousesAfterFilterChange(
     for (const house of stop.houses) {
       const fresh = nextVisible.find((item) => item.id === house.id);
       if (!fresh || !visibleIds.has(house.id) || seen.has(house.id)) continue;
-      if (skipped.has(house.id)) continue;
-      if (visited.has(house.id)) continue;
       routeHouses.push(fresh);
       seen.add(house.id);
     }
@@ -320,8 +297,6 @@ export function diffRouteByFilters(
     });
   const added = nextVisible
     .filter((house) => !currentIds.has(house.id))
-    .filter((house) => !context.skippedIds.includes(house.id))
-    .filter((house) => !context.visitedIds.includes(house.id))
     .map((house) => ({
       name: house.name,
       reason: whyAddedToRoute(house, nextFilters, context),
@@ -357,6 +332,7 @@ export function diffActiveRouteStatusChanges(
   );
   const changes: RouteStatusChangeEntry[] = [];
   for (const id of routeHouseIds(route)) {
+    if (context.visitedIds.includes(id) || context.skippedIds.includes(id)) continue;
     if (!candidateIds.has(id)) continue;
     const house = houses.find((item) => item.id === id);
     const previous = previousById.get(id);

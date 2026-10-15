@@ -195,6 +195,7 @@ export function HouseDetailOverlay({
                 visited={visited}
                 gemCollected={gemCollected}
                 liked={liked}
+                hideListPin={usesSchoolCampusClusterChrome(clusterHouses!)}
                 onSelect={(id) => onSelectClusterHouse?.(id)}
               />
             </div>

@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { config } from "@/lib/config";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AddHouseCutoffSchedule } from "@/lib/types";
-import { Button } from "@/components/ui/button";
+import { FormPrimarySecondaryActions } from "@/components/form-primary-secondary-actions";
 import { cn } from "@/lib/utils";
 
 type SettingsResponse = {
@@ -42,24 +41,19 @@ function parseTimeInput(value: string): Pick<AddHouseCutoffSchedule, "hour" | "m
   return { hour, minute };
 }
 
-function labelSchedule(schedule: AddHouseCutoffSchedule) {
-  return `${formatDateInput(schedule).split("-").reverse().join("/")} ${formatTimeInput(schedule)}`;
-}
-
 export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [customized, setCustomized] = useState(false);
-  const [defaults, setDefaults] = useState<AddHouseCutoffSchedule>(() => ({
-    year: config.addHouseCutoff.year,
-    month: config.addHouseCutoff.month,
-    day: config.addHouseCutoff.day,
-    hour: config.addHouseCutoff.hour,
-    minute: config.addHouseCutoff.minute,
-  }));
+  const [savedDateValue, setSavedDateValue] = useState("2026-10-30");
+  const [savedTimeValue, setSavedTimeValue] = useState("23:59");
   const [dateValue, setDateValue] = useState("2026-10-30");
   const [timeValue, setTimeValue] = useState("23:59");
+
+  const dirty = useMemo(
+    () => dateValue !== savedDateValue || timeValue !== savedTimeValue,
+    [dateValue, savedDateValue, savedTimeValue, timeValue],
+  );
 
   const load = useCallback(async () => {
     setError("");
@@ -71,10 +65,12 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
         setError(json?.error ?? "טעינת ההגדרות נכשלה.");
         return;
       }
-      setCustomized(Boolean(json.customized));
-      setDefaults(json.defaults);
-      setDateValue(formatDateInput(json.addHouseCutoff));
-      setTimeValue(formatTimeInput(json.addHouseCutoff));
+      const nextDate = formatDateInput(json.addHouseCutoff);
+      const nextTime = formatTimeInput(json.addHouseCutoff);
+      setSavedDateValue(nextDate);
+      setSavedTimeValue(nextTime);
+      setDateValue(nextDate);
+      setTimeValue(nextTime);
     } catch {
       setError("טעינת ההגדרות נכשלה.");
     } finally {
@@ -106,10 +102,12 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
         setError(json?.error ?? "שמירה נכשלה.");
         return;
       }
-      setCustomized(Boolean(json.customized));
-      setDefaults(json.defaults);
-      setDateValue(formatDateInput(json.addHouseCutoff));
-      setTimeValue(formatTimeInput(json.addHouseCutoff));
+      const nextDate = formatDateInput(json.addHouseCutoff);
+      const nextTime = formatTimeInput(json.addHouseCutoff);
+      setSavedDateValue(nextDate);
+      setSavedTimeValue(nextTime);
+      setDateValue(nextDate);
+      setTimeValue(nextTime);
     } catch {
       setError("שמירה נכשלה.");
     } finally {
@@ -117,29 +115,10 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
     }
   }
 
-  async function onReset() {
-    setSaving(true);
+  function onCancelEdit() {
     setError("");
-    try {
-      const res = await fetch("/api/admin/event/add-house-cutoff", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reset: true }),
-      });
-      const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
-      if (!res.ok) {
-        setError(json?.error ?? "איפוס נכשל.");
-        return;
-      }
-      setCustomized(false);
-      setDefaults(json.defaults);
-      setDateValue(formatDateInput(json.addHouseCutoff));
-      setTimeValue(formatTimeInput(json.addHouseCutoff));
-    } catch {
-      setError("איפוס נכשל.");
-    } finally {
-      setSaving(false);
-    }
+    setDateValue(savedDateValue);
+    setTimeValue(savedTimeValue);
   }
 
   return (
@@ -178,30 +157,15 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
           />
         </label>
       </div>
-      <p className="text-sm text-violet-400">
-        ברירת מחדל{" "}
-        <span dir="ltr" className="text-violet-200">
-          {labelSchedule(defaults)}
-        </span>
-        {customized ? <span className="text-orange-200"> · מוגדר במנהל</span> : null}
-      </p>
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" size="sm" disabled={loading || saving} onClick={() => void onSave()}>
-          {saving ? "שומר…" : "שמירה"}
-        </Button>
-        {customized ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={loading || saving}
-            onClick={() => void onReset()}
-          >
-            איפוס
-          </Button>
-        ) : null}
-      </div>
+      <FormPrimarySecondaryActions
+        primaryLabel={saving ? "שומר…" : "שמירה"}
+        secondaryLabel="ביטול"
+        onPrimary={() => void onSave()}
+        onSecondary={onCancelEdit}
+        primaryDisabled={loading || saving || !dirty}
+        secondaryDisabled={loading || saving || !dirty}
+      />
     </div>
   );
 }

@@ -7,11 +7,14 @@ import {
   trimWalkingRouteToVisible,
   type WalkingRoute,
 } from "@/lib/route";
-import { rebuildRouteAfterSkipChange, routeCandidateHouses } from "@/lib/route-changes";
+import { rebuildRouteAfterFilterChange, routeCandidateHouses } from "@/lib/route-changes";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
-import { captureRouteDisplayOrders } from "@/lib/route-display-order";
+import {
+  captureRouteDisplayOrders,
+  mergeRouteDisplayOrders,
+} from "@/lib/route-display-order";
 import { readRouteMode, writeRouteMode } from "@/lib/route-mode";
 import type { PublicHouse } from "@/lib/types";
 
@@ -21,8 +24,8 @@ function originPoint(origin: ResolvedOrigin) {
 
 /** Re-optimize stop order only when the user picks a new starting point — not on live GPS drift. */
 function shouldReoptimizeRoute(current: WalkingRoute, origin: ResolvedOrigin) {
+  if (origin.kind === "gps" || current.startedFrom === "gps") return false;
   if (current.startedFrom !== origin.kind) return true;
-  if (origin.kind === "gps") return false;
   return current.origin.lat !== origin.lat || current.origin.lng !== origin.lng;
 }
 
@@ -58,9 +61,29 @@ export function useNeighborhoodRoute({
   onBeforeEnter: () => void;
 }) {
   const [routeMode, setRouteMode] = useState(() => readRouteMode());
-  const [pinnedRoute, setPinnedRoute] = useState<WalkingRoute | null>(null);
+  const [pinnedRoute, setPinnedRouteState] = useState<WalkingRoute | null>(null);
+  const setPinnedRoute = useCallback((route: WalkingRoute | null) => {
+    setPinnedRouteState(route);
+  }, []);
+  const commitSessionPlan = useCallback(
+    (route: WalkingRoute | null, options?: { mergeDisplayOrders?: boolean }) => {
+      setRouteSessionPlan(route);
+      if (!route) {
+        setRouteSessionDisplayOrders(null);
+        return;
+      }
+      setRouteSessionDisplayOrders((prev) =>
+        options?.mergeDisplayOrders
+          ? mergeRouteDisplayOrders(prev, route)
+          : captureRouteDisplayOrders(route),
+      );
+    },
+    [],
+  );
   const [routeSessionDisplayOrders, setRouteSessionDisplayOrders] =
     useState<Map<string, number> | null>(null);
+  /** Full tour geometry for map/list progress — updates on skip/rebuild, not on in-order visits. */
+  const [routeSessionPlan, setRouteSessionPlan] = useState<WalkingRoute | null>(null);
   const pendingRouteGps = useRef(false);
   const lastVisitedCountRef = useRef(0);
   const recaptureDisplayOrdersAfterVisitClearRef = useRef(false);
@@ -82,8 +105,10 @@ export function useNeighborhoodRoute({
   }, [routeCandidates, accessibleOnly, origin]);
 
   const pinCurrentRoute = useCallback(() => {
+    if (!filterRoute) return;
     setPinnedRoute(filterRoute);
-  }, [filterRoute]);
+    commitSessionPlan(filterRoute);
+  }, [filterRoute, setPinnedRoute, commitSessionPlan]);
 
   const clearPendingRouteGps = useCallback(() => {
     pendingRouteGps.current = false;
@@ -92,20 +117,28 @@ export function useNeighborhoodRoute({
   useEffect(() => {
     if (!routeMode || !pendingRouteGps.current || !gps) return;
     pendingRouteGps.current = false;
-    setPinnedRoute((current) => {
+    setPinnedRouteState((current) => {
       const base = current ?? filterRoute;
       if (!base) return filterRoute;
-      return refreshWalkingRoute(base, { lat: gps.lat, lng: gps.lng }, {
+      const refreshed = refreshWalkingRoute(base, { lat: gps.lat, lng: gps.lng }, {
         startedFrom: "gps",
         accessible: accessibleOnly,
         originLabel: origin.label,
       });
+      setRouteSessionPlan((plan) =>
+        plan ? refreshWalkingRoute(plan, { lat: gps.lat, lng: gps.lng }, {
+          startedFrom: "gps",
+          accessible: accessibleOnly,
+          originLabel: origin.label,
+        }) : refreshed,
+      );
+      return refreshed;
     });
   }, [routeMode, gps, filterRoute, accessibleOnly, origin.label]);
 
   useEffect(() => {
     if (!routeMode || pendingRouteGps.current) return;
-    setPinnedRoute((current) => {
+    setPinnedRouteState((current) => {
       if (!current) return current;
       const routeOptions = {
         accessible: accessibleOnly,
@@ -118,27 +151,35 @@ export function useNeighborhoodRoute({
 
       const context = { ...filterContext, skippedIds };
       const candidateIds = new Set(routeCandidates.map((house) => house.id));
-      const currentStopIds = current.stops.map((stop) => stop.house.id);
-      const hasNewCandidates = routeCandidates.some((house) => !currentStopIds.includes(house.id));
-      const hasRemovedStops = currentStopIds.some((id) => !candidateIds.has(id));
+      const currentStopIds = new Set(current.stops.map((stop) => stop.house.id));
+      /** Only filter changes remove stops — visit/skip are progress, not route membership. */
+      const stopLostFromRoute = [...currentStopIds].some((id) => !candidateIds.has(id));
+      const filterAddsStops = routeCandidates.some((house) => !currentStopIds.has(house.id));
+      const visibleForTrim = candidateIds;
 
-      if (!hasNewCandidates && !hasRemovedStops) {
+      if (!stopLostFromRoute && !filterAddsStops) {
         if (current.accessible === accessibleOnly) return current;
-        const trimmed = trimWalkingRouteToVisible(current, candidateIds);
+        const trimmed = trimWalkingRouteToVisible(current, visibleForTrim);
         if (!trimmed) return null;
-        return refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
+        const refreshed = refreshWalkingRoute(trimmed, originPoint(origin), routeOptions);
+        setRouteSessionPlan(refreshed);
+        return refreshed;
       }
 
-      return rebuildRouteAfterSkipChange(
+      const rebuilt = rebuildRouteAfterFilterChange(
         current,
         houses,
         filters,
         context,
-        skippedIds,
-        hasNewCandidates,
+        filterAddsStops,
         originPoint(origin),
         routeOptions,
       );
+      setRouteSessionPlan(rebuilt);
+      if (rebuilt) {
+        setRouteSessionDisplayOrders((prev) => mergeRouteDisplayOrders(prev, rebuilt));
+      }
+      return rebuilt;
     });
   }, [
     routeMode,
@@ -192,6 +233,7 @@ export function useNeighborhoodRoute({
     setRouteMode(false);
     setPinnedRoute(null);
     setRouteSessionDisplayOrders(null);
+    setRouteSessionPlan(null);
   }
 
   function enterRouteMode() {
@@ -204,9 +246,9 @@ export function useNeighborhoodRoute({
         pendingRouteGps.current = true;
         setAskedLocation(true);
         geoRefresh();
-        return;
+      } else {
+        pendingRouteGps.current = false;
       }
-      pendingRouteGps.current = false;
       pinCurrentRoute();
     };
     proceed();
@@ -224,5 +266,7 @@ export function useNeighborhoodRoute({
     pendingRouteGps,
     clearPendingRouteGps,
     routeSessionDisplayOrders,
+    routeSessionPlan,
+    commitSessionPlan,
   };
 }

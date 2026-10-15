@@ -4,6 +4,7 @@ import { distanceMeters } from "@/lib/geo";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import type { PublicHouse } from "@/lib/types";
 import { routeDisplayOrder } from "@/lib/route-display-order";
+import { type TourLegTone, tourLegTone } from "@/lib/route-session-progress";
 import type { WalkingRoute } from "@/lib/route";
 
 export type RouteListItemInput = {
@@ -11,6 +12,14 @@ export type RouteListItemInput = {
   order: number;
   hop: string;
   skipped: boolean;
+  /** Visited — collapsed green row (any order). */
+  doneCollapsed?: boolean;
+  legTone?: TourLegTone;
+  /** @deprecated Use legTone */
+  legDone?: boolean;
+  /** @deprecated Use legTone */
+  legSkipped?: boolean;
+  /** Off-plan visit shown after the tour (legacy compact). */
   visitedTail?: boolean;
   distanceM?: number;
 };
@@ -26,6 +35,7 @@ export function buildRouteListItems(options: {
   distanceAllowed: (houseId: string) => boolean;
   /** Pinned 1…N for this route session; stops keep numbers after visits until route mode exits. */
   sessionDisplayOrders?: Map<string, number> | null;
+  routeModeActive?: boolean;
 }): RouteListItemInput[] {
   const {
     route,
@@ -37,20 +47,27 @@ export function buildRouteListItems(options: {
     distanceLabel,
     distanceAllowed,
     sessionDisplayOrders,
+    routeModeActive = false,
   } = options;
 
   const routeIds = routeHouseIds(route);
   const skippedSet = new Set(skippedIds);
+  const visitedSet = new Set(visitedIds);
   const houseById = new Map(
     catalogHouses
       .filter((house) => houseMatchesSet(house, houseSet))
       .map((house) => [house.id, house]),
   );
 
-  const activeItems = route.stops.flatMap((stop) =>
-    stop.houses.map((house, houseIndex) => {
+  const items: RouteListItemInput[] = [];
+  let stopIdx = 0;
+  for (const stop of route.stops) {
+    stop.houses.forEach((house, houseIndex) => {
       const allowed = distanceAllowed(house.id);
-      return {
+      const skipped = skippedSet.has(house.id);
+      const visited = visitedSet.has(house.id);
+      const legTone = tourLegTone(house.id, visitedSet, skippedSet, routeModeActive);
+      items.push({
         house,
         order: routeDisplayOrder(house.id, stop.order, sessionDisplayOrders),
         hop:
@@ -59,10 +76,15 @@ export function buildRouteListItems(options: {
             : houseIndex > 0
               ? "אותו המיקום"
               : distanceLabel(house.id, stop.fromPreviousMeters),
-        skipped: false,
-      };
-    }),
-  );
+        skipped,
+        legTone,
+        legDone: legTone === "visited",
+        legSkipped: legTone === "skipped",
+        doneCollapsed: visited || skipped,
+      });
+    });
+    stopIdx += 1;
+  }
 
   const originPoint = { lat: origin.lat, lng: origin.lng };
   const lastStop = route.stops[route.stops.length - 1];
@@ -74,23 +96,26 @@ export function buildRouteListItems(options: {
     ids: string[],
     flags: { skipped: boolean; visitedTail?: boolean },
   ): RouteListItemInput[] {
-    const items: RouteListItemInput[] = [];
+    const tail: RouteListItemInput[] = [];
     for (const id of ids) {
       const house = houseById.get(id);
       if (!house) continue;
       const point = { lat: house.lat, lng: house.lng };
       const legM = estimateWalkingMeters(tailCursor, point);
-      items.push({
+      tail.push({
         house,
         order: routeDisplayOrder(id, 0, sessionDisplayOrders),
         hop: distanceLabel(house.id, legM),
         skipped: flags.skipped,
         visitedTail: flags.visitedTail,
+        legDone: flags.visitedTail && visitedSet.has(id),
+        doneCollapsed: flags.skipped || (flags.visitedTail && visitedSet.has(id)),
+        legSkipped: flags.skipped,
         distanceM: distanceAllowed(house.id) ? distanceMeters(originPoint, point) : undefined,
       });
       tailCursor = point;
     }
-    return items;
+    return tail;
   }
 
   const visitedTail = appendTail(
@@ -101,5 +126,5 @@ export function buildRouteListItems(options: {
     skippedIds.filter((id) => !routeIds.has(id)),
     { skipped: true },
   );
-  return [...activeItems, ...visitedTail, ...skippedTail];
+  return [...items, ...visitedTail, ...skippedTail];
 }

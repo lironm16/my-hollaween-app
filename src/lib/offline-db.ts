@@ -378,6 +378,9 @@ export function markVisited(id: string): { ids: string[]; newlyMarked: boolean }
 const SKIPPED_KEY = "hw-skipped-houses";
 const SKIPPED_META_KEY = "hw-skipped-meta";
 const SKIP_NOTES_KEY = "hw-skip-notes";
+const SKIP_REASON_CATEGORY_KEY = "hw-skip-reason-categories";
+
+export type SkipReasonCategoryStored = "not-open" | "candy-out" | "other";
 
 export type SkippedHouseMeta = {
   reason: SkipReasonId;
@@ -465,15 +468,73 @@ export function saveSkipNote(id: string, note: string) {
     if (notes[id]) {
       delete notes[id];
       saveSkipNotes(notes);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("hw-skip-notes-changed"));
+      }
     }
     return;
   }
   notes[id] = clean;
   saveSkipNotes(notes);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skip-notes-changed"));
+  }
 }
 
 export function clearSkipNote(id: string) {
   saveSkipNote(id, "");
+}
+
+function loadSkipReasonCategories(): Record<string, SkipReasonCategoryStored> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(SKIP_REASON_CATEGORY_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: Record<string, SkipReasonCategoryStored> = {};
+    for (const [id, value] of Object.entries(parsed as Record<string, unknown>)) {
+      if (value === "not-open" || value === "candy-out" || value === "other") {
+        out[id] = value;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function saveSkipReasonCategories(categories: Record<string, SkipReasonCategoryStored>) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SKIP_REASON_CATEGORY_KEY, JSON.stringify(categories));
+}
+
+export function getSkipReasonCategory(id: string): SkipReasonCategoryStored | undefined {
+  return loadSkipReasonCategories()[id];
+}
+
+export function saveSkipReasonCategory(id: string, category: SkipReasonCategoryStored) {
+  const categories = loadSkipReasonCategories();
+  categories[id] = category;
+  saveSkipReasonCategories(categories);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skip-notes-changed"));
+  }
+}
+
+export function clearSkipReasonCategory(id: string) {
+  const categories = loadSkipReasonCategories();
+  if (!categories[id]) return;
+  delete categories[id];
+  saveSkipReasonCategories(categories);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("hw-skip-notes-changed"));
+  }
+}
+
+/** Clears user-entered skip reason (category + comment), not skip membership. */
+export function clearSkipReasonUserData(id: string) {
+  clearSkipNote(id);
+  clearSkipReasonCategory(id);
 }
 
 export function skipHouse(id: string, meta?: SkippedHouseMeta): string[] {
@@ -519,7 +580,6 @@ export function unskipHouse(id: string): string[] {
     delete all[id];
     saveSkippedMeta(all);
   }
-  clearSkipNote(id);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("hw-skipped-changed"));
   }
@@ -531,6 +591,7 @@ export function unskipAllHouses(): string[] {
   localStorage.setItem(SKIPPED_KEY, JSON.stringify([]));
   saveSkippedMeta({});
   saveSkipNotes({});
+  saveSkipReasonCategories({});
   window.dispatchEvent(new Event("hw-skipped-changed"));
   return [];
 }

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { Rubik, Creepster, Rubik_Wet_Paint } from "next/font/google";
 import Script from "next/script";
@@ -58,7 +59,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   const themeCss = getInlineThemeCss();
   return (
     <html
@@ -71,7 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
         <link rel="stylesheet" href={`/app.css?v=${appVersion()}`} />
-        <meta name="hw-build" content="2026-10-13-gem-cam-max-no-glow-v1" />
+        <meta name="hw-build" content="2026-10-14-route-path-v4" />
         <meta name="hw-version" content={appVersion()} />
         <link rel="stylesheet" href={`/shell.css?v=${appVersion()}`} />
       </head>

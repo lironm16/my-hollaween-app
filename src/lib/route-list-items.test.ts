@@ -186,6 +186,66 @@ describe("buildRouteListItems", () => {
     );
   });
 
+  it("collapses in-order visited stops on the plan with green legs", () => {
+    const houses = [
+      stub("a", { lat: 32.091, lng: 34.801 }),
+      stub("b", { lat: 32.092, lng: 34.802 }),
+      stub("c", { lat: 32.093, lng: 34.803 }),
+    ];
+    const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
+    assert.ok(route);
+
+    const items = buildRouteListItems({
+      route,
+      catalogHouses: houses,
+      houseSet: "real",
+      visitedIds: ["a"],
+      skippedIds: [],
+      origin: { lat: 32.09, lng: 34.81 },
+      distanceLabel: () => "hop",
+      distanceAllowed: () => true,
+    });
+
+    const a = items.find((item) => item.house.id === "a");
+    const b = items.find((item) => item.house.id === "b");
+    assert.ok(a?.doneCollapsed);
+    assert.equal(a?.legDone, true);
+    assert.equal(b?.legDone, false);
+
+    const outOfOrder = buildRouteListItems({
+      route,
+      catalogHouses: houses,
+      houseSet: "real",
+      visitedIds: ["c"],
+      skippedIds: [],
+      origin: { lat: 32.09, lng: 34.81 },
+      distanceLabel: () => "hop",
+      distanceAllowed: () => true,
+    });
+    const cOnly = outOfOrder.find((item) => item.house.id === "c");
+    assert.ok(cOnly?.doneCollapsed);
+    assert.equal(cOnly?.legDone, true);
+    assert.equal(items.filter((item) => item.visitedTail).length, 0);
+  });
+
+  it("uses gray legs onto skipped houses", () => {
+    const houses = [stub("a"), stub("b")];
+    const route = buildWalkingRouteOrdered(houses, { lat: 32.09, lng: 34.81 });
+    assert.ok(route);
+    const items = buildRouteListItems({
+      route,
+      catalogHouses: houses,
+      houseSet: "real",
+      visitedIds: [],
+      skippedIds: ["b"],
+      origin: { lat: 32.09, lng: 34.81 },
+      distanceLabel: () => "hop",
+      distanceAllowed: () => true,
+    });
+    const b = items.find((item) => item.house.id === "b");
+    assert.equal(b?.legTone, "skipped");
+  });
+
   it("includes skipped tail houses not on the route", () => {
     const houses = [stub("a"), stub("b")];
     const route = buildWalkingRouteOrdered([houses[0]!], { lat: 32.09, lng: 34.81 });

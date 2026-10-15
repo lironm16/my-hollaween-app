@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import {
+  clearSkipReasonUserData,
   clearSkipNote,
   getSkipNote,
+  getSkipReasonCategory,
   getSkippedMeta,
   loadSkippedIds,
   saveSkipNote,
+  saveSkipReasonCategory,
   skipHouse,
   toggleSkipped,
   unskipAllHouses,
@@ -20,14 +23,19 @@ export function useSkippedHouses() {
     typeof window === "undefined" ? [] : loadSkippedIds(),
   );
 
+  const [notesTick, setNotesTick] = useState(0);
+
   useEffect(() => {
     const read = () => setIds(loadSkippedIds());
+    const readNotes = () => setNotesTick((n) => n + 1);
     read();
     window.addEventListener("storage", read);
     window.addEventListener("hw-skipped-changed", read);
+    window.addEventListener("hw-skip-notes-changed", readNotes);
     return () => {
       window.removeEventListener("storage", read);
       window.removeEventListener("hw-skipped-changed", read);
+      window.removeEventListener("hw-skip-notes-changed", readNotes);
     };
   }, []);
 
@@ -45,9 +53,22 @@ export function useSkippedHouses() {
       return next;
     },
     meta: (id: string) => getSkippedMeta(id),
-    note: (id: string) => getSkipNote(id),
+    note: (id: string) => {
+      void notesTick;
+      return getSkipNote(id);
+    },
+    skipCategory: (id: string) => {
+      void notesTick;
+      return getSkipReasonCategory(id);
+    },
     saveNote: (id: string, note: string) => saveSkipNote(id, note),
+    saveSkipCategory: (id: string, category: "not-open" | "candy-out" | "other") =>
+      saveSkipReasonCategory(id, category),
     clearNote: (id: string) => clearSkipNote(id),
+    clearSkipReasonUserData: (id: string) => {
+      clearSkipReasonUserData(id);
+      setNotesTick((n) => n + 1);
+    },
     unskip: (id: string) => {
       const next = unskipHouse(id);
       setIds(next);

@@ -3,9 +3,10 @@ import { describe, it } from "node:test";
 import { PIN_BACKGROUND, pinBackgroundFill } from "@/lib/pin-colors";
 
 describe("pinBackgroundFill", () => {
-  it("uses purple for decorated houses and orange for POIs", () => {
+  it("uses purple/orange decorated fills and gray undecorated fills", () => {
     assert.equal(pinBackgroundFill({}, true), PIN_BACKGROUND.house.decorated);
     assert.equal(pinBackgroundFill({ kind: "poi" }, true), PIN_BACKGROUND.poi.decorated);
+    assert.equal(pinBackgroundFill({}, false), PIN_BACKGROUND.house.undecorated);
   });
 
   it("avoids candy and scare badge hex values", () => {

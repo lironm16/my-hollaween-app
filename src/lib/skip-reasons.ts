@@ -156,6 +156,78 @@ export function temporaryRestoreAlertText(house: PublicHouse, meta: SkippedHouse
   return `${name} חזר לרשימה`;
 }
 
+/** Restore triggers that applied at skip time (from statusKey snapshot). */
+export function temporaryRestoreOptionsFromSnapshot(
+  statusKey: string,
+): TemporaryRestoreTriggerId[] {
+  const options: TemporaryRestoreTriggerId[] = [];
+  const [visit, frozen, breakStatus, hoursOpen, candy] = statusKey.split("|");
+  if (
+    visit === "closed" ||
+    frozen === "frozen" ||
+    breakStatus === "break" ||
+    hoursOpen === "closed-hours"
+  ) {
+    options.push("not-open");
+  }
+  if (candy === "out") options.push("candy-out");
+  return options;
+}
+
+export function temporaryRestoreWhenLabel(trigger: TemporaryRestoreTriggerId) {
+  if (trigger === "not-open") return "הבית פתוח";
+  return "יש ממתקים";
+}
+
+/** Single return offer at skip time — candy status wins over open/closed. */
+export function primaryRestoreTriggerFromSnapshot(
+  statusKey: string,
+): TemporaryRestoreTriggerId | null {
+  const options = temporaryRestoreOptionsFromSnapshot(statusKey);
+  if (options.includes("candy-out")) return "candy-out";
+  if (options.includes("not-open")) return "not-open";
+  return null;
+}
+
+export function skipReturnOfferLabel(trigger: TemporaryRestoreTriggerId) {
+  if (trigger === "candy-out") return "החזר כשמלאי הממתקים חוזר";
+  return "החזר כשהבית ייפתח";
+}
+
+export function skipReturnOfferLabelFromSnapshot(statusKey: string) {
+  const trigger = primaryRestoreTriggerFromSnapshot(statusKey);
+  return trigger ? skipReturnOfferLabel(trigger) : null;
+}
+
+export function skipReturnRuleActive(meta: SkippedHouseMeta) {
+  return meta.temporary && metaRestoreTriggers(meta).length > 0;
+}
+
+/** One-line copy for list previews when the return rule is active. */
+export function skipReturnAutoDisplayLabel(meta: SkippedHouseMeta) {
+  if (!skipReturnRuleActive(meta)) return null;
+  const trigger = metaRestoreTriggers(meta)[0];
+  return trigger ? skipReturnOfferLabel(trigger) : null;
+}
+
+export function skipRestoreUndoPromptMessage(house: PublicHouse, meta: SkippedHouseMeta) {
+  const name = houseHeadline(house);
+  const trigger = metaRestoreTriggers(meta)[0];
+  if (trigger === "not-open") {
+    return `${name} — דילגתם כשהבית לא היה פתוח. עכשיו הוא פתוח. לבטל את הדילוג?`;
+  }
+  if (trigger === "candy-out") {
+    return `${name} — דילגתם כשלא היו ממתקים. עכשיו יש ממתקים. לבטל את הדילוג?`;
+  }
+  return `${name} — התנאי להחזרה התקיים. לבטל את הדילוג?`;
+}
+
+export function defaultRestoreTriggersFromSnapshot(
+  statusKey: string,
+): TemporaryRestoreTriggerId[] {
+  return temporaryRestoreOptionsFromSnapshot(statusKey);
+}
+
 /** Whether the house was closed or out of candy when the skip was recorded. */
 export function skipSnapshotHadCandyOutOrClosed(statusKey: string) {
   const [visit, frozen, breakStatus, hoursOpen, candy] = statusKey.split("|");
@@ -164,6 +236,19 @@ export function skipSnapshotHadCandyOutOrClosed(statusKey: string) {
   if (hoursOpen === "closed-hours") return true;
   if (candy === "out") return true;
   return false;
+}
+
+export function skipReturnOfferEligible(meta: SkippedHouseMeta | undefined) {
+  return Boolean(
+    meta &&
+      skipSnapshotHadCandyOutOrClosed(meta.statusKey) &&
+      primaryRestoreTriggerFromSnapshot(meta.statusKey),
+  );
+}
+
+/** @deprecated use skipReturnOfferEligible */
+export function skipReturnSectionVisible(meta: SkippedHouseMeta | undefined) {
+  return skipReturnOfferEligible(meta);
 }
 
 /** Temporary auto-restore still runs silently unless candy or closed status triggered the skip. */

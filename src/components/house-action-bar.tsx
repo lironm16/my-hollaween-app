@@ -19,7 +19,8 @@ import { ImpOutlineIcon } from "@/components/imp-outline-icon";
 import { GEM_PLACE_ACTION_HE } from "@/lib/gem-hunt-copy";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
-import { houseMapsUrl, shareHouse } from "@/lib/nav-links";
+import { useHouseMapsUrl } from "@/hooks/use-house-maps-url";
+import { shareHouse } from "@/lib/nav-links";
 import { VisitPosterDialog } from "@/components/visit-poster-panel";
 import type { PublicHouse } from "@/lib/types";
 import { appHeaderBottom, safeAreaInsetBottom } from "@/lib/viewport";
@@ -104,6 +105,7 @@ export function HouseActionBar({
   className?: string;
 }) {
   const addressReveal = useAddressReveal();
+  const mapsUrl = useHouseMapsUrl(house);
   const [open, setOpen] = useState(false);
   const [editCodeOpen, setEditCodeOpen] = useState(false);
   const [visitPosterOpen, setVisitPosterOpen] = useState(false);
@@ -139,7 +141,7 @@ export function HouseActionBar({
       id: "nav",
       label: "ניווט",
       icon: <Navigation className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-      href: houseMapsUrl(house),
+      href: mapsUrl,
       external: true,
     });
   }

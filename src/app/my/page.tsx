@@ -35,6 +35,12 @@ import {
   saveOwnedHouse,
 } from "@/lib/offline-db";
 import { queueRouteRestore, readRouteMode } from "@/lib/route-mode";
+import { useHouseFilters } from "@/hooks/use-house-filters";
+import {
+  primaryRestoreTriggerFromSnapshot,
+  skipStatusSnapshot,
+  type SkipReasonId,
+} from "@/lib/skip-reasons";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
@@ -110,6 +116,7 @@ function MyCollectionsPageContent() {
   const editFlow = useHouseEditFlow();
   const nightPass = useNightPass();
   const { openOwnerPasses } = useNightPassDialog();
+  const { filters } = useHouseFilters();
 
   const catalogHouses = useMemo(() => {
     const resolved = resolveCatalogHouses(catalog);
@@ -213,7 +220,25 @@ function MyCollectionsPageContent() {
         : undefined,
       onToggleLike: (id) => likes.toggle(id),
       onToggleVisited: (id) => visits.toggle(id),
-      onSkip: tab === "visited" ? (id) => skips.toggle(id) : undefined,
+      onSkip:
+        tab === "visited"
+          ? (id) => {
+              const house = [...skippedHouses, ...visitedHouses, ...savedHouses, ...mineHouses].find(
+                (item) => item.id === id,
+              );
+              if (!house) return;
+              if (skips.skipped(id)) {
+                skips.unskip(id);
+                return;
+              }
+              skips.skip(id, {
+                reason: "other" as SkipReasonId,
+                temporary: false,
+                statusKey: skipStatusSnapshot(house, now, filters),
+                skippedAt: new Date().toISOString(),
+              });
+            }
+          : undefined,
       onRestore:
         tab === "skipped"
           ? (id) => {
@@ -232,6 +257,28 @@ function MyCollectionsPageContent() {
           ? (house) => openGemPlacer(house, owned.find((item) => item.id === house.id)?.editCode)
           : undefined,
       skipMetaFor: (id) => skips.meta(id),
+      onApproveSkipReturn: (id) => {
+        const prev = skips.meta(id);
+        if (!prev) return;
+        const trigger = primaryRestoreTriggerFromSnapshot(prev.statusKey);
+        if (!trigger) return;
+        skips.update(id, {
+          ...prev,
+          temporary: true,
+          restoreTriggers: [trigger],
+          reason: trigger,
+        });
+      },
+      onRevokeSkipReturn: (id) => {
+        const prev = skips.meta(id);
+        if (!prev) return;
+        skips.update(id, {
+          ...prev,
+          temporary: false,
+          restoreTriggers: [],
+          reason: "other",
+        });
+      },
       editingId: editFlow.flow?.house.id ?? null,
       onShowOnMap: (id) => router.push(`/?focus=${encodeURIComponent(id)}`),
     };
@@ -252,6 +299,12 @@ function MyCollectionsPageContent() {
     nightPass.enabled,
     openOwnerPasses,
     router,
+    filters,
+    now,
+    mineHouses,
+    skippedHouses,
+    visitedHouses,
+    savedHouses,
   ]);
 
   const emptyKind =

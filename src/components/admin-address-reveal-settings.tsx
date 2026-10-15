@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { config } from "@/lib/config";
-import { Button } from "@/components/ui/button";
+import { FormPrimarySecondaryActions } from "@/components/form-primary-secondary-actions";
 import { cn } from "@/lib/utils";
 
 type SettingsResponse = {
@@ -30,9 +30,10 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [customized, setCustomized] = useState(false);
-  const [defaults, setDefaults] = useState({ hour: 12, minute: 0 });
+  const [savedTimeValue, setSavedTimeValue] = useState("12:00");
   const [timeValue, setTimeValue] = useState("12:00");
+
+  const dirty = useMemo(() => timeValue !== savedTimeValue, [savedTimeValue, timeValue]);
 
   const load = useCallback(async () => {
     setError("");
@@ -44,9 +45,9 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
         setError(json?.error ?? "טעינת ההגדרות נכשלה.");
         return;
       }
-      setCustomized(Boolean(json.customized));
-      setDefaults(json.defaults);
-      setTimeValue(formatTimeInput(json.addressReveal));
+      const next = formatTimeInput(json.addressReveal);
+      setSavedTimeValue(next);
+      setTimeValue(next);
     } catch {
       setError("טעינת ההגדרות נכשלה.");
     } finally {
@@ -77,9 +78,9 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
         setError(json?.error ?? "שמירה נכשלה.");
         return;
       }
-      setCustomized(Boolean(json.customized));
-      setDefaults(json.defaults);
-      setTimeValue(formatTimeInput(json.addressReveal));
+      const next = formatTimeInput(json.addressReveal);
+      setSavedTimeValue(next);
+      setTimeValue(next);
     } catch {
       setError("שמירה נכשלה.");
     } finally {
@@ -87,31 +88,10 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
     }
   }
 
-  async function onReset() {
-    setSaving(true);
+  function onCancelEdit() {
     setError("");
-    try {
-      const res = await fetch("/api/admin/event/address-reveal", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reset: true }),
-      });
-      const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
-      if (!res.ok) {
-        setError(json?.error ?? "איפוס נכשל.");
-        return;
-      }
-      setCustomized(false);
-      setDefaults(json.defaults);
-      setTimeValue(formatTimeInput(json.addressReveal));
-    } catch {
-      setError("איפוס נכשל.");
-    } finally {
-      setSaving(false);
-    }
+    setTimeValue(savedTimeValue);
   }
-
-  const defaultLabel = formatTimeInput(defaults);
 
   return (
     <div
@@ -137,30 +117,15 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
           className="filter-time-input h-10 w-full min-h-10 rounded-md bg-black/30 px-2 text-base text-orange-50 ring-1 ring-orange-500/20 disabled:cursor-not-allowed"
         />
       </label>
-      <p className="text-sm text-violet-400">
-        ברירת מחדל{" "}
-        <span dir="ltr" className="text-violet-200">
-          {defaultLabel}
-        </span>
-        {customized ? <span className="text-orange-200"> · מוגדר במנהל</span> : null}
-      </p>
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" size="sm" disabled={loading || saving} onClick={() => void onSave()}>
-          {saving ? "שומר…" : "שמירה"}
-        </Button>
-        {customized ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={loading || saving}
-            onClick={() => void onReset()}
-          >
-            איפוס
-          </Button>
-        ) : null}
-      </div>
+      <FormPrimarySecondaryActions
+        primaryLabel={saving ? "שומר…" : "שמירה"}
+        secondaryLabel="ביטול"
+        onPrimary={() => void onSave()}
+        onSecondary={onCancelEdit}
+        primaryDisabled={loading || saving || !dirty}
+        secondaryDisabled={loading || saving || !dirty}
+      />
     </div>
   );
 }

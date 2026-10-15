@@ -59,8 +59,9 @@ export function HouseList({
     () => "nearby" as const,
   );
   const filtered = useMemo(
-    () => sortHousesForList(houses, sort, origin, now),
-    [houses, sort, origin, now],
+    () =>
+      sortHousesForList(houses, sort, origin, now, addressReveal.addressReveal),
+    [houses, sort, origin, now, addressReveal.addressReveal],
   );
 
   useEffect(() => {

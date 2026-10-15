@@ -15,6 +15,9 @@ import {
   temporaryRestoreAlertText,
   temporaryRestoreReasonMet,
   temporarySkipRestoreMet,
+  temporaryRestoreOptionsFromSnapshot,
+  skipReturnAutoDisplayLabel,
+  primaryRestoreTriggerFromSnapshot,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -251,6 +254,53 @@ describe("temporaryRestoreAlertText", () => {
       }),
       /משפחת לוין חזר לרשימה — הבית פתוח ויש ממתקים/,
     );
+  });
+});
+
+describe("primaryRestoreTriggerFromSnapshot", () => {
+  it("prefers candy-out when both closed and out of candy", () => {
+    assert.equal(
+      primaryRestoreTriggerFromSnapshot("open|active|active|closed-hours|out"),
+      "candy-out",
+    );
+    assert.equal(
+      primaryRestoreTriggerFromSnapshot("open|active|active|closed-hours|plenty"),
+      "not-open",
+    );
+  });
+});
+
+describe("skipReturnAutoDisplayLabel", () => {
+  it("shows offer copy only when the rule is active", () => {
+    assert.equal(
+      skipReturnAutoDisplayLabel({
+        reason: "candy-out",
+        temporary: true,
+        restoreTriggers: ["candy-out"],
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      "החזר כשמלאי הממתקים חוזר",
+    );
+    assert.equal(
+      skipReturnAutoDisplayLabel({
+        reason: "other",
+        temporary: false,
+        statusKey: "x",
+        skippedAt: "2026-01-01T00:00:00.000Z",
+      }),
+      null,
+    );
+  });
+});
+
+describe("temporaryRestoreOptionsFromSnapshot", () => {
+  it("lists triggers that applied when the skip was recorded", () => {
+    assert.deepEqual(
+      temporaryRestoreOptionsFromSnapshot("open|active|active|closed-hours|out"),
+      ["not-open", "candy-out"],
+    );
+    assert.deepEqual(temporaryRestoreOptionsFromSnapshot("open|active|active|open|plenty"), []);
   });
 });
 

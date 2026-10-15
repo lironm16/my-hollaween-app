@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { enrichHousesWithAdminLocations, mergeVisibleHouses } from "@/hooks/use-merged-houses";
+import {
+  enrichHousesForUserPreview,
+  enrichHousesWithAdminLocations,
+  mergeVisibleHouses,
+} from "@/hooks/use-merged-houses";
+import { makeAddressRevealContext } from "@/lib/address-reveal";
 import { noteCatalogRemovals } from "@/lib/catalog-removed";
 import { houseMatchesSet } from "@/lib/house-set";
 import type { House, PublicHouse } from "@/lib/types";
@@ -186,6 +191,40 @@ describe("mergeVisibleHouses", () => {
     const enriched = enrichHousesWithAdminLocations(catalog, admin, true);
     assert.equal(enriched[0]?.address, "רוקח 32");
     assert.equal(enriched[0]?.arrival, "קומה 1");
+  });
+
+  it("enrichHousesForUserPreview fills only after simulated reveal", () => {
+    const catalog = [
+      {
+        ...publicHouse("בית-9002", "2026-10-31T10:00:00.000Z"),
+        address: "",
+        arrival: "",
+      },
+    ];
+    const admin = [
+      {
+        ...adminHouse("בית-9002", "2026-10-31T10:00:00.000Z"),
+        address: "רוקח 40",
+        arrival: "דלת קדמית",
+        ownerPhone: "0500000000",
+      },
+    ];
+    const before = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 11, 0),
+      isAdmin: false,
+      addressReveal: { hour: 12, minute: 0 },
+    });
+    const after = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 12, 30),
+      isAdmin: false,
+      addressReveal: { hour: 12, minute: 0 },
+    });
+    const hidden = enrichHousesForUserPreview(catalog, admin, before);
+    assert.equal(hidden[0]?.address, "");
+    const shown = enrichHousesForUserPreview(catalog, admin, after);
+    assert.equal(shown[0]?.address, "רוקח 40");
+    assert.equal(shown[0]?.arrival, "דלת קדמית");
+    assert.equal((shown[0] as { ownerPhone?: string }).ownerPhone, undefined);
   });
 
   it("drops catalog-removed owned previews from the public merge", () => {

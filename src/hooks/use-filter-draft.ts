@@ -27,6 +27,7 @@ export function useFilterDraft({
   routeMode,
   pinnedRoute,
   setPinnedRoute,
+  commitSessionPlan,
   origin,
   skippedIds,
   now,
@@ -45,6 +46,10 @@ export function useFilterDraft({
   routeMode: boolean;
   pinnedRoute: WalkingRoute | null;
   setPinnedRoute: (route: WalkingRoute | null) => void;
+  commitSessionPlan: (
+    route: WalkingRoute | null,
+    options?: { mergeDisplayOrders?: boolean },
+  ) => void;
   origin: ResolvedOrigin;
   skippedIds: string[];
   now: Date;
@@ -79,21 +84,21 @@ export function useFilterDraft({
   function applyFiltersWithRoute(nextFilters: HouseFiltersState, includeNew: boolean) {
     updateFilters(() => cloneHouseFilters(nextFilters));
     if (routeMode) {
-      setPinnedRoute(
-        rebuildRouteAfterFilterChange(
-          pinnedRoute,
-          houses,
-          nextFilters,
-          { ...filterContext, skippedIds },
-          includeNew,
-          { lat: origin.lat, lng: origin.lng },
-          {
-            accessible: nextFilters.accessibleOnly,
-            startedFrom: origin.kind,
-            originLabel: origin.label,
-          },
-        ),
+      const rebuilt = rebuildRouteAfterFilterChange(
+        pinnedRoute,
+        houses,
+        nextFilters,
+        { ...filterContext, skippedIds },
+        includeNew,
+        { lat: origin.lat, lng: origin.lng },
+        {
+          accessible: nextFilters.accessibleOnly,
+          startedFrom: origin.kind,
+          originLabel: origin.label,
+        },
       );
+      setPinnedRoute(rebuilt);
+      commitSessionPlan(rebuilt, { mergeDisplayOrders: true });
     }
     setFiltersOpen(false);
   }

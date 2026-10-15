@@ -1,7 +1,7 @@
 import { isHouseClosedForDisplay } from "@/lib/filter-houses";
 import { distanceMeters } from "@/lib/geo";
 import { effectiveVisit } from "@/lib/house-state";
-import type { PublicHouse } from "@/lib/types";
+import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
 export const LIST_SORT_KEY = "hw-list-sort";
 export const LIST_SORT_EVENT = "hw-list-sort";
@@ -52,9 +52,9 @@ function stamp(value: string | undefined) {
   return Number.isFinite(n) ? n : 0;
 }
 
-function closedRank(house: PublicHouse, now: Date) {
+function closedRank(house: PublicHouse, now: Date, addressReveal?: AddressRevealSchedule) {
   if (effectiveVisit(house) === "closed") return 2;
-  if (isHouseClosedForDisplay(house, now)) return 1;
+  if (isHouseClosedForDisplay(house, now, addressReveal)) return 1;
   return 0;
 }
 
@@ -63,6 +63,7 @@ export function sortHousesForList(
   sort: ListSort,
   origin: { lat: number; lng: number } | null | undefined,
   now: Date,
+  addressReveal?: AddressRevealSchedule,
 ): Array<{ house: PublicHouse; distanceM?: number }> {
   const withDistance = houses.map((house) => ({
     house,
@@ -70,7 +71,8 @@ export function sortHousesForList(
   }));
 
   const byName = (a: PublicHouse, b: PublicHouse) => a.name.localeCompare(b.name, "he");
-  const byClosed = (a: PublicHouse, b: PublicHouse) => closedRank(a, now) - closedRank(b, now);
+  const byClosed = (a: PublicHouse, b: PublicHouse) =>
+    closedRank(a, now, addressReveal) - closedRank(b, now, addressReveal);
 
   withDistance.sort((a, b) => {
     const closed = byClosed(a.house, b.house);

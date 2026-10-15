@@ -8,7 +8,12 @@ import { loadPendingWrites } from "@/lib/offline-db";
 import { loadServerRemovedHouseIds } from "@/lib/server-removed-houses";
 import { isPracticeHouse } from "@/lib/practice-house";
 import { isStubHouse } from "@/lib/house-set";
-import { mergePublicHouseWithAdminRow } from "@/lib/admin-house-overlay";
+import {
+  adminHouseByIdMap,
+  mergePublicHouseLocationFromAdminRow,
+  mergePublicHouseWithAdminRow,
+} from "@/lib/admin-house-overlay";
+import { canViewHouseLocationDetails, type AddressRevealContext } from "@/lib/address-reveal";
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
 import type { OwnedHouse } from "@/lib/offline-db";
 
@@ -107,6 +112,20 @@ export function enrichHousesWithAdminLocations(
   if (!enabled || adminHouses.length === 0) return [...houses];
   const byId = new Map(adminHouses.map((row) => [row.id, row]));
   return houses.map((house) => mergePublicHouseWithAdminRow(house, byId.get(house.id)));
+}
+
+/** תצוגת משתמש — public catalog stays redacted until reveal; fill rows the visitor would see at `ctx.now`. */
+export function enrichHousesForUserPreview(
+  houses: readonly PublicHouse[],
+  adminHouses: readonly House[],
+  ctx: AddressRevealContext,
+): PublicHouse[] {
+  if (adminHouses.length === 0) return [...houses];
+  const byId = adminHouseByIdMap(adminHouses);
+  return houses.map((house) => {
+    if (!canViewHouseLocationDetails(house.id, ctx)) return house;
+    return mergePublicHouseLocationFromAdminRow(house, byId.get(house.id));
+  });
 }
 
 export function useMergedHouses({
