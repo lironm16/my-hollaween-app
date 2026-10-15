@@ -34,6 +34,8 @@ export type GemHuntExperienceProps = {
   onCollectPersist?: (monsterId: GemMonsterId) => void;
   /** After short campus animation — advance to next booth or end session. */
   onCampusStepComplete?: (monsterId: GemMonsterId) => void;
+  /** Map roving hunt — pick closest gem before «גלה לי» / «רמז» (sticky until next tap). */
+  onBeforeNavigationAssist?: () => void;
 };
 
 /**
@@ -84,6 +86,7 @@ export function GemHuntExperience(props: GemHuntExperienceProps) {
         campusQueue={props.campusQueue}
         onCollectPersist={props.onCollectPersist}
         onCampusStepComplete={props.onCampusStepComplete}
+        onBeforeNavigationAssist={props.onBeforeNavigationAssist}
         onClose={props.onClose}
         onCollect={props.onCollect}
         onFallbackCamera={onWebXrFallback}

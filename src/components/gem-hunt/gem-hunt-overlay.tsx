@@ -110,6 +110,7 @@ export function GemHuntOverlay({
   encounterMode = true,
   repeatVisit = false,
   tellMeHuntRadiusEnforced = true,
+  onBeforeNavigationAssist,
   onClose,
   onCollect,
   campusQueue,
@@ -128,6 +129,8 @@ export function GemHuntOverlay({
   /** House pet already in sticker book — shorter resolve + repeat reward. */
   repeatVisit?: boolean;
   tellMeHuntRadiusEnforced?: boolean;
+  /** Re-target closest gem before tell-me / hint (map roving hunt). */
+  onBeforeNavigationAssist?: () => void;
   campusQueue?: GemCampusQueueUi;
   onCollectPersist?: (monsterId: GemMonsterId) => void;
   onCampusStepComplete?: (monsterId: GemMonsterId) => void;
@@ -546,13 +549,14 @@ export function GemHuntOverlay({
   }
 
   const activateTellMe = useCallback(() => {
+    onBeforeNavigationAssist?.();
     setUserDismissedCenterGem(false);
     setHintPanel(null);
     if (!revealedRef.current) reveal();
     setShowHelp(false);
     setHint("found");
     setCenterReveal(true);
-  }, [reveal]);
+  }, [onBeforeNavigationAssist, reveal]);
 
   const deactivateTellMe = useCallback(() => {
     if (campusSession) return;
@@ -752,6 +756,7 @@ export function GemHuntOverlay({
       setHintPanel(null);
       return;
     }
+    onBeforeNavigationAssist?.();
     if (!inOnsiteBand && (centerReveal || gemAtCenter)) {
       setUserDismissedCenterGem(true);
       if (encounterMode && encounterPhase === "encounter") {
@@ -769,6 +774,7 @@ export function GemHuntOverlay({
     encounterMode,
     encounterPhase,
     inOnsiteBand,
+    onBeforeNavigationAssist,
     setEncounterPhase,
   ]);
 

@@ -71,6 +71,11 @@ import {
   gemClusterQueueHeadline,
   nextClusterGemHouse,
 } from "@/lib/gem-campus-queue";
+import {
+  firstClusterGemHouseInProximity,
+  pickMapFabGemHuntTarget,
+  pickMapRovingGemHuntHouse,
+} from "@/lib/map-gem-hunt-target";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import {
@@ -242,6 +247,8 @@ export function NeighborhoodApp({
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
   const mapGemCheerTimerRef = useRef<number | null>(null);
   const mapGemClusterSessionRef = useRef<GemClusterSessionCatch[]>([]);
+  /** Sticky tell-me / hint target until the user taps «גלה לי» or «רמז» again. */
+  const mapGemNavPinRef = useRef<string | null>(null);
   const [clusterGemSessionSummary, setClusterGemSessionSummary] = useState<
     GemClusterSessionCatch[] | null
   >(null);
@@ -525,6 +532,14 @@ export function NeighborhoodApp({
     [activeHouseSet, addressReveal],
   );
 
+  const fabGemHuntPool = useMemo(
+    () =>
+      gemMapRingHousesVisible.filter(
+        (h) => matchedIds.has(h.id) && gemHouseHuntAllowed(h) && !gems.collected(h.id),
+      ),
+    [gemMapRingHousesVisible, matchedIds, gemHouseHuntAllowed, gems.collected],
+  );
+
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
@@ -539,13 +554,27 @@ export function NeighborhoodApp({
     async (clusterHouses: PublicHouse[]) => {
       const houses = clusterHouses.filter(gemHouseHuntAllowed);
       if (houses.length < 2) return;
-      const target = firstClusterGemHouseToHunt(houses, gems.collected);
+      const target =
+        firstClusterGemHouseInProximity(houses, gps, gems.collected) ??
+        firstClusterGemHouseToHunt(houses, gems.collected);
       if (!target) return;
       mapGemClusterSessionRef.current = [];
       await bootMapGemHunt(target, houses);
     },
-    [bootMapGemHunt, gemHouseHuntAllowed, gems.collected],
+    [bootMapGemHunt, gemHouseHuntAllowed, gems.collected, gps],
   );
+
+  const pinMapGemNavigationTarget = useCallback(() => {
+    const picked = pickMapFabGemHuntTarget(
+      gps ?? mapGemGps,
+      fabGemHuntPool,
+      mapHouses,
+      gems.collected,
+    );
+    if (!picked) return;
+    mapGemNavPinRef.current = picked.id;
+    setMapGemHouse((current) => (current?.id === picked.id ? current : picked));
+  }, [gps, mapGemGps, fabGemHuntPool, mapHouses, gems.collected]);
 
   const restoreAfterGemHunt = useCallback(() => {
     if (gemHuntOpenedFromViewRef.current !== "list") return;
@@ -555,6 +584,7 @@ export function NeighborhoodApp({
 
   const closeMapGemHunt = useCallback(() => {
     mapGemOpenGenRef.current += 1;
+    mapGemNavPinRef.current = null;
     releaseGemHuntCamera();
     void endGemHuntWebXrSession(mapGemWebXrSession);
     setMapGemWebXrSession(null);
@@ -563,6 +593,44 @@ export function NeighborhoodApp({
     setMapGemGps(null);
     restoreAfterGemHunt();
   }, [mapGemWebXrSession, restoreAfterGemHunt]);
+
+  const openGemHuntFromMapFab = useCallback(async () => {
+    if (mapGemHouse) {
+      closeMapGemHunt();
+      return;
+    }
+    if (fabGemHuntPool.length === 0) return;
+    mapGemNavPinRef.current = null;
+    const target = pickMapFabGemHuntTarget(gps, fabGemHuntPool, mapHouses, gems.collected);
+    if (!target) return;
+    mapGemClusterSessionRef.current = [];
+    await bootMapGemHunt(target, null);
+  }, [mapGemHouse, fabGemHuntPool, gps, mapHouses, gems.collected, bootMapGemHunt, closeMapGemHunt]);
+
+  useEffect(() => {
+    if (!mapGemHouse || mapGemClusterMembers) return;
+    const user = gps ?? mapGemGps;
+    if (!user) return;
+    const next = pickMapRovingGemHuntHouse(
+      user,
+      fabGemHuntPool,
+      mapHouses,
+      gems.collected,
+      mapGemNavPinRef.current,
+      mapGemHouse.id,
+    );
+    if (next && next.id !== mapGemHouse.id) {
+      setMapGemHouse(next);
+    }
+  }, [
+    mapGemHouse,
+    mapGemClusterMembers,
+    gps,
+    mapGemGps,
+    fabGemHuntPool,
+    mapHouses,
+    gems.collected,
+  ]);
 
   const mapGemClusterQueueUi = useMemo(() => {
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;
@@ -1567,9 +1635,9 @@ export function NeighborhoodApp({
                   showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
                   gemCamFabEnabled={gemUi}
-                  gemCamFabActive={mapDiamondsVisible}
+                  gemCamFabHuntOpen={Boolean(mapGemHouse)}
                   gemCamFabNearSignal={mapGemNearSignal}
-                  onToggleGemCamFab={() => setMapDiamondsVisible((on) => !on)}
+                  onOpenGemCamFab={() => void openGemHuntFromMapFab()}
                 />
               {view === "map" && originPick.originPickActive ? (
                   <div className="origin-pick-bar">
@@ -1767,6 +1835,9 @@ export function NeighborhoodApp({
           )}
           initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
+          onBeforeNavigationAssist={
+            mapGemClusterMembers ? undefined : pinMapGemNavigationTarget
+          }
           encounterMode={!mapGemClusterMembers || isIosLike()}
           campusQueue={mapGemClusterQueueUi}
           onCollectPersist={

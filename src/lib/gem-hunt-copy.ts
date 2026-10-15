@@ -14,6 +14,9 @@ export const GEM_MAP_LEGEND_SECTION_HE = "שדונים";
 export const GEM_MAP_LEGEND_OPEN_HE = "שדון למצוא";
 export const GEM_MAP_TOGGLE_SHOW_HE = "הצג שדונים במפה";
 export const GEM_MAP_TOGGLE_HIDE_HE = "הסתר שדונים במפה";
+/** Floating map demon cam — opens hunt camera (not map ring toggle). */
+export const GEM_MAP_CAM_FAB_OPEN_HE = "מצלמת שדונים";
+export const GEM_MAP_CAM_FAB_CLOSE_HE = "סגירת מצלמת שדונים";
 
 export const GEM_HOUSE_KICKER_HE = "שדון נסתר · גלו במצלמה";
 

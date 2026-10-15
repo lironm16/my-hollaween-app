@@ -2,7 +2,7 @@
 
 import { ImpDemonCameraIcon } from "@/components/imp-demon-camera-icon";
 import { useAddHouseFabVisible } from "@/hooks/use-add-house-fab-visible";
-import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
+import { GEM_MAP_CAM_FAB_CLOSE_HE, GEM_MAP_CAM_FAB_OPEN_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 /** Match {@link MapAddHouseFab} outer geometry (size-14 circle); visuals in CSS (3D gem disc). */
@@ -12,14 +12,15 @@ const fabBase =
 /** Same map corner as {@link MapAddHouseFab} — visible when add-house FAB is hidden and gem hunt UI is on. */
 export function MapDemonCamFab({
   gemUi,
-  active,
+  huntOpen,
   nearSignal,
-  onToggle,
+  onOpenHunt,
 }: {
   gemUi: boolean;
-  active: boolean;
+  /** True while the map hunt camera session is open. */
+  huntOpen: boolean;
   nearSignal: boolean;
-  onToggle: () => void;
+  onOpenHunt: () => void;
 }) {
   const addHouseOpen = useAddHouseFabVisible();
 
@@ -28,13 +29,13 @@ export function MapDemonCamFab({
   return (
     <button
       type="button"
-      className={cn(fabBase, active && "is-active", nearSignal && "is-near")}
-      aria-label={active ? GEM_MAP_TOGGLE_HIDE_HE : GEM_MAP_TOGGLE_SHOW_HE}
-      aria-pressed={active}
-      title={active ? GEM_MAP_TOGGLE_HIDE_HE : GEM_MAP_TOGGLE_SHOW_HE}
+      className={cn(fabBase, huntOpen && "is-active", nearSignal && "is-near")}
+      aria-label={huntOpen ? GEM_MAP_CAM_FAB_CLOSE_HE : GEM_MAP_CAM_FAB_OPEN_HE}
+      aria-pressed={huntOpen}
+      title={huntOpen ? GEM_MAP_CAM_FAB_CLOSE_HE : GEM_MAP_CAM_FAB_OPEN_HE}
       onClick={(event) => {
         event.stopPropagation();
-        onToggle();
+        onOpenHunt();
       }}
     >
       <ImpDemonCameraIcon variant="fab" />

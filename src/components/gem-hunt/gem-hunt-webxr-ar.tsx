@@ -80,6 +80,7 @@ type Props = {
   encounterMode?: boolean;
   repeatVisit?: boolean;
   tellMeHuntRadiusEnforced?: boolean;
+  onBeforeNavigationAssist?: () => void;
   initialWebXrSession?: XRSession | null;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
@@ -136,6 +137,7 @@ export function GemHuntWebXrAr({
   encounterMode = true,
   repeatVisit = false,
   tellMeHuntRadiusEnforced = true,
+  onBeforeNavigationAssist,
   initialWebXrSession = null,
   onClose,
   onCollect,
@@ -515,6 +517,7 @@ export function GemHuntWebXrAr({
       setHintPanel(null);
       return;
     }
+    onBeforeNavigationAssist?.();
     const inOnsiteBand = simulateInRange || canCollectNow || inWebXrHuntBand;
     if (!inOnsiteBand && (centerReveal || tellMeRevealActive)) {
       setUserDismissedCenterGem(true);
@@ -541,9 +544,11 @@ export function GemHuntWebXrAr({
     canCollectNow,
     inWebXrHuntBand,
     simulateInRange,
+    onBeforeNavigationAssist,
   ]);
 
   const activateTellMe = useCallback(() => {
+    onBeforeNavigationAssist?.();
     setUserDismissedCenterGem(false);
     setHintPanel(null);
     if (!placed) {
@@ -551,7 +556,7 @@ export function GemHuntWebXrAr({
       placeAssistRef.current.fast = true;
     }
     setCenterReveal(true);
-  }, [placed]);
+  }, [onBeforeNavigationAssist, placed]);
 
   const deactivateTellMe = useCallback(() => {
     setCenterReveal(false);

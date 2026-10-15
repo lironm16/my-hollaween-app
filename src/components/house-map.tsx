@@ -853,12 +853,12 @@ type Props = {
   gemAnchorHouses?: PublicHouse[];
   gemAnchorVisual?: GemMapAnchorVisual;
   isGemCollected?: (houseId: string) => boolean;
-  /** Yellow/diamond rings on pins when the map demon cam FAB is on. */
+  /** Yellow/diamond rings on pins when toolbar gem map toggle is on. */
   showGemPinRings?: boolean;
   gemCamFabEnabled?: boolean;
-  gemCamFabActive?: boolean;
+  gemCamFabHuntOpen?: boolean;
   gemCamFabNearSignal?: boolean;
-  onToggleGemCamFab?: () => void;
+  onOpenGemCamFab?: () => void;
   /** Owner/admin gem placement — draggable demon around the selected house. */
   gemAnchorEdit?: GemAnchorEditState | null;
   /** Tour mode — cluster ring uses orange for open slices instead of white. */
@@ -910,9 +910,9 @@ export function HouseMap({
   isGemCollected,
   showGemPinRings = false,
   gemCamFabEnabled = false,
-  gemCamFabActive = false,
+  gemCamFabHuntOpen = false,
   gemCamFabNearSignal = false,
-  onToggleGemCamFab,
+  onOpenGemCamFab,
   gemAnchorEdit = null,
   routeModeActive = false,
 }: Props) {
@@ -1240,12 +1240,12 @@ export function HouseMap({
         ) : null}
       </MapContainer>
       {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
-      {!pickMode && !originPickActive && !embed && onToggleGemCamFab ? (
+      {!pickMode && !originPickActive && !embed && onOpenGemCamFab ? (
         <MapDemonCamFab
           gemUi={gemCamFabEnabled}
-          active={gemCamFabActive}
+          huntOpen={gemCamFabHuntOpen}
           nearSignal={gemCamFabNearSignal}
-          onToggle={onToggleGemCamFab}
+          onOpenHunt={onOpenGemCamFab}
         />
       ) : null}
       <div className="map-fab-stack">
