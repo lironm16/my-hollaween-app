@@ -279,6 +279,7 @@ function sanitizeOwnerPatch(
     const normalized = normalizeOwnerPhone(String(patch.ownerPhone ?? ""));
     next.ownerPhone = normalized || null;
   }
+  if (patch.editCode !== undefined) next.editCode = patch.editCode.trim();
   return next;
 }
 

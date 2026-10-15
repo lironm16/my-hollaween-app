@@ -2,7 +2,11 @@ import { createHash, randomInt } from "node:crypto";
 
 /** No 0/O, 1/I/L — codes are read aloud and typed on phones. */
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+/** Legacy per-slot codes (migration only). */
 export const NIGHT_PASS_CODE_LENGTH = 8;
+/** Unified family code — edit + map access. */
+export const HOUSE_ACCESS_CODE_LENGTH = 4;
+export const HOUSE_ACCESS_MAX_DEVICES = 4;
 
 export function newNightPassCode() {
   let out = "";
@@ -12,11 +16,20 @@ export function newNightPassCode() {
   return out;
 }
 
+export function newHouseAccessCode() {
+  let out = "";
+  for (let i = 0; i < HOUSE_ACCESS_CODE_LENGTH; i += 1) {
+    out += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
+  }
+  return out;
+}
+
 /** Uppercase and strip separators so `k7qm-3xpa` and `K7QM 3XPA` match. */
 export function normalizeNightPassCode(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const cleaned = raw.toUpperCase().replace(/[\s\-_.]/g, "");
-  if (cleaned.length !== NIGHT_PASS_CODE_LENGTH) return null;
+  const len = cleaned.length;
+  if (len !== NIGHT_PASS_CODE_LENGTH && len !== HOUSE_ACCESS_CODE_LENGTH) return null;
   for (const ch of cleaned) {
     if (!CODE_ALPHABET.includes(ch)) return null;
   }
@@ -24,7 +37,12 @@ export function normalizeNightPassCode(raw: unknown): string | null {
 }
 
 export function formatNightPassCode(code: string) {
-  return code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
+  if (code.length === 8) return `${code.slice(0, 4)}-${code.slice(4)}`;
+  return code;
+}
+
+export function formatHouseAccessCode(code: string) {
+  return code.length === HOUSE_ACCESS_CODE_LENGTH ? code : formatNightPassCode(code);
 }
 
 export function passIdForCode(code: string) {

@@ -19,7 +19,7 @@ import { readNightPassState } from "@/lib/night-pass-client";
 import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
 
 type NightPassDialogContextValue = {
-  openRegister: (initialCode?: string) => void;
+  openRegister: (initialCode?: string, inviteToken?: string) => void;
   openOwnerPasses: (houseId: string) => void;
 };
 
@@ -29,13 +29,16 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const { admin } = useAdminSession();
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCode, setRegisterCode] = useState("");
+  const [registerInvite, setRegisterInvite] = useState("");
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerHouseId, setOwnerHouseId] = useState<string | null>(null);
 
-  const openRegister = useCallback((initialCode = "") => {
+  const openRegister = useCallback((initialCode = "", inviteToken = "") => {
     const code = initialCode.replace(/[\s-]/g, "").toUpperCase();
-    if (readNightPassState().registered && !code) return;
+    const invite = inviteToken.trim();
+    if (readNightPassState().registered && !code && !invite) return;
     setRegisterCode(code);
+    setRegisterInvite(invite);
     setRegisterOpen(true);
   }, []);
 
@@ -64,6 +67,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
         <NightPassRegisterPanel
           key={registerOpen ? registerCode || "open" : "closed"}
           initialCode={registerCode}
+          inviteToken={registerInvite}
           compact
           onRegistered={() => setRegisterOpen(false)}
           onNavigateAway={() => setRegisterOpen(false)}
@@ -72,7 +76,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       <HouseEditModal
         open={ownerOpen}
         onClose={() => setOwnerOpen(false)}
-        title="4 מכשירים לאירוע"
+        title="מכשירים והזמנות"
       >
         {ownerHouseId ? (
           <NightPassesCard houseId={ownerHouseId} admin={admin} embedded />
@@ -98,12 +102,21 @@ export function useNightPassDialogOptional() {
 function PassQueryOpener({
   openRegister,
 }: {
-  openRegister: (initialCode?: string) => void;
+  openRegister: (initialCode?: string, inviteToken?: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    const invite = searchParams.get("invite") ?? "";
+    if (invite) {
+      openRegister("", invite);
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("invite");
+      const qs = next.toString();
+      router.replace(qs ? `/?${qs}` : "/");
+      return;
+    }
     if (searchParams.get("openPass") !== "1") return;
     const code = searchParams.get("c") ?? "";
     openRegister(code);

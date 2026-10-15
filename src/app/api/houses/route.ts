@@ -8,8 +8,12 @@ import { loadDb } from "@/lib/store/core";
 import { toEditorHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
+import { normalizeIsraeliMobile } from "@/lib/night-pass-codes";
+import { registerHouseAccessDevice } from "@/lib/night-pass-service";
+import { readNightPassSettings } from "@/lib/night-pass-store";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readIncludeEndpoint } from "@/lib/push";
+import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
 
 export const runtime = "nodejs";
 
@@ -50,9 +54,34 @@ export async function POST(request: Request) {
     } catch {
       /* owner cookie is optional — house is already saved */
     }
+    let deviceConnected = false;
+    const passSettings = await readNightPassSettings();
+    if (passSettings.enabled || admin) {
+      const phone = normalizeIsraeliMobile(ownerPhone ?? "");
+      const name = addedBy?.trim();
+      if (phone && name) {
+        try {
+          const cookie = await readNightPassCookie();
+          const outcome = await registerHouseAccessDevice({
+            houseId: house.house.id,
+            name,
+            phone,
+            preferredCode: house.house.editCode,
+            priorToken: cookie?.token ?? null,
+          });
+          if (outcome.ok) {
+            await setNightPassCookie(outcome.record.id, outcome.token);
+            deviceConnected = true;
+          }
+        } catch {
+          /* pass optional */
+        }
+      }
+    }
     return NextResponse.json({
       house: toEditorHouse(house.house),
       editCode: house.house.editCode,
+      deviceConnected,
       push: house.push,
     });
   } catch (error) {

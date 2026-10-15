@@ -48,7 +48,15 @@ export type NightPassLost = { reason: "taken" | "reset"; byName?: string };
 /** Same code still active with another token → taken by that holder; record gone → owner reset. */
 export async function describeNightPassLost(passId: string): Promise<NightPassLost> {
   const record = await readNightPass(passId).catch(() => null);
-  return record && record.status === "active"
+  if (!record) return { reason: "reset" };
+  if (record.model === "unified" || Array.isArray(record.sessions)) {
+    const last = record.sessions?.[record.sessions.length - 1];
+    return {
+      reason: "taken",
+      ...(last?.holderName ? { byName: last.holderName } : {}),
+    };
+  }
+  return record.status === "active"
     ? { reason: "taken", ...(record.holderName ? { byName: record.holderName } : {}) }
     : { reason: "reset" };
 }

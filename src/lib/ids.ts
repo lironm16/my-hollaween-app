@@ -3,7 +3,7 @@ import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
 
 const digits = customAlphabet("0123456789", 4);
-const pin = customAlphabet("0123456789", 6);
+const accessCode = customAlphabet("ABCDEFGHJKMNPQRSTUVWXYZ23456789", 4);
 
 const HOUSE_ID_PREFIX = "בית-";
 const POI_ID_PREFIX = "נק-";
@@ -16,8 +16,9 @@ export function newPoiPublicId() {
   return `${POI_ID_PREFIX}${digits()}`;
 }
 
+/** Unified house access code (4 chars) — edit + device registration. */
 export function newEditCode() {
-  return pin();
+  return accessCode();
 }
 
 /** Path params for `בית-1234` sometimes arrive still percent-encoded. */

@@ -11,26 +11,36 @@ export const NIGHT_PASS_SLOTS = [1, 2, 3, 4] as const;
 export type NightPassSlot = (typeof NIGHT_PASS_SLOTS)[number];
 
 export type NightPassEvent = {
-  type: "registered" | "reregistered" | "reset";
+  type: "registered" | "reregistered" | "reset" | "evicted";
   at: string;
   name?: string;
   phone?: string;
+};
+
+export type HouseAccessSession = {
+  tokenHash: string;
+  registeredAt: string;
+  holderName: string;
+  holderPhone: string;
 };
 
 export type NightPassRecord = {
   /** Lookup id derived from the code (see passIdForCode). */
   id: string;
   houseId: string;
-  slot: NightPassSlot;
+  /** Unified pool — one family code, up to four device sessions. */
+  model?: "unified";
+  sessions?: HouseAccessSession[];
+  slot?: NightPassSlot;
   /** Shown to the house owner so it can be shared again. Never sent to visitors. */
   code: string;
-  status: "unused" | "active";
-  holderName: string | null;
-  holderPhone: string | null;
-  /** sha256 of the device token; only the last registration matches. */
-  tokenHash: string | null;
-  registeredAt: string | null;
-  registrations: number;
+  status?: "unused" | "active";
+  holderName?: string | null;
+  holderPhone?: string | null;
+  /** Legacy: single device token. Unified: use sessions[]. */
+  tokenHash?: string | null;
+  registeredAt?: string | null;
+  registrations?: number;
   resetCount: number;
   history: NightPassEvent[];
   createdAt: string;
@@ -161,7 +171,7 @@ export async function listHouseNightPasses(houseId: string): Promise<NightPassRe
     rows = Object.values((await readLocal()).passes).filter((row) => row.houseId === houseId);
   }
   for (const row of rows) passMem.set(row.id, { value: row, at: Date.now() });
-  return rows.sort((a, b) => a.slot - b.slot);
+  return rows.sort((a, b) => (a.slot ?? 0) - (b.slot ?? 0));
 }
 
 /** Read-modify-write one pass atomically. `mutate` returns the next record, or null to leave it. */

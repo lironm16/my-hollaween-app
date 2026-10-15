@@ -279,7 +279,9 @@ function EditPageContent() {
             </Button>
           )
         ) : null}
-        {house && !editFlow.flow ? <NightPassesCard houseId={house.id} admin={admin} /> : null}
+        {house && !editFlow.flow ? (
+          <NightPassesCard houseId={house.id} house={house} admin={admin} />
+        ) : null}
         </div>
       </main>
       <HouseEditFlowPanels

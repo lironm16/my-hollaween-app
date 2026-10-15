@@ -84,9 +84,35 @@ export function houseSharePayload(
 }
 
 export function editCodeSharePayload(house: PublicHouse, editCode: string) {
-  const title = `קוד עריכה — ${houseHeadline(house)}`;
-  const text = `קוד העריכה ל${houseHeadline(house)}: ${editCode}\n\nלהזנה: תפריט ← בית ← עריכה ← בחרו את הבית ← הזינו את הקוד.`;
+  const title = `קוד משפחה — ${houseHeadline(house)}`;
+  const text = `קוד המשפחה ל${houseHeadline(house)}: ${editCode}\n\nלהתחברות: תפריט ← התחברות ← הזינו את הקוד.`;
   return { title, text };
+}
+
+export async function shareHouseAccessInvite(
+  house: PublicHouse,
+  origin?: string,
+): Promise<"shared" | "copied" | "aborted" | "failed"> {
+  try {
+    const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/invites`, {
+      method: "POST",
+    });
+    const json = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+    if (!res.ok || !json?.url) return "failed";
+    const url =
+      json.url.startsWith("http") ? json.url : `${(origin ?? window.location.origin).replace(/\/$/, "")}${json.url}`;
+    const title = `הזמנה — ${houseHeadline(house)}`;
+    const text = `הצטרפו לבית שלנו במפת השכונה:\n${url}`;
+    if (navigator.share) {
+      await navigator.share({ title, text, url });
+      return "shared";
+    }
+    await navigator.clipboard.writeText(`${text}`);
+    return "copied";
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") return "aborted";
+    return "failed";
+  }
 }
 
 export async function shareEditCode(

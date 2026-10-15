@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { canonicalHouseId } from "@/lib/ids";
-import { nightPassSlotView, resetNightPassSlot } from "@/lib/night-pass-service";
-import { NIGHT_PASS_SLOTS, readNightPassSettings, type NightPassSlot } from "@/lib/night-pass-store";
+import { houseAccessView, resetHouseAccess } from "@/lib/night-pass-service";
+import { readNightPassSettings } from "@/lib/night-pass-store";
 import { ownerMayEdit } from "@/lib/owner-session";
-import { getHouse } from "@/lib/store";
+import { getHouse, updateByEditCode } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "private, no-store" };
 
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+/** New family code — all devices must reconnect. */
+export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id: rawId } = await context.params;
   const id = canonicalHouseId(rawId);
   const admin = await isAdmin();
@@ -21,19 +22,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!admin && !(await readNightPassSettings()).enabled) {
     return NextResponse.json({ error: "קודי הכניסה עוד לא פעילים." }, { status: 404, headers: NO_STORE });
   }
-  const json = (await request.json().catch(() => null)) as { slot?: unknown } | null;
-  const slot = Number(json?.slot);
-  if (!NIGHT_PASS_SLOTS.includes(slot as NightPassSlot)) {
-    return NextResponse.json({ error: "קוד כניסה לא תקין." }, { status: 400, headers: NO_STORE });
-  }
   const house = await getHouse(id);
   if (!house) return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404, headers: NO_STORE });
-  const outcome = await resetNightPassSlot(house.id, slot as NightPassSlot, { admin });
+  const outcome = await resetHouseAccess(house.id);
   if (!outcome.ok) {
-    return NextResponse.json(
-      { error: "קוד הכניסה לא נמצא." },
-      { status: 404, headers: NO_STORE },
-    );
+    return NextResponse.json({ error: "קוד המשפחה לא נמצא." }, { status: 404, headers: NO_STORE });
   }
-  return NextResponse.json({ ok: true, slot: nightPassSlotView(outcome.record, admin) }, { headers: NO_STORE });
+  await updateByEditCode(house.id, house.editCode, { editCode: outcome.record.code });
+  return NextResponse.json(
+    { ok: true, access: houseAccessView(outcome.record, null) },
+    { headers: NO_STORE },
+  );
 }

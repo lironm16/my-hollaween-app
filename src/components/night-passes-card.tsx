@@ -1,49 +1,43 @@
 "use client";
 
-import { Copy, KeyRound, Loader2, LogIn } from "lucide-react";
+import { Copy, KeyRound, Loader2, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
 import { Button } from "@/components/ui/button";
 import {
   NIGHT_PASSES_SLOTS_CHANGED_EVENT,
   notifyNightPassSlotsChanged,
 } from "@/lib/night-pass-client";
 import { formatHouseAddedAt } from "@/lib/house-meta";
+import { shareHouseAccessInvite } from "@/lib/nav-links";
+import type { PublicHouse } from "@/lib/types";
 
-type SlotView = {
-  slot: number;
-  code: string;
-  status: "unused" | "active";
-  holderName: string | null;
-  holderPhone: string | null;
-  registeredAt: string | null;
-  registrations: number;
+type AccessView = {
+  familyCode: string;
+  connectedCount: number;
+  maxDevices: number;
+  devices: {
+    holderName: string;
+    holderPhone: string;
+    registeredAt: string;
+    isThisDevice: boolean;
+  }[];
   resetCount: number;
 };
 
 type PassesResponse = {
   enabled: boolean;
-  slots: SlotView[];
-  thisDeviceSlot: number | null;
+  access: AccessView | null;
   thisDeviceRegistered: boolean;
   error?: string;
 };
 
 function PassesSkeleton() {
   return (
-    <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
-      {[0, 1, 2, 3].map((i) => (
-        <li key={i} className="space-y-3 px-3 py-4">
-          <div className="mx-auto h-7 w-40 animate-pulse rounded-md bg-violet-950/80" />
-          <div className="flex justify-center gap-2">
-            <div className="h-9 w-16 animate-pulse rounded-lg bg-black/40" />
-            <div className="h-9 w-16 animate-pulse rounded-lg bg-black/40" />
-          </div>
-          <div className="mx-auto h-5 w-24 animate-pulse rounded-md bg-emerald-950/50" />
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-3 rounded-xl ring-1 ring-orange-500/20">
+      <div className="mx-auto h-8 w-32 animate-pulse rounded-md bg-violet-950/80" />
+      <div className="h-20 animate-pulse rounded-xl bg-black/30" />
+    </div>
   );
 }
 
@@ -73,21 +67,23 @@ function SlotAction({
   );
 }
 
-/** Owner / admin: four event device codes. */
+/** Owner / admin: family code, devices, invite link. */
 export function NightPassesCard({
   houseId,
+  house,
   admin,
   embedded = false,
 }: {
   houseId: string;
+  house?: PublicHouse | null;
   admin: boolean;
   embedded?: boolean;
 }) {
-  const passDialog = useNightPassDialogOptional();
   const [data, setData] = useState<PassesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [busySlot, setBusySlot] = useState<number | null>(null);
+  const [busyReset, setBusyReset] = useState(false);
+  const [busyShare, setBusyShare] = useState(false);
 
   const load = useCallback(async () => {
     setError("");
@@ -97,13 +93,13 @@ export function NightPassesCard({
       });
       const json = (await res.json().catch(() => null)) as PassesResponse | null;
       if (!res.ok || !json) {
-        setError(json?.error ?? "טעינת קודי הכניסה נכשלה.");
+        setError(json?.error ?? "טעינת המכשירים נכשלה.");
         setData(null);
         return;
       }
       setData(json);
     } catch {
-      setError("טעינת קודי הכניסה נכשלה.");
+      setError("טעינת המכשירים נכשלה.");
       setData(null);
     } finally {
       setLoading(false);
@@ -127,55 +123,52 @@ export function NightPassesCard({
   async function copy(code: string) {
     try {
       await navigator.clipboard.writeText(code);
-      toast.success("קוד הכניסה הועתק");
+      toast.success("קוד המשפחה הועתק");
     } catch {
       toast.message(code);
     }
   }
 
-  function connectSlot(slot: SlotView, occupied: boolean) {
-    if (occupied) {
-      const who = slot.holderName ? `המכשיר של ${slot.holderName} יאבד גישה.\n\n` : "";
-      if (
-        !window.confirm(
-          `${who}המכשיר הזה יתחבר עם קוד הכניסה הזה. להמשיך?`,
-        )
-      ) {
-        return;
-      }
-    }
-    passDialog?.openRegister(slot.code.replace("-", ""));
-  }
-
-  async function resetSlot(slot: SlotView) {
-    const who = slot.holderName ? `המכשיר של ${slot.holderName} יאבד גישה.\n\n` : "";
+  async function resetFamilyCode() {
     if (
       !window.confirm(
-        `${who}ייווצר קוד כניסה חדש, וקוד הכניסה הנוכחי לא יהיה ניתן לשימוש. להמשיך?`,
+        "ייווצר קוד משפחה חדש. כל המכשירים (כולל שלכם) יצטרכו להתחבר מחדש. להמשיך?",
       )
     ) {
       return;
     }
-    setBusySlot(slot.slot);
+    setBusyReset(true);
     try {
       const res = await fetch(
         `/api/houses/${encodeURIComponent(houseId)}/night-passes/reset`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slot: slot.slot }),
-        },
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
       );
       const json = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
         toast.error(json?.error ?? "האיפוס נכשל.");
         return;
       }
-      toast.success("נוצר קוד כניסה חדש");
+      toast.success("קוד משפחה חדש נוצר");
       notifyNightPassSlotsChanged();
       await load();
     } finally {
-      setBusySlot(null);
+      setBusyReset(false);
+    }
+  }
+
+  async function shareInvite() {
+    if (!house) {
+      toast.error("לא ניתן לשלוח הזמנה.");
+      return;
+    }
+    setBusyShare(true);
+    try {
+      const result = await shareHouseAccessInvite(house);
+      if (result === "shared") toast.success("ההזמנה נשלחה");
+      else if (result === "copied") toast.success("קישור ההזמנה הועתק");
+      else if (result === "failed") toast.error("שליחת ההזמנה נכשלה");
+    } finally {
+      setBusyShare(false);
     }
   }
 
@@ -192,6 +185,7 @@ export function NightPassesCard({
   }
   if (!data.enabled && !admin) return null;
 
+  const access = data.access;
   const shellClass = embedded
     ? "space-y-3"
     : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
@@ -199,78 +193,88 @@ export function NightPassesCard({
   return (
     <section className={shellClass}>
       {!embedded ? (
-        <h2 className="text-center text-lg font-medium text-orange-200">4 מכשירים לאירוע</h2>
+        <h2 className="text-center text-lg font-medium text-orange-200">מכשירים והזמנות</h2>
       ) : null}
       {!data.enabled ? (
         <p className="text-center text-sm text-amber-200">כבוי לציבור — רק מנהלים רואים עכשיו.</p>
       ) : null}
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
-      <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
-        {data.slots.map((slot) => {
-          const mine = data.thisDeviceSlot === slot.slot;
-          const inUse = slot.status === "active";
-          const canReset = inUse;
-          const resetting = busySlot === slot.slot;
-          const showConnect = !mine && (inUse || !data.thisDeviceRegistered);
-
-          return (
-            <li key={slot.slot} className="flex flex-col items-center gap-3 px-3 py-4">
-              <span dir="ltr" className="font-mono text-xl tracking-widest text-orange-100">
-                {slot.code}
-              </span>
-              <div className="flex flex-wrap items-center justify-center gap-2">
+      {access ? (
+        <>
+          <p className="text-center text-sm text-violet-200">
+            מחוברים: {access.connectedCount}/{access.maxDevices}
+          </p>
+          <div className="flex flex-col items-center gap-2 rounded-xl bg-black/30 px-3 py-4 ring-1 ring-orange-500/20">
+            <span className="text-sm text-violet-300">קוד משפחה</span>
+            <span dir="ltr" className="font-mono text-2xl tracking-[0.35em] text-orange-100">
+              {access.familyCode}
+            </span>
+            <div className="flex flex-wrap justify-center gap-2">
+              <SlotAction
+                label="העתק"
+                onClick={() => void copy(access.familyCode.replace(/-/g, ""))}
+                icon={<Copy className="size-4 shrink-0" strokeWidth={2.2} />}
+              />
+              {house ? (
                 <SlotAction
-                  label="העתק"
-                  onClick={() => void copy(slot.code)}
-                  icon={<Copy className="size-4 shrink-0" strokeWidth={2.2} />}
+                  label="שלח הזמנה"
+                  disabled={busyShare}
+                  onClick={() => void shareInvite()}
+                  icon={
+                    busyShare ? (
+                      <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
+                    ) : (
+                      <Share2 className="size-4 shrink-0" strokeWidth={2.2} />
+                    )
+                  }
                 />
-                {showConnect ? (
-                  <SlotAction
-                    label="חבר אותי"
-                    onClick={() => connectSlot(slot, inUse)}
-                    icon={<LogIn className="size-4 shrink-0" strokeWidth={2.2} />}
-                  />
-                ) : null}
-                {canReset ? (
-                  <SlotAction
-                    label="קוד כניסה חדש"
-                    disabled={resetting}
-                    onClick={() => void resetSlot(slot)}
-                    icon={
-                      resetting ? (
-                        <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
-                      ) : (
-                        <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
-                      )
-                    }
-                  />
-                ) : null}
-              </div>
-              {inUse ? (
-                <p className="text-center text-base font-medium text-violet-200">
-                  {slot.holderName}
-                  {slot.holderPhone ? (
-                    <>
-                      {" · "}
-                      <bdi dir="ltr" className="inline-block text-violet-300">
-                        {slot.holderPhone}
-                      </bdi>
-                    </>
-                  ) : null}
-                  {mine ? <span className="text-orange-300"> · המכשיר הזה</span> : null}
-                  {slot.registeredAt ? (
-                    <span className="block text-sm font-normal text-violet-400">
-                      עודכן · {formatHouseAddedAt(slot.registeredAt)}
-                    </span>
-                  ) : null}
-                </p>
-              ) : (
-                <p className="text-center text-lg font-semibold text-emerald-400">פנוי</p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+              ) : null}
+              <SlotAction
+                label="קוד חדש"
+                disabled={busyReset}
+                onClick={() => void resetFamilyCode()}
+                icon={
+                  busyReset ? (
+                    <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
+                  ) : (
+                    <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
+                  )
+                }
+              />
+            </div>
+          </div>
+          <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
+            {access.devices.length === 0 ? (
+              <li className="px-3 py-4 text-center text-emerald-400">אין מכשירים מחוברים עדיין</li>
+            ) : (
+              access.devices.map((device) => (
+                <li key={`${device.registeredAt}-${device.holderPhone}`} className="px-3 py-3">
+                  <p className="text-center text-base font-medium text-violet-200">
+                    {device.holderName}
+                    {" · "}
+                    <bdi dir="ltr" className="text-violet-300">
+                      {device.holderPhone}
+                    </bdi>
+                    {device.isThisDevice ? (
+                      <span className="text-orange-300"> · המכשיר הזה</span>
+                    ) : null}
+                  </p>
+                  <p className="text-center text-sm text-violet-400">
+                    {formatHouseAddedAt(device.registeredAt)}
+                  </p>
+                </li>
+              ))
+            )}
+            {access.connectedCount < access.maxDevices
+              ? Array.from({ length: access.maxDevices - access.connectedCount }).map((_, i) => (
+                  <li key={`empty-${i}`} className="px-3 py-2 text-center text-sm text-emerald-400/90">
+                    פנוי
+                  </li>
+                ))
+              : null}
+          </ul>
+        </>
+      ) : null}
     </section>
   );
 }

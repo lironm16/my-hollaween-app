@@ -154,6 +154,7 @@ export type HouseInput = {
 };
 
 export type NightPatch = {
+  editCode?: string;
   visit?: VisitState;
   scareLevel?: ScareLevel;
   decorLevel?: DecorLevel;

@@ -22,6 +22,7 @@ function isIosBrowserTab() {
 
 type Props = {
   initialCode?: string;
+  inviteToken?: string;
   onRegistered?: () => void;
   /** Close the register dialog before in-app navigation (help link). */
   onNavigateAway?: () => void;
@@ -31,6 +32,7 @@ type Props = {
 /** Redeem a pass code on this device — no «פרטים» screen for already-registered devices. */
 export function NightPassRegisterPanel({
   initialCode = "",
+  inviteToken = "",
   onRegistered,
   onNavigateAway,
   compact,
@@ -45,7 +47,8 @@ export function NightPassRegisterPanel({
   const [error, setError] = useState("");
   const [iosTab, setIosTab] = useState(false);
 
-  const hasCode = initialCode.replace(/[\s-]/g, "").length >= 8;
+  const hasInvite = inviteToken.trim().length > 0;
+  const hasCode = initialCode.replace(/[\s-]/g, "").length >= 4;
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
@@ -53,7 +56,7 @@ export function NightPassRegisterPanel({
 
   useEffect(() => {
     const raw = initialCode.replace(/[\s-]/g, "");
-    if (raw.length < 8) return;
+    if (raw.length < 4) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -83,14 +86,19 @@ export function NightPassRegisterPanel({
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/night-passes/redeem", {
+      const endpoint = hasInvite ? "/api/night-passes/redeem-invite" : "/api/night-passes/redeem";
+      const body = hasInvite
+        ? { invite: inviteToken.trim(), name, phone }
+        : { code, name, phone };
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, name, phone }),
+        body: JSON.stringify(body),
       });
       const json = (await res.json().catch(() => null)) as {
         error?: string;
         reregistered?: boolean;
+        evicted?: boolean;
       } | null;
       if (!res.ok) {
         setError(json?.error ?? "ההרשמה נכשלה. נסו שוב.");
@@ -98,7 +106,10 @@ export function NightPassRegisterPanel({
       }
       await refreshNightPassState({ force: true });
       notifyNightPassSlotsChanged();
-      toast.success(json?.reregistered ? "המכשיר עודכן" : "המכשיר נרשם");
+      if (json?.evicted) {
+        toast.message("4 מכשירים כבר מחוברים — המכשיר הישן ביותר נותק.");
+      }
+      toast.success(json?.reregistered ? "המכשיר עודכן" : "המכשיר מחובר");
       onRegistered?.();
     } catch {
       setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");
@@ -113,7 +124,7 @@ export function NightPassRegisterPanel({
     return <p className="text-base text-violet-300">בודקים את המכשיר…</p>;
   }
 
-  if (pass.registered && !hasCode) {
+  if (pass.registered && !hasCode && !hasInvite) {
     return null;
   }
 
@@ -138,20 +149,26 @@ export function NightPassRegisterPanel({
           באייפון: הירשמו מתוך האפליקציה אם הוספתם אותה למסך הבית.
         </p>
       ) : null}
-      <div className="space-y-1.5">
-        <Label htmlFor="pass-code">קוד כניסה (8 תווים)</Label>
-        <Input
-          id="pass-code"
-          value={code}
-          onChange={(event) => setCode(event.target.value.toUpperCase())}
-          dir="ltr"
-          autoCapitalize="characters"
-          autoComplete="one-time-code"
-          placeholder="K7QM-3XPA"
-          maxLength={12}
-          className="h-11 bg-[#12081a] text-center font-mono text-lg tracking-widest"
-        />
-      </div>
+      {hasInvite ? (
+        <p className="rounded-xl bg-emerald-950/50 p-3 text-center text-sm text-emerald-100 ring-1 ring-emerald-500/25">
+          הזמנה לבית — מלאו שם ונייד ולחצו «הרשמה».
+        </p>
+      ) : (
+        <div className="space-y-1.5">
+          <Label htmlFor="pass-code">קוד משפחה (4 תווים)</Label>
+          <Input
+            id="pass-code"
+            value={code}
+            onChange={(event) => setCode(event.target.value.toUpperCase())}
+            dir="ltr"
+            autoCapitalize="characters"
+            autoComplete="one-time-code"
+            placeholder="K7QM"
+            maxLength={6}
+            className="h-11 bg-[#12081a] text-center font-mono text-lg tracking-widest"
+          />
+        </div>
+      )}
       <div className="space-y-1.5">
         <Label htmlFor="pass-name">שם</Label>
         <Input
@@ -184,7 +201,7 @@ export function NightPassRegisterPanel({
       ) : null}
       <Button
         type="submit"
-        disabled={busy || !code.trim() || !name.trim() || !phone.trim()}
+        disabled={busy || (!hasInvite && !code.trim()) || !name.trim() || !phone.trim()}
         className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
       >
         {busy ? "נרשמים…" : "הרשמה"}
