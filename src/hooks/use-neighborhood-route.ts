@@ -11,7 +11,10 @@ import { rebuildRouteAfterFilterChange, routeCandidateHouses } from "@/lib/route
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
-import { captureRouteDisplayOrders } from "@/lib/route-display-order";
+import {
+  captureRouteDisplayOrders,
+  mergeRouteDisplayOrders,
+} from "@/lib/route-display-order";
 import { readRouteMode, writeRouteMode } from "@/lib/route-mode";
 import type { PublicHouse } from "@/lib/types";
 
@@ -21,8 +24,8 @@ function originPoint(origin: ResolvedOrigin) {
 
 /** Re-optimize stop order only when the user picks a new starting point — not on live GPS drift. */
 function shouldReoptimizeRoute(current: WalkingRoute, origin: ResolvedOrigin) {
+  if (origin.kind === "gps" || current.startedFrom === "gps") return false;
   if (current.startedFrom !== origin.kind) return true;
-  if (origin.kind === "gps") return false;
   return current.origin.lat !== origin.lat || current.origin.lng !== origin.lng;
 }
 
@@ -62,10 +65,21 @@ export function useNeighborhoodRoute({
   const setPinnedRoute = useCallback((route: WalkingRoute | null) => {
     setPinnedRouteState(route);
   }, []);
-  const commitSessionPlan = useCallback((route: WalkingRoute | null) => {
-    setRouteSessionPlan(route);
-    if (route) setRouteSessionDisplayOrders(captureRouteDisplayOrders(route));
-  }, []);
+  const commitSessionPlan = useCallback(
+    (route: WalkingRoute | null, options?: { mergeDisplayOrders?: boolean }) => {
+      setRouteSessionPlan(route);
+      if (!route) {
+        setRouteSessionDisplayOrders(null);
+        return;
+      }
+      setRouteSessionDisplayOrders((prev) =>
+        options?.mergeDisplayOrders
+          ? mergeRouteDisplayOrders(prev, route)
+          : captureRouteDisplayOrders(route),
+      );
+    },
+    [],
+  );
   const [routeSessionDisplayOrders, setRouteSessionDisplayOrders] =
     useState<Map<string, number> | null>(null);
   /** Full tour geometry for map/list progress — updates on skip/rebuild, not on in-order visits. */
@@ -162,6 +176,9 @@ export function useNeighborhoodRoute({
         routeOptions,
       );
       setRouteSessionPlan(rebuilt);
+      if (rebuilt) {
+        setRouteSessionDisplayOrders((prev) => mergeRouteDisplayOrders(prev, rebuilt));
+      }
       return rebuilt;
     });
   }, [
@@ -229,9 +246,9 @@ export function useNeighborhoodRoute({
         pendingRouteGps.current = true;
         setAskedLocation(true);
         geoRefresh();
-        return;
+      } else {
+        pendingRouteGps.current = false;
       }
-      pendingRouteGps.current = false;
       pinCurrentRoute();
     };
     proceed();

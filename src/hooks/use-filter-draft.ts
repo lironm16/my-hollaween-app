@@ -46,7 +46,10 @@ export function useFilterDraft({
   routeMode: boolean;
   pinnedRoute: WalkingRoute | null;
   setPinnedRoute: (route: WalkingRoute | null) => void;
-  commitSessionPlan: (route: WalkingRoute | null) => void;
+  commitSessionPlan: (
+    route: WalkingRoute | null,
+    options?: { mergeDisplayOrders?: boolean },
+  ) => void;
   origin: ResolvedOrigin;
   skippedIds: string[];
   now: Date;
@@ -95,7 +98,7 @@ export function useFilterDraft({
         },
       );
       setPinnedRoute(rebuilt);
-      commitSessionPlan(rebuilt);
+      commitSessionPlan(rebuilt, { mergeDisplayOrders: true });
     }
     setFiltersOpen(false);
   }

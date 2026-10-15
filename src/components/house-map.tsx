@@ -909,19 +909,14 @@ export function HouseMap({
   const dimActive = filterDimActive && Boolean(matchedIds);
   const routeOrderById = useMemo(() => {
     const map = new Map<string, number>();
-    for (const stop of routeStops ?? []) map.set(stop.id, stop.order);
     if (routeSessionDisplayOrders) {
-      for (const id of visitedIds) {
-        const order = routeSessionDisplayOrders.get(id);
-        if (order !== undefined) map.set(id, order);
-      }
-      for (const id of skippedIds) {
-        const order = routeSessionDisplayOrders.get(id);
-        if (order !== undefined) map.set(id, order);
-      }
+      for (const [id, order] of routeSessionDisplayOrders) map.set(id, order);
+    }
+    for (const stop of routeStops ?? []) {
+      if (!map.has(stop.id)) map.set(stop.id, stop.order);
     }
     return map;
-  }, [routeStops, routeSessionDisplayOrders, visitedIds, skippedIds]);
+  }, [routeStops, routeSessionDisplayOrders]);
   const skippedIdSet = useMemo(() => new Set(skippedIds), [skippedIds]);
   const lineRenderer = useMemo(() => L.canvas({ padding: 0.5 }), []);
   const focus = useMemo(() => {
