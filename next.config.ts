@@ -25,6 +25,17 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV ?? "",
   },
   serverExternalPackages: ["web-push"],
+  turbopack: {},
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        crypto: false,
+        "node:crypto": false,
+      };
+    }
+    return config;
+  },
   // Keep the seed on Vercel so /api/catalog can boot without a writable data dir.
   outputFileTracingIncludes: {
     "/api/**/*": ["./data/seed.json"],

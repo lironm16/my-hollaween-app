@@ -3,11 +3,11 @@ import { describe, it } from "node:test";
 import {
   HOUSE_ACCESS_CODE_LENGTH,
   maskPhone,
-  newHouseAccessCode,
   normalizeHolderName,
   normalizeIsraeliMobile,
   normalizeNightPassCode,
-} from "@/lib/night-pass-codes";
+} from "@/lib/house-access-code";
+import { newHouseAccessCode } from "@/lib/night-pass-codes";
 
 describe("night pass codes", () => {
   it("generates 4-char family codes from the unambiguous alphabet", () => {

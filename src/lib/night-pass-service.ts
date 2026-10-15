@@ -1,9 +1,7 @@
-import "server-only";
-import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
+import { formatHouseAccessCode, HOUSE_ACCESS_MAX_DEVICES } from "@/lib/house-access-code";
 import {
-  formatHouseAccessCode,
   hashNightPassToken,
-  HOUSE_ACCESS_MAX_DEVICES,
   newHouseAccessCode,
   passIdForHouse,
 } from "@/lib/night-pass-codes";
@@ -16,7 +14,7 @@ import {
   type NightPassEvent,
   type NightPassRecord,
 } from "@/lib/night-pass-store";
-import { getHouse, getHouseByAccessCode } from "@/lib/store";
+import { getHouse, getHouseByAccessCode } from "@/lib/store/houses";
 
 const HISTORY_MAX = 20;
 
