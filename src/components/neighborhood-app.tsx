@@ -1421,10 +1421,6 @@ export function NeighborhoodApp({
             onOpenRouteUpdates={
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
-            gemMapToggleEnabled={gemUi}
-            gemMapVisible={mapDiamondsVisible}
-            gemNearSignal={mapGemNearSignal}
-            onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
           />
         </div>
       ) : null}
@@ -1566,6 +1562,10 @@ export function NeighborhoodApp({
                   gemAnchorHouses={gemUi ? gemMapRingHousesVisible : []}
                   showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
+                  gemCamFabEnabled={gemUi}
+                  gemCamFabActive={mapDiamondsVisible}
+                  gemCamFabNearSignal={mapGemNearSignal}
+                  onToggleGemCamFab={() => setMapDiamondsVisible((on) => !on)}
                 />
               {view === "map" && originPick.originPickActive ? (
                   <div className="origin-pick-bar">

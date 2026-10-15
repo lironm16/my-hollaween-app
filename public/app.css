@@ -7956,7 +7956,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   gap: 0.5rem;
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
-.map-add-house-fab {
+.map-add-house-fab,
+.map-demon-cam-fab {
   position: absolute;
   left: 2.15rem;
   z-index: 1100;
@@ -8204,7 +8205,8 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
     box-shadow: 0 8px 32px rgb(0 0 0 / 0.45), 0 0 24px rgb(251 191 36 / 0.35);
   }
 }
-.is-origin-pick .map-add-house-fab {
+.is-origin-pick .map-add-house-fab,
+.is-origin-pick .map-demon-cam-fab {
   bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
 }
 .locate-me {
