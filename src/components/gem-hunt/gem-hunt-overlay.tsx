@@ -620,14 +620,14 @@ export function GemHuntOverlay({
       encounterPhase.startsWith("resolve") ||
       encounterPhase === "reward");
   const gemAtCenter =
-    inOnsiteBand &&
     !userDismissedCenterGem &&
-    (centerReveal ||
-      encounterForcesCenter ||
-      (encounterMode &&
-        (encounterPhase === "approach" || encounterPhase === "encounter")) ||
-      (!encounterMode && gemVisible) ||
-      (campusSession && (canCollectNow || sim)));
+    ((centerReveal && gemVisible) ||
+      (inOnsiteBand &&
+        (encounterForcesCenter ||
+          (encounterMode &&
+            (encounterPhase === "approach" || encounterPhase === "encounter")) ||
+          (!encounterMode && gemVisible) ||
+          (campusSession && (canCollectNow || sim)))));
   const showWorldGemSprite =
     !gemAtCenter && gemWorldPinVisible(pinDisplay ?? pinPlacement, huntBandM);
   const worldLockRevealed =
@@ -773,9 +773,9 @@ export function GemHuntOverlay({
   ]);
 
   useEffect(() => {
-    if (sim || canCollectNow) return;
+    if (sim || canCollectNow || centerReveal) return;
     setCenterReveal(false);
-  }, [canCollectNow, sim]);
+  }, [canCollectNow, sim, centerReveal]);
 
   function retryCamera() {
     setCameraError(null);

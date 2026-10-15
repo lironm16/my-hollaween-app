@@ -12,7 +12,7 @@ export function ImpDemonCameraIcon({
   return (
     <span
       className={cn(
-        "imp-demon-camera-icon inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md",
+        "imp-demon-camera-icon inline-flex size-8 shrink-0 items-center justify-center overflow-hidden",
         signalActive && "is-signal-active",
         className,
       )}
@@ -20,7 +20,7 @@ export function ImpDemonCameraIcon({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/icons/demon-camera-hunt.jpg"
+        src="/icons/demon-camera-hunt.png"
         alt=""
         className="size-[92%] max-h-full max-w-full object-contain object-center"
         decoding="async"
