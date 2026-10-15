@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import {
+  clearSkipReasonUserData,
   clearSkipNote,
   getSkipNote,
+  getSkipReasonCategory,
   getSkippedMeta,
   loadSkippedIds,
   saveSkipNote,
+  saveSkipReasonCategory,
   skipHouse,
   toggleSkipped,
   unskipAllHouses,
@@ -54,8 +57,18 @@ export function useSkippedHouses() {
       void notesTick;
       return getSkipNote(id);
     },
+    skipCategory: (id: string) => {
+      void notesTick;
+      return getSkipReasonCategory(id);
+    },
     saveNote: (id: string, note: string) => saveSkipNote(id, note),
+    saveSkipCategory: (id: string, category: "not-open" | "candy-out" | "other") =>
+      saveSkipReasonCategory(id, category),
     clearNote: (id: string) => clearSkipNote(id),
+    clearSkipReasonUserData: (id: string) => {
+      clearSkipReasonUserData(id);
+      setNotesTick((n) => n + 1);
+    },
     unskip: (id: string) => {
       const next = unskipHouse(id);
       setIds(next);

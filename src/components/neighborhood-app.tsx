@@ -37,7 +37,7 @@ import { RouteShareImportDialog } from "@/components/route-share-import-dialog";
 import { OriginPickerSheet } from "@/components/origin-picker";
 import { RouteList } from "@/components/route-list";
 import { buildRouteListItems } from "@/lib/route-list-items";
-import { firstRouteStopPoint } from "@/lib/route-session-progress";
+import { nextApproachStopPoint } from "@/lib/route-session-progress";
 import { routeDisplayOrder } from "@/lib/route-display-order";
 import { VisitSkipConflictDialog } from "@/components/visit-skip-conflict-dialog";
 import { LikeCheer } from "@/components/like-cheer";
@@ -157,7 +157,6 @@ import {
 } from "@/lib/route-share";
 import { useRouteStatusAlerts } from "@/hooks/use-route-status-alerts";
 import { skipStatusSnapshot, type SkipReasonId } from "@/lib/skip-reasons";
-import { normalizeSkipReasonCategory } from "@/lib/skip-reason-categories";
 import { houseSelectionAnnouncement } from "@/lib/map-a11y";
 import {
   dismissVisitSkipConflictPrompt,
@@ -1035,7 +1034,9 @@ export function NeighborhoodApp({
     routeMode,
   );
   const routeApproachTarget =
-    routePlan && routeMode ? firstRouteStopPoint(routePlan) : null;
+    routePlan && routeMode
+      ? nextApproachStopPoint(routePlan, visits.visitedIds, skips.skippedIds)
+      : null;
   const summaryProps = {
     filteredHouses: visible.length,
     route: activeRoute ?? filterRoute,
@@ -1268,29 +1269,22 @@ export function NeighborhoodApp({
             )
         : undefined,
       skipMetaFor: (id) => skips.meta(id),
-      skipCategoryFor: (id) =>
-        skips.skipped(id) ? normalizeSkipReasonCategory(skips.meta(id)?.reason) : undefined,
+      skipCategoryFor: (id) => (skips.skipped(id) ? skips.skipCategory(id) : undefined),
       skipNoteFor: (id) => skips.note(id),
       onSaveSkipReason: (id, payload) => {
-        const prev = skips.meta(id);
-        const meta = {
-          reason: payload.category as SkipReasonId,
-          temporary: false,
-          statusKey:
-            prev?.statusKey ??
-            (() => {
-              const house = houses.find((item) => item.id === id);
-              return house ? skipStatusSnapshot(house, now, filters) : "";
-            })(),
-          skippedAt: prev?.skippedAt ?? new Date().toISOString(),
-        };
-        if (prev) skips.update(id, meta);
+        skips.saveSkipCategory(id, payload.category);
         skips.saveNote(id, payload.note);
+        const prev = skips.meta(id);
+        if (prev) {
+          skips.update(id, {
+            ...prev,
+            reason: payload.category as SkipReasonId,
+            temporary: false,
+          });
+        }
       },
       onDeleteSkipReason: (id) => {
-        skips.clearNote(id);
-        const prev = skips.meta(id);
-        if (prev) skips.update(id, { ...prev, reason: "other", temporary: false });
+        skips.clearSkipReasonUserData(id);
       },
       editingId: editFlow.flow?.house.id ?? null,
     };

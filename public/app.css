@@ -1300,9 +1300,6 @@
   .grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
   .grid-cols-\[auto_auto_minmax\(0\,1fr\)\] {
     grid-template-columns: auto auto minmax(0,1fr);
   }
@@ -1650,12 +1647,6 @@
       border-color: color-mix(in oklab, var(--color-orange-400) 55%, transparent);
     }
   }
-  .border-orange-400\/60 {
-    border-color: color-mix(in srgb, oklch(75% 0.183 55.934) 60%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-orange-400) 60%, transparent);
-    }
-  }
   .border-orange-500\/10 {
     border-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 10%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1702,12 +1693,6 @@
     border-color: color-mix(in srgb, oklch(63.7% 0.237 25.331) 35%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--color-red-500) 35%, transparent);
-    }
-  }
-  .border-slate-500\/35 {
-    border-color: color-mix(in srgb, oklch(55.4% 0.046 257.417) 35%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-slate-500) 35%, transparent);
     }
   }
   .border-slate-500\/45 {
@@ -1790,6 +1775,9 @@
   }
   .bg-\[\#1a1028\] {
     background-color: #1a1028;
+  }
+  .bg-\[\#1a1028\]\/60 {
+    background-color: color-mix(in oklab, #1a1028 60%, transparent);
   }
   .bg-\[\#1a1028\]\/80 {
     background-color: color-mix(in oklab, #1a1028 80%, transparent);
@@ -2523,6 +2511,9 @@
   .pe-8 {
     padding-inline-end: calc(var(--spacing) * 8);
   }
+  .pt-0\.5 {
+    padding-top: calc(var(--spacing) * 0.5);
+  }
   .pt-1 {
     padding-top: var(--spacing);
   }
@@ -2583,8 +2574,8 @@
   .pb-\[max\(1rem\,env\(safe-area-inset-bottom\,0px\)\)\] {
     padding-bottom: max(1rem, env(safe-area-inset-bottom,0px));
   }
-  .pl-10 {
-    padding-left: calc(var(--spacing) * 10);
+  .pl-3 {
+    padding-left: calc(var(--spacing) * 3);
   }
   .text-center {
     text-align: center;
@@ -3840,6 +3831,14 @@
     width: calc(var(--spacing) * 0.5);
   }
   @media (hover: hover) {
+    .hover\:border-orange-500\/40:hover {
+      border-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 40%, transparent);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:border-orange-500\/40:hover {
+        border-color: color-mix(in oklab, var(--color-orange-500) 40%, transparent);
+      }
+    }
     .hover\:border-violet-300\/70:hover {
       border-color: color-mix(in srgb, oklch(81.1% 0.111 293.571) 70%, transparent);
     }
