@@ -181,7 +181,9 @@ function pinStatusMark(
   house: PublicHouse,
   now: Date,
   addressReveal: AddressRevealSchedule | undefined,
+  skipped = false,
 ) {
+  if (skipped) return "";
   const visit = pinVisitKind(house, now, addressReveal);
   if (visit === "closed") {
     return `<b class="pin-status is-closed" aria-label="סגור"></b>`;
@@ -219,6 +221,9 @@ function clusterAptDotsHtml(
     .map((house) => {
       const filteredClass =
         matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
+      if (skippedIds?.has(house.id)) {
+        return `<i class="pin-apt-dot is-skipped${filteredClass}"></i>`;
+      }
       const visit = pinVisitKind(house, now, addressReveal);
       if (visit === "closed") return `<i class="pin-apt-dot is-closed${filteredClass}"></i>`;
       if (visit === "break") return `<i class="pin-apt-dot is-break${filteredClass}"></i>`;
@@ -253,6 +258,9 @@ function housePinHtml(
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = pinBackgroundFill(house, face !== "bare");
+  const houseSkipped = Boolean(extras?.skippedIds?.includes(house.id));
+  const houseVisited = Boolean(extras?.visitedIds?.includes(house.id));
+  const progressClass = houseSkipped ? " is-skipped" : houseVisited ? " is-visited" : "";
   const tourRing = pinTourRingDecor(
     [house],
     extras?.visitedIds ?? [],
@@ -274,7 +282,7 @@ function housePinHtml(
               ? 'aria-label="מקושט"'
               : 'aria-label="לא מקושט"';
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${tourRing.classSuffix}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${progressClass}${tourRing.classSuffix}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal, houseSkipped)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();

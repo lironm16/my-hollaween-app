@@ -16,7 +16,6 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
-import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -64,6 +63,7 @@ function SwatchPin({
         gemRing === "diamond" && "is-gem-ring-diamond",
         bare && "is-undecorated",
         visited && !skipped && "is-visited",
+        skipped && "is-skipped",
       )}
       style={
         multi && multiClusterKind
@@ -117,11 +117,6 @@ function SwatchPin({
             decoding="async"
           />
         </span>
-      ) : null}
-      {skipped ? (
-        <b className="pin-status is-skipped" aria-hidden>
-          <SkipIcon className="pin-skip-icon" />
-        </b>
       ) : null}
       {!skipped && closed ? <b className="pin-status is-closed" /> : null}
       {!skipped && onBreak ? <b className="pin-status is-break" /> : null}

@@ -8,16 +8,9 @@ import {
   skipReturnOfferLabel,
   skipReturnRuleActive,
 } from "@/lib/skip-reasons";
-import type { TemporaryRestoreTriggerId } from "@/lib/skip-reasons";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { SkipSign } from "@/components/visit-marks";
 import { cn } from "@/lib/utils";
-
-function RestoreWhenIcon({ trigger }: { trigger: TemporaryRestoreTriggerId }) {
-  if (trigger === "not-open") {
-    return <span className="skip-restore-when-icon is-open" aria-hidden />;
-  }
-  return <span className="skip-restore-when-icon is-candy" aria-hidden />;
-}
 
 function SkipReturnSwitch({
   on,
@@ -80,7 +73,7 @@ export function SkipReturnSection({
       role="status"
     >
       <div className="route-skipped-main min-w-0">
-        <RestoreWhenIcon trigger={displayTrigger} />
+        <SkipSign className="size-8 shrink-0" />
         <span className="route-skipped-name text-base font-medium text-violet-100">{label}</span>
       </div>
       <SkipReturnSwitch

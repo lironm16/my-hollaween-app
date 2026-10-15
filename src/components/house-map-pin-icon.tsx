@@ -1,6 +1,5 @@
 "use client";
 
-import { SkipIcon } from "@/components/skip-icon";
 import { useCatalog } from "@/hooks/use-catalog";
 import { clusterPinStatus, clusterPinVisitKind } from "@/lib/cluster-pin-status";
 import { pinScareSrc } from "@/lib/pin-faces";
@@ -46,7 +45,8 @@ export function HouseMapPinIcon({
         !decorated && "is-undecorated",
         closingSoon && "is-closing-soon",
         openingSoon && "is-opening-soon",
-        visited && "is-visited",
+        visited && !skipped && "is-visited",
+        skipped && "is-skipped",
         filteredOut && "is-filtered-out",
         className,
       )}
@@ -55,11 +55,6 @@ export function HouseMapPinIcon({
     >
       {closingSoon ? <i className="pin-hours-ring is-closing" /> : null}
       {openingSoon ? <i className="pin-hours-ring is-opening" /> : null}
-      {skipped ? (
-        <b className="pin-status is-skipped" aria-hidden>
-          <SkipIcon className="pin-skip-icon" />
-        </b>
-      ) : null}
       {!skipped && status === "closed" ? <b className="pin-status is-closed" /> : null}
       {!skipped && status === "break" ? <b className="pin-status is-break" /> : null}
       {!skipped && (status === "plenty" || status === "low" || status === "out") ? (
