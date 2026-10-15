@@ -6949,23 +6949,22 @@ svg.leaflet-zoom-animated {
   isolation: isolate;
 }
 .house-pin-route.is-single-shell {
+  width: 62px;
+  min-height: 72px;
   box-sizing: border-box;
-  overflow: visible;
 }
 .house-pin-route.is-single-shell .house-pin {
   position: absolute;
   left: 50%;
   top: 12px;
   z-index: 2;
-  width: 56px;
-  height: 56px;
-  box-sizing: border-box;
   transform: translateX(-50%);
   margin-top: 0;
 }
 .house-pin-route.is-school-shell {
+  width: 88px;
+  min-height: 142px;
   box-sizing: border-box;
-  overflow: visible;
 }
 .house-pin-route.is-school-shell .house-pin.is-building {
   position: absolute;
@@ -6976,8 +6975,9 @@ svg.leaflet-zoom-animated {
   margin-top: 0;
 }
 .house-pin-route.is-cluster-shell {
+  width: 62px;
+  min-height: 98px;
   box-sizing: border-box;
-  overflow: visible;
 }
 .house-pin-route.is-cluster-shell .house-pin.is-building {
   position: absolute;
@@ -6987,19 +6987,12 @@ svg.leaflet-zoom-animated {
   transform: translateX(-50%);
   margin-top: 0;
 }
-.house-pin-route.is-cluster-shell .pin-apt-dots {
+.house-pin-route.is-cluster-shell .pin-apt-dots,
+.house-pin-route.is-school-shell .pin-apt-dots {
   position: absolute;
   left: 0;
   right: 0;
   bottom: -14px;
-  margin: 0;
-  z-index: 14;
-}
-.house-pin-route.is-school-shell > .pin-apt-dots {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 26px;
   margin: 0;
   z-index: 14;
 }
