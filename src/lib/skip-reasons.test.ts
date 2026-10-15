@@ -17,6 +17,7 @@ import {
   temporarySkipRestoreMet,
   temporaryRestoreOptionsFromSnapshot,
   skipReturnAutoDisplayLabel,
+  primaryRestoreTriggerFromSnapshot,
 } from "@/lib/skip-reasons";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -256,27 +257,39 @@ describe("temporaryRestoreAlertText", () => {
   });
 });
 
+describe("primaryRestoreTriggerFromSnapshot", () => {
+  it("prefers candy-out when both closed and out of candy", () => {
+    assert.equal(
+      primaryRestoreTriggerFromSnapshot("open|active|active|closed-hours|out"),
+      "candy-out",
+    );
+    assert.equal(
+      primaryRestoreTriggerFromSnapshot("open|active|active|closed-hours|plenty"),
+      "not-open",
+    );
+  });
+});
+
 describe("skipReturnAutoDisplayLabel", () => {
-  it("uses one combined line when both triggers apply", () => {
+  it("shows offer copy only when the rule is active", () => {
     assert.equal(
       skipReturnAutoDisplayLabel({
-        reason: "not-open",
+        reason: "candy-out",
         temporary: true,
-        restoreTriggers: ["not-open", "candy-out"],
+        restoreTriggers: ["candy-out"],
         statusKey: "x",
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
-      "כשהבית פתוח ויש ממתקים",
+      "החזר כשמלאי הממתקים חוזר",
     );
     assert.equal(
       skipReturnAutoDisplayLabel({
-        reason: "not-open",
-        temporary: true,
-        restoreTriggers: ["not-open"],
+        reason: "other",
+        temporary: false,
         statusKey: "x",
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
-      "כשהבית פתוח",
+      null,
     );
   });
 });

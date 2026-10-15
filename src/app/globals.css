@@ -2108,6 +2108,17 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   padding-inline: 0.65rem;
 }
 
+.skip-return-row--active {
+  border-style: solid;
+  border-color: rgb(251 146 60 / 0.45);
+  background: rgb(251 146 60 / 0.12);
+  box-shadow: 0 0 0 1px rgb(251 146 60 / 0.08);
+}
+
+.skip-return-row--active .route-skipped-name {
+  color: #fff7ed;
+}
+
 .route-tail-row {
   display: flex;
   flex-direction: column;

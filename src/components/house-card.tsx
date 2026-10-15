@@ -30,6 +30,8 @@ export function HouseCard({
   onRestoreRoute,
   skipped = false,
   skipMeta,
+  onApproveSkipReturn,
+  onRevokeSkipReturn,
   canEdit = false,
   editCode,
   showVisitPoster = false,
@@ -65,6 +67,8 @@ export function HouseCard({
   onRestoreRoute?: () => void;
   skipped?: boolean;
   skipMeta?: SkippedHouseMeta;
+  onApproveSkipReturn?: () => void;
+  onRevokeSkipReturn?: () => void;
   canEdit?: boolean;
   editCode?: string;
   showVisitPoster?: boolean;
@@ -108,8 +112,10 @@ export function HouseCard({
     onSkip,
     onRestoreRoute,
     skipped,
-    skipMeta,
-    canEdit: mayEdit,
+  skipMeta,
+  onApproveSkipReturn,
+  onRevokeSkipReturn,
+  canEdit: mayEdit,
     editCode: mayEdit ? editCode : undefined,
     showVisitPoster: mayEdit && showVisitPoster,
     admin,
@@ -164,7 +170,13 @@ export function HouseCard({
             className={cn(catalogRemoved && "shrink-0 self-center")}
           />
         </div>
-        {skipped && skipMeta ? <SkipReturnSection meta={skipMeta} /> : null}
+        {skipped && skipMeta && onApproveSkipReturn && onRevokeSkipReturn ? (
+          <SkipReturnSection
+            meta={skipMeta}
+            onApprove={onApproveSkipReturn}
+            onRevokeRule={onRevokeSkipReturn}
+          />
+        ) : null}
         <HouseDetails
           house={house}
           distanceM={distanceM}

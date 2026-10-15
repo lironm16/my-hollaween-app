@@ -179,28 +179,44 @@ export function temporaryRestoreWhenLabel(trigger: TemporaryRestoreTriggerId) {
   return "יש ממתקים";
 }
 
-/** One-line copy for the house card (auto return condition at skip time). */
-export function skipReturnAutoDisplayLabel(meta: SkippedHouseMeta) {
-  const triggers = metaRestoreTriggers(meta);
-  if (!meta.temporary || triggers.length === 0) return null;
-  if (triggers.includes("not-open") && triggers.includes("candy-out")) {
-    return "כשהבית פתוח ויש ממתקים";
-  }
-  if (triggers.includes("not-open")) return "כשהבית פתוח";
-  if (triggers.includes("candy-out")) return "כשיש ממתקים";
+/** Single return offer at skip time — candy status wins over open/closed. */
+export function primaryRestoreTriggerFromSnapshot(
+  statusKey: string,
+): TemporaryRestoreTriggerId | null {
+  const options = temporaryRestoreOptionsFromSnapshot(statusKey);
+  if (options.includes("candy-out")) return "candy-out";
+  if (options.includes("not-open")) return "not-open";
   return null;
+}
+
+export function skipReturnOfferLabel(trigger: TemporaryRestoreTriggerId) {
+  if (trigger === "candy-out") return "החזר כשמלאי הממתקים חוזר";
+  return "החזר כשהבית פתוח";
+}
+
+export function skipReturnOfferLabelFromSnapshot(statusKey: string) {
+  const trigger = primaryRestoreTriggerFromSnapshot(statusKey);
+  return trigger ? skipReturnOfferLabel(trigger) : null;
+}
+
+export function skipReturnRuleActive(meta: SkippedHouseMeta) {
+  return meta.temporary && metaRestoreTriggers(meta).length > 0;
+}
+
+/** One-line copy for list previews when the return rule is active. */
+export function skipReturnAutoDisplayLabel(meta: SkippedHouseMeta) {
+  if (!skipReturnRuleActive(meta)) return null;
+  const trigger = metaRestoreTriggers(meta)[0];
+  return trigger ? skipReturnOfferLabel(trigger) : null;
 }
 
 export function skipRestoreUndoPromptMessage(house: PublicHouse, meta: SkippedHouseMeta) {
   const name = houseHeadline(house);
-  const triggers = metaRestoreTriggers(meta);
-  if (triggers.includes("not-open") && triggers.includes("candy-out")) {
-    return `${name} — דילגתם כשהבית היה סגור ובלי ממתקים. עכשיו הוא פתוח ויש ממתקים. לבטל את הדילוג?`;
-  }
-  if (triggers.includes("not-open")) {
+  const trigger = metaRestoreTriggers(meta)[0];
+  if (trigger === "not-open") {
     return `${name} — דילגתם כשהבית לא היה פתוח. עכשיו הוא פתוח. לבטל את הדילוג?`;
   }
-  if (triggers.includes("candy-out")) {
+  if (trigger === "candy-out") {
     return `${name} — דילגתם כשלא היו ממתקים. עכשיו יש ממתקים. לבטל את הדילוג?`;
   }
   return `${name} — התנאי להחזרה התקיים. לבטל את הדילוג?`;
@@ -222,13 +238,17 @@ export function skipSnapshotHadCandyOutOrClosed(statusKey: string) {
   return false;
 }
 
-export function skipReturnSectionVisible(meta: SkippedHouseMeta | undefined) {
+export function skipReturnOfferEligible(meta: SkippedHouseMeta | undefined) {
   return Boolean(
     meta &&
-      meta.temporary &&
-      metaRestoreTriggers(meta).length > 0 &&
-      skipSnapshotHadCandyOutOrClosed(meta.statusKey),
+      skipSnapshotHadCandyOutOrClosed(meta.statusKey) &&
+      primaryRestoreTriggerFromSnapshot(meta.statusKey),
   );
+}
+
+/** @deprecated use skipReturnOfferEligible */
+export function skipReturnSectionVisible(meta: SkippedHouseMeta | undefined) {
+  return skipReturnOfferEligible(meta);
 }
 
 /** Temporary auto-restore still runs silently unless candy or closed status triggered the skip. */

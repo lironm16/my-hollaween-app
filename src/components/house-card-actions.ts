@@ -41,6 +41,8 @@ export type HouseCardActionContext = {
   /** Owner/admin ⋮ «מיקום השדון» — only shown on houses this device may edit. */
   onPlaceGem?: (house: PublicHouse) => void;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
+  onApproveSkipReturn?: (id: string) => void;
+  onRevokeSkipReturn?: (id: string) => void;
   editingId?: string | null;
 };
 
@@ -70,6 +72,10 @@ export function houseCardPropsFor(
     gemCollected: ctx.gemCollected?.(id),
     skipped: isSkipped,
     skipMeta: ctx.skipMetaFor?.(id),
+    onApproveSkipReturn: ctx.onApproveSkipReturn
+      ? () => ctx.onApproveSkipReturn!(id)
+      : undefined,
+    onRevokeSkipReturn: ctx.onRevokeSkipReturn ? () => ctx.onRevokeSkipReturn!(id) : undefined,
     onToggleLike:
       viewOnlyRemoved || !ctx.onToggleLike ? undefined : () => ctx.onToggleLike!(id),
     onToggleVisited:

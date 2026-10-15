@@ -1686,6 +1686,12 @@
   .border-transparent {
     border-color: transparent;
   }
+  .border-violet-400\/35 {
+    border-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 35%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-violet-400) 35%, transparent);
+    }
+  }
   .border-violet-400\/55 {
     border-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 55%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -7255,6 +7261,15 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 .route-skipped-restore {
   min-height: 2rem;
   padding-inline: 0.65rem;
+}
+.skip-return-row--active {
+  border-style: solid;
+  border-color: rgb(251 146 60 / 0.45);
+  background: rgb(251 146 60 / 0.12);
+  box-shadow: 0 0 0 1px rgb(251 146 60 / 0.08);
+}
+.skip-return-row--active .route-skipped-name {
+  color: #fff7ed;
 }
 .route-tail-row {
   display: flex;

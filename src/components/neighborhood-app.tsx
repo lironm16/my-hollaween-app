@@ -156,7 +156,7 @@ import {
 } from "@/lib/route-share";
 import { useRouteStatusAlerts } from "@/hooks/use-route-status-alerts";
 import {
-  defaultRestoreTriggersFromSnapshot,
+  primaryRestoreTriggerFromSnapshot,
   skipStatusSnapshot,
   type SkipReasonId,
 } from "@/lib/skip-reasons";
@@ -905,12 +905,9 @@ export function NeighborhoodApp({
   function applySkipHouse(house: PublicHouse) {
     const wasSkipped = skips.skipped(house.id);
     const statusKey = skipStatusSnapshot(house, now, filters);
-    const restoreTriggers = defaultRestoreTriggersFromSnapshot(statusKey);
-    const temporary = restoreTriggers.length > 0;
     const meta = {
-      reason: (restoreTriggers[0] ?? "other") as SkipReasonId,
-      temporary,
-      restoreTriggers: temporary ? restoreTriggers : undefined,
+      reason: "other" as SkipReasonId,
+      temporary: false,
       statusKey,
       skippedAt: wasSkipped ? (skips.meta(house.id)?.skippedAt ?? new Date().toISOString()) : new Date().toISOString(),
     };
@@ -1288,6 +1285,28 @@ export function NeighborhoodApp({
             )
         : undefined,
       skipMetaFor: (id) => skips.meta(id),
+      onApproveSkipReturn: (id) => {
+        const prev = skips.meta(id);
+        if (!prev) return;
+        const trigger = primaryRestoreTriggerFromSnapshot(prev.statusKey);
+        if (!trigger) return;
+        skips.update(id, {
+          ...prev,
+          temporary: true,
+          restoreTriggers: [trigger],
+          reason: trigger,
+        });
+      },
+      onRevokeSkipReturn: (id) => {
+        const prev = skips.meta(id);
+        if (!prev) return;
+        skips.update(id, {
+          ...prev,
+          temporary: false,
+          restoreTriggers: [],
+          reason: "other",
+        });
+      },
       editingId: editFlow.flow?.house.id ?? null,
     };
   }, [

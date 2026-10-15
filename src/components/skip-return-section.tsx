@@ -1,14 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { SkipIcon } from "@/components/skip-icon";
+import { Button } from "@/components/ui/button";
+import { SkipSign } from "@/components/visit-marks";
 import {
   metaRestoreTriggers,
-  skipReturnAutoDisplayLabel,
-  skipReturnSectionVisible,
+  primaryRestoreTriggerFromSnapshot,
+  skipReturnOfferEligible,
+  skipReturnOfferLabel,
+  skipReturnRuleActive,
 } from "@/lib/skip-reasons";
 import type { TemporaryRestoreTriggerId } from "@/lib/skip-reasons";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { cn } from "@/lib/utils";
 
 function RestoreWhenIcon({ trigger }: { trigger: TemporaryRestoreTriggerId }) {
   if (trigger === "not-open") {
@@ -17,27 +21,54 @@ function RestoreWhenIcon({ trigger }: { trigger: TemporaryRestoreTriggerId }) {
   return <span className="skip-restore-when-icon is-candy" aria-hidden />;
 }
 
-export function SkipReturnSection({ meta }: { meta: SkippedHouseMeta }) {
-  const label = useMemo(() => skipReturnAutoDisplayLabel(meta), [meta]);
-  const triggers = useMemo(() => metaRestoreTriggers(meta), [meta]);
+export function SkipReturnSection({
+  meta,
+  onApprove,
+  onRevokeRule,
+}: {
+  meta: SkippedHouseMeta;
+  onApprove: () => void;
+  onRevokeRule: () => void;
+}) {
+  const active = skipReturnRuleActive(meta);
+  const offerTrigger = useMemo(
+    () => primaryRestoreTriggerFromSnapshot(meta.statusKey),
+    [meta.statusKey],
+  );
+  const displayTrigger =
+    (active ? metaRestoreTriggers(meta)[0] : undefined) ?? offerTrigger ?? null;
 
-  if (!skipReturnSectionVisible(meta) || !label) return null;
+  if (!skipReturnOfferEligible(meta) || !displayTrigger) return null;
 
-  const showBothIcons =
-    triggers.includes("not-open") && triggers.includes("candy-out");
+  const label = skipReturnOfferLabel(displayTrigger);
 
   return (
-    <div className="skip-return-section mb-2 flex min-w-0 items-center gap-2.5 py-0.5 text-lg font-medium text-violet-50">
-      <SkipIcon className="size-5 shrink-0 text-orange-400" aria-hidden />
-      {showBothIcons ? (
-        <>
-          <RestoreWhenIcon trigger="not-open" />
-          <RestoreWhenIcon trigger="candy-out" />
-        </>
-      ) : triggers[0] ? (
-        <RestoreWhenIcon trigger={triggers[0]} />
-      ) : null}
-      <span className="min-w-0 truncate">{label}</span>
+    <div
+      className={cn(
+        "skip-return-row route-skipped-row house-skipped-banner mb-2",
+        active && "skip-return-row--active",
+      )}
+      role="status"
+    >
+      <div className="route-skipped-main min-w-0">
+        <SkipSign className="size-8 shrink-0" />
+        <RestoreWhenIcon trigger={displayTrigger} />
+        <span className="route-skipped-name text-base font-medium text-violet-100">{label}</span>
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant={active ? "outline" : "default"}
+        className={cn(
+          "route-skipped-restore shrink-0",
+          active
+            ? "border-violet-400/35 text-violet-100 hover:bg-violet-500/10"
+            : "bg-orange-500 text-black hover:bg-orange-400",
+        )}
+        onClick={active ? onRevokeRule : onApprove}
+      >
+        {active ? "ביטול" : "עדכן"}
+      </Button>
     </div>
   );
 }
