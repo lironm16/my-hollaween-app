@@ -3,7 +3,8 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Camera, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
+import { ImpDemonCameraIcon } from "@/components/imp-demon-camera-icon";
 import { GemCheer } from "@/components/gem-cheer";
 import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
 import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
@@ -339,7 +340,7 @@ export function GemHuntPanel({
           )}
           onClick={() => void openCamera()}
         >
-          <Camera className="size-4" aria-hidden />
+          <ImpDemonCameraIcon className="size-7 shrink-0" signalActive={canCollect} />
           {collected
             ? androidArReady
               ? "מפגש AR שוב"

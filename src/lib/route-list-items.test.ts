@@ -240,7 +240,7 @@ describe("buildRouteListItems", () => {
     assert.equal(b?.legTone, "skipped");
   });
 
-  it("includes skipped tail houses not on the route", () => {
+  it("omits off-route skipped houses from the route list", () => {
     const houses = [stub("a"), stub("b")];
     const route = buildWalkingRouteOrdered([houses[0]!], { lat: 32.09, lng: 34.81 });
     assert.ok(route);
@@ -256,8 +256,7 @@ describe("buildRouteListItems", () => {
       distanceAllowed: () => true,
     });
 
-    const skippedTail = items.filter((item) => item.skipped);
-    assert.equal(skippedTail.length, 1);
-    assert.equal(skippedTail[0]!.house.id, "b");
+    assert.equal(items.length, 1);
+    assert.equal(items[0]!.house.id, "a");
   });
 });

@@ -65,6 +65,7 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { isGemTypeInCollection, loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
 import {
   firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
@@ -447,6 +448,17 @@ export function NeighborhoodApp({
     displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading && !catalogReady;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
+  const gemMapRingHousesVisible = useMemo(
+    () => gemMapRingHouses.filter((house) => matchedIds.has(house.id)),
+    [gemMapRingHouses, matchedIds],
+  );
+  const mapGemNearSignal = useMemo(
+    () =>
+      gemUi
+        ? mapGemNearSignalActive(gps, gemMapRingHousesVisible, matchedIds, gems.collected)
+        : false,
+    [gemUi, gps, gemMapRingHousesVisible, matchedIds, gems.collected],
+  );
   const matchedIdsKey = useMemo(
     () => (filterDimActive ? visible.map((house) => house.id).join("\0") : ""),
     [filterDimActive, visible],
@@ -1411,6 +1423,7 @@ export function NeighborhoodApp({
             }
             gemMapToggleEnabled={gemUi}
             gemMapVisible={mapDiamondsVisible}
+            gemNearSignal={mapGemNearSignal}
             onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
           />
         </div>
@@ -1550,7 +1563,7 @@ export function NeighborhoodApp({
                     routeMode && !originPick.originPickActive ? routeSessionDisplayOrders : null
                   }
                   showGemLegend={showGemMapLegend}
-                  gemAnchorHouses={gemUi ? gemMapRingHouses : []}
+                  gemAnchorHouses={gemUi ? gemMapRingHousesVisible : []}
                   showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
                 />

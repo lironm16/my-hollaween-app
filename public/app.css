@@ -6866,13 +6866,13 @@ svg.leaflet-zoom-animated {
   border-bottom-color: #475569;
 }
 .route-stop-pin.is-mixed-done::before {
-  background: #411900;
-  border-color: #2a1000;
+  background: #e08543;
+  border-color: #b8652a;
 }
 .route-stop-pin.is-mixed-done::after {
-  background: #411900;
-  border-right-color: #2a1000;
-  border-bottom-color: #2a1000;
+  background: #e08543;
+  border-right-color: #b8652a;
+  border-bottom-color: #b8652a;
 }
 .route-stop-pin.is-visited .route-stop-num,
 .route-stop-pin.is-skipped .route-stop-num {
@@ -7908,6 +7908,42 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   .app-toolbar--floating .app-toolbar__btn svg {
     width: 1.125rem;
     height: 1.125rem;
+  }
+}
+.app-toolbar__btn.is-gem-near {
+  box-shadow: 0 0 0 2px rgba(253, 224, 71, 0.55),
+    0 0 14px rgba(251, 191, 36, 0.75);
+  animation: toolbar-gem-near-pulse 1.6s ease-in-out infinite;
+}
+.imp-demon-camera-icon.is-signal-active img {
+  animation: toolbar-gem-icon-twinkle 1.6s ease-in-out infinite;
+}
+@keyframes toolbar-gem-near-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(253, 224, 71, 0.45),
+      0 0 10px rgba(251, 191, 36, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(253, 224, 71, 0.85),
+      0 0 18px rgba(251, 191, 36, 0.95);
+  }
+}
+@keyframes toolbar-gem-icon-twinkle {
+  0%,
+  100% {
+    opacity: 0.88;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-toolbar__btn.is-gem-near,
+  .imp-demon-camera-icon.is-signal-active img {
+    animation: none;
   }
 }
 .map-fab-stack {

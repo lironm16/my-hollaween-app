@@ -2,7 +2,7 @@
 
 import { Heart } from "lucide-react";
 import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
-import { ImpOutlineIcon } from "@/components/imp-outline-icon";
+import { ImpDemonCameraIcon } from "@/components/imp-demon-camera-icon";
 import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipOutlineIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
@@ -147,7 +147,7 @@ export function HouseCardQuickActions({
           {gemCollected ? (
             <ImpMenuActiveGlyph className={QUICK_ICON_CLASS} />
           ) : (
-            <ImpOutlineIcon className={QUICK_ICON_CLASS} />
+            <ImpDemonCameraIcon className={QUICK_ICON_CLASS} />
           )}
         </button>
       ) : null}

@@ -2856,6 +2856,50 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   }
 }
 
+.app-toolbar__btn.is-gem-near {
+  box-shadow:
+    0 0 0 2px rgba(253, 224, 71, 0.55),
+    0 0 14px rgba(251, 191, 36, 0.75);
+  animation: toolbar-gem-near-pulse 1.6s ease-in-out infinite;
+}
+
+.imp-demon-camera-icon.is-signal-active img {
+  animation: toolbar-gem-icon-twinkle 1.6s ease-in-out infinite;
+}
+
+@keyframes toolbar-gem-near-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(253, 224, 71, 0.45),
+      0 0 10px rgba(251, 191, 36, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(253, 224, 71, 0.85),
+      0 0 18px rgba(251, 191, 36, 0.95);
+  }
+}
+
+@keyframes toolbar-gem-icon-twinkle {
+  0%,
+  100% {
+    opacity: 0.88;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-toolbar__btn.is-gem-near,
+  .imp-demon-camera-icon.is-signal-active img {
+    animation: none;
+  }
+}
+
 .map-fab-stack {
   position: absolute;
   right: 0.75rem;

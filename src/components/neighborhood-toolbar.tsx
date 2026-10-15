@@ -1,6 +1,6 @@
 "use client";
 
-import { GemDiamondIcon } from "@/components/gem-diamond-icon";
+import { ImpDemonCameraIcon } from "@/components/imp-demon-camera-icon";
 import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
 import { List, MapPinned, Route } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
@@ -63,6 +63,7 @@ export function NeighborhoodToolbar({
   docked = false,
   gemMapToggleEnabled = false,
   gemMapVisible = false,
+  gemNearSignal = false,
   onToggleGemMap,
 }: {
   view: HomeView;
@@ -85,6 +86,8 @@ export function NeighborhoodToolbar({
   /** Show toolbar control to toggle map diamond markers. */
   gemMapToggleEnabled?: boolean;
   gemMapVisible?: boolean;
+  /** Hunt-range pulse on the toolbar demon cam control. */
+  gemNearSignal?: boolean;
   onToggleGemMap?: () => void;
 }) {
   return (
@@ -130,9 +133,13 @@ export function NeighborhoodToolbar({
               gemMapVisible
                 ? "bg-orange-500 text-white"
                 : "bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25",
+              gemNearSignal && "is-gem-near",
             )}
           >
-            <GemDiamondIcon active={gemMapVisible} className="size-6 max-h-full max-w-full" />
+            <ImpDemonCameraIcon
+              signalActive={gemNearSignal}
+              className="size-7 max-h-full max-w-full"
+            />
           </button>
         ) : null}
         <button
