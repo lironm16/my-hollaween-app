@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
-import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/night-pass-codes";
+import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/house-access-code";
 import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
 import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
 import { cn } from "@/lib/utils";
