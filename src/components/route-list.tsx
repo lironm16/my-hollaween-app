@@ -22,7 +22,6 @@ export type RouteListItem = {
   legDone?: boolean;
   legSkipped?: boolean;
   legTone?: TourLegTone;
-  visitedTail?: boolean;
   distanceM?: number;
 };
 
@@ -181,12 +180,10 @@ export function RouteList({
             </div>
           </div>
         </li>
-        {items.map(({ house, order, hop, skipped, doneCollapsed, legTone, visitedTail, distanceM }, i) => {
+        {items.map(({ house, order, hop, skipped, doneCollapsed, legTone, distanceM }, i) => {
           const tone = legTone ?? (skipped ? "skipped" : "open-route");
           const showSkippedHeading =
-            skipped && !doneCollapsed && !visitedTail && (i === 0 || !items[i - 1]!.skipped);
-          const showVisitedHeading =
-            visitedTail && (i === 0 || !items[i - 1]?.visitedTail);
+            skipped && !doneCollapsed && (i === 0 || !items[i - 1]!.skipped);
           return (
             <li
               key={house.id}
@@ -194,12 +191,8 @@ export function RouteList({
               className={cn(
                 house.id === focusId && "house-list-focus",
                 skipped && !doneCollapsed && "route-list-skipped",
-                visitedTail && "route-list-visited",
               )}
             >
-              {showVisitedHeading ? (
-                <p className="route-list-visited-heading">ביקרתם (מחוץ למסלול)</p>
-              ) : null}
               {showSkippedHeading && !doneCollapsed ? (
                 <p className="route-list-skipped-heading">דילגתם</p>
               ) : null}

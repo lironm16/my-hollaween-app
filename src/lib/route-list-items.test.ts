@@ -68,7 +68,7 @@ const baseFilters = (): HouseFiltersState => ({
 });
 
 describe("buildRouteListItems", () => {
-  it("includes visited tail houses even when unvisitedOnly filter hides them from the list", () => {
+  it("omits off-route visited houses from the route list", () => {
     const houses = [stub("a"), stub("b"), stub("c")];
     const route = buildWalkingRouteOrdered([houses[0]!, houses[2]!], { lat: 32.09, lng: 34.81 });
     assert.ok(route);
@@ -97,9 +97,11 @@ describe("buildRouteListItems", () => {
       distanceAllowed: () => true,
     });
 
-    const visitedTail = items.filter((item) => item.visitedTail);
-    assert.equal(visitedTail.length, 1);
-    assert.equal(visitedTail[0]!.house.id, "b");
+    assert.equal(items.some((item) => item.house.id === "b"), false);
+    assert.deepEqual(
+      items.map((item) => item.house.id),
+      ["a", "c"],
+    );
   });
 
   it("keeps pinned stop numbers after a visit rebuild compacts orders", () => {
@@ -126,14 +128,11 @@ describe("buildRouteListItems", () => {
       sessionDisplayOrders: session,
     });
 
-    const active = items.filter((item) => !item.visitedTail && !item.skipped);
     assert.deepEqual(
-      active.map((item) => item.order),
+      items.map((item) => item.order),
       [2, 3],
     );
-    const visited = items.filter((item) => item.visitedTail);
-    assert.equal(visited.length, 1);
-    assert.equal(visited[0]!.order, 1);
+    assert.equal(items.some((item) => item.house.id === "a"), false);
   });
 
   it("omits hop labels before address reveal but keeps leg slots empty", () => {
@@ -157,7 +156,7 @@ describe("buildRouteListItems", () => {
     assert.equal(items[1]!.hop, "");
   });
 
-  it("lists visited tail when active stops are empty after route completion", () => {
+  it("shows an empty route list when active stops are cleared after completion", () => {
     const houses = [stub("a"), stub("b")];
     const emptyRoute = buildWalkingRouteOrdered([], { lat: 32.09, lng: 34.81 });
     assert.equal(emptyRoute, null);
@@ -179,11 +178,7 @@ describe("buildRouteListItems", () => {
       distanceLabel: () => "hop",
       distanceAllowed: () => true,
     });
-    assert.equal(items.filter((item) => !item.visitedTail).length, 0);
-    assert.deepEqual(
-      items.filter((item) => item.visitedTail).map((item) => item.house.id),
-      ["a", "b"],
-    );
+    assert.equal(items.length, 0);
   });
 
   it("collapses in-order visited stops on the plan with green legs", () => {
@@ -225,7 +220,6 @@ describe("buildRouteListItems", () => {
     const cOnly = outOfOrder.find((item) => item.house.id === "c");
     assert.ok(cOnly?.doneCollapsed);
     assert.equal(cOnly?.legDone, true);
-    assert.equal(items.filter((item) => item.visitedTail).length, 0);
   });
 
   it("uses gray legs onto skipped houses", () => {

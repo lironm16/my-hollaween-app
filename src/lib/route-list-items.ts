@@ -19,8 +19,6 @@ export type RouteListItemInput = {
   legDone?: boolean;
   /** @deprecated Use legTone */
   legSkipped?: boolean;
-  /** Off-plan visit shown after the tour (legacy compact). */
-  visitedTail?: boolean;
   distanceM?: number;
 };
 
@@ -92,10 +90,7 @@ export function buildRouteListItems(options: {
     ? { lat: lastStop.house.lat, lng: lastStop.house.lng }
     : originPoint;
 
-  function appendTail(
-    ids: string[],
-    flags: { skipped: boolean; visitedTail?: boolean },
-  ): RouteListItemInput[] {
+  function appendSkippedTail(ids: string[]): RouteListItemInput[] {
     const tail: RouteListItemInput[] = [];
     for (const id of ids) {
       const house = houseById.get(id);
@@ -106,11 +101,9 @@ export function buildRouteListItems(options: {
         house,
         order: routeDisplayOrder(id, 0, sessionDisplayOrders),
         hop: distanceLabel(house.id, legM),
-        skipped: flags.skipped,
-        visitedTail: flags.visitedTail,
-        legDone: flags.visitedTail && visitedSet.has(id),
-        doneCollapsed: flags.skipped || (flags.visitedTail && visitedSet.has(id)),
-        legSkipped: flags.skipped,
+        skipped: true,
+        legSkipped: true,
+        doneCollapsed: false,
         distanceM: distanceAllowed(house.id) ? distanceMeters(originPoint, point) : undefined,
       });
       tailCursor = point;
@@ -118,13 +111,6 @@ export function buildRouteListItems(options: {
     return tail;
   }
 
-  const visitedTail = appendTail(
-    visitedIds.filter((id) => !routeIds.has(id) && !skippedSet.has(id)),
-    { skipped: false, visitedTail: true },
-  );
-  const skippedTail = appendTail(
-    skippedIds.filter((id) => !routeIds.has(id)),
-    { skipped: true },
-  );
-  return [...items, ...visitedTail, ...skippedTail];
+  const skippedTail = appendSkippedTail(skippedIds.filter((id) => !routeIds.has(id)));
+  return [...items, ...skippedTail];
 }
