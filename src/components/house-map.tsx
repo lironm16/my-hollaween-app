@@ -258,15 +258,17 @@ function housePinHtml(
   const extraClass = extras?.extraClass ? ` ${extras.extraClass}` : "";
   const idAttr = extras?.houseId ? ` data-house-id="${attr(extras.houseId)}"` : "";
   const fill = pinBackgroundFill(house, face !== "bare");
-  const houseSkipped = Boolean(extras?.skippedIds?.includes(house.id));
-  const houseVisited = Boolean(extras?.visitedIds?.includes(house.id));
-  const progressClass = houseSkipped ? " is-skipped" : houseVisited ? " is-visited" : "";
   const tourRing = pinTourRingDecor(
     [house],
     extras?.visitedIds ?? [],
     extras?.skippedIds ? [...extras.skippedIds] : [],
     extras?.routeModeActive ?? false,
   );
+  const tourRingActive = tourRing.classSuffix.includes("pin-tour-ring");
+  const houseSkipped = Boolean(extras?.skippedIds?.includes(house.id));
+  const houseVisited = Boolean(extras?.visitedIds?.includes(house.id));
+  const progressClass =
+    tourRingActive ? "" : houseSkipped ? " is-skipped" : houseVisited ? " is-visited" : "";
   const ringStyle = tourRing.styleAttr.match(/style="([^"]*)"/)?.[1] ?? "";
   const styleAttr = ` style="background:${fill}${extras?.extraStyle ? `;${extras.extraStyle}` : ""}${ringStyle ? `;${ringStyle}` : ""}"`;
   const label =

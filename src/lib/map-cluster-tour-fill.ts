@@ -69,6 +69,14 @@ export type ClusterTourRingDecor = {
   styleAttr: string;
 };
 
+/** Full-circle tour rings only — Safari desktop mis-renders masked conic ::before. */
+export function solidTourRingColor(gradient: string): string | null {
+  const match = gradient.match(
+    /^conic-gradient\(from -90deg, (#(?:[0-9a-f]{3,8})|#[0-9a-f]{8}) 0% 100%\)$/i,
+  );
+  return match?.[1] ?? null;
+}
+
 /** HTML class + inline style for tour progress ring on any map pin (border, not fill). */
 export function pinTourRingDecor(
   houses: PublicHouse[],
@@ -88,6 +96,13 @@ export function clusterTourRingDecor(
 ): ClusterTourRingDecor {
   const gradient = clusterTourRingGradient(houses, visitedIds, skippedIds, routeModeActive);
   if (gradient) {
+    const solid = solidTourRingColor(gradient);
+    if (solid) {
+      return {
+        classSuffix: " pin-tour-ring pin-tour-ring-solid",
+        styleAttr: ` style="--pin-tour-ring-color:${solid}"`,
+      };
+    }
     return {
       classSuffix: " pin-tour-ring",
       styleAttr: ` style="--pin-tour-ring:${gradient}"`,

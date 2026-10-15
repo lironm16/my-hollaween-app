@@ -1003,7 +1003,17 @@
   overflow: visible;
 }
 
-.house-pin.pin-tour-ring::before {
+/* Solid progress rings use border-color — avoids Safari desktop mask-composite bugs. */
+.house-pin.pin-tour-ring-solid {
+  border-color: var(--pin-tour-ring-color, #fff7ed);
+}
+
+.house-pin.pin-tour-ring-solid::before {
+  content: none;
+  display: none;
+}
+
+.house-pin.pin-tour-ring:not(.pin-tour-ring-solid)::before {
   content: "";
   position: absolute;
   inset: -4px;

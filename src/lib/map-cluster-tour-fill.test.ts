@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   clusterProgressCounts,
   clusterTourRingDecor,
+  solidTourRingColor,
   clusterTourRingGradient,
 } from "@/lib/map-cluster-tour-fill";
 import type { PublicHouse } from "@/lib/types";
@@ -96,10 +97,30 @@ describe("clusterTourRingGradient", () => {
   });
 });
 
+describe("solidTourRingColor", () => {
+  it("detects single-color conic rings", () => {
+    assert.equal(
+      solidTourRingColor("conic-gradient(from -90deg, #f97316 0% 100%)"),
+      "#f97316",
+    );
+    assert.equal(
+      solidTourRingColor("conic-gradient(from -90deg, #059669 0% 50%, #64748b 50% 100%)"),
+      null,
+    );
+  });
+});
+
 describe("clusterTourRingDecor", () => {
-  it("uses tour ring styling when route is on and cluster is untouched", () => {
+  it("uses solid border ring when route is on and cluster is untouched", () => {
     const decor = clusterTourRingDecor([stub("a")], [], [], true);
+    assert.equal(decor.classSuffix, " pin-tour-ring pin-tour-ring-solid");
+    assert.match(decor.styleAttr, /--pin-tour-ring-color:#f97316/);
+  });
+
+  it("uses masked ring for split visited/skipped progress", () => {
+    const decor = clusterTourRingDecor([stub("a"), stub("b")], ["a"], ["b"], true);
     assert.equal(decor.classSuffix, " pin-tour-ring");
-    assert.match(decor.styleAttr, /#f97316/);
+    assert.match(decor.styleAttr, /--pin-tour-ring:/);
+    assert.doesNotMatch(decor.classSuffix, /pin-tour-ring-solid/);
   });
 });

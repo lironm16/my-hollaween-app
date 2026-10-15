@@ -6272,7 +6272,14 @@ svg.leaflet-zoom-animated {
   border-color: transparent;
   overflow: visible;
 }
-.house-pin.pin-tour-ring::before {
+.house-pin.pin-tour-ring-solid {
+  border-color: var(--pin-tour-ring-color, #fff7ed);
+}
+.house-pin.pin-tour-ring-solid::before {
+  content: none;
+  display: none;
+}
+.house-pin.pin-tour-ring:not(.pin-tour-ring-solid)::before {
   content: "";
   position: absolute;
   inset: -4px;
