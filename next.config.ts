@@ -28,12 +28,16 @@ const nextConfig: NextConfig = {
   turbopack: {},
   webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
-      // Client must never resolve the `node:` scheme (Webpack dev throws UnhandledSchemeError).
+      // Client must never resolve Node built-ins (Webpack dev throws UnhandledSchemeError on `node:`).
       config.plugins.push(
         new webpack.NormalModuleReplacementPlugin(/^node:crypto$/, (resource: { request: string }) => {
           resource.request = "crypto";
         }),
       );
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "node:crypto": false,
+      };
       config.resolve.fallback = {
         ...config.resolve.fallback,
         crypto: false,

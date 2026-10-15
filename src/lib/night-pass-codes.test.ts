@@ -7,7 +7,7 @@ import {
   normalizeIsraeliMobile,
   normalizeNightPassCode,
 } from "@/lib/house-access-code";
-import { newHouseAccessCode } from "@/lib/night-pass-codes";
+import { newHouseAccessCode } from "@/lib/night-pass-codes.impl";
 
 describe("night pass codes", () => {
   it("generates 4-char family codes from the unambiguous alphabet", () => {
