@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { maskPhone } from "@/lib/night-pass-codes";
+import { houseAccessSessionForDevice } from "@/lib/night-pass-service";
 import {
   describeNightPassLost,
   readAsUserParam,
@@ -27,6 +28,11 @@ export async function GET(request: Request) {
   const staleCookie = await readNightPassCookie();
   const resolved = await resolveNightPassViewer({ asUser: readAsUserParam(request) });
   const pass = resolved.enabled ? resolved.pass : null;
+  const cookie = pass ? await readNightPassCookie() : staleCookie;
+  const session =
+    pass && cookie
+      ? houseAccessSessionForDevice(pass, cookie.sessionId, cookie.token)
+      : null;
   const lostNow =
     !pass && staleCookie ? describeNightPassLost(staleCookie.passId) : Promise.resolve(null);
   const [house, freshLost, storedLost] = await Promise.all([
@@ -38,9 +44,9 @@ export async function GET(request: Request) {
   const body: NightPassMeResponse = {
     enabled: resolved.enabled,
     viewer: resolved.viewer,
-    registered: Boolean(pass),
-    ...(pass?.holderName ? { holderName: pass.holderName } : {}),
-    ...(pass?.holderPhone ? { holderPhone: maskPhone(pass.holderPhone) } : {}),
+    registered: Boolean(pass && session),
+    ...(session?.holderName ? { holderName: session.holderName } : {}),
+    ...(session?.holderPhone ? { holderPhone: maskPhone(session.holderPhone) } : {}),
     ...(house?.name ? { houseName: house.name } : {}),
     ...(lost ? { lost } : {}),
   };

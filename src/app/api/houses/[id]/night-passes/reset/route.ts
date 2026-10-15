@@ -30,7 +30,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   }
   await updateByEditCode(house.id, house.editCode, { editCode: outcome.newCode });
   return NextResponse.json(
-    { ok: true, access: houseAccessView(outcome.record, outcome.newCode, null) },
+    { ok: true, access: houseAccessView(outcome.record, outcome.newCode, null, null) },
     { headers: NO_STORE },
   );
 }

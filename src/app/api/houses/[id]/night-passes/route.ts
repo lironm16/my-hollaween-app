@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { canonicalHouseId } from "@/lib/ids";
-import {
-  ensureHouseAccess,
-  houseAccessView,
-  nightPassSlotView,
-} from "@/lib/night-pass-service";
+import { ensureHouseAccess, houseAccessView } from "@/lib/night-pass-service";
 import { currentNightPass, readNightPassCookie } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { ownerMayEdit } from "@/lib/owner-session";
@@ -26,7 +22,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   }
   const settings = await readNightPassSettings();
   if (!settings.enabled && !admin) {
-    return NextResponse.json({ enabled: false, access: null, slots: [] }, { headers: NO_STORE });
+    return NextResponse.json({ enabled: false, access: null }, { headers: NO_STORE });
   }
   const house = await getHouse(id);
   if (!house) return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404, headers: NO_STORE });
@@ -35,25 +31,19 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     currentNightPass(),
   ]);
   const cookie = await readNightPassCookie();
-  const token =
-    devicePass && devicePass.houseId === house.id && cookie?.passId === devicePass.id
-      ? cookie.token
-      : null;
+  const sameHouse =
+    devicePass && devicePass.houseId === house.id && cookie?.passId === devicePass.id;
   const access = houseAccessView(
     record,
     house.editCode,
-    token,
-    cookie?.passId === devicePass?.id ? cookie.sessionId : null,
+    sameHouse ? cookie?.sessionId : null,
+    sameHouse ? cookie?.token : null,
   );
-  const thisDeviceRegistered = access.devices.some((d) => d.isThisDevice);
-  const slots = [nightPassSlotView(record, house.editCode, admin)];
   return NextResponse.json(
     {
       enabled: settings.enabled,
       access,
-      slots,
-      thisDeviceSlot: thisDeviceRegistered ? 1 : null,
-      thisDeviceRegistered,
+      thisDeviceRegistered: access.devices.some((d) => d.isThisDevice),
     },
     { headers: NO_STORE },
   );

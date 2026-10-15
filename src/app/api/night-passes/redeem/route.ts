@@ -49,14 +49,13 @@ export async function POST(request: Request) {
   const cookie = await readNightPassCookie();
   const passId = house ? passIdForHouse(house.id) : null;
   const samePass = passId && cookie?.passId === passId;
-  const priorToken = samePass ? cookie.token : null;
   const priorSessionId = samePass ? cookie.sessionId : null;
 
-  const outcome = await redeemNightPass({ code, name, phone, priorToken, priorSessionId });
+  const outcome = await redeemNightPass({ code, name, phone, priorSessionId });
   if (!outcome.ok) {
     return fail(404, "invalid", "קוד המשפחה לא נמצא. בדקו שכל 4 התווים נכונים.");
   }
-  await setNightPassCookie(outcome.record.id, outcome.token, outcome.sessionId);
+  await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
   try {
     await grantOwnerHouse(outcome.record.houseId);
   } catch {

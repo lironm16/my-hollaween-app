@@ -63,9 +63,8 @@ describe("house access service (file store)", () => {
     const code = newEditCode();
     seedHouses([testHouse(id, code)]);
     const first = await service.ensureHouseAccess(id);
-    assert.equal(first.model, "unified");
     assert.equal(first.id, passIdForHouse(id));
-    assert.equal(first.code, undefined);
+    assert.deepEqual(first.sessions, []);
     const again = await service.ensureHouseAccess(id);
     assert.equal(again.id, first.id);
   });

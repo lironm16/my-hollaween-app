@@ -2,19 +2,9 @@ import { createHash, randomInt } from "node:crypto";
 
 /** No 0/O, 1/I/L — codes are read aloud and typed on phones. */
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-/** Legacy per-slot codes (migration only). */
-export const NIGHT_PASS_CODE_LENGTH = 8;
-/** Unified family code — edit + map access. */
+/** Family code — edit unlock + map access. */
 export const HOUSE_ACCESS_CODE_LENGTH = 4;
 export const HOUSE_ACCESS_MAX_DEVICES = 4;
-
-export function newNightPassCode() {
-  let out = "";
-  for (let i = 0; i < NIGHT_PASS_CODE_LENGTH; i += 1) {
-    out += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
-  }
-  return out;
-}
 
 export function newHouseAccessCode() {
   let out = "";
@@ -24,33 +14,22 @@ export function newHouseAccessCode() {
   return out;
 }
 
-/** Uppercase and strip separators so `k7qm-3xpa` and `K7QM 3XPA` match. */
+/** Uppercase and strip separators. */
 export function normalizeNightPassCode(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const cleaned = raw.toUpperCase().replace(/[\s\-_.]/g, "");
-  const len = cleaned.length;
-  if (len !== NIGHT_PASS_CODE_LENGTH && len !== HOUSE_ACCESS_CODE_LENGTH) return null;
+  if (cleaned.length !== HOUSE_ACCESS_CODE_LENGTH) return null;
   for (const ch of cleaned) {
     if (!CODE_ALPHABET.includes(ch)) return null;
   }
   return cleaned;
 }
 
-export function formatNightPassCode(code: string) {
-  if (code.length === 8) return `${code.slice(0, 4)}-${code.slice(4)}`;
+export function formatHouseAccessCode(code: string) {
   return code;
 }
 
-export function formatHouseAccessCode(code: string) {
-  return code.length === HOUSE_ACCESS_CODE_LENGTH ? code : formatNightPassCode(code);
-}
-
-/** Legacy — pass docs keyed by code before house-scoped ids. */
-export function passIdForCode(code: string) {
-  return createHash("sha256").update(`hw-night-pass:${code}`).digest("hex").slice(0, 32);
-}
-
-/** Stable pass document id — survives family code reset; code lives only on the house. */
+/** Stable pass document id — code lives only on house.editCode. */
 export function passIdForHouse(houseId: string) {
   const id = houseId.trim();
   return createHash("sha256").update(`hw-house-access:${id}`).digest("hex").slice(0, 32);

@@ -45,13 +45,12 @@ export async function POST(request: Request) {
     houseId: house.id,
     name,
     phone,
-    priorToken: cookie?.token ?? null,
     priorSessionId: cookie?.sessionId ?? null,
   });
   if (!outcome.ok) {
     return fail(500, "register", "ההרשמה נכשלה. נסו שוב.");
   }
-  await setNightPassCookie(outcome.record.id, outcome.token, outcome.sessionId);
+  await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
   try {
     await grantOwnerHouse(house.id);
   } catch {
