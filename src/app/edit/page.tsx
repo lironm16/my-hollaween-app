@@ -21,6 +21,7 @@ import type { PublicHouse } from "@/lib/types";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
+import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { catalogRemovedViewOnlyEditPage } from "@/lib/labels";
 import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/house-access-code";
@@ -122,11 +123,8 @@ function EditPageContent() {
         editCode: code,
         preview: data.house,
       });
+      await refreshNightPassState({ force: true });
       if (data.deviceConnected) {
-        const { refreshNightPassState, notifyNightPassSlotsChanged } = await import(
-          "@/lib/night-pass-client"
-        );
-        await refreshNightPassState({ force: true });
         notifyNightPassSlotsChanged();
       }
       return true;

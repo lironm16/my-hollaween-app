@@ -32,6 +32,25 @@ function readLostDetail(value: unknown): NightPassLostDetail {
 }
 /** Owner codes list changed (pair, reset, re-register). */
 export const NIGHT_PASSES_SLOTS_CHANGED_EVENT = "hw-night-passes-changed";
+/** Owner unlocked a house but contact on file is incomplete — open register without code. */
+export const NIGHT_PASS_OWNER_REGISTER_EVENT = "hw-night-pass-owner-register";
+
+export type NightPassOwnerRegisterDetail = { houseId?: string };
+
+const ownerRegisterPrompted = new Set<string>();
+
+/** Auto-open owner register (no entrance code) once per house per tab session. */
+export function dispatchOwnerRegisterPrompt(houseId?: string) {
+  if (typeof window === "undefined") return;
+  const key = houseId?.trim() || "*";
+  if (ownerRegisterPrompted.has(key)) return;
+  ownerRegisterPrompted.add(key);
+  window.dispatchEvent(
+    new CustomEvent<NightPassOwnerRegisterDetail>(NIGHT_PASS_OWNER_REGISTER_EVENT, {
+      detail: houseId?.trim() ? { houseId: houseId.trim() } : {},
+    }),
+  );
+}
 
 export function notifyNightPassSlotsChanged() {
   if (typeof window === "undefined") return;
@@ -130,7 +149,11 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
             signal: AbortSignal.timeout(8000),
           });
           if (connect.ok) {
-            const detail = (await connect.json()) as { connected?: boolean };
+            const detail = (await connect.json()) as {
+              connected?: boolean;
+              needsRegistration?: boolean;
+              houseId?: string;
+            };
             if (detail.connected) {
               const again = await fetch(`/api/night-passes/me${qs}`, {
                 cache: "no-store",
@@ -140,6 +163,8 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
                 const json2 = (await again.json()) as { lost?: unknown };
                 next = asState(json2) ?? next;
               }
+            } else if (detail.needsRegistration) {
+              dispatchOwnerRegisterPrompt(detail.houseId);
             }
           }
         } catch {

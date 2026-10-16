@@ -21,11 +21,18 @@ import {
   NIGHT_PASS_ALREADY_REGISTERED_BODY,
   NIGHT_PASS_ALREADY_REGISTERED_TITLE,
 } from "@/lib/night-pass-copy";
-import { readNightPassState, refreshNightPassState } from "@/lib/night-pass-client";
+import {
+  NIGHT_PASS_OWNER_REGISTER_EVENT,
+  readNightPassState,
+  refreshNightPassState,
+  type NightPassOwnerRegisterDetail,
+} from "@/lib/night-pass-client";
 import type { PublicHouse } from "@/lib/types";
 
 type NightPassDialogContextValue = {
   openRegister: (initialCode?: string, inviteToken?: string) => void;
+  /** Owner unlocked a house — register for the event without an entrance code. */
+  openOwnerRegister: (houseId?: string) => void;
   /** After add-house — same dialog as ⋮ → קוד עריכה ומכשירים. */
   openOwnerPasses: (house: PublicHouse, editCode: string) => void;
 };
@@ -38,6 +45,8 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCode, setRegisterCode] = useState("");
   const [registerInvite, setRegisterInvite] = useState("");
+  const [ownerRegisterMode, setOwnerRegisterMode] = useState(false);
+  const [ownerRegisterHouseId, setOwnerRegisterHouseId] = useState("");
   const [alreadyRegisteredOpen, setAlreadyRegisteredOpen] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerHouse, setOwnerHouse] = useState<PublicHouse | null>(null);
@@ -47,10 +56,30 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
     const code = initialCode.replace(/[\s-]/g, "").toUpperCase();
     const invite = inviteToken.trim();
     if (readNightPassState().registered && !code && !invite) return;
+    setOwnerRegisterMode(false);
+    setOwnerRegisterHouseId("");
     setRegisterCode(code);
     setRegisterInvite(invite);
     setRegisterOpen(true);
   }, []);
+
+  const openOwnerRegister = useCallback((houseId = "") => {
+    if (readNightPassState().registered) return;
+    setOwnerRegisterMode(true);
+    setRegisterCode("");
+    setRegisterInvite("");
+    setOwnerRegisterHouseId(houseId.trim());
+    setRegisterOpen(true);
+  }, []);
+
+  useEffect(() => {
+    const onOwnerRegister = (event: Event) => {
+      const detail = (event as CustomEvent<NightPassOwnerRegisterDetail>).detail;
+      openOwnerRegister(detail?.houseId ?? "");
+    };
+    window.addEventListener(NIGHT_PASS_OWNER_REGISTER_EVENT, onOwnerRegister);
+    return () => window.removeEventListener(NIGHT_PASS_OWNER_REGISTER_EVENT, onOwnerRegister);
+  }, [openOwnerRegister]);
 
   const openOwnerPasses = useCallback((house: PublicHouse, editCode: string) => {
     setOwnerHouse(house);
@@ -59,8 +88,8 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ openRegister, openOwnerPasses }),
-    [openRegister, openOwnerPasses],
+    () => ({ openRegister, openOwnerRegister, openOwnerPasses }),
+    [openRegister, openOwnerRegister, openOwnerPasses],
   );
 
   return (
@@ -95,13 +124,25 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       </HouseEditModal>
       <HouseEditModal
         open={registerOpen}
-        onClose={() => setRegisterOpen(false)}
-        title="מכשיר מחובר"
+        onClose={() => {
+          setRegisterOpen(false);
+          setOwnerRegisterMode(false);
+          setOwnerRegisterHouseId("");
+        }}
+        title={ownerRegisterMode ? "חיבור לאירוע" : "מכשיר מחובר"}
       >
         <NightPassRegisterPanel
-          key={registerOpen ? registerCode || registerInvite || "open" : "closed"}
+          key={
+            registerOpen
+              ? ownerRegisterMode
+                ? `owner-${ownerRegisterHouseId || "any"}`
+                : registerCode || registerInvite || "open"
+              : "closed"
+          }
           initialCode={registerCode}
           inviteToken={registerInvite}
+          ownerRegister={ownerRegisterMode}
+          ownerHouseId={ownerRegisterHouseId || undefined}
           compact
           onRegistered={() => setRegisterOpen(false)}
           onNavigateAway={() => setRegisterOpen(false)}

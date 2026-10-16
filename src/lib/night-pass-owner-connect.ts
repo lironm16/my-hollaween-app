@@ -1,13 +1,139 @@
 import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-code";
-import { registerHouseAccessDevice } from "@/lib/night-pass-service";
+import { toPublicHouse } from "@/lib/ids";
+import { normalizeOwnerPhone } from "@/lib/owner-phone";
+import { registerHouseAccessDevice, type RedeemOutcome } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { currentNightPass, readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
-import { ownerHouseIds } from "@/lib/owner-session";
-import { getHouse } from "@/lib/store";
+import { ownerHouseIds, ownerMayEdit } from "@/lib/owner-session";
+import { getHouse, updateByEditCode } from "@/lib/store";
+import { canonicalHouseId } from "@/lib/ids";
 
 export type OwnerDeviceConnectOutcome =
   | { connected: true; houseId: string }
-  | { connected: false; reason: "disabled" | "already" | "no_owner_houses" | "missing_contact" | "register_failed" };
+  | {
+      connected: false;
+      reason: "disabled" | "already" | "no_owner_houses" | "missing_contact" | "register_failed";
+      needsRegistration?: boolean;
+      houseId?: string;
+    };
+
+export type OwnerRegisterPrefill = {
+  eligible: boolean;
+  houseId?: string;
+  houseName?: string;
+  name?: string;
+  phone?: string;
+};
+
+function contactFromHouse(house: { addedBy?: string | null; ownerPhone?: string | null }) {
+  const name = normalizeHolderName(house.addedBy ?? "") ?? "";
+  const phone =
+    normalizeIsraeliMobile(house.ownerPhone ?? "") ??
+    normalizeIsraeliMobile(normalizeOwnerPhone(String(house.ownerPhone ?? ""))) ??
+    "";
+  return { name, phone };
+}
+
+export async function ownerRegisterPrefill(preferredHouseId?: string): Promise<OwnerRegisterPrefill> {
+  const settings = await readNightPassSettings();
+  if (!settings.enabled) return { eligible: false };
+
+  const owned = await ownerHouseIds();
+  if (owned.length === 0) return { eligible: false };
+
+  const prefer = preferredHouseId ? canonicalHouseId(preferredHouseId) : "";
+  const order =
+    prefer && owned.some((id) => canonicalHouseId(id) === prefer)
+      ? [prefer, ...owned.filter((id) => canonicalHouseId(id) !== prefer)]
+      : owned;
+
+  for (const rawId of order) {
+    const id = canonicalHouseId(rawId);
+    if (!(await ownerMayEdit(id))) continue;
+    const house = await getHouse(id);
+    if (!house) continue;
+    const { name, phone } = contactFromHouse(house);
+    return {
+      eligible: true,
+      houseId: house.id,
+      houseName: house.name,
+      name,
+      phone,
+    };
+  }
+  return { eligible: false };
+}
+
+async function patchHouseContactIfMissing(
+  houseId: string,
+  editCode: string,
+  name: string,
+  phone: string,
+) {
+  const house = await getHouse(houseId);
+  if (!house) return;
+  const patch: { addedBy?: string; ownerPhone?: string } = {};
+  if (!normalizeHolderName(house.addedBy ?? "") && name) {
+    patch.addedBy = name;
+  }
+  if (!normalizeIsraeliMobile(house.ownerPhone ?? "") && phone) {
+    patch.ownerPhone = normalizeOwnerPhone(phone);
+  }
+  if (Object.keys(patch).length === 0) return;
+  await updateByEditCode(houseId, editCode, patch);
+}
+
+/** Register owner device and backfill missing house contact fields from the form. */
+export async function registerOwnerDeviceWithContact(input: {
+  houseId: string;
+  name: string;
+  phone: string;
+}): Promise<
+  | (Extract<RedeemOutcome, { ok: true }> & {
+      houseId: string;
+      editCode: string;
+      house: ReturnType<typeof toPublicHouse>;
+    })
+  | { ok: false; error: string }
+> {
+  const settings = await readNightPassSettings();
+  if (!settings.enabled) return { ok: false, error: "disabled" };
+
+  const id = canonicalHouseId(input.houseId);
+  if (!(await ownerMayEdit(id))) return { ok: false, error: "forbidden" };
+
+  const name = normalizeHolderName(input.name);
+  const phone = normalizeIsraeliMobile(input.phone);
+  if (!name) return { ok: false, error: "name" };
+  if (!phone) return { ok: false, error: "phone" };
+
+  const house = await getHouse(id);
+  if (!house?.editCode?.trim()) return { ok: false, error: "invalid" };
+
+  if (await currentNightPass()) {
+    return { ok: false, error: "already" };
+  }
+
+  const cookie = await readNightPassCookie();
+  const outcome = await registerHouseAccessDevice({
+    houseId: house.id,
+    name,
+    phone,
+    priorSessionId: cookie?.sessionId ?? null,
+  });
+  if (!outcome.ok) return { ok: false, error: outcome.error };
+
+  await patchHouseContactIfMissing(house.id, house.editCode, name, phone);
+  await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
+
+  const updated = (await getHouse(house.id)) ?? house;
+  return {
+    ...outcome,
+    houseId: updated.id,
+    editCode: updated.editCode,
+    house: toPublicHouse(updated),
+  };
+}
 
 /** Register this device for event access using owner-unlocked houses (name + mobile on file). */
 export async function tryConnectOwnerDeviceForEvent(): Promise<OwnerDeviceConnectOutcome> {
@@ -19,12 +145,15 @@ export async function tryConnectOwnerDeviceForEvent(): Promise<OwnerDeviceConnec
   if (owned.length === 0) return { connected: false, reason: "no_owner_houses" };
 
   const cookie = await readNightPassCookie();
+  let fallbackHouseId: string | undefined;
   for (const id of owned) {
     const house = await getHouse(id);
     if (!house) continue;
-    const phone = normalizeIsraeliMobile(house.ownerPhone ?? "");
-    const name = normalizeHolderName(house.addedBy ?? "");
-    if (!phone || !name) continue;
+    const { name, phone } = contactFromHouse(house);
+    if (!name || !phone) {
+      fallbackHouseId = fallbackHouseId ?? house.id;
+      continue;
+    }
     const outcome = await registerHouseAccessDevice({
       houseId: house.id,
       name,
@@ -36,7 +165,12 @@ export async function tryConnectOwnerDeviceForEvent(): Promise<OwnerDeviceConnec
       return { connected: true, houseId: house.id };
     }
   }
-  return { connected: false, reason: "missing_contact" };
+  return {
+    connected: false,
+    reason: "missing_contact",
+    needsRegistration: true,
+    houseId: fallbackHouseId ?? owned[0],
+  };
 }
 
 /** Same as add-house auto-connect for one house row. */
@@ -49,8 +183,7 @@ export async function tryConnectOwnerDeviceForHouse(
   if (await currentNightPass()) return true;
   const house = await getHouse(houseId);
   if (!house) return false;
-  const phone = normalizeIsraeliMobile(house.ownerPhone ?? "");
-  const name = normalizeHolderName(house.addedBy ?? "");
+  const { name, phone } = contactFromHouse(house);
   if (!phone || !name) return false;
   const cookie = await readNightPassCookie();
   const outcome = await registerHouseAccessDevice({

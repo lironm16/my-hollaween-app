@@ -11,6 +11,7 @@ import { useNightPass } from "@/hooks/use-night-pass";
 import {
   NIGHT_PASS_ALREADY_REGISTERED_BODY,
   NIGHT_PASS_ALREADY_REGISTERED_TITLE,
+  NIGHT_PASS_OWNER_REGISTER_SUBTITLE,
   NIGHT_PASS_REGISTER_SUBTITLE,
 } from "@/lib/night-pass-copy";
 import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
@@ -30,6 +31,9 @@ function isIosBrowserTab() {
 type Props = {
   initialCode?: string;
   inviteToken?: string;
+  /** Owner flow — no entrance code; uses house on file + backfills missing contact. */
+  ownerRegister?: boolean;
+  ownerHouseId?: string;
   onRegistered?: () => void;
   onAlreadyRegistered?: () => void;
   /** Close the register dialog before in-app navigation (help link). */
@@ -41,6 +45,8 @@ type Props = {
 export function NightPassRegisterPanel({
   initialCode = "",
   inviteToken = "",
+  ownerRegister = false,
+  ownerHouseId,
   onRegistered,
   onAlreadyRegistered,
   onNavigateAway,
@@ -55,9 +61,10 @@ export function NightPassRegisterPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [iosTab, setIosTab] = useState(false);
+  const [ownerHouseName, setOwnerHouseName] = useState("");
+  const [resolvedOwnerHouseId, setResolvedOwnerHouseId] = useState("");
 
   const hasInvite = inviteToken.trim().length > 0;
-  const hasCode = initialCode.replace(/\D/g, "").length >= 6;
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
@@ -87,6 +94,43 @@ export function NightPassRegisterPanel({
   }, [initialCode]);
 
   useEffect(() => {
+    if (!ownerRegister) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const qs = ownerHouseId?.trim()
+          ? `?houseId=${encodeURIComponent(ownerHouseId.trim())}`
+          : "";
+        const res = await fetch(`/api/night-passes/owner-register-prefill${qs}`, {
+          cache: "no-store",
+        });
+        const json = (await res.json()) as {
+          eligible?: boolean;
+          houseId?: string;
+          houseName?: string;
+          name?: string;
+          phone?: string;
+        };
+        if (cancelled || !json.eligible) {
+          if (!cancelled && !json.eligible) {
+            setError("לא נמצא בית לעריכה במכשיר הזה.");
+          }
+          return;
+        }
+        if (json.houseId) setResolvedOwnerHouseId(json.houseId);
+        if (json.houseName) setOwnerHouseName(json.houseName);
+        if (json.name) setName((prev) => (prev.trim() ? prev : json.name!));
+        if (json.phone) setPhone((prev) => (prev.trim() ? prev : json.phone!));
+      } catch {
+        if (!cancelled) setError("לא הצלחנו לטעון פרטים. נסו שוב.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ownerRegister, ownerHouseId]);
+
+  useEffect(() => {
     setIosTab(isIosBrowserTab());
     void refreshNightPassState({ force: true }).finally(() => setChecked(true));
   }, []);
@@ -95,10 +139,16 @@ export function NightPassRegisterPanel({
     setBusy(true);
     setError("");
     try {
-      const endpoint = hasInvite ? "/api/night-passes/redeem-invite" : "/api/night-passes/redeem";
-      const body = hasInvite
-        ? { invite: inviteToken.trim(), name, phone }
-        : { code, name, phone };
+      const endpoint = ownerRegister
+        ? "/api/night-passes/register-owner"
+        : hasInvite
+          ? "/api/night-passes/redeem-invite"
+          : "/api/night-passes/redeem";
+      const body = ownerRegister
+        ? { houseId: resolvedOwnerHouseId || ownerHouseId?.trim(), name, phone }
+        : hasInvite
+          ? { invite: inviteToken.trim(), name, phone }
+          : { code, name, phone };
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,8 +195,9 @@ export function NightPassRegisterPanel({
     return <p className="text-base text-violet-300">בודקים את המכשיר…</p>;
   }
 
-  if (pass.registered && !hasCode && !hasInvite) {
-    return null;
+  if (pass.registered && !hasInvite && !ownerRegister) {
+    const hasCode = initialCode.replace(/\D/g, "").length >= 6;
+    if (!hasCode) return null;
   }
 
   if (pass.registered && hasInvite) {
@@ -185,7 +236,14 @@ export function NightPassRegisterPanel({
         void submit();
       }}
     >
-      <p className="text-base leading-relaxed text-violet-100">{NIGHT_PASS_REGISTER_SUBTITLE}</p>
+      <p className="text-base leading-relaxed text-violet-100">
+        {ownerRegister ? NIGHT_PASS_OWNER_REGISTER_SUBTITLE : NIGHT_PASS_REGISTER_SUBTITLE}
+      </p>
+      {ownerRegister && ownerHouseName ? (
+        <p className="rounded-xl bg-violet-950/50 p-3 text-center text-sm text-violet-100 ring-1 ring-violet-500/25">
+          {ownerHouseName}
+        </p>
+      ) : null}
       {iosTab ? (
         <p className="rounded-xl bg-amber-950/60 p-3 text-sm text-amber-100 ring-1 ring-amber-500/25">
           באייפון: הירשמו מתוך האפליקציה אם הוספתם אותה למסך הבית.
@@ -195,7 +253,7 @@ export function NightPassRegisterPanel({
         <p className="rounded-xl bg-emerald-950/50 p-3 text-center text-sm text-emerald-100 ring-1 ring-emerald-500/25">
           הזמנה לבית — מלאו שם ונייד ולחצו «הרשמה».
         </p>
-      ) : (
+      ) : ownerRegister ? null : (
         <div className="space-y-1.5">
           <Label htmlFor="pass-code">קוד כניסה (6 ספרות)</Label>
           <Input
@@ -243,7 +301,13 @@ export function NightPassRegisterPanel({
       ) : null}
       <Button
         type="submit"
-        disabled={busy || (!hasInvite && !code.trim()) || !name.trim() || !phone.trim()}
+        disabled={
+          busy ||
+          (ownerRegister && !resolvedOwnerHouseId && !ownerHouseId?.trim()) ||
+          (!ownerRegister && !hasInvite && !code.trim()) ||
+          !name.trim() ||
+          !phone.trim()
+        }
         className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
       >
         {busy ? "נרשמים…" : "הרשמה"}
