@@ -49,7 +49,7 @@ export function NightPassRegisterPanel({
   const [iosTab, setIosTab] = useState(false);
 
   const hasInvite = inviteToken.trim().length > 0;
-  const hasCode = initialCode.replace(/[\s-]/g, "").length >= 4;
+  const hasCode = initialCode.replace(/\D/g, "").length >= 6;
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
@@ -57,7 +57,7 @@ export function NightPassRegisterPanel({
 
   useEffect(() => {
     const raw = initialCode.replace(/[\s-]/g, "");
-    if (raw.length < 4) return;
+    if (raw.replace(/\D/g, "").length < 6) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -157,18 +157,15 @@ export function NightPassRegisterPanel({
         </p>
       ) : (
         <div className="space-y-1.5">
-          <Label htmlFor="pass-code">קוד כניסה (4 תווים או 6 ספרות)</Label>
+          <Label htmlFor="pass-code">קוד כניסה (6 ספרות)</Label>
           <Input
             id="pass-code"
             value={code}
-            onChange={(event) => {
-              const raw = event.target.value.toUpperCase();
-              setCode(/^\d*$/.test(raw.replace(/\s/g, "")) ? raw.replace(/\D/g, "") : raw);
-            }}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
             dir="ltr"
-            autoCapitalize="characters"
+            inputMode="numeric"
             autoComplete="one-time-code"
-            placeholder="K7QM"
+            placeholder="123456"
             maxLength={6}
             className="h-11 bg-[#12081a] text-center font-mono text-lg tracking-widest"
           />

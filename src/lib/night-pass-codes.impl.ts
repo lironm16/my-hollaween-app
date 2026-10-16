@@ -1,11 +1,10 @@
 import { createHash, randomInt } from "crypto";
-import { HOUSE_ACCESS_CODE_LENGTH, houseAccessCodeAlphabet } from "@/lib/house-access-code";
+import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/house-access-code";
 
 export function newHouseAccessCode() {
-  const alphabet = houseAccessCodeAlphabet();
   let out = "";
   for (let i = 0; i < HOUSE_ACCESS_CODE_LENGTH; i += 1) {
-    out += alphabet[randomInt(alphabet.length)];
+    out += String(randomInt(10));
   }
   return out;
 }

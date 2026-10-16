@@ -10,20 +10,19 @@ import {
 import { newHouseAccessCode } from "@/lib/night-pass-codes.impl";
 
 describe("night pass codes", () => {
-  it("generates 4-char family codes from the unambiguous alphabet", () => {
+  it("generates 6-digit entrance codes", () => {
     for (let i = 0; i < 50; i += 1) {
       const code = newHouseAccessCode();
       assert.equal(code.length, HOUSE_ACCESS_CODE_LENGTH);
-      assert.match(code, /^[A-HJKMNP-Z2-9]{4}$/);
-      assert.equal(normalizeNightPassCode(code), code);
+      assert.match(code, /^\d{6}$/);
     }
   });
 
-  it("accepts lowercase and strips spaces", () => {
+  it("accepts legacy 4-char codes for lookup", () => {
     assert.equal(normalizeNightPassCode(" k7qm "), "K7QM");
   });
 
-  it("rejects wrong length and ambiguous characters", () => {
+  it("rejects wrong length and ambiguous characters for legacy codes", () => {
     assert.equal(normalizeNightPassCode("K7Q"), null);
     assert.equal(normalizeNightPassCode("K7QM3XPA"), null);
     assert.equal(normalizeNightPassCode("K7QI"), null);

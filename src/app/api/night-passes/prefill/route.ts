@@ -3,7 +3,7 @@ import { isAdmin } from "@/lib/admin";
 import {
   normalizeHolderName,
   normalizeIsraeliMobile,
-  normalizeNightPassCode,
+  normalizeHouseAccessCode,
 } from "@/lib/house-access-code";
 import { ownerMayEdit } from "@/lib/owner-session";
 import { getHouseByAccessCode } from "@/lib/store";
@@ -15,7 +15,7 @@ const NO_STORE = { "Cache-Control": "private, no-store" };
 
 /** Owner prefill for «להשתמש בטלפון הזה» — name + phone from the house row. */
 export async function GET(request: Request) {
-  const code = normalizeNightPassCode(new URL(request.url).searchParams.get("code"));
+  const code = normalizeHouseAccessCode(new URL(request.url).searchParams.get("code"));
   if (!code) {
     return NextResponse.json({ name: "", phone: "" }, { headers: NO_STORE });
   }

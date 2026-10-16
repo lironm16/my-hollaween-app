@@ -43,7 +43,7 @@ export function EditCodeDialog({
         </p>
         <div className="space-y-2">
           <label htmlFor="edit-code-field" className="text-base text-violet-300">
-            קוד עריכה ({codeSpec.labelSuffix})
+            קוד כניסה ({codeSpec.labelSuffix})
           </label>
           <input
             id="edit-code-field"
