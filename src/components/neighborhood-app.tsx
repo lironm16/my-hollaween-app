@@ -64,7 +64,12 @@ import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hu
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { isGemTypeInCollection, loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
-import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
+import {
+  canCollectGem,
+  gemMonsterForHouse,
+  userWithinGemHuntRange,
+  GEM_CHEER_MS,
+} from "@/lib/gem-hunt";
 import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
 import {
   firstClusterGemHouseToHunt,
@@ -1796,6 +1801,10 @@ export function NeighborhoodApp({
           open
           catches={clusterGemSessionSummary}
           onClose={() => setClusterGemSessionSummary(null)}
+          onOpenStickerBook={() => {
+            setClusterGemSessionSummary(null);
+            router.push("/gem-bag");
+          }}
         />
       ) : null}
       {gemPlacerDialog}
@@ -1825,6 +1834,10 @@ export function NeighborhoodApp({
         <GemHuntExperienceLazy
           house={mapGemHouse}
           userLocation={gps ?? mapGemGps}
+          repeatVisit={isGemTypeInCollection(
+            gemMonsterForHouse(mapGemHouse),
+            loadGemCollected(),
+          )}
           deferCameraUntilInRange={false}
           collectEnabled={canCollectGem(
             gps ?? mapGemGps,

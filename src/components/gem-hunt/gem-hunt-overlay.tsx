@@ -57,6 +57,7 @@ import { useGemEncounterPhase } from "@/hooks/use-gem-encounter-phase";
 import { useTreatSwipe } from "@/hooks/use-treat-swipe";
 import {
   GEM_ENCOUNTER_CELEBRATE_MS,
+  encounterCollectFeedbackActive,
   encounterUiChromeHidden,
   markEncounterTutorialSeen,
 } from "@/lib/gem-encounter";
@@ -705,7 +706,7 @@ export function GemHuntOverlay({
     }
     encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
-    onTreatSuccess();
+    onTreatSuccess({ fromTap: true });
   }, [encounterPhase, onTreatSuccess]);
 
   const handleGemInspectTap = useCallback(() => {
@@ -718,11 +719,9 @@ export function GemHuntOverlay({
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
   const hideHuntHintControls = showHuntGem && phase === "visible" && inOnsiteBand;
-  const repeatFoundBanner =
-    repeatFoundBannerHe &&
-    inOnsiteBand &&
-    (phase === "visible" || phase === "collecting") &&
-    (showHuntGem || phase === "collecting");
+  const collectFeedbackActive =
+    phase === "collecting" ||
+    (encounterMode && encounterCollectFeedbackActive(encounterPhase));
 
   const gemEncounterWiggle =
     encounterPhase === "resolve-hit" ||
@@ -745,6 +744,17 @@ export function GemHuntOverlay({
     (campusSession && phase === "visible");
   const hideFooterChrome =
     encounterMode && encounterUiChromeHidden(encounterPhase);
+  const repeatFoundBanner =
+    repeatFoundBannerHe &&
+    inOnsiteBand &&
+    (collectFeedbackActive || (phase === "visible" && showHuntGem));
+  const hideCloseButton = !campusSession && collectFeedbackActive;
+  const showFooterPanel = showHuntUi && (showLegacyFooter || collectFeedbackActive);
+  const showFooterButtons =
+    showFooterPanel &&
+    !hideFooterChrome &&
+    !hideHuntHintControls &&
+    phase === "visible";
 
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission({ force: true });
@@ -821,17 +831,6 @@ export function GemHuntOverlay({
         </div>
       ) : null}
       <div className="gem-hunt-overlay__shade" aria-hidden />
-      {topCollectBanner ? (
-        <p
-          className={cn(
-            "gem-hunt-overlay__collect-banner",
-            phase === "collecting" && "is-exploding",
-          )}
-          role="status"
-        >
-          {topCollectBanner}
-        </p>
-      ) : null}
       {encounterMode ? (
         <GemEncounterLayer
           house={house}
@@ -859,29 +858,17 @@ export function GemHuntOverlay({
             ) : null}
           </div>
         ) : null}
-        <OverlayCloseButton
-          label="סגירה"
-          onClick={handleClose}
-          className={cn(
-            "gem-hunt-overlay__close pointer-events-auto",
-            !campusSession &&
-              (phase === "collecting" ||
-                (phase === "albumReveal" && albumRevealPhase === "enter" && !albumShowActions)) &&
-              "pointer-events-none opacity-40",
-          )}
-        />
+        {hideCloseButton ? null : (
+          <OverlayCloseButton
+            label="סגירה"
+            onClick={handleClose}
+            className="gem-hunt-overlay__close pointer-events-auto"
+          />
+        )}
       </header>
 
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
-      ) : null}
-      {phase === "collecting" && repeatFoundBannerHe ? (
-        <p
-          className="gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--collect is-exploding"
-          role="status"
-        >
-          {repeatFoundBannerHe}
-        </p>
       ) : null}
 
       {showHuntUi ? (
@@ -972,15 +959,32 @@ export function GemHuntOverlay({
         />
       ) : null}
 
-      {showHuntUi && phase !== "collecting" && showLegacyFooter && !hideFooterChrome ? (
+      {showFooterPanel ? (
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
-          {repeatFoundBanner ? (
-            <p className="gem-hunt-overlay__found-again-banner" role="status">
-              {repeatFoundBannerHe}
-            </p>
-          ) : null}
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
+              {collectFeedbackActive && topCollectBanner ? (
+                <p
+                  className={cn(
+                    "gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain gem-hunt-overlay__collect-banner-footer",
+                    phase === "collecting" && "is-exploding",
+                  )}
+                  role="status"
+                >
+                  {topCollectBanner}
+                </p>
+              ) : null}
+              {repeatFoundBanner ? (
+                <p
+                  className={cn(
+                    "gem-hunt-overlay__footer-hint gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--footer",
+                    collectFeedbackActive && "is-exploding",
+                  )}
+                  role="status"
+                >
+                  {repeatFoundBannerHe}
+                </p>
+              ) : null}
               {tellMeButton.showRangeError ? (
                 <p
                   className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain gem-hunt-overlay__footer-hint--error"
@@ -989,7 +993,9 @@ export function GemHuntOverlay({
                   {tellMeButton.rangeErrorMessage}
                 </p>
               ) : null}
-              {showEncounterFooter && encounterPhase === "encounter" ? (
+              {!collectFeedbackActive &&
+              showEncounterFooter &&
+              encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
                   סובבו את החיה באצבע. למציאה — הקישו עליה.
                 </p>
@@ -1026,6 +1032,7 @@ export function GemHuntOverlay({
                 </div>
               ) : null}
             </div>
+            {showFooterButtons ? (
             <div className="gem-hunt-overlay__footer-controls">
               {campusSession && phase === "visible" && !encounterMode ? (
                 <button
@@ -1073,6 +1080,7 @@ export function GemHuntOverlay({
                   </div>
                 ) : null}
             </div>
+            ) : null}
           </div>
         </footer>
       ) : null}

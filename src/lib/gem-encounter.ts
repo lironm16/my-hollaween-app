@@ -51,3 +51,15 @@ export function encounterUiChromeHidden(phase: GemEncounterPhase): boolean {
     phase === "resolve-celebrate"
   );
 }
+
+/** Tap / swipe resolve chain — hide close + show «מצאתם…» copy. */
+export function encounterCollectFeedbackActive(phase: GemEncounterPhase): boolean {
+  return (
+    phase === "resolve-hit" ||
+    phase === "resolve-wiggle1" ||
+    phase === "resolve-wiggle2" ||
+    phase === "resolve-breakout" ||
+    phase === "resolve-celebrate" ||
+    phase === "reward"
+  );
+}

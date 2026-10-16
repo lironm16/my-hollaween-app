@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   GEM_ENCOUNTER_APPROACH_MIN_MS,
   GEM_ENCOUNTER_APPROACH_SKIP_MS,
-  GEM_ENCOUNTER_BREAKOUT_MS,
   GEM_ENCOUNTER_CELEBRATE_MS,
   GEM_ENCOUNTER_HIT_MS,
   GEM_ENCOUNTER_REPEAT_REWARD_MS,
@@ -73,6 +72,30 @@ export function useGemEncounterPhase({
     return clearTimer;
   }, [enabled, phase, petRevealed, inRange, collectEnabled, clearTimer]);
 
+  const finishReward = useCallback(() => {
+    setPhase("reward");
+    onEncounterCollect();
+    if (repeatVisit) {
+      timerRef.current = window.setTimeout(onRepeatRewardDone, GEM_ENCOUNTER_REPEAT_REWARD_MS);
+    }
+  }, [onEncounterCollect, onRepeatRewardDone, repeatVisit]);
+
+  const runCelebrateChain = useCallback(() => {
+    setPhase("resolve-celebrate");
+    timerRef.current = window.setTimeout(() => {
+      finishReward();
+    }, GEM_ENCOUNTER_CELEBRATE_MS);
+  }, [finishReward]);
+
+  /** Gem tap — always completes (no wiggle / breakout loop). */
+  const runTapResolveChain = useCallback(() => {
+    clearTimer();
+    setPhase("resolve-hit");
+    timerRef.current = window.setTimeout(() => {
+      runCelebrateChain();
+    }, GEM_ENCOUNTER_HIT_MS);
+  }, [clearTimer, runCelebrateChain]);
+
   const runResolveChain = useCallback(() => {
     clearTimer();
     setPhase("resolve-hit");
@@ -82,42 +105,28 @@ export function useGemEncounterPhase({
         if (!repeatVisit) {
           setPhase("resolve-wiggle2");
           timerRef.current = window.setTimeout(() => {
-            const roll = Math.random();
-            if (roll < 0.12 && breakoutUsedRef.current < 1) {
-              breakoutUsedRef.current += 1;
-              setPhase("resolve-breakout");
-              timerRef.current = window.setTimeout(() => {
-                setPhase("encounter");
-              }, GEM_ENCOUNTER_BREAKOUT_MS);
-              return;
-            }
-            setPhase("resolve-celebrate");
-            timerRef.current = window.setTimeout(() => {
-              setPhase("reward");
-              onEncounterCollect();
-              if (repeatVisit) {
-                timerRef.current = window.setTimeout(onRepeatRewardDone, GEM_ENCOUNTER_REPEAT_REWARD_MS);
-              }
-            }, GEM_ENCOUNTER_CELEBRATE_MS);
+            runCelebrateChain();
           }, GEM_ENCOUNTER_WIGGLE2_MS);
         } else {
-          setPhase("resolve-celebrate");
-          timerRef.current = window.setTimeout(() => {
-            setPhase("reward");
-            onEncounterCollect();
-            timerRef.current = window.setTimeout(onRepeatRewardDone, GEM_ENCOUNTER_REPEAT_REWARD_MS);
-          }, GEM_ENCOUNTER_CELEBRATE_MS);
+          runCelebrateChain();
         }
       }, GEM_ENCOUNTER_WIGGLE1_MS);
     }, GEM_ENCOUNTER_HIT_MS);
-  }, [clearTimer, onEncounterCollect, onRepeatRewardDone, repeatVisit]);
+  }, [clearTimer, repeatVisit, runCelebrateChain]);
 
-  const onTreatSuccess = useCallback(() => {
-    if (phase !== "encounter") return;
-    /** GPS can flicker out of band during the swipe/tap — do not block the resolve chain. */
-    if (!collectEnabled && !petRevealed && !inRange) return;
-    runResolveChain();
-  }, [phase, collectEnabled, petRevealed, inRange, runResolveChain]);
+  const onTreatSuccess = useCallback(
+    (opts?: { fromTap?: boolean }) => {
+      if (phase !== "encounter") return;
+      /** GPS can flicker out of band during the swipe/tap — do not block the resolve chain. */
+      if (!collectEnabled && !petRevealed && !inRange) return;
+      if (opts?.fromTap) {
+        runTapResolveChain();
+        return;
+      }
+      runResolveChain();
+    },
+    [phase, collectEnabled, petRevealed, inRange, runResolveChain, runTapResolveChain],
+  );
 
   const onTreatMiss = useCallback(() => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {

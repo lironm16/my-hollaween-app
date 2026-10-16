@@ -52,6 +52,7 @@ import { useGemEncounterPhase } from "@/hooks/use-gem-encounter-phase";
 import { useTreatSwipe } from "@/hooks/use-treat-swipe";
 import {
   GEM_ENCOUNTER_CELEBRATE_MS,
+  encounterCollectFeedbackActive,
   encounterUiChromeHidden,
   markEncounterTutorialSeen,
 } from "@/lib/gem-encounter";
@@ -453,12 +454,15 @@ export function GemHuntWebXrAr({
       liveLoc != null &&
       !simulateInRange;
   const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
+  const collectFeedbackActive =
+    phase === "collecting" ||
+    (encounterMode && encounterCollectFeedbackActive(encounterPhase));
   const showEncounterFooter =
-    encounterMode &&
-    (encounterPhase === "approach" || encounterPhase === "encounter") &&
-    phase !== "collecting";
+    encounterMode && (encounterPhase === "approach" || encounterPhase === "encounter");
   const showSessionFooter =
-    sessionActive && phase !== "collecting" && (!encounterMode || showEncounterFooter) && !hideFooterChrome;
+    sessionActive &&
+    (collectFeedbackActive || (!hideFooterChrome && (!encounterMode || showEncounterFooter)));
+  const hideCloseButton = !campusSession && collectFeedbackActive;
 
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
@@ -476,7 +480,7 @@ export function GemHuntWebXrAr({
     }
     encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
-    onTreatSuccess();
+    onTreatSuccess({ fromTap: true });
   }, [
     canCollectNow,
     encounterPhase,
@@ -501,7 +505,7 @@ export function GemHuntWebXrAr({
     if (encounterMode) {
       encounterCollectLatchedRef.current = true;
       markEncounterTutorialSeen();
-      onTreatSuccessRef.current();
+      onTreatSuccessRef.current({ fromTap: true });
       return;
     }
     handleCollectRef.current();
@@ -603,8 +607,13 @@ export function GemHuntWebXrAr({
   const repeatFoundBanner =
     repeatFoundBannerHe &&
     inOnsiteBand &&
-    (phase === "placed" || phase === "collecting") &&
-    (showArGem || showTellMeCenterGem || phase === "collecting");
+    (collectFeedbackActive ||
+      (phase === "placed" && (showArGem || showTellMeCenterGem)));
+  const showSessionFooterButtons =
+    showSessionFooter &&
+    !hideFooterChrome &&
+    !hideHuntHintControls &&
+    phase !== "collecting";
 
   useEffect(() => {
     const host = hostRef.current;
@@ -1142,31 +1151,17 @@ export function GemHuntWebXrAr({
             ) : null}
           </div>
         ) : null}
-        <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn pointer-events-auto" />
+        {hideCloseButton ? null : (
+          <OverlayCloseButton
+            label="סגירה"
+            onClick={handleClose}
+            className="gem-hunt-webxr__close-btn pointer-events-auto"
+          />
+        )}
       </header>
-
-      {topCollectBanner ? (
-        <p
-          className={cn(
-            "gem-hunt-overlay__collect-banner",
-            phase === "collecting" && "is-exploding",
-          )}
-          role="status"
-        >
-          {topCollectBanner}
-        </p>
-      ) : null}
 
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
-      ) : null}
-      {phase === "collecting" && repeatFoundBannerHe ? (
-        <p
-          className="gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--collect is-exploding"
-          role="status"
-        >
-          {repeatFoundBannerHe}
-        </p>
       ) : null}
 
       <div ref={hostRef} className="gem-hunt-webxr__host" />
@@ -1235,11 +1230,6 @@ export function GemHuntWebXrAr({
         className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt gem-hunt-webxr__footer"
         dir="rtl"
       >
-        {repeatFoundBanner && phase !== "collecting" ? (
-          <p className="gem-hunt-overlay__found-again-banner" role="status">
-            {repeatFoundBannerHe}
-          </p>
-        ) : null}
         {error ? (
           <p className="gem-hunt-webxr__error" role="alert">
             {error} — עוברים למצב מצלמה…
@@ -1247,6 +1237,28 @@ export function GemHuntWebXrAr({
         ) : (
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
+              {collectFeedbackActive && topCollectBanner ? (
+                <p
+                  className={cn(
+                    "gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain gem-hunt-overlay__collect-banner-footer",
+                    phase === "collecting" && "is-exploding",
+                  )}
+                  role="status"
+                >
+                  {topCollectBanner}
+                </p>
+              ) : null}
+              {repeatFoundBanner ? (
+                <p
+                  className={cn(
+                    "gem-hunt-overlay__footer-hint gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--footer",
+                    collectFeedbackActive && "is-exploding",
+                  )}
+                  role="status"
+                >
+                  {repeatFoundBannerHe}
+                </p>
+              ) : null}
               {tellMeButton.showRangeError ? (
                 <p
                   className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain gem-hunt-overlay__footer-hint--error"
@@ -1260,7 +1272,9 @@ export function GemHuntWebXrAr({
                   {GEM_AR_LOCATING_HE}
                 </p>
               ) : null}
-              {showEncounterFooter && encounterPhase === "encounter" ? (
+              {!collectFeedbackActive &&
+              showEncounterFooter &&
+              encounterPhase === "encounter" ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
                   סובבו את החיה באצבע. למציאה — הקישו עליה.
                 </p>
@@ -1300,7 +1314,7 @@ export function GemHuntWebXrAr({
                 sessionActive && "is-hidden",
               )}
             />
-            {showSessionFooter && !hideHuntHintControls ? (
+            {showSessionFooterButtons ? (
               <div className="gem-hunt-overlay__footer-controls">
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
