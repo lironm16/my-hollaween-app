@@ -9,6 +9,11 @@ const appVersion = (
   ) as { version?: string }
 ).version ?? "0.0.0";
 
+/** Webpack `NormalModuleReplacementPlugin` callback (typed locally — no `webpack` types in project). */
+function replaceNodeCryptoImport(resource: { request: string }): void {
+  resource.request = "crypto";
+}
+
 const corsHeaders = [
   { key: "Access-Control-Allow-Origin", value: "*" },
   { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD" },
@@ -30,9 +35,7 @@ const nextConfig: NextConfig = {
     if (!isServer) {
       // Client must never resolve Node built-ins (Webpack dev throws UnhandledSchemeError on `node:`).
       config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/^node:crypto$/, (resource: { request: string }) => {
-          resource.request = "crypto";
-        }),
+        new webpack.NormalModuleReplacementPlugin(/^node:crypto$/, replaceNodeCryptoImport),
       );
       config.resolve.alias = {
         ...config.resolve.alias,
