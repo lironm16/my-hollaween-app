@@ -71,7 +71,6 @@ import {
 } from "@/lib/gem-hunt";
 import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
 import {
-  firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
   nextClusterGemHouse,
 } from "@/lib/gem-campus-queue";
@@ -552,14 +551,17 @@ export function NeighborhoodApp({
     async (clusterHouses: PublicHouse[]) => {
       const houses = clusterHouses.filter(gemHouseHuntAllowed);
       if (houses.length < 2) return;
-      const target =
-        firstClusterGemHouseInProximity(houses, gps, gems.collected) ??
-        firstClusterGemHouseToHunt(houses, gems.collected);
+      const target = firstClusterGemHouseInProximity(
+        houses,
+        gps ?? mapGemGps,
+        gems.collected,
+      );
       if (!target) return;
+      mapGemNavPinRef.current = target.id;
       mapGemClusterSessionRef.current = [];
       await bootMapGemHunt(target, houses);
     },
-    [bootMapGemHunt, gemHouseHuntAllowed, gems.collected, gps],
+    [bootMapGemHunt, gemHouseHuntAllowed, gems.collected, gps, mapGemGps],
   );
 
   const pinMapGemNavigationTarget = useCallback(() => {

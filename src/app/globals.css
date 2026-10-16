@@ -5239,9 +5239,9 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   position: absolute;
   left: 0;
   right: 0;
-  bottom: max(6.5rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem));
+  bottom: 0;
   z-index: 4;
-  height: min(14vh, 5.5rem);
+  height: min(16vh, 6.5rem);
   pointer-events: auto;
   touch-action: pan-y;
 }
@@ -5398,7 +5398,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__footer-controls {
   position: relative;
-  z-index: 5;
+  z-index: 2;
   flex-shrink: 0;
 }
 .gem-hunt-overlay__hint1-popover {
@@ -5663,7 +5663,7 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: none;
 }
 .gem-hunt-overlay__footer--hunt {
-  z-index: 80;
+  z-index: 50;
   gap: 0.4rem;
   bottom: max(1.35rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem));
 }
@@ -6166,20 +6166,15 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   flex-direction: row;
   gap: 0.45rem;
   width: 100%;
-  z-index: 6;
+  z-index: 3;
   background: transparent;
   border: none;
   box-shadow: none;
-  isolation: isolate;
 }
 .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   touch-action: manipulation;
-  min-height: 3.1rem;
-}
-.gem-hunt-overlay__hint-btn--reveal {
-  z-index: 3;
 }
 .gem-hunt-overlay__hint-actions--row .gem-hunt-overlay__hint-btn {
   flex: 1 1 0;
