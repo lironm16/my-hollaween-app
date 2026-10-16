@@ -1,6 +1,6 @@
 import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-code";
 import { toPublicHouse } from "@/lib/ids";
-import { normalizeOwnerPhone } from "@/lib/owner-phone";
+import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
 import { registerHouseAccessDevice, type RedeemOutcome } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { currentNightPass, readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
@@ -25,12 +25,21 @@ export type OwnerRegisterPrefill = {
   phone?: string;
 };
 
+function mobileForNightPass(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  const direct =
+    normalizeIsraeliMobile(trimmed) ?? normalizeIsraeliMobile(normalizeOwnerPhone(trimmed));
+  if (direct) return direct;
+  if (!isValidOwnerPhone(trimmed)) return "";
+  let digits = trimmed.replace(/\D/g, "");
+  if (digits.startsWith("972")) digits = `0${digits.slice(3)}`;
+  return normalizeIsraeliMobile(digits) ?? "";
+}
+
 function contactFromHouse(house: { addedBy?: string | null; ownerPhone?: string | null }) {
   const name = normalizeHolderName(house.addedBy ?? "") ?? "";
-  const phone =
-    normalizeIsraeliMobile(house.ownerPhone ?? "") ??
-    normalizeIsraeliMobile(normalizeOwnerPhone(String(house.ownerPhone ?? ""))) ??
-    "";
+  const phone = mobileForNightPass(String(house.ownerPhone ?? ""));
   return { name, phone };
 }
 
@@ -145,15 +154,17 @@ export async function tryConnectOwnerDeviceForEvent(): Promise<OwnerDeviceConnec
   if (owned.length === 0) return { connected: false, reason: "no_owner_houses" };
 
   const cookie = await readNightPassCookie();
-  let fallbackHouseId: string | undefined;
+  let missingContactHouseId: string | undefined;
+  let sawCompleteContact = false;
   for (const id of owned) {
     const house = await getHouse(id);
     if (!house) continue;
     const { name, phone } = contactFromHouse(house);
     if (!name || !phone) {
-      fallbackHouseId = fallbackHouseId ?? house.id;
+      missingContactHouseId = missingContactHouseId ?? house.id;
       continue;
     }
+    sawCompleteContact = true;
     const outcome = await registerHouseAccessDevice({
       houseId: house.id,
       name,
@@ -165,11 +176,17 @@ export async function tryConnectOwnerDeviceForEvent(): Promise<OwnerDeviceConnec
       return { connected: true, houseId: house.id };
     }
   }
+  if (missingContactHouseId) {
+    return {
+      connected: false,
+      reason: "missing_contact",
+      needsRegistration: true,
+      houseId: missingContactHouseId,
+    };
+  }
   return {
     connected: false,
-    reason: "missing_contact",
-    needsRegistration: true,
-    houseId: fallbackHouseId ?? owned[0],
+    reason: sawCompleteContact ? "register_failed" : "no_owner_houses",
   };
 }
 

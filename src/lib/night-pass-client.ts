@@ -1,5 +1,6 @@
 import type { AddressRevealAudience } from "@/lib/address-reveal";
 import { readAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
+import { loadOwnedHouses } from "@/lib/offline-db";
 import type { CatalogDelta, NightPassViewer } from "@/lib/types";
 
 /** Mirror of `GET /api/night-passes/me`. */
@@ -123,6 +124,77 @@ const MIN_REFETCH_MS = 10_000;
 /** Intentional «התנתקות» — do not show «pass lost» toast. */
 let suppressNextPassLostEvent = false;
 
+const ownerUnlockAttempted = new Set<string>();
+
+if (typeof window !== "undefined") {
+  window.addEventListener("hw-owned-changed", () => ownerUnlockAttempted.clear());
+}
+
+async function fetchNightPassMe(qs: string): Promise<{ json: { lost?: unknown }; state: NightPassState | null }> {
+  const res = await fetch(`/api/night-passes/me${qs}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) return { json: {}, state: null };
+  const json = (await res.json()) as { lost?: unknown };
+  return { json, state: asState(json) };
+}
+
+/** Server owner session is the signed hw_owner cookie — restore it from saved edit codes. */
+async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
+  const owned = loadOwnedHouses();
+  if (!owned.length) return false;
+  let anyOk = false;
+  for (const house of owned.slice(0, 8)) {
+    const code = house.editCode?.trim();
+    if (!code || ownerUnlockAttempted.has(house.id)) continue;
+    ownerUnlockAttempted.add(house.id);
+    try {
+      const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/unlock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editCode: code }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) anyOk = true;
+    } catch {
+      /* offline */
+    }
+  }
+  return anyOk;
+}
+
+async function tryOwnerNightPassConnect(
+  qs: string,
+  state: NightPassState,
+): Promise<NightPassState> {
+  if (!state.enabled || state.registered || state.viewer !== "owner") return state;
+  try {
+    const connect = await fetch("/api/night-passes/connect-owner", {
+      method: "POST",
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!connect.ok) return state;
+    const detail = (await connect.json()) as {
+      connected?: boolean;
+      needsRegistration?: boolean;
+      houseId?: string;
+    };
+    if (detail.connected) {
+      const again = await fetchNightPassMe(qs);
+      return again.state ?? state;
+    }
+    if (detail.needsRegistration) {
+      dispatchOwnerRegisterPrompt(detail.houseId);
+    }
+  } catch {
+    /* optional */
+  }
+  return state;
+}
+
 /** Ask the server who this device is. Network failure keeps the last known state. */
 export function refreshNightPassState(options?: { force?: boolean }): Promise<NightPassState | null> {
   if (inflight) return inflight;
@@ -133,44 +205,17 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
   inflight = (async () => {
     try {
       const qs = readAdminPreviewAsUser() ? "?asUser=1" : "";
-      const res = await fetch(`/api/night-passes/me${qs}`, {
-        cache: "no-store",
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!res.ok) return null;
-      const json = (await res.json()) as { lost?: unknown };
-      let next = asState(json);
-      if (!next) return null;
-      if (next.enabled && !next.registered && next.viewer === "owner") {
-        try {
-          const connect = await fetch("/api/night-passes/connect-owner", {
-            method: "POST",
-            cache: "no-store",
-            signal: AbortSignal.timeout(8000),
-          });
-          if (connect.ok) {
-            const detail = (await connect.json()) as {
-              connected?: boolean;
-              needsRegistration?: boolean;
-              houseId?: string;
-            };
-            if (detail.connected) {
-              const again = await fetch(`/api/night-passes/me${qs}`, {
-                cache: "no-store",
-                signal: AbortSignal.timeout(8000),
-              });
-              if (again.ok) {
-                const json2 = (await again.json()) as { lost?: unknown };
-                next = asState(json2) ?? next;
-              }
-            } else if (detail.needsRegistration) {
-              dispatchOwnerRegisterPrompt(detail.houseId);
-            }
-          }
-        } catch {
-          /* optional */
+      const first = await fetchNightPassMe(qs);
+      if (!first.state) return null;
+      let next = first.state;
+      const json = first.json;
+      if (next.enabled && !next.registered && next.viewer === "public" && loadOwnedHouses().length > 0) {
+        if (await restoreOwnerSessionFromLocalHouses()) {
+          const again = await fetchNightPassMe(qs);
+          if (again.state) next = again.state;
         }
       }
+      next = await tryOwnerNightPassConnect(qs, next);
       const lost = readLostDetail(json.lost);
       const prev = readNightPassState();
       if (JSON.stringify(prev) !== JSON.stringify(next)) {

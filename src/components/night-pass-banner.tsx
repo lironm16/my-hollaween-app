@@ -6,7 +6,7 @@ import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provi
 import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
 import type { HouseSet } from "@/lib/house-set";
-import { NIGHT_PASS_BANNER_CTA } from "@/lib/night-pass-copy";
+import { NIGHT_PASS_BANNER_CTA, NIGHT_PASS_OWNER_BANNER_CTA } from "@/lib/night-pass-copy";
 import { NIGHT_PASS_LOST_EVENT, type NightPassLostDetail } from "@/lib/night-pass-client";
 import { hiddenHouseCountForSet } from "@/lib/night-pass-scope";
 
@@ -39,16 +39,18 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
   if (!pass.enabled || pass.viewer === "admin" || pass.registered) return null;
 
   const hidden = hiddenHouseCountForSet(catalog, houseSet);
+  const owner = pass.viewer === "owner";
+  const cta = owner ? NIGHT_PASS_OWNER_BANNER_CTA : NIGHT_PASS_BANNER_CTA;
   return (
     <button
       type="button"
       className="relative z-30 block w-full bg-[#2a1638] px-3 py-2 text-center text-base text-orange-100 ring-1 ring-inset ring-orange-500/25"
-      onClick={() => passDialog?.openRegister()}
+      onClick={() => (owner ? passDialog?.openOwnerRegister() : passDialog?.openRegister())}
     >
       {hidden > 0
         ? `עוד ${hidden} בתים פרטיים זמינים למכשיר רשום · `
         : "כתובות בתים פרטיים זמינות למכשיר רשום · "}
-      <span className="font-medium text-orange-300 underline underline-offset-2">{NIGHT_PASS_BANNER_CTA}</span>
+      <span className="font-medium text-orange-300 underline underline-offset-2">{cta}</span>
     </button>
   );
 }

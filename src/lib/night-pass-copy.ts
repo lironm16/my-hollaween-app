@@ -10,6 +10,9 @@ export const NIGHT_PASS_OWNER_REGISTER_SUBTITLE =
 /** Map banner / register entry — distinct from קוד עריכה. */
 export const NIGHT_PASS_BANNER_CTA = "יש לי קוד כניסה";
 
+/** Owner unlocked a house on this device — no entrance code needed. */
+export const NIGHT_PASS_OWNER_BANNER_CTA = "חיבור לאירוע (בעלי בית)";
+
 /** No clock/date — private homes unlock on reveal day. */
 export const NIGHT_PASS_REVEAL_HINT = "כתובות בתים פרטיים יוצגו ביום החשיפה.";
 
