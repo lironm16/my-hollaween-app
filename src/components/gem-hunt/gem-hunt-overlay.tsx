@@ -718,7 +718,6 @@ export function GemHuntOverlay({
   }, [encounterMode, encounterPhase, gemAtCenter, offerEncounterCollect, canTapCollect, handleCollect]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
-  const hideHuntHintControls = showHuntGem && phase === "visible" && inOnsiteBand;
   const collectFeedbackActive =
     phase === "collecting" ||
     (encounterMode && encounterCollectFeedbackActive(encounterPhase));
@@ -751,10 +750,7 @@ export function GemHuntOverlay({
   const hideCloseButton = !campusSession && collectFeedbackActive;
   const showFooterPanel = showHuntUi && (showLegacyFooter || collectFeedbackActive);
   const showFooterButtons =
-    showFooterPanel &&
-    !hideFooterChrome &&
-    !hideHuntHintControls &&
-    phase === "visible";
+    showFooterPanel && !hideFooterChrome && phase === "visible";
 
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission({ force: true });
@@ -847,15 +843,9 @@ export function GemHuntOverlay({
         className={cn(
           "gem-hunt-overlay__header",
           "gem-hunt-overlay__header--close-only",
-          campusQueue && "gem-hunt-overlay__header--cluster-queue",
         )}
         dir="ltr"
       >
-        {campusQueue?.boothTitle ? (
-          <p className="gem-hunt-overlay__cluster-queue-label pointer-events-none" dir="rtl">
-            {campusQueue.boothTitle}
-          </p>
-        ) : null}
         {hideCloseButton ? null : (
           <OverlayCloseButton
             label="סגירה"
@@ -1045,8 +1035,7 @@ export function GemHuntOverlay({
                   {GEM_CAMPUS_TAP_SAVE_HE}
                 </button>
               ) : null}
-                {!hideHuntHintControls ? (
-                  <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
+                <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                     <button
                       type="button"
                       className={cn(
@@ -1076,7 +1065,6 @@ export function GemHuntOverlay({
                       />
                     ) : null}
                   </div>
-                ) : null}
             </div>
             ) : null}
           </div>

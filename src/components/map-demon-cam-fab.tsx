@@ -1,6 +1,6 @@
 "use client";
 
-import { ImpDemonCameraIcon } from "@/components/imp-demon-camera-icon";
+import { ImpDemonFilledIcon } from "@/components/imp-demon-reference-icon";
 import { useAddHouseFabVisible } from "@/hooks/use-add-house-fab-visible";
 import { GEM_MAP_CAM_FAB_CLOSE_HE, GEM_MAP_CAM_FAB_OPEN_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ export function MapDemonCamFab({
         onOpenHunt();
       }}
     >
-      <ImpDemonCameraIcon variant="fab" />
+      <ImpDemonFilledIcon className="map-demon-cam-fab__glyph size-8 text-amber-300" aria-hidden />
     </button>
   );
 }

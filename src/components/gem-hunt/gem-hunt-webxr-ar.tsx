@@ -599,21 +599,13 @@ export function GemHuntWebXrAr({
           ? GEM_COLLECT_NEW_HE
           : null
       : null;
-  const hideHuntHintControls =
-    sessionActive &&
-    phase === "placed" &&
-    inOnsiteBand &&
-    (showArGem || showTellMeCenterGem);
   const repeatFoundBanner =
     repeatFoundBannerHe &&
     inOnsiteBand &&
     (collectFeedbackActive ||
       (phase === "placed" && (showArGem || showTellMeCenterGem)));
   const showSessionFooterButtons =
-    showSessionFooter &&
-    !hideFooterChrome &&
-    !hideHuntHintControls &&
-    phase !== "collecting";
+    showSessionFooter && !hideFooterChrome && phase !== "collecting";
 
   useEffect(() => {
     const host = hostRef.current;
@@ -1140,15 +1132,9 @@ export function GemHuntWebXrAr({
         className={cn(
           "gem-hunt-webxr__bar",
           "gem-hunt-webxr__bar--close-only",
-          campusQueue && "gem-hunt-overlay__header--cluster-queue",
         )}
         dir="ltr"
       >
-        {campusQueue?.boothTitle ? (
-          <p className="gem-hunt-overlay__cluster-queue-label pointer-events-none" dir="rtl">
-            {campusQueue.boothTitle}
-          </p>
-        ) : null}
         {hideCloseButton ? null : (
           <OverlayCloseButton
             label="סגירה"
