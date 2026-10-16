@@ -11,25 +11,31 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
-import { NightPassesCard } from "@/components/night-passes-card";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useNightPass } from "@/hooks/use-night-pass";
 import { readNightPassState } from "@/lib/night-pass-client";
+import type { PublicHouse } from "@/lib/types";
+
 type NightPassDialogContextValue = {
   openRegister: (initialCode?: string, inviteToken?: string) => void;
-  openOwnerPasses: (houseId: string) => void;
+  /** After add-house — same dialog as ⋮ → קוד עריכה ומכשירים. */
+  openOwnerPasses: (house: PublicHouse, editCode: string) => void;
 };
 
 const NightPassDialogContext = createContext<NightPassDialogContextValue | null>(null);
 
 export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const { admin } = useAdminSession();
+  const nightPass = useNightPass();
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCode, setRegisterCode] = useState("");
   const [registerInvite, setRegisterInvite] = useState("");
   const [ownerOpen, setOwnerOpen] = useState(false);
-  const [ownerHouseId, setOwnerHouseId] = useState<string | null>(null);
+  const [ownerHouse, setOwnerHouse] = useState<PublicHouse | null>(null);
+  const [ownerEditCode, setOwnerEditCode] = useState("");
 
   const openRegister = useCallback((initialCode = "", inviteToken = "") => {
     const code = initialCode.replace(/[\s-]/g, "").toUpperCase();
@@ -40,8 +46,9 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
     setRegisterOpen(true);
   }, []);
 
-  const openOwnerPasses = useCallback((houseId: string) => {
-    setOwnerHouseId(houseId);
+  const openOwnerPasses = useCallback((house: PublicHouse, editCode: string) => {
+    setOwnerHouse(house);
+    setOwnerEditCode(editCode);
     setOwnerOpen(true);
   }, []);
 
@@ -70,15 +77,16 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
           onNavigateAway={() => setRegisterOpen(false)}
         />
       </HouseEditModal>
-      <HouseEditModal
-        open={ownerOpen}
-        onClose={() => setOwnerOpen(false)}
-        title="מכשירים והזמנות"
-      >
-        {ownerHouseId ? (
-          <NightPassesCard houseId={ownerHouseId} admin={admin} embedded />
-        ) : null}
-      </HouseEditModal>
+      {ownerHouse && ownerEditCode ? (
+        <EditCodeDialog
+          open={ownerOpen}
+          house={ownerHouse}
+          editCode={ownerEditCode}
+          admin={admin}
+          nightPassesEnabled={nightPass.enabled}
+          onClose={() => setOwnerOpen(false)}
+        />
+      ) : null}
     </NightPassDialogContext.Provider>
   );
 }

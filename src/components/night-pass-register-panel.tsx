@@ -157,16 +157,19 @@ export function NightPassRegisterPanel({
         </p>
       ) : (
         <div className="space-y-1.5">
-          <Label htmlFor="pass-code">קוד עריכה (4 תווים)</Label>
+          <Label htmlFor="pass-code">קוד כניסה (4 תווים או 6 ספרות)</Label>
           <Input
             id="pass-code"
             value={code}
-            onChange={(event) => setCode(event.target.value.toUpperCase())}
+            onChange={(event) => {
+              const raw = event.target.value.toUpperCase();
+              setCode(/^\d*$/.test(raw.replace(/\s/g, "")) ? raw.replace(/\D/g, "") : raw);
+            }}
             dir="ltr"
             autoCapitalize="characters"
             autoComplete="one-time-code"
             placeholder="K7QM"
-            maxLength={4}
+            maxLength={6}
             className="h-11 bg-[#12081a] text-center font-mono text-lg tracking-widest"
           />
         </div>

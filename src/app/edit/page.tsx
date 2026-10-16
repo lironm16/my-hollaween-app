@@ -23,6 +23,7 @@ import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { catalogRemovedViewOnlyEditPage } from "@/lib/labels";
+import { LEGACY_EDIT_CODE_LENGTH } from "@/lib/house-access-code";
 
 export default function EditPage() {
   return (
@@ -238,9 +239,9 @@ function EditPageContent() {
                 onChange={(event) => setEditCode(event.target.value)}
                 autoCapitalize="characters"
                 autoComplete="one-time-code"
-                placeholder="4 תווים"
+                placeholder="4 תווים או 6 ספרות"
                 className="h-10 bg-[#12081a] font-mono tracking-widest"
-                maxLength={4}
+                maxLength={LEGACY_EDIT_CODE_LENGTH}
               />
               <Button
                 type="button"

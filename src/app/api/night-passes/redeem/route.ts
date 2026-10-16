@@ -3,7 +3,7 @@ import { isAdmin } from "@/lib/admin";
 import {
   normalizeHolderName,
   normalizeIsraeliMobile,
-  normalizeNightPassCode,
+  normalizeHouseAccessCode,
 } from "@/lib/house-access-code";
 import { passIdForHouse } from "@/lib/night-pass-codes";
 import { getHouseByAccessCode } from "@/lib/store";
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     return fail(404, "disabled", "ההרשמה עוד לא פתוחה.");
   }
   const json = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const code = normalizeNightPassCode(json?.code);
+  const code = normalizeHouseAccessCode(json?.code);
   const name = normalizeHolderName(json?.name);
   const phone = normalizeIsraeliMobile(json?.phone);
   if (!name) return fail(400, "name", "נא לכתוב שם (2–40 תווים).");
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return fail(429, "rate", "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.");
   }
   if (!code) {
-    return fail(404, "invalid", "קוד המשפחה לא נמצא. בדקו שכל 4 התווים נכונים.");
+    return fail(404, "invalid", "קוד הכניסה לא נמצא. בדקו את הקוד ונסו שוב.");
   }
   const house = await getHouseByAccessCode(code);
   if (house && !(await rateLimitShared(`night-pass-house:${passIdForHouse(house.id)}`, 10, WINDOW_MS))) {
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
   const outcome = await redeemNightPass({ code, name, phone, priorSessionId });
   if (!outcome.ok) {
-    return fail(404, "invalid", "קוד המשפחה לא נמצא. בדקו שכל 4 התווים נכונים.");
+    return fail(404, "invalid", "קוד הכניסה לא נמצא. בדקו את הקוד ונסו שוב.");
   }
   await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
   try {

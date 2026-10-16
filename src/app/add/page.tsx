@@ -114,7 +114,7 @@ export default function AddPage() {
                   type="button"
                   variant="outline"
                   className="w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
-                  onClick={() => openOwnerPasses(done.id)}
+                  onClick={() => openOwnerPasses(done.house, done.editCode)}
                 >
                   חבר מכשירים
                 </Button>

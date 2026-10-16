@@ -458,7 +458,11 @@ export function GemHuntWebXrAr({
     phase === "collecting" ||
     (encounterMode && encounterCollectFeedbackActive(encounterPhase));
   const showEncounterFooter =
-    encounterMode && (encounterPhase === "approach" || encounterPhase === "encounter");
+    encounterMode &&
+    (encounterPhase === "approach" ||
+      encounterPhase === "encounter" ||
+      encounterPhase === "transition" ||
+      encounterPhase === "reward");
   const showSessionFooter =
     sessionActive &&
     (collectFeedbackActive || (!hideFooterChrome && (!encounterMode || showEncounterFooter)));

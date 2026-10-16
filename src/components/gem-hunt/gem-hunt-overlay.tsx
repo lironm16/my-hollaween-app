@@ -355,6 +355,7 @@ export function GemHuntOverlay({
     return () => {
       cancelled = true;
       streamRef.current = null;
+      releaseGemHuntCamera(videoRef.current);
     };
   }, [house.id, cameraRetry, sim]);
 
@@ -734,7 +735,10 @@ export function GemHuntOverlay({
 
   const showEncounterFooter =
     encounterMode &&
-    (encounterPhase === "approach" || encounterPhase === "encounter") &&
+    (encounterPhase === "approach" ||
+      encounterPhase === "encounter" ||
+      encounterPhase === "transition" ||
+      encounterPhase === "reward") &&
     phase !== "collecting";
   const campusQuickTapGem = campusSession && !encounterMode && !centerReveal;
   const showLegacyFooter =
@@ -750,7 +754,7 @@ export function GemHuntOverlay({
   const hideCloseButton = !campusSession && collectFeedbackActive;
   const showFooterPanel = showHuntUi && (showLegacyFooter || collectFeedbackActive);
   const showFooterButtons =
-    showFooterPanel && !hideFooterChrome && phase === "visible";
+    showFooterPanel && !hideFooterChrome && (phase === "visible" || phase === "scanning");
 
   async function retryCompassPermission() {
     const ok = await requestGemHuntOrientationPermission({ force: true });

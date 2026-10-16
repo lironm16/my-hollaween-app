@@ -98,11 +98,8 @@ export function houseCardPropsFor(
     editCode: editAllowed ? ctx.editCodeFor?.(id) : undefined,
     showVisitPoster: editAllowed,
     admin: ctx.admin,
+    nightPassesEnabled: editAllowed && ctx.nightPassesEnabled,
     onToggleEdit: editAllowed && ctx.onEdit ? () => ctx.onEdit!(house) : undefined,
-    onNightPasses:
-      editAllowed && ctx.nightPassesEnabled && ctx.onNightPasses
-        ? () => ctx.onNightPasses!(house)
-        : undefined,
     onPlaceGem:
       editAllowed && ctx.onPlaceGem && (ctx.gemQuickActionEligible?.(house) ?? true)
         ? () => ctx.onPlaceGem!(house)
@@ -151,11 +148,12 @@ export function houseActionBarPropsFromCard(
     onShowOnMap: card.onShowOnMap,
     onShowInList: card.onShowInList,
     onToggleEdit: card.canEdit ? card.onToggleEdit : undefined,
-    onNightPasses: card.onNightPasses,
     onPlaceGem: card.onPlaceGem,
     skipped: card.skipped,
     editing: card.editing,
     editCode: card.editCode,
+    admin: card.admin,
+    nightPassesEnabled: card.nightPassesEnabled,
     showVisitPoster: card.showVisitPoster,
     menuPlacement: "bottom",
   };

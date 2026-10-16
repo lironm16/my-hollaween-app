@@ -1,4 +1,4 @@
-import { normalizeNightPassCode } from "@/lib/house-access-code";
+import { houseEditCodesMatch, normalizeHouseAccessCode } from "@/lib/house-access-code";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import {
   canonicalHouseId,
@@ -119,10 +119,10 @@ export async function getHouse(id: string): Promise<House | undefined> {
 
 /** Resolve the single family / edit code to a house row. */
 export async function getHouseByAccessCode(rawCode: unknown): Promise<House | undefined> {
-  const code = normalizeNightPassCode(rawCode);
+  const code = normalizeHouseAccessCode(rawCode);
   if (!code) return undefined;
   const houses = await getAllHouses();
-  return houses.find((house) => normalizeNightPassCode(house.editCode) === code);
+  return houses.find((house) => houseEditCodesMatch(house.editCode, code));
 }
 
 function nextPublicId(db: { houses: House[] }, kind: HouseInput["kind"]) {

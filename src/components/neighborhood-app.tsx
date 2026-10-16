@@ -26,7 +26,6 @@ import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
 import { NightPassBanner } from "@/components/night-pass-banner";
-import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { adminSeesAllHouses } from "@/lib/night-pass-client";
 import { RouteChangeBanner, routeChangeBannerMessage } from "@/components/route-change-banner";
@@ -79,7 +78,6 @@ import {
 import {
   firstClusterGemHouseInProximity,
   pickMapFabGemHuntTarget,
-  pickMapRovingGemHuntHouse,
 } from "@/lib/map-gem-hunt-target";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
@@ -318,7 +316,6 @@ export function NeighborhoodApp({
     userLocation: gps,
     refreshLocation: geo.refresh,
   });
-  const { openOwnerPasses } = useNightPassDialog();
   useEffect(() => {
     applyClockSearchParams(window.location.search);
   }, []);
@@ -605,37 +602,12 @@ export function NeighborhoodApp({
       return;
     }
     if (fabGemHuntPool.length === 0) return;
-    mapGemNavPinRef.current = null;
     const target = pickMapFabGemHuntTarget(gps, fabGemHuntPool, mapHouses, gems.collected);
     if (!target) return;
+    mapGemNavPinRef.current = target.id;
     mapGemClusterSessionRef.current = [];
     await bootMapGemHunt(target, null);
   }, [mapGemHouse, fabGemHuntPool, gps, mapHouses, gems.collected, bootMapGemHunt, closeMapGemHunt]);
-
-  useEffect(() => {
-    if (!mapGemHouse || mapGemClusterMembers) return;
-    const user = gps ?? mapGemGps;
-    if (!user) return;
-    const next = pickMapRovingGemHuntHouse(
-      user,
-      fabGemHuntPool,
-      mapHouses,
-      gems.collected,
-      mapGemNavPinRef.current,
-      mapGemHouse.id,
-    );
-    if (next && next.id !== mapGemHouse.id) {
-      setMapGemHouse(next);
-    }
-  }, [
-    mapGemHouse,
-    mapGemClusterMembers,
-    gps,
-    mapGemGps,
-    fabGemHuntPool,
-    mapHouses,
-    gems.collected,
-  ]);
 
   const mapGemClusterQueueUi = useMemo(() => {
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;
@@ -1359,7 +1331,6 @@ export function NeighborhoodApp({
           : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => requestHouseEdit(house, true),
       nightPassesEnabled: nightPass.enabled,
-      onNightPasses: (house) => openOwnerPasses(house.id),
       onPlaceGem: gemUi
         ? (house) =>
             openGemPlacer(
@@ -1399,7 +1370,6 @@ export function NeighborhoodApp({
     admin,
     gemPreviewAsUser,
     nightPass.enabled,
-    openOwnerPasses,
     gemAdminTools,
     source,
     likes.liked,
