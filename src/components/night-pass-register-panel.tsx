@@ -10,6 +10,8 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
 import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
+import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
+import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function isIosBrowserTab() {
@@ -100,10 +102,22 @@ export function NightPassRegisterPanel({
         error?: string;
         reregistered?: boolean;
         evicted?: boolean;
+        houseId?: string;
+        editCode?: string;
+        house?: PublicHouse;
       } | null;
       if (!res.ok) {
         setError(json?.error ?? "ההרשמה נכשלה. נסו שוב.");
         return;
+      }
+      if (json?.houseId && json.editCode) {
+        saveOwnedHouse({
+          id: json.houseId,
+          name: json.house?.name ?? name.trim(),
+          editCode: json.editCode,
+          preview: json.house,
+        });
+        notifyCatalogChanged();
       }
       await refreshNightPassState({ force: true });
       notifyNightPassSlotsChanged();

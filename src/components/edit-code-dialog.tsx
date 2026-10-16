@@ -29,6 +29,7 @@ export function EditCodeDialog({
 }) {
   const codeSpec = editCodeSpecForDisplay(editCode);
   const displayCode = formatEditCodeDisplay(editCode);
+  const showDevices = nightPassesEnabled || admin;
 
   return (
     <HouseEditModal
@@ -39,7 +40,9 @@ export function EditCodeDialog({
     >
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">
-          שתפו את הקוד עם מי שצריך לערוך את הבית. אחרי הזנה פעם אחת הקוד נשמר במכשיר שלהם.
+          {showDevices
+            ? "קוד הכניסה לעריכה ולחיבור מכשירים. אחרי הזנה פעם אחת נשמר במכשיר — אפשר גם לשלוח קישור הזמנה."
+            : "שתפו את הקוד עם מי שצריך לערוך את הבית. אחרי הזנה פעם אחת הקוד נשמר במכשיר שלהם."}
         </p>
         <div className="space-y-2">
           <label htmlFor="edit-code-field" className="text-base text-violet-300">
@@ -53,43 +56,50 @@ export function EditCodeDialog({
             className="w-full rounded-xl border border-orange-500/25 bg-black/35 px-4 py-3 text-center font-mono text-2xl tracking-[0.25em] text-orange-100 outline-none ring-orange-500/20 focus:ring-2"
             onFocus={(event) => event.target.select()}
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 w-full justify-center text-base"
-            onClick={() => void copyText(editCode.replace(/\s/g, ""), "קוד העריכה הועתק")}
-          >
-            <Copy className="size-5" />
-            העתיקו
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 min-w-0 flex-1 justify-center text-base"
+              onClick={() => void copyText(editCode.replace(/\s/g, ""), "קוד הכניסה הועתק")}
+            >
+              <Copy className="size-5" />
+              העתיקו
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 min-w-0 flex-1 justify-center text-base"
+              onClick={() => {
+                void shareEditCode(house, editCode).then((result) => {
+                  if (result === "shared") toast.success("קוד הכניסה נשלח");
+                  if (result === "copied") toast.success("קוד הכניסה הועתק");
+                  if (result === "failed") toast.error("לא הצלחנו לשתף את הקוד");
+                });
+              }}
+            >
+              <Share2 className="size-5" />
+              שיתוף קוד
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2 pt-1">
-          <Button
-            type="button"
-            className="h-11 min-w-0 flex-1 justify-center bg-orange-500 text-base text-black hover:bg-orange-400"
-            onClick={() => {
-              void shareEditCode(house, editCode).then((result) => {
-                if (result === "shared") toast.success("קוד העריכה נשלח");
-                if (result === "copied") toast.success("קוד העריכה הועתק");
-                if (result === "failed") toast.error("לא הצלחנו לשתף את הקוד");
-              });
-            }}
-          >
-            <Share2 className="size-5" />
-            שיתוף
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 min-w-0 flex-1 justify-center text-base"
-            onClick={onClose}
-          >
-            סגירה
-          </Button>
-        </div>
-        {nightPassesEnabled || admin ? (
-          <NightPassesCard houseId={house.id} house={house} admin={admin} embedded />
+        {showDevices ? (
+          <NightPassesCard
+            houseId={house.id}
+            house={house}
+            admin={admin}
+            embedded
+            showFamilyCode={false}
+          />
         ) : null}
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full justify-center text-base"
+          onClick={onClose}
+        >
+          סגירה
+        </Button>
       </div>
     </HouseEditModal>
   );

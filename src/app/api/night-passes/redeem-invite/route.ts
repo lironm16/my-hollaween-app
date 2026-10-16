@@ -6,6 +6,7 @@ import { registerHouseAccessDevice } from "@/lib/night-pass-service";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
+import { toPublicHouse } from "@/lib/ids";
 import { getHouse } from "@/lib/store";
 import { clientKey } from "@/lib/rate-limit";
 import { rateLimitShared } from "@/lib/rate-limit-store";
@@ -60,6 +61,8 @@ export async function POST(request: Request) {
     {
       ok: true,
       houseId: house.id,
+      editCode: house.editCode,
+      house: toPublicHouse(house),
       evicted: outcome.evicted ?? false,
       reregistered: outcome.reregistered,
     },

@@ -5,8 +5,9 @@ import {
   normalizeIsraeliMobile,
   normalizeHouseAccessCode,
 } from "@/lib/house-access-code";
+import { toPublicHouse } from "@/lib/ids";
 import { passIdForHouse } from "@/lib/night-pass-codes";
-import { getHouseByAccessCode } from "@/lib/store";
+import { getHouse, getHouseByAccessCode } from "@/lib/store";
 import { redeemNightPass } from "@/lib/night-pass-service";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
@@ -61,12 +62,15 @@ export async function POST(request: Request) {
   } catch {
     /* optional */
   }
+  const registeredHouse = await getHouse(outcome.record.houseId);
   return NextResponse.json(
     {
       ok: true,
       reregistered: outcome.reregistered,
       evicted: outcome.evicted ?? false,
       houseId: outcome.record.houseId,
+      editCode: registeredHouse?.editCode,
+      house: registeredHouse ? toPublicHouse(registeredHouse) : undefined,
     },
     { headers: NO_STORE },
   );

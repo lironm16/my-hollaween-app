@@ -73,11 +73,14 @@ export function NightPassesCard({
   house,
   admin,
   embedded = false,
+  /** When false, skip the family-code block (shown elsewhere, e.g. edit-code dialog). */
+  showFamilyCode = true,
 }: {
   houseId: string;
   house?: PublicHouse | null;
   admin: boolean;
   embedded?: boolean;
+  showFamilyCode?: boolean;
 }) {
   const [data, setData] = useState<PassesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -223,10 +226,37 @@ export function NightPassesCard({
     ? "space-y-3"
     : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
 
+  const inviteActions = house ? (
+    <>
+      <SlotAction
+        label="העתק קישור"
+        disabled={busyShare}
+        onClick={() => void copyInviteLink()}
+        icon={
+          busyShare ? (
+            <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
+          ) : (
+            <Link2 className="size-4 shrink-0" strokeWidth={2.2} />
+          )
+        }
+      />
+      <SlotAction
+        label="שלח הזמנה"
+        disabled={busyShare}
+        onClick={() => void shareInvite()}
+        icon={<Share2 className="size-4 shrink-0" strokeWidth={2.2} />}
+      />
+    </>
+  ) : null;
+
   return (
     <section className={shellClass}>
       {!embedded ? (
         <h2 className="text-center text-lg font-medium text-orange-200">מכשירים והזמנות</h2>
+      ) : embedded ? (
+        <h3 className="border-t border-orange-500/20 pt-4 text-center text-base font-medium text-orange-200">
+          מכשירים והזמנות
+        </h3>
       ) : null}
       {!data.enabled ? (
         <p className="text-center text-sm text-amber-200">כבוי לציבור — רק מנהלים רואים עכשיו.</p>
@@ -237,39 +267,36 @@ export function NightPassesCard({
           <p className="text-center text-sm text-violet-200">
             מחוברים: {access.connectedCount}/{access.maxDevices}
           </p>
-          <div className="flex flex-col items-center gap-2 rounded-xl bg-black/30 px-3 py-4 ring-1 ring-orange-500/20">
-            <span className="text-sm text-violet-300">קוד משפחה</span>
-            <span dir="ltr" className="font-mono text-2xl tracking-[0.35em] text-orange-100">
-              {access.familyCode}
-            </span>
+          {showFamilyCode ? (
+            <div className="flex flex-col items-center gap-2 rounded-xl bg-black/30 px-3 py-4 ring-1 ring-orange-500/20">
+              <span className="text-sm text-violet-300">קוד כניסה</span>
+              <span dir="ltr" className="font-mono text-2xl tracking-[0.35em] text-orange-100">
+                {access.familyCode}
+              </span>
+              <div className="flex flex-wrap justify-center gap-2">
+                <SlotAction
+                  label="העתק"
+                  onClick={() => void copy(access.familyCode.replace(/-/g, ""))}
+                  icon={<Copy className="size-4 shrink-0" strokeWidth={2.2} />}
+                />
+                {inviteActions}
+                <SlotAction
+                  label="קוד חדש"
+                  disabled={busyReset}
+                  onClick={() => void resetFamilyCode()}
+                  icon={
+                    busyReset ? (
+                      <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
+                    ) : (
+                      <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
+                    )
+                  }
+                />
+              </div>
+            </div>
+          ) : (
             <div className="flex flex-wrap justify-center gap-2">
-              <SlotAction
-                label="העתק"
-                onClick={() => void copy(access.familyCode.replace(/-/g, ""))}
-                icon={<Copy className="size-4 shrink-0" strokeWidth={2.2} />}
-              />
-              {house ? (
-                <>
-                  <SlotAction
-                    label="העתק קישור"
-                    disabled={busyShare}
-                    onClick={() => void copyInviteLink()}
-                    icon={
-                      busyShare ? (
-                        <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
-                      ) : (
-                        <Link2 className="size-4 shrink-0" strokeWidth={2.2} />
-                      )
-                    }
-                  />
-                  <SlotAction
-                    label="שלח הזמנה"
-                    disabled={busyShare}
-                    onClick={() => void shareInvite()}
-                    icon={<Share2 className="size-4 shrink-0" strokeWidth={2.2} />}
-                  />
-                </>
-              ) : null}
+              {inviteActions}
               <SlotAction
                 label="קוד חדש"
                 disabled={busyReset}
@@ -283,7 +310,7 @@ export function NightPassesCard({
                 }
               />
             </div>
-          </div>
+          )}
           <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
             {access.devices.length === 0 ? (
               <li className="px-3 py-4 text-center text-emerald-400">אין מכשירים מחוברים עדיין</li>
