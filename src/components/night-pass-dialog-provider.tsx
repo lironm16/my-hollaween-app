@@ -152,7 +152,7 @@ function PassQueryOpener({
     const invite = searchParams.get("invite") ?? "";
     if (invite) {
       void (async () => {
-        const state = await refreshNightPassState({ force: true });
+        const state = (await refreshNightPassState({ force: true })) ?? readNightPassState();
         if (state.registered) {
           onInviteForRegisteredDevice();
         } else {
