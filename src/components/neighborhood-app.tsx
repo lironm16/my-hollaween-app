@@ -87,11 +87,7 @@ import {
   mainMapGemEligibleHouses,
   syncGemMonsterAssignment,
 } from "@/lib/gem-monsters";
-import {
-  isGemHuntOrientationGranted,
-  prepareGemHuntSensors,
-  releaseGemHuntCamera,
-} from "@/lib/gem-hunt-sensors";
+import { prepareGemHuntSensors, releaseGemHuntCamera } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
@@ -511,7 +507,7 @@ export function NeighborhoodApp({
 
       await prepareGemHuntSensors({
         requestCamera: !xrSession,
-        requestOrientation: !isGemHuntOrientationGranted(),
+        requestOrientation: false,
       });
       if (gen !== mapGemOpenGenRef.current) {
         void endGemHuntWebXrSession(xrSession);

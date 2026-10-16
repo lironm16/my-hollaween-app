@@ -48,6 +48,10 @@ export function gemClusterSessionSummaryHe(total: number, newCount: number): str
 export const GEM_MAP_COMPLETE_TITLE_HE = "כל השדונים נמצאו!";
 
 export const GEM_COLLECT_NEW_HE = "כל הכבוד!! מצאתם שדון חדש!";
+
+export function gemCollectNewBannerHe(demonLabel: string) {
+  return `כל הכבוד!! מצאתם את ${demonLabel} — שדון חדש!`;
+}
 export const GEM_ALBUM_SLOTS_HE = "שדונים באוסף";
 export const GEM_ALBUM_ALL_HE = "כל השדונים";
 

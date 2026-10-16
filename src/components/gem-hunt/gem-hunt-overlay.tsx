@@ -65,7 +65,7 @@ import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import {
   GEM_CAMPUS_TAP_SAVE_HE,
-  GEM_COLLECT_NEW_HE,
+  gemCollectNewBannerHe,
   GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
@@ -324,7 +324,7 @@ export function GemHuntOverlay({
         cameraBootRef.current = true;
         const prepared = await prepareGemHuntSensors({
           requestCamera: true,
-          requestOrientation: !isGemHuntOrientationGranted(),
+          requestOrientation: false,
         });
         cameraBootRef.current = false;
         if (cancelled || huntClosingRef.current) return;
@@ -587,7 +587,7 @@ export function GemHuntOverlay({
       ? campusSession
         ? GEM_FOUND_CHEER_HE
         : albumRevealNewFriend
-          ? GEM_COLLECT_NEW_HE
+          ? gemCollectNewBannerHe(gemLabelHe(monsterId))
           : null
       : null;
 

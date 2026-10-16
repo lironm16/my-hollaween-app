@@ -65,7 +65,7 @@ import { useGemTellMeButton } from "@/hooks/use-gem-tell-me-button";
 import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
 import {
   GEM_AR_LOCATING_HE,
-  GEM_COLLECT_NEW_HE,
+  gemCollectNewBannerHe,
   GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
@@ -600,7 +600,7 @@ export function GemHuntWebXrAr({
       ? campusSession
         ? GEM_FOUND_CHEER_HE
         : albumRevealNewFriend
-          ? GEM_COLLECT_NEW_HE
+          ? gemCollectNewBannerHe(gemLabelHe(monsterId))
           : null
       : null;
   const repeatFoundBanner =
