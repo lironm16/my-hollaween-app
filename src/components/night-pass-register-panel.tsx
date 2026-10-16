@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
-import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
+import {
+  NIGHT_PASS_ALREADY_REGISTERED_BODY,
+  NIGHT_PASS_ALREADY_REGISTERED_TITLE,
+  NIGHT_PASS_REGISTER_SUBTITLE,
+} from "@/lib/night-pass-copy";
 import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
@@ -27,6 +31,7 @@ type Props = {
   initialCode?: string;
   inviteToken?: string;
   onRegistered?: () => void;
+  onAlreadyRegistered?: () => void;
   /** Close the register dialog before in-app navigation (help link). */
   onNavigateAway?: () => void;
   compact?: boolean;
@@ -37,6 +42,7 @@ export function NightPassRegisterPanel({
   initialCode = "",
   inviteToken = "",
   onRegistered,
+  onAlreadyRegistered,
   onNavigateAway,
   compact,
 }: Props) {
@@ -141,6 +147,26 @@ export function NightPassRegisterPanel({
 
   if (pass.registered && !hasCode && !hasInvite) {
     return null;
+  }
+
+  if (pass.registered && hasInvite) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-xl bg-emerald-950/70 px-4 py-5 text-center ring-2 ring-emerald-400/40">
+          <p className="text-xl font-semibold text-emerald-100">{NIGHT_PASS_ALREADY_REGISTERED_TITLE}</p>
+          <p className="mt-2 text-base leading-relaxed text-emerald-200/95">
+            {NIGHT_PASS_ALREADY_REGISTERED_BODY}
+          </p>
+        </div>
+        <Button
+          type="button"
+          className="h-11 w-full bg-emerald-500 text-black hover:bg-emerald-400"
+          onClick={() => onAlreadyRegistered?.() ?? onRegistered?.()}
+        >
+          סגירה
+        </Button>
+      </div>
+    );
   }
 
   if (!open) {

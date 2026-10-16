@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, KeyRound, Link2, Loader2, Share2 } from "lucide-react";
+import { Copy, KeyRound, Loader2, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -135,7 +135,7 @@ export function NightPassesCard({
   async function resetFamilyCode() {
     if (
       !window.confirm(
-        "ייווצר קוד משפחה חדש. כל המכשירים (כולל שלכם) יצטרכו להתחבר מחדש. להמשיך?",
+        "ייווצר קוד כניסה חדש. כל המכשירים (כולל שלכם) יצטרכו להתחבר מחדש. להמשיך?",
       )
     ) {
       return;
@@ -151,44 +151,11 @@ export function NightPassesCard({
         toast.error(json?.error ?? "האיפוס נכשל.");
         return;
       }
-      toast.success("קוד משפחה חדש נוצר");
+      toast.success("קוד הכניסה אופס");
       notifyNightPassSlotsChanged();
       await load();
     } finally {
       setBusyReset(false);
-    }
-  }
-
-  async function fetchInviteUrl(): Promise<string | null> {
-    if (!house) return null;
-    const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/invites`, {
-      method: "POST",
-    });
-    const json = (await res.json().catch(() => null)) as { url?: string } | null;
-    if (!res.ok || !json?.url) return null;
-    return json.url.startsWith("http")
-      ? json.url
-      : `${window.location.origin.replace(/\/$/, "")}${json.url}`;
-  }
-
-  async function copyInviteLink() {
-    if (!house) {
-      toast.error("לא ניתן להעתיק קישור.");
-      return;
-    }
-    setBusyShare(true);
-    try {
-      const url = await fetchInviteUrl();
-      if (!url) {
-        toast.error("יצירת קישור ההזמנה נכשלה");
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      toast.success("קישור ההזמנה הועתק");
-    } catch {
-      toast.error("לא הצלחנו להעתיק את הקישור");
-    } finally {
-      setBusyShare(false);
     }
   }
 
@@ -227,26 +194,18 @@ export function NightPassesCard({
     : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
 
   const inviteActions = house ? (
-    <>
-      <SlotAction
-        label="העתק קישור"
-        disabled={busyShare}
-        onClick={() => void copyInviteLink()}
-        icon={
-          busyShare ? (
-            <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
-          ) : (
-            <Link2 className="size-4 shrink-0" strokeWidth={2.2} />
-          )
-        }
-      />
-      <SlotAction
-        label="שלח הזמנה"
-        disabled={busyShare}
-        onClick={() => void shareInvite()}
-        icon={<Share2 className="size-4 shrink-0" strokeWidth={2.2} />}
-      />
-    </>
+    <SlotAction
+      label="שלח הזמנה"
+      disabled={busyShare}
+      onClick={() => void shareInvite()}
+      icon={
+        busyShare ? (
+          <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
+        ) : (
+          <Share2 className="size-4 shrink-0" strokeWidth={2.2} />
+        )
+      }
+    />
   ) : null;
 
   return (
@@ -281,7 +240,7 @@ export function NightPassesCard({
                 />
                 {inviteActions}
                 <SlotAction
-                  label="קוד חדש"
+                  label="איפוס קוד"
                   disabled={busyReset}
                   onClick={() => void resetFamilyCode()}
                   icon={
@@ -298,7 +257,7 @@ export function NightPassesCard({
             <div className="flex flex-wrap justify-center gap-2">
               {inviteActions}
               <SlotAction
-                label="קוד חדש"
+                label="איפוס קוד"
                 disabled={busyReset}
                 onClick={() => void resetFamilyCode()}
                 icon={

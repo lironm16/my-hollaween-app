@@ -14,9 +14,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
+import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
-import { readNightPassState } from "@/lib/night-pass-client";
+import {
+  NIGHT_PASS_ALREADY_REGISTERED_BODY,
+  NIGHT_PASS_ALREADY_REGISTERED_TITLE,
+} from "@/lib/night-pass-copy";
+import { readNightPassState, refreshNightPassState } from "@/lib/night-pass-client";
 import type { PublicHouse } from "@/lib/types";
 
 type NightPassDialogContextValue = {
@@ -33,6 +38,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCode, setRegisterCode] = useState("");
   const [registerInvite, setRegisterInvite] = useState("");
+  const [alreadyRegisteredOpen, setAlreadyRegisteredOpen] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerHouse, setOwnerHouse] = useState<PublicHouse | null>(null);
   const [ownerEditCode, setOwnerEditCode] = useState("");
@@ -60,21 +66,49 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   return (
     <NightPassDialogContext.Provider value={value}>
       <Suspense fallback={null}>
-        <PassQueryOpener openRegister={openRegister} />
+        <PassQueryOpener
+          openRegister={openRegister}
+          onInviteForRegisteredDevice={() => setAlreadyRegisteredOpen(true)}
+        />
       </Suspense>
       {children}
+      <HouseEditModal
+        open={alreadyRegisteredOpen}
+        onClose={() => setAlreadyRegisteredOpen(false)}
+        title="מכשיר מחובר"
+      >
+        <div className="space-y-4">
+          <div className="rounded-xl bg-emerald-950/70 px-4 py-5 text-center ring-2 ring-emerald-400/40">
+            <p className="text-xl font-semibold text-emerald-100">{NIGHT_PASS_ALREADY_REGISTERED_TITLE}</p>
+            <p className="mt-2 text-base leading-relaxed text-emerald-200/95">
+              {NIGHT_PASS_ALREADY_REGISTERED_BODY}
+            </p>
+          </div>
+          <Button
+            type="button"
+            className="h-11 w-full bg-emerald-500 text-black hover:bg-emerald-400"
+            onClick={() => setAlreadyRegisteredOpen(false)}
+          >
+            סגירה
+          </Button>
+        </div>
+      </HouseEditModal>
       <HouseEditModal
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
         title="מכשיר מחובר"
       >
         <NightPassRegisterPanel
-          key={registerOpen ? registerCode || "open" : "closed"}
+          key={registerOpen ? registerCode || registerInvite || "open" : "closed"}
           initialCode={registerCode}
           inviteToken={registerInvite}
           compact
           onRegistered={() => setRegisterOpen(false)}
           onNavigateAway={() => setRegisterOpen(false)}
+          onAlreadyRegistered={() => {
+            setRegisterOpen(false);
+            setAlreadyRegisteredOpen(true);
+          }}
         />
       </HouseEditModal>
       {ownerHouse && ownerEditCode ? (
@@ -106,8 +140,10 @@ export function useNightPassDialogOptional() {
 
 function PassQueryOpener({
   openRegister,
+  onInviteForRegisteredDevice,
 }: {
   openRegister: (initialCode?: string, inviteToken?: string) => void;
+  onInviteForRegisteredDevice: () => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -115,11 +151,18 @@ function PassQueryOpener({
   useEffect(() => {
     const invite = searchParams.get("invite") ?? "";
     if (invite) {
-      openRegister("", invite);
-      const next = new URLSearchParams(searchParams.toString());
-      next.delete("invite");
-      const qs = next.toString();
-      router.replace(qs ? `/?${qs}` : "/");
+      void (async () => {
+        const state = await refreshNightPassState({ force: true });
+        if (state.registered) {
+          onInviteForRegisteredDevice();
+        } else {
+          openRegister("", invite);
+        }
+        const next = new URLSearchParams(searchParams.toString());
+        next.delete("invite");
+        const qs = next.toString();
+        router.replace(qs ? `/?${qs}` : "/");
+      })();
       return;
     }
     if (searchParams.get("openPass") !== "1") return;
@@ -130,7 +173,7 @@ function PassQueryOpener({
     next.delete("c");
     const qs = next.toString();
     router.replace(qs ? `/?${qs}` : "/");
-  }, [openRegister, router, searchParams]);
+  }, [openRegister, onInviteForRegisteredDevice, router, searchParams]);
 
   return null;
 }

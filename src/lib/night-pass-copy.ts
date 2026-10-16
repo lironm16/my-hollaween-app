@@ -9,3 +9,7 @@ export const NIGHT_PASS_BANNER_CTA = "יש לי קוד כניסה";
 
 /** No clock/date — private homes unlock on reveal day. */
 export const NIGHT_PASS_REVEAL_HINT = "כתובות בתים פרטיים יוצגו ביום החשיפה.";
+
+export const NIGHT_PASS_ALREADY_REGISTERED_TITLE = "כבר נרשמתם!";
+export const NIGHT_PASS_ALREADY_REGISTERED_BODY =
+  "המכשיר הזה כבר מחובר לאירוע. אין צורך להירשם שוב מהזמנה.";
