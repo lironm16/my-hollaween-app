@@ -71,15 +71,15 @@ describe("gem cluster queue", () => {
     assert.equal(nextClusterGemHouse(members, isCollected, "c"), null);
   });
 
-  it("formats school booth subtitle; street clusters use title only", () => {
+  it("formats cluster cam chrome without house names", () => {
     const school = [house("a", "ביה״ס ניצנים", 2, "ממתקים"), house("b", "ביה״ס ניצנים", 3, "אימה")];
     const schoolHead = gemClusterQueueHeadline(school[0]!, school);
-    assert.equal(schoolHead.boothTitle, "ממתקים");
-    assert.equal(schoolHead.boothSubtitle, "דוכן 2");
+    assert.equal(schoolHead.boothTitle, "דוכן 2");
+    assert.equal(schoolHead.boothSubtitle, "");
 
     const apt = [house("x", "חרוזים 8", 4, "רוח רפאים"), house("y", "חרוזים 8", 5, "ממתקים")];
     const aptHead = gemClusterQueueHeadline(apt[0]!, apt);
-    assert.equal(aptHead.boothTitle, "רוח רפאים");
+    assert.equal(aptHead.boothTitle, "דוכן 1 מתוך 2");
     assert.equal(aptHead.boothSubtitle, "");
   });
 });
