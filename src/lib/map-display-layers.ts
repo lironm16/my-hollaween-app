@@ -1,9 +1,4 @@
-import {
-  catalogHasRealHouses,
-  isStubHouse,
-  type HouseSet,
-  type StubFlagHouse,
-} from "@/lib/house-set";
+import { isStubHouse, type HouseSet, type StubFlagHouse } from "@/lib/house-set";
 import { isPracticeHouse, type PracticeFlagHouse } from "@/lib/practice-house";
 
 export type MapDisplayLayer = "real" | "stubs";
@@ -145,8 +140,8 @@ export function houseMatchesMapLayers(
 }
 
 /**
- * Preview QA: filter context may include stubs (`activeHouseSet` all) while map layers
- * still default to real-only — turn stubs on so pins match the list/count.
+ * Preview QA: when the session catalog filter includes stubs (`activeHouseSet` all/stubs),
+ * turn stub pins on so the map matches admin list/count. Non-admins stay real-only (empty on stub-only catalog).
  */
 export function mapDisplayLayersForSession(
   layers: MapDisplayLayers,
@@ -157,14 +152,11 @@ export function mapDisplayLayersForSession(
   },
 ): MapDisplayLayers {
   if (!options.previewDeployment) return layers;
-  const stubOnly =
-    Boolean(options.catalog?.houses.length) &&
-    catalogHasRealHouses(options.catalog) === false;
-  if (stubOnly || options.activeHouseSet === "all" || options.activeHouseSet === "stubs") {
-    if (layers.stubs) return layers;
-    return { ...layers, stubs: true };
+  if (options.activeHouseSet !== "all" && options.activeHouseSet !== "stubs") {
+    return layers;
   }
-  return layers;
+  if (layers.stubs) return layers;
+  return { ...layers, stubs: true };
 }
 
 export function houseVisibleOnMainMap(

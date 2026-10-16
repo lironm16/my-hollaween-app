@@ -44,8 +44,8 @@ describe("map display layers", () => {
     assert.deepEqual(toggleMapDisplayLayer(onlyReal, "real"), onlyReal);
   });
 
-  it("enables stub pins on preview when filters include stubs", () => {
-    const layers = { real: true, stubs: false, practice: false };
+  it("enables stub pins on preview when session filter includes stubs", () => {
+    const layers = { real: true, stubs: false };
     const stubOnly = { houses: [{ id: "בית-1", isStub: true }] };
     assert.deepEqual(
       mapDisplayLayersForSession(layers, {
@@ -53,12 +53,25 @@ describe("map display layers", () => {
         activeHouseSet: "all",
         catalog: stubOnly,
       }),
-      { real: true, stubs: true, practice: false },
+      { real: true, stubs: true },
     );
     assert.equal(
       mapDisplayLayersForSession(layers, {
         previewDeployment: false,
         activeHouseSet: "all",
+        catalog: stubOnly,
+      }),
+      layers,
+    );
+  });
+
+  it("keeps real-only map layers for visitors on stub-only preview catalog", () => {
+    const layers = { real: true, stubs: false };
+    const stubOnly = { houses: [{ id: "בית-1", isStub: true }] };
+    assert.equal(
+      mapDisplayLayersForSession(layers, {
+        previewDeployment: true,
+        activeHouseSet: "real",
         catalog: stubOnly,
       }),
       layers,
