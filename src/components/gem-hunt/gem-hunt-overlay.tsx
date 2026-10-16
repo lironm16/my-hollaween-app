@@ -846,17 +846,15 @@ export function GemHuntOverlay({
       <header
         className={cn(
           "gem-hunt-overlay__header",
-          campusQueue ? "gem-hunt-overlay__header--title" : "gem-hunt-overlay__header--close-only",
+          "gem-hunt-overlay__header--close-only",
+          campusQueue && "gem-hunt-overlay__header--cluster-queue",
         )}
-        dir={campusQueue ? "rtl" : "ltr"}
+        dir="ltr"
       >
-        {campusQueue ? (
-          <div className="gem-hunt-overlay__header-text pointer-events-none" dir="rtl">
-            <p className="gem-hunt-overlay__title--hero text-orange-50">{campusQueue.boothTitle}</p>
-            {campusQueue.boothSubtitle ? (
-              <p className="mt-0.5 text-sm font-semibold text-amber-200/95">{campusQueue.boothSubtitle}</p>
-            ) : null}
-          </div>
+        {campusQueue?.boothTitle ? (
+          <p className="gem-hunt-overlay__cluster-queue-label pointer-events-none" dir="rtl">
+            {campusQueue.boothTitle}
+          </p>
         ) : null}
         {hideCloseButton ? null : (
           <OverlayCloseButton

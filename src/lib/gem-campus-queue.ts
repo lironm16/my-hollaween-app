@@ -54,9 +54,13 @@ export function gemClusterQueueHeadline(
   house: PublicHouse,
   cluster: readonly PublicHouse[],
 ): GemClusterQueueUi {
-  const boothTitle = house.name?.trim() || house.arrival?.trim() || "בית";
   const booth = clusterBoothLabel(house, cluster);
-  return { boothTitle, boothSubtitle: booth ?? "" };
+  const idx = cluster.findIndex((h) => h.id === house.id);
+  const n = idx >= 0 ? idx + 1 : 1;
+  const boothTitle =
+    booth?.trim() ||
+    (cluster.length > 1 ? `דוכן ${n} מתוך ${cluster.length}` : "מצאו שדונים");
+  return { boothTitle, boothSubtitle: "" };
 }
 
 /** @deprecated Use {@link gemClusterQueueHeadline}. */
