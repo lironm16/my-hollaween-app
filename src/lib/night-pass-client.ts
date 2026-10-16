@@ -120,8 +120,32 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
       });
       if (!res.ok) return null;
       const json = (await res.json()) as { lost?: unknown };
-      const next = asState(json);
+      let next = asState(json);
       if (!next) return null;
+      if (next.enabled && !next.registered && next.viewer === "owner") {
+        try {
+          const connect = await fetch("/api/night-passes/connect-owner", {
+            method: "POST",
+            cache: "no-store",
+            signal: AbortSignal.timeout(8000),
+          });
+          if (connect.ok) {
+            const detail = (await connect.json()) as { connected?: boolean };
+            if (detail.connected) {
+              const again = await fetch(`/api/night-passes/me${qs}`, {
+                cache: "no-store",
+                signal: AbortSignal.timeout(8000),
+              });
+              if (again.ok) {
+                const json2 = (await again.json()) as { lost?: unknown };
+                next = asState(json2) ?? next;
+              }
+            }
+          }
+        } catch {
+          /* optional */
+        }
+      }
       const lost = readLostDetail(json.lost);
       const prev = readNightPassState();
       if (JSON.stringify(prev) !== JSON.stringify(next)) {

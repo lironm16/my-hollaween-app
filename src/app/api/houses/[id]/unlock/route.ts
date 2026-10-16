@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getHouse } from "@/lib/store";
 import { canonicalHouseId, toEditorHouse } from "@/lib/ids";
+import { tryConnectOwnerDeviceForHouse } from "@/lib/night-pass-owner-connect";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { clientKey } from "@/lib/rate-limit";
 import { rateLimitShared } from "@/lib/rate-limit-store";
@@ -29,5 +30,11 @@ export async function POST(
     return NextResponse.json({ error: "קוד העריכה שגוי." }, { status: 403 });
   }
   await grantOwnerHouse(id);
-  return NextResponse.json({ house: toEditorHouse(house) });
+  let deviceConnected = false;
+  try {
+    deviceConnected = await tryConnectOwnerDeviceForHouse(id);
+  } catch {
+    /* optional */
+  }
+  return NextResponse.json({ house: toEditorHouse(house), deviceConnected });
 }

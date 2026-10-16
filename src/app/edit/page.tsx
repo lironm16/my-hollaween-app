@@ -105,7 +105,9 @@ function EditPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ editCode: code }),
       });
-      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
+      const data = await readApiJson<{ error?: string; house?: PublicHouse; deviceConnected?: boolean }>(
+        res,
+      );
       if (pickedIdRef.current !== target.id) return false;
       if (!res.ok || !data.house) {
         if (!options?.quiet) {
@@ -120,6 +122,13 @@ function EditPageContent() {
         editCode: code,
         preview: data.house,
       });
+      if (data.deviceConnected) {
+        const { refreshNightPassState, notifyNightPassSlotsChanged } = await import(
+          "@/lib/night-pass-client"
+        );
+        await refreshNightPassState({ force: true });
+        notifyNightPassSlotsChanged();
+      }
       return true;
     } catch {
       if (pickedIdRef.current !== target.id) return false;
