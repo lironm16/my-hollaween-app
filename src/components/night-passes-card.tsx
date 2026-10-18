@@ -25,7 +25,7 @@ type AccessView = {
     holderPhone: string;
     registeredAt: string;
     isThisDevice: boolean;
-    clientSurface?: "ios-browser" | "ios-app" | "other";
+    clientSurface?: string;
   }[];
   resetCount: number;
 };
@@ -358,18 +358,18 @@ export function NightPassesCard({
                       <bdi dir="ltr" className="text-violet-300">
                         {device.holderPhone}
                       </bdi>
+                      {nightPassClientSurfaceLabel(device.clientSurface) ? (
+                        <span className="text-violet-400">
+                          {" · "}
+                          {nightPassClientSurfaceLabel(device.clientSurface)}
+                        </span>
+                      ) : null}
                       {device.isThisDevice ? (
                         <span className="text-orange-300"> · המכשיר הזה</span>
                       ) : null}
                     </p>
                     <p className="text-center text-sm text-violet-400">
                       {formatHouseAddedAt(device.registeredAt)}
-                      {nightPassClientSurfaceLabel(device.clientSurface) ? (
-                        <>
-                          {" · "}
-                          {nightPassClientSurfaceLabel(device.clientSurface)}
-                        </>
-                      ) : null}
                     </p>
                   </div>
                   <Button

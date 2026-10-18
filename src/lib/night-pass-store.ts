@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import type { NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import {
   firestoreConfigured,
   metaDoc,
@@ -21,8 +22,8 @@ export type HouseAccessSession = {
   registeredAt: string;
   holderName: string;
   holderPhone: string;
-  /** Set on register — iOS browser vs home-screen app. */
-  clientSurface?: "ios-browser" | "ios-app" | "other";
+  /** Set on register — browser tab vs home-screen / PWA app. */
+  clientSurface?: NightPassClientSurface;
 };
 
 /** Device registry for one house — family code is always house.editCode. */
