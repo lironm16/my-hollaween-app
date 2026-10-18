@@ -110,11 +110,13 @@ export async function getHouse(id: string): Promise<House | undefined> {
   }
 
   const cached = houseFromWarmCaches(id);
-  if (cached) return cached;
+  if (cached && !isHouseDeleted(cached)) return cached;
 
   const found = findHouseIn((await loadDb()).houses, id);
-  if (found) return found;
-  return findHouseIn((await loadDb(true)).houses, id);
+  if (found && !isHouseDeleted(found)) return found;
+  const stale = findHouseIn((await loadDb(true)).houses, id);
+  if (stale && !isHouseDeleted(stale)) return stale;
+  return undefined;
 }
 
 /** Resolve the single family / edit code to a house row. */

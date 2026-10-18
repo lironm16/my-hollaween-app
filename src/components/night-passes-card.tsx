@@ -12,6 +12,8 @@ import {
 } from "@/lib/night-pass-client";
 import { formatHouseAddedAt } from "@/lib/house-meta";
 import { nightPassClientSurfaceLabel } from "@/lib/night-pass-client-surface";
+import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
+import { useNightPass } from "@/hooks/use-night-pass";
 import { shareHouseAccessInvite } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 
@@ -99,6 +101,8 @@ export function NightPassesCard({
   const [busyReset, setBusyReset] = useState(false);
   const [busyShare, setBusyShare] = useState(false);
   const [busyRemoveId, setBusyRemoveId] = useState<string | null>(null);
+  const passDialog = useNightPassDialogOptional();
+  const nightPass = useNightPass();
 
   const load = useCallback(async () => {
     setError("");
@@ -280,8 +284,14 @@ export function NightPassesCard({
     : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
 
   const devicesHeading = access
-    ? `מכשירים והזמנות · מכשירים מחוברים: ${access.connectedCount}/${access.maxDevices}`
-    : "מכשירים והזמנות";
+    ? `מכשירים מחוברים: ${access.connectedCount}/${access.maxDevices}`
+    : "מכשירים מחוברים";
+  const showConnectMe =
+    Boolean(data?.enabled) &&
+    Boolean(access) &&
+    !data.thisDeviceRegistered &&
+    nightPass.enabled &&
+    !nightPass.registered;
 
   return (
     <section className={shellClass}>
@@ -387,8 +397,22 @@ export function NightPassesCard({
             )}
             {access.connectedCount < access.maxDevices
               ? Array.from({ length: access.maxDevices - access.connectedCount }).map((_, i) => (
-                  <li key={`empty-${i}`} className="px-3 py-2 text-center text-sm text-emerald-400/90">
-                    פנוי
+                  <li
+                    key={`empty-${i}`}
+                    className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-emerald-400/90"
+                  >
+                    <span>פנוי</span>
+                    {showConnectMe ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 border-emerald-500/35 text-emerald-100 hover:bg-emerald-950/40"
+                        onClick={() => passDialog?.openOwnerRegister(houseId)}
+                      >
+                        חבר אותי
+                      </Button>
+                    ) : null}
                   </li>
                 ))
               : null}

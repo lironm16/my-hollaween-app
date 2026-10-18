@@ -14,6 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
@@ -193,16 +194,32 @@ function PassQueryOpener({
     const invite = searchParams.get("invite") ?? "";
     if (invite) {
       void (async () => {
+        const next = new URLSearchParams(searchParams.toString());
+        next.delete("invite");
+        const qs = next.toString();
+        router.replace(qs ? `/?${qs}` : "/");
+
+        try {
+          const prefill = await fetch(
+            `/api/night-passes/invite-prefill?invite=${encodeURIComponent(invite)}`,
+            { cache: "no-store" },
+          );
+          const json = (await prefill.json()) as { ok?: boolean };
+          if (!json.ok) {
+            toast.error("הבית הוסר מהאירוע — לא ניתן להירשם מהזמנה הזו.");
+            return;
+          }
+        } catch {
+          toast.error("לא הצלחנו לבדוק את ההזמנה. נסו שוב.");
+          return;
+        }
+
         const state = (await refreshNightPassState({ force: true })) ?? readNightPassState();
         if (state.registered) {
           onInviteForRegisteredDevice();
         } else {
           openRegister("", invite);
         }
-        const next = new URLSearchParams(searchParams.toString());
-        next.delete("invite");
-        const qs = next.toString();
-        router.replace(qs ? `/?${qs}` : "/");
       })();
       return;
     }

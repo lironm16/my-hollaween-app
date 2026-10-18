@@ -36,7 +36,9 @@ export async function POST(request: Request) {
   if (!phone) return fail(400, "phone", "נא לכתוב מספר נייד ישראלי, למשל 050-1234567.");
 
   const house = await getHouse(parsed.houseId);
-  if (!house) return fail(404, "house", "הבית לא נמצא.");
+  if (!house?.editCode?.trim()) {
+    return fail(404, "house", "הבית הוסר מהאירוע — אי אפשר להירשם מהזמנה הזו.");
+  }
 
   const ip = clientKey(request.headers);
   if (!(await rateLimitShared(`night-pass-invite:${ip}`, 20, WINDOW_MS))) {

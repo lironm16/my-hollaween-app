@@ -64,6 +64,8 @@ export function NightPassRegisterPanel({
   const [ownerHouseName, setOwnerHouseName] = useState("");
   const [resolvedOwnerHouseId, setResolvedOwnerHouseId] = useState("");
   const [inviteHouseName, setInviteHouseName] = useState("");
+  const [inviteReady, setInviteReady] = useState(false);
+  const [inviteUnavailable, setInviteUnavailable] = useState(false);
 
   const hasInvite = inviteToken.trim().length > 0;
 
@@ -72,7 +74,13 @@ export function NightPassRegisterPanel({
   }, [initialCode]);
 
   useEffect(() => {
-    if (!hasInvite) return;
+    if (!hasInvite) {
+      setInviteReady(true);
+      setInviteUnavailable(false);
+      return;
+    }
+    setInviteReady(false);
+    setInviteUnavailable(false);
     let cancelled = false;
     void (async () => {
       try {
@@ -81,9 +89,19 @@ export function NightPassRegisterPanel({
           { cache: "no-store" },
         );
         const json = (await res.json()) as { ok?: boolean; houseName?: string };
-        if (!cancelled && json.ok && json.houseName) setInviteHouseName(json.houseName);
+        if (cancelled) return;
+        if (!json.ok) {
+          setInviteUnavailable(true);
+          setInviteReady(true);
+          return;
+        }
+        if (json.houseName) setInviteHouseName(json.houseName);
+        setInviteReady(true);
       } catch {
-        /* optional */
+        if (!cancelled) {
+          setInviteUnavailable(true);
+          setInviteReady(true);
+        }
       }
     })();
     return () => {
@@ -183,8 +201,25 @@ export function NightPassRegisterPanel({
 
   const open = pass.enabled || admin;
 
-  if (!checked) {
+  if (!checked || (hasInvite && !inviteReady)) {
     return <p className="text-base text-violet-300">בודקים את המכשיר…</p>;
+  }
+
+  if (hasInvite && inviteUnavailable) {
+    return (
+      <div className="space-y-4">
+        <p className="rounded-xl bg-zinc-900/90 px-4 py-5 text-center text-base leading-relaxed text-zinc-100 ring-1 ring-white/10">
+          הבית הוסר מהאירוע — לא ניתן להירשם מהזמנה הזו.
+        </p>
+        <Button
+          type="button"
+          className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
+          onClick={() => onRegistered?.()}
+        >
+          סגירה
+        </Button>
+      </div>
+    );
   }
 
   if (pass.registered && !hasInvite && !ownerRegister) {
