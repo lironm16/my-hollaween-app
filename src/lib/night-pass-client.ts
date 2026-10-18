@@ -220,7 +220,9 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
           if (again.state) next = again.state;
         }
       }
-      next = await tryOwnerNightPassConnect(qs, next);
+      if (next.viewer === "owner") {
+        next = await tryOwnerNightPassConnect(qs, next);
+      }
       const lost = readLostDetail(json.lost);
       const prev = readNightPassState();
       if (JSON.stringify(prev) !== JSON.stringify(next)) {

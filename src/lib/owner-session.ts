@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { adminPassword } from "@/lib/admin";
 import { canonicalHouseId, sameHouseId } from "@/lib/ids";
+import { getHouse } from "@/lib/store/houses";
 
 const COOKIE = "hw_owner";
 const MAX_HOUSES = 20;
@@ -53,15 +54,23 @@ export async function grantOwnerHouse(id: string) {
   });
 }
 
-/** House ids this device unlocked (signed hw_owner cookie). */
+/** House ids this device unlocked — only rows still on the event (deleted houses excluded). */
 export async function ownerHouseIds(): Promise<string[]> {
   const jar = await cookies();
-  return parseCookie(jar.get(COOKIE)?.value).map(canonicalHouseId).filter(Boolean);
+  const raw = parseCookie(jar.get(COOKIE)?.value).map(canonicalHouseId).filter(Boolean);
+  const ids: string[] = [];
+  await Promise.all(
+    raw.map(async (id) => {
+      if (await getHouse(id)) ids.push(id);
+    }),
+  );
+  return ids.sort();
 }
 
 export async function ownerMayEdit(id: string) {
   const needle = canonicalHouseId(id);
   if (!needle) return false;
+  if (!(await getHouse(needle))) return false;
   const jar = await cookies();
   return parseCookie(jar.get(COOKIE)?.value).some((item) => sameHouseId(item, needle));
 }
