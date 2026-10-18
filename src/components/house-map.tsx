@@ -20,7 +20,6 @@ import {
   type GemAnchorEditState,
 } from "@/components/map-gem-anchor-edit-layer";
 import { MapAddHouseFab } from "@/components/map-add-house-fab";
-import { MapDemonCamFab } from "@/components/map-demon-cam-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
@@ -855,11 +854,6 @@ type Props = {
   isGemCollected?: (houseId: string) => boolean;
   /** Yellow/diamond rings on pins when toolbar gem map toggle is on. */
   showGemPinRings?: boolean;
-  gemCamFabEnabled?: boolean;
-  gemCamFabHuntOpen?: boolean;
-  gemCamFabNearSignal?: boolean;
-  gemCamFabHeadline?: string | null;
-  onOpenGemCamFab?: () => void;
   /** Owner/admin gem placement — draggable demon around the selected house. */
   gemAnchorEdit?: GemAnchorEditState | null;
   /** Tour mode — cluster ring uses orange for open slices instead of white. */
@@ -910,11 +904,6 @@ export function HouseMap({
   gemAnchorVisual = "admin",
   isGemCollected,
   showGemPinRings = false,
-  gemCamFabEnabled = false,
-  gemCamFabHuntOpen = false,
-  gemCamFabNearSignal = false,
-  gemCamFabHeadline = null,
-  onOpenGemCamFab,
   gemAnchorEdit = null,
   routeModeActive = false,
 }: Props) {
@@ -1242,15 +1231,6 @@ export function HouseMap({
         ) : null}
       </MapContainer>
       {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
-      {!pickMode && !originPickActive && !embed && onOpenGemCamFab ? (
-        <MapDemonCamFab
-          gemUi={gemCamFabEnabled}
-          huntOpen={gemCamFabHuntOpen}
-          nearSignal={gemCamFabNearSignal}
-          targetHeadline={gemCamFabHeadline}
-          onOpenHunt={onOpenGemCamFab}
-        />
-      ) : null}
       <div className="map-fab-stack">
           {!pickMode && onLocate && (!embed || showLocateButton) ? (
             <button

@@ -69,16 +69,11 @@ import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
 import {
   firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
-  gemSingleHuntQueueHeadline,
   gemClusterSessionMembers,
   nextClusterGemHouse,
   skipClusterGemHouse,
 } from "@/lib/gem-campus-queue";
-import {
-  firstClusterGemHouseInProximity,
-  pickMapFabGemHuntTarget,
-  pickMapRovingGemHuntHouse,
-} from "@/lib/map-gem-hunt-target";
+import { firstClusterGemHouseInProximity } from "@/lib/map-gem-hunt-target";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import {
@@ -233,8 +228,6 @@ export function NeighborhoodApp({
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
   /** Sorted cluster houses when gem camera runs as one multi-unit session. */
   const [mapGemClusterMembers, setMapGemClusterMembers] = useState<PublicHouse[] | null>(null);
-  /** True only for the floating map FAB — roving target + cluster-style header. */
-  const [mapGemFabRoving, setMapGemFabRoving] = useState(false);
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
   const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
@@ -254,8 +247,6 @@ export function NeighborhoodApp({
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
   const mapGemCheerTimerRef = useRef<number | null>(null);
   const mapGemClusterSessionRef = useRef<GemClusterSessionCatch[]>([]);
-  /** Sticky tell-me / hint target until the user taps «גלה לי» or «רמז» again. */
-  const mapGemNavPinRef = useRef<string | null>(null);
   const [clusterGemSessionSummary, setClusterGemSessionSummary] = useState<
     GemClusterSessionCatch[] | null
   >(null);
@@ -489,12 +480,7 @@ export function NeighborhoodApp({
   const { resetForNavigation } = selection;
 
   const bootMapGemHunt = useCallback(
-    async (
-      house: PublicHouse,
-      clusterMembers: PublicHouse[] | null,
-      options?: { fabRoving?: boolean },
-    ) => {
-      const fabRoving = Boolean(options?.fabRoving);
+    async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
       const gen = ++mapGemOpenGenRef.current;
       preloadGemHuntChunks();
       getGemHuntPortalRoot();
@@ -510,7 +496,6 @@ export function NeighborhoodApp({
       setMapGemWebXrSession(null);
       setMapGemGps(gps);
       setMapGemClusterMembers(clusterMembers);
-      setMapGemFabRoving(fabRoving);
       flushSync(() => {
         setMapGemHouse(house);
       });
@@ -552,21 +537,13 @@ export function NeighborhoodApp({
     [activeHouseSet, addressReveal],
   );
 
-  const fabGemHuntPool = useMemo(
-    () =>
-      gemMapRingHousesVisible.filter(
-        (h) => matchedIds.has(h.id) && gemHouseHuntAllowed(h) && !gems.collected(h.id),
-      ),
-    [gemMapRingHousesVisible, matchedIds, gemHouseHuntAllowed, gems.collected],
-  );
-
   const openGemHuntForHouse = useCallback(
     async (house: PublicHouse) => {
       if (gems.collected(house.id)) return;
       if (!gemHouseHuntAllowed(house)) return;
       mapGemClusterSessionRef.current = [];
       setMapGemClusterCatchCount(0);
-      await bootMapGemHunt(house, null, { fabRoving: false });
+      await bootMapGemHunt(house, null);
     },
     [bootMapGemHunt, gemHouseHuntAllowed, gems],
   );
@@ -581,22 +558,10 @@ export function NeighborhoodApp({
       if (!target) return;
       mapGemClusterSessionRef.current = [];
       setMapGemClusterCatchCount(0);
-      await bootMapGemHunt(target, houses, { fabRoving: false });
+      await bootMapGemHunt(target, houses);
     },
     [bootMapGemHunt, gemHouseHuntAllowed, gems.collected, gps],
   );
-
-  const pinMapGemNavigationTarget = useCallback(() => {
-    const picked = pickMapFabGemHuntTarget(
-      gps ?? mapGemGps,
-      fabGemHuntPool,
-      mapHouses,
-      gems.collected,
-    );
-    if (!picked) return;
-    mapGemNavPinRef.current = picked.id;
-    setMapGemHouse((current) => (current?.id === picked.id ? current : picked));
-  }, [gps, mapGemGps, fabGemHuntPool, mapHouses, gems.collected]);
 
   const restoreAfterGemHunt = useCallback(() => {
     if (gemHuntOpenedFromViewRef.current !== "list") return;
@@ -610,132 +575,21 @@ export function NeighborhoodApp({
 
   const closeMapGemHunt = useCallback(() => {
     mapGemOpenGenRef.current += 1;
-    mapGemNavPinRef.current = null;
     releaseGemHuntCamera();
     stopGemHuntCameraStream();
     void endGemHuntWebXrSession(mapGemWebXrSession);
     setMapGemWebXrSession(null);
     setMapGemHouse(null);
     setMapGemClusterMembers(null);
-    setMapGemFabRoving(false);
     setMapGemGps(null);
     setMapGemClusterCatchCount(0);
     restoreAfterGemHunt();
   }, [mapGemWebXrSession, restoreAfterGemHunt]);
 
-  const openGemHuntFromMapFab = useCallback(async () => {
-    if (mapGemHouse) {
-      closeMapGemHunt();
-      return;
-    }
-    if (fabGemHuntPool.length === 0) return;
-    mapGemNavPinRef.current = null;
-    const picked = pickMapFabGemHuntTarget(gps, fabGemHuntPool, mapHouses, gems.collected);
-    if (!picked) return;
-    const cluster = gemClusterSessionMembers([...mapHouses], picked);
-    let huntHouse = picked;
-    let clusterMembers: PublicHouse[] | null = null;
-    if (cluster && cluster.length >= 2) {
-      const open = cluster.filter(
-        (h) => gemHouseHuntAllowed(h) && !gems.collected(h.id),
-      );
-      if (open.length >= 2) {
-        clusterMembers = open;
-        huntHouse =
-          firstClusterGemHouseInProximity(open, gps, gems.collected) ??
-          firstClusterGemHouseToHunt(open, gems.collected) ??
-          picked;
-      }
-    }
-    mapGemClusterSessionRef.current = [];
-    setMapGemClusterCatchCount(0);
-    await bootMapGemHunt(huntHouse, clusterMembers, { fabRoving: true });
-  }, [
-    mapGemHouse,
-    fabGemHuntPool,
-    gps,
-    mapHouses,
-    gems.collected,
-    gemHouseHuntAllowed,
-    bootMapGemHunt,
-    closeMapGemHunt,
-  ]);
-
-  useEffect(() => {
-    if (!mapGemHouse || mapGemClusterMembers || !mapGemFabRoving) return;
-    const user = gps ?? mapGemGps;
-    if (!user) return;
-    const next = pickMapRovingGemHuntHouse(
-      user,
-      fabGemHuntPool,
-      mapHouses,
-      gems.collected,
-      mapGemNavPinRef.current,
-      mapGemHouse.id,
-    );
-    if (next && next.id !== mapGemHouse.id) {
-      setMapGemHouse(next);
-    }
-  }, [
-    mapGemHouse,
-    mapGemClusterMembers,
-    mapGemFabRoving,
-    gps,
-    mapGemGps,
-    fabGemHuntPool,
-    mapHouses,
-    gems.collected,
-  ]);
-
   const mapGemClusterQueueUi = useMemo(() => {
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;
     return gemClusterQueueHeadline(mapGemHouse, mapGemClusterMembers);
   }, [mapGemHouse, mapGemClusterMembers]);
-
-  const mapGemHuntQueueUi = useMemo(() => {
-    if (!mapGemHouse) return undefined;
-    if (mapGemClusterMembers) return mapGemClusterQueueUi;
-    if (mapGemFabRoving) return gemSingleHuntQueueHeadline(mapGemHouse);
-    return undefined;
-  }, [mapGemHouse, mapGemClusterMembers, mapGemClusterQueueUi, mapGemFabRoving]);
-
-  const mapGemFabHeadline = useMemo(() => {
-    const headlineFor = (house: PublicHouse, cluster: PublicHouse[] | null) => {
-      if (cluster && cluster.length >= 2) {
-        const ui = gemClusterQueueHeadline(house, cluster);
-        return [ui.boothTitle, ui.boothSubtitle].filter(Boolean).join(" · ");
-      }
-      return house.name?.trim() || house.arrival?.trim() || null;
-    };
-    if (mapGemHouse) {
-      return headlineFor(mapGemHouse, mapGemClusterMembers);
-    }
-    const user = gps ?? mapGemGps;
-    const target = pickMapFabGemHuntTarget(user, fabGemHuntPool, mapHouses, gems.collected);
-    if (!target) return null;
-    const cluster = gemClusterSessionMembers([...mapHouses], target);
-    if (cluster && cluster.length >= 2) {
-      const open = cluster.filter(
-        (h) => !gems.collected(h.id) && fabGemHuntPool.some((p) => p.id === h.id),
-      );
-      if (open.length >= 2) {
-        const hunt =
-          firstClusterGemHouseInProximity(open, user, gems.collected) ??
-          firstClusterGemHouseToHunt(open, gems.collected) ??
-          target;
-        return headlineFor(hunt, open);
-      }
-    }
-    return headlineFor(target, null);
-  }, [
-    mapGemHouse,
-    mapGemClusterMembers,
-    gps,
-    mapGemGps,
-    fabGemHuntPool,
-    mapHouses,
-    gems.collected,
-  ]);
 
   const mapGemClusterSkipAvailable = useMemo(() => {
     if (!mapGemClusterMembers || !mapGemHouse) return false;
@@ -1760,11 +1614,6 @@ export function NeighborhoodApp({
                   gemAnchorHouses={gemUi ? gemMapRingHousesVisible : []}
                   showGemPinRings={gemUi && mapDiamondsVisible}
                   isGemCollected={gems.collected}
-                  gemCamFabEnabled={gemUi}
-                  gemCamFabHuntOpen={Boolean(mapGemHouse)}
-                  gemCamFabNearSignal={mapGemNearSignal}
-                  gemCamFabHeadline={mapGemFabHeadline}
-                  onOpenGemCamFab={() => void openGemHuntFromMapFab()}
                 />
               {view === "map" && originPick.originPickActive ? (
                   <div className="origin-pick-bar">
@@ -1963,12 +1812,9 @@ export function NeighborhoodApp({
           )}
           initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
-          onBeforeNavigationAssist={
-            mapGemFabRoving && !mapGemClusterMembers ? pinMapGemNavigationTarget : undefined
-          }
           encounterMode={!mapGemClusterMembers}
           repeatVisit={!mapGemClusterMembers && gems.collected(mapGemHouse.id)}
-          campusQueue={mapGemHuntQueueUi}
+          campusQueue={mapGemClusterQueueUi}
           onClusterFinishSession={
             mapGemClusterMembers ? finishMapGemClusterSession : undefined
           }

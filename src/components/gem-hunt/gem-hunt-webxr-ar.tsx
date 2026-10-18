@@ -462,9 +462,12 @@ export function GemHuntWebXrAr({
       encounterPhase.startsWith("resolve") ||
       encounterPhase === "reward");
   const tellMeRevealActive = centerReveal || encounterForcesReveal;
-  /** DOM center gem only for «גלה לי» — world AR model handles on-site placement taps. */
-  const showTellMeCenterGem =
-    centerReveal && sessionActive && phase !== "collecting" && !userDismissedCenterGem;
+  /** DOM center gem for «גלה לי» (world AR model hidden while centerReveal). */
+  const tellMeCenterSession =
+    centerReveal && sessionActive && !userDismissedCenterGem;
+  const showTellMeCenterGem = tellMeCenterSession && phase !== "collecting";
+  /** iOS-style collect choreography — WebXR hid the DOM gem during `collecting`. */
+  const showCenterCollectGem = phase === "collecting" && sessionActive;
 
   const showApproachScreenGem =
     sessionActive &&
@@ -1328,7 +1331,7 @@ export function GemHuntWebXrAr({
         </div>
       ) : null}
 
-      {showTellMeCenterGem ? (
+      {showCenterCollectGem || showTellMeCenterGem ? (
         <div
           className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage is-gem-interactive"
           aria-hidden={false}
@@ -1337,20 +1340,28 @@ export function GemHuntWebXrAr({
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
               "is-ring-center is-center-collect is-collect-layer is-tell-me-center",
-              gemTapCollectEnabled && "is-tap-collect-ready",
-              "is-tell-me-center-active",
+              showCenterCollectGem && "is-collecting",
+              gemTapCollectEnabled && !showCenterCollectGem && "is-tap-collect-ready",
+              tellMeCenterSession && !showCenterCollectGem && "is-tell-me-center-active",
             )}
           >
-            <div className="gem-hunt-overlay__gem-dance" data-collect-dance={danceIndex}>
+            <div
+              className={cn(
+                "gem-hunt-overlay__gem-dance",
+                showCenterCollectGem && "is-collecting is-collecting-3d",
+              )}
+              data-collect-dance={danceIndex}
+            >
               <GemSprite
                 house={house}
                 mode="inspect360"
                 size="fill"
                 spinWhileCollect={false}
                 tapCollect={false}
+                motion={showCenterCollectGem ? "celebrate" : "idle"}
                 celebrateVariant={danceIndex}
                 zoom={gemTellMeCenterModelZoom()}
-                onInspectTap={onTellMeCenterTap}
+                onInspectTap={showCenterCollectGem ? undefined : onTellMeCenterTap}
               />
             </div>
           </div>
