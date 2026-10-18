@@ -1,5 +1,10 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
-import { formatHouseAccessCode, HOUSE_ACCESS_MAX_DEVICES } from "@/lib/house-access-code";
+import {
+  formatHouseAccessCode,
+  HOUSE_ACCESS_MAX_DEVICES,
+  normalizeHolderName,
+  normalizeIsraeliMobile,
+} from "@/lib/house-access-code";
 import {
   hashNightPassToken,
   newHouseAccessCode,
@@ -83,9 +88,8 @@ export type RedeemOutcome =
       token: string;
       sessionId: string;
       reregistered: boolean;
-      evicted?: boolean;
     }
-  | { ok: false; error: "invalid" };
+  | { ok: false; error: "invalid" | "full" | "duplicate_identity" };
 
 export async function redeemNightPass(input: {
   code: string;
@@ -102,7 +106,7 @@ export async function redeemNightPass(input: {
   const tokenHash = hashNightPassToken(token);
   const sessionId = randomUUID();
   let outcome: "invalid" | "registered" | "reregistered" = "invalid";
-  let evicted = false;
+  let failError: "full" | "duplicate_identity" | null = null;
 
   const record = await updateNightPass(id, (current) => {
     if (!current) {
@@ -115,6 +119,9 @@ export async function redeemNightPass(input: {
       input.priorSessionId != null
         ? sessions.findIndex((s) => s.sessionId === input.priorSessionId)
         : -1;
+    const sameIdentity = (session: HouseAccessSession) =>
+      normalizeHolderName(session.holderName) === input.name &&
+      normalizeIsraeliMobile(session.holderPhone) === input.phone;
     if (priorIdx >= 0) {
       outcome = "reregistered";
       sessions[priorIdx] = {
@@ -125,12 +132,15 @@ export async function redeemNightPass(input: {
         holderPhone: input.phone,
       };
     } else {
-      outcome = "registered";
       if (sessions.length >= HOUSE_ACCESS_MAX_DEVICES) {
-        sessions = sortSessions(sessions);
-        sessions.shift();
-        evicted = true;
+        failError = "full";
+        return null;
       }
+      if (sessions.some((session) => sameIdentity(session))) {
+        failError = "duplicate_identity";
+        return null;
+      }
+      outcome = "registered";
       sessions.push({
         sessionId,
         tokenHash,
@@ -152,6 +162,7 @@ export async function redeemNightPass(input: {
     };
   });
 
+  if (failError) return { ok: false, error: failError };
   if (outcome === "invalid" || !record) {
     return { ok: false, error: "invalid" };
   }
@@ -165,7 +176,6 @@ export async function redeemNightPass(input: {
     token,
     sessionId: activeSessionId,
     reregistered: outcome === "reregistered",
-    evicted,
   };
 }
 
@@ -191,6 +201,34 @@ export type ResetOutcome =
   | { ok: false; error: "missing" };
 
 /** New family code on the house — all device sessions cleared. */
+/** Owner removes one paired device — frees a slot without resetting the family code. */
+export async function removeHouseAccessSession(
+  houseId: string,
+  sessionId: string,
+): Promise<boolean> {
+  const id = passId(houseId);
+  let removed = false;
+  await updateNightPass(id, (current) => {
+    if (!current) return null;
+    const target = current.sessions.find((s) => s.sessionId === sessionId);
+    if (!target) return null;
+    removed = true;
+    const now = new Date().toISOString();
+    return {
+      ...current,
+      sessions: current.sessions.filter((s) => s.sessionId !== sessionId),
+      updatedAt: now,
+      history: withEvent(current.history, {
+        type: "evicted",
+        at: now,
+        name: target.holderName,
+        phone: target.holderPhone,
+      }),
+    };
+  });
+  return removed;
+}
+
 export async function resetHouseAccess(houseId: string): Promise<ResetOutcome> {
   const record = await ensureHouseAccess(houseId);
   const newCode = newHouseAccessCode();

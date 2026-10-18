@@ -34,7 +34,9 @@ export async function GET(request: Request) {
       ? houseAccessSessionForDevice(pass, cookie.sessionId, cookie.token)
       : null;
   const lostNow =
-    !pass && staleCookie ? describeNightPassLost(staleCookie.passId) : Promise.resolve(null);
+    !pass && staleCookie
+      ? describeNightPassLost(staleCookie.passId, staleCookie.sessionId)
+      : Promise.resolve(null);
   const [house, freshLost, storedLost] = await Promise.all([
     pass ? getHouse(pass.houseId).catch(() => null) : Promise.resolve(null),
     lostNow,

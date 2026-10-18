@@ -3,6 +3,7 @@ import { isAdmin } from "@/lib/admin";
 import { parseHouseAccessInviteToken } from "@/lib/house-access-invite";
 import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-code";
 import { registerHouseAccessDevice } from "@/lib/night-pass-service";
+import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
@@ -49,6 +50,9 @@ export async function POST(request: Request) {
     priorSessionId: cookie?.sessionId ?? null,
   });
   if (!outcome.ok) {
+    if (outcome.error === "full" || outcome.error === "duplicate_identity") {
+      return fail(409, outcome.error, nightPassRegisterErrorMessage(outcome.error));
+    }
     return fail(500, "register", "ההרשמה נכשלה. נסו שוב.");
   }
   await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
@@ -63,7 +67,7 @@ export async function POST(request: Request) {
       houseId: house.id,
       editCode: house.editCode,
       house: toPublicHouse(house),
-      evicted: outcome.evicted ?? false,
+      evicted: false,
       reregistered: outcome.reregistered,
     },
     { headers: NO_STORE },

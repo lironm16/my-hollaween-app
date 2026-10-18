@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   NIGHT_PASSES_SLOTS_CHANGED_EVENT,
+  disconnectNightPassOnDevice,
   notifyNightPassSlotsChanged,
+  refreshNightPassState,
 } from "@/lib/night-pass-client";
 import { formatHouseAddedAt } from "@/lib/house-meta";
 import { shareHouseAccessInvite } from "@/lib/nav-links";
@@ -17,6 +19,7 @@ type AccessView = {
   connectedCount: number;
   maxDevices: number;
   devices: {
+    sessionId: string;
     holderName: string;
     holderPhone: string;
     registeredAt: string;
@@ -93,6 +96,7 @@ export function NightPassesCard({
   const [error, setError] = useState("");
   const [busyReset, setBusyReset] = useState(false);
   const [busyShare, setBusyShare] = useState(false);
+  const [busyRemoveId, setBusyRemoveId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError("");
@@ -159,9 +163,48 @@ export function NightPassesCard({
       }
       toast.success("קוד הכניסה אופס");
       notifyNightPassSlotsChanged();
+      await disconnectNightPassOnDevice();
+      await refreshNightPassState({ force: true });
       await load();
     } finally {
       setBusyReset(false);
+    }
+  }
+
+  async function removeDevice(sessionId: string, isThisDevice: boolean) {
+    if (
+      !window.confirm(
+        isThisDevice
+          ? "להסיר את המכשיר הזה מהרשימה? תצטרכו להירשם מחדש כדי לראות כתובות."
+          : "להסיר את המכשיר מהרשימה?",
+      )
+    ) {
+      return;
+    }
+    setBusyRemoveId(sessionId);
+    try {
+      const res = await fetch(
+        `/api/houses/${encodeURIComponent(houseId)}/night-passes/remove`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        },
+      );
+      const json = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        toast.error(json?.error ?? "ההסרה נכשלה.");
+        return;
+      }
+      if (isThisDevice) {
+        await disconnectNightPassOnDevice();
+      }
+      toast.success("המכשיר הוסר");
+      notifyNightPassSlotsChanged();
+      await refreshNightPassState({ force: true });
+      await load();
+    } finally {
+      setBusyRemoveId(null);
     }
   }
 
@@ -250,7 +293,7 @@ export function NightPassesCard({
       {access ? (
         <>
           <p className="text-center text-sm text-violet-200">
-            מחוברים: {access.connectedCount}/{access.maxDevices}
+            מכשירים מחוברים: {access.connectedCount}/{access.maxDevices}
           </p>
           {showFamilyCode ? (
             <div className="flex flex-col items-center gap-2 rounded-xl bg-black/30 px-3 py-4 ring-1 ring-orange-500/20">
@@ -301,20 +344,35 @@ export function NightPassesCard({
               <li className="px-3 py-4 text-center text-emerald-400">אין מכשירים מחוברים עדיין</li>
             ) : (
               access.devices.map((device) => (
-                <li key={`${device.registeredAt}-${device.holderPhone}`} className="px-3 py-3">
-                  <p className="text-center text-base font-medium text-violet-200">
-                    {device.holderName}
-                    {" · "}
-                    <bdi dir="ltr" className="text-violet-300">
-                      {device.holderPhone}
-                    </bdi>
-                    {device.isThisDevice ? (
-                      <span className="text-orange-300"> · המכשיר הזה</span>
-                    ) : null}
-                  </p>
-                  <p className="text-center text-sm text-violet-400">
-                    {formatHouseAddedAt(device.registeredAt)}
-                  </p>
+                <li
+                  key={device.sessionId}
+                  className="flex items-start gap-2 px-3 py-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-center text-base font-medium text-violet-200">
+                      {device.holderName}
+                      {" · "}
+                      <bdi dir="ltr" className="text-violet-300">
+                        {device.holderPhone}
+                      </bdi>
+                      {device.isThisDevice ? (
+                        <span className="text-orange-300"> · המכשיר הזה</span>
+                      ) : null}
+                    </p>
+                    <p className="text-center text-sm text-violet-400">
+                      {formatHouseAddedAt(device.registeredAt)}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busyRemoveId === device.sessionId}
+                    className="shrink-0 border-red-500/30 text-sm text-red-200 hover:bg-red-950/40"
+                    onClick={() => void removeDevice(device.sessionId, device.isThisDevice)}
+                  >
+                    {busyRemoveId === device.sessionId ? "…" : "הסרה"}
+                  </Button>
                 </li>
               ))
             )}

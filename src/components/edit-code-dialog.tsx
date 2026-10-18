@@ -59,11 +59,12 @@ export function EditCodeDialog({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 min-w-0 flex-1 justify-center text-base"
+                size="sm"
+                className="h-9 min-w-0 flex-1 gap-1.5 border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15"
                 onClick={() => void copyText(editCode.replace(/\s/g, ""), "קוד הכניסה הועתק")}
               >
-                <Copy className="size-5" />
-                העתק
+                <Copy className="size-4 shrink-0" strokeWidth={2.2} />
+                <span className="text-sm">העתק</span>
               </Button>
               <NightPassesCard
                 houseId={house.id}

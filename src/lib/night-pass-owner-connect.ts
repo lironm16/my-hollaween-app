@@ -2,7 +2,6 @@ import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-
 import { toPublicHouse } from "@/lib/ids";
 import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
 import {
-  ensureHouseAccess,
   houseAccessSessionForDevice,
   registerHouseAccessDevice,
   type RedeemOutcome,
@@ -111,7 +110,7 @@ export async function registerOwnerDeviceWithContact(input: {
       editCode: string;
       house: ReturnType<typeof toPublicHouse>;
     })
-  | { ok: false; error: string }
+  | { ok: false; error: string | "full" | "duplicate_identity" }
 > {
   const settings = await readNightPassSettings();
   if (!settings.enabled) return { ok: false, error: "disabled" };
@@ -132,31 +131,13 @@ export async function registerOwnerDeviceWithContact(input: {
   }
 
   const cookie = await readNightPassCookie();
-  const record = await ensureHouseAccess(house.id);
-  const primaryName = normalizeHolderName(house.addedBy ?? "");
-  const primaryPhone = mobileForNightPass(String(house.ownerPhone ?? ""));
-  const usesPrimaryIdentity =
-    Boolean(primaryName && primaryPhone) && name === primaryName && phone === primaryPhone;
-  if (usesPrimaryIdentity) {
-    const priorSessionId = cookie?.sessionId ?? null;
-    const taken = record.sessions.some(
-      (session) =>
-        session.sessionId !== priorSessionId &&
-        mobileForNightPass(session.holderPhone) === primaryPhone &&
-        normalizeHolderName(session.holderName) === primaryName,
-    );
-    if (taken) {
-      return { ok: false, error: "primary_slot_taken" };
-    }
-  }
-
   const outcome = await registerHouseAccessDevice({
     houseId: house.id,
     name,
     phone,
     priorSessionId: cookie?.sessionId ?? null,
   });
-  if (!outcome.ok) return { ok: false, error: outcome.error };
+  if (!outcome.ok) return { ok: false, error: outcome.error as string | "full" | "duplicate_identity" };
 
   await patchHouseContactIfMissing(house.id, house.editCode, name, phone);
   await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);

@@ -69,7 +69,7 @@ describe("house access service (file store)", () => {
     assert.equal(again.id, first.id);
   });
 
-  it("LRU evicts oldest on fifth device", async () => {
+  it("rejects fifth device when four slots are full", async () => {
     const id = "בית-lru";
     const code = newEditCode();
     seedHouses([testHouse(id, code)]);
@@ -94,12 +94,11 @@ describe("house access service (file store)", () => {
       name: "fifth",
       phone: "0509999999",
     });
-    assert.equal(fifth.ok, true);
-    if (!fifth.ok) return;
-    assert.equal(fifth.evicted, true);
+    assert.equal(fifth.ok, false);
+    if (fifth.ok) return;
+    assert.equal(fifth.error, "full");
     store.invalidateNightPassMem();
-    assert.equal(await service.validNightPassForToken(access.id, tokens[0]!), null);
-    assert.ok(await service.validNightPassForToken(access.id, fifth.token));
+    assert.ok(await service.validNightPassForToken(access.id, tokens[0]!));
   });
 
   it("reset clears devices and returns a new code for the house row", async () => {

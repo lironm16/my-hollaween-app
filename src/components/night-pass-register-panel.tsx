@@ -11,8 +11,6 @@ import { useNightPass } from "@/hooks/use-night-pass";
 import {
   NIGHT_PASS_ALREADY_REGISTERED_BODY,
   NIGHT_PASS_ALREADY_REGISTERED_TITLE,
-  NIGHT_PASS_OWNER_COEDITOR_HINT,
-  NIGHT_PASS_OWNER_REGISTER_SUBTITLE,
   NIGHT_PASS_REGISTER_SUBTITLE,
 } from "@/lib/night-pass-copy";
 import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
@@ -64,36 +62,12 @@ export function NightPassRegisterPanel({
   const [iosTab, setIosTab] = useState(false);
   const [ownerHouseName, setOwnerHouseName] = useState("");
   const [resolvedOwnerHouseId, setResolvedOwnerHouseId] = useState("");
-  const [ownerContactComplete, setOwnerContactComplete] = useState(false);
   const [inviteHouseName, setInviteHouseName] = useState("");
 
   const hasInvite = inviteToken.trim().length > 0;
 
   useEffect(() => {
     setCode((prev) => initialCode || prev);
-  }, [initialCode]);
-
-  useEffect(() => {
-    const raw = initialCode.replace(/[\s-]/g, "");
-    if (raw.replace(/\D/g, "").length < 6) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await fetch(
-          `/api/night-passes/prefill?code=${encodeURIComponent(raw)}`,
-          { cache: "no-store" },
-        );
-        const json = (await res.json()) as { name?: string; phone?: string };
-        if (cancelled) return;
-        if (json.name) setName((prev) => (prev.trim() ? prev : json.name!));
-        if (json.phone) setPhone((prev) => (prev.trim() ? prev : json.phone!));
-      } catch {
-        /* optional */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
   }, [initialCode]);
 
   useEffect(() => {
@@ -131,9 +105,6 @@ export function NightPassRegisterPanel({
           eligible?: boolean;
           houseId?: string;
           houseName?: string;
-          name?: string;
-          phone?: string;
-          contactComplete?: boolean;
         };
         if (cancelled || !json.eligible) {
           if (!cancelled && !json.eligible) {
@@ -143,9 +114,6 @@ export function NightPassRegisterPanel({
         }
         if (json.houseId) setResolvedOwnerHouseId(json.houseId);
         if (json.houseName) setOwnerHouseName(json.houseName);
-        if (json.name) setName((prev) => (prev.trim() ? prev : json.name!));
-        if (json.phone) setPhone((prev) => (prev.trim() ? prev : json.phone!));
-        setOwnerContactComplete(Boolean(json.contactComplete));
       } catch {
         if (!cancelled) setError("לא הצלחנו לטעון פרטים. נסו שוב.");
       }
@@ -202,9 +170,6 @@ export function NightPassRegisterPanel({
       }
       await refreshNightPassState({ force: true });
       notifyNightPassSlotsChanged();
-      if (json?.evicted) {
-        toast.message("4 מכשירים כבר מחוברים — המכשיר הישן ביותר נותק.");
-      }
       toast.success(json?.reregistered ? "המכשיר עודכן" : "המכשיר מחובר");
       onRegistered?.();
     } catch {
@@ -261,16 +226,13 @@ export function NightPassRegisterPanel({
         void submit();
       }}
     >
-      <p className="text-base leading-relaxed text-violet-100">
-        {ownerRegister ? NIGHT_PASS_OWNER_REGISTER_SUBTITLE : NIGHT_PASS_REGISTER_SUBTITLE}
-      </p>
+      {!ownerRegister && !hasInvite ? (
+        <p className="text-base leading-relaxed text-violet-100">{NIGHT_PASS_REGISTER_SUBTITLE}</p>
+      ) : null}
       {ownerRegister && ownerHouseName ? (
         <p className="rounded-xl bg-violet-950/50 p-3 text-center text-sm text-violet-100 ring-1 ring-violet-500/25">
           {ownerHouseName}
         </p>
-      ) : null}
-      {ownerRegister && ownerContactComplete ? (
-        <p className="text-sm leading-relaxed text-violet-300/95">{NIGHT_PASS_OWNER_COEDITOR_HINT}</p>
       ) : null}
       {iosTab ? (
         <p className="rounded-xl bg-amber-950/60 p-3 text-sm text-amber-100 ring-1 ring-amber-500/25">
@@ -338,11 +300,7 @@ export function NightPassRegisterPanel({
         }
         className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
       >
-        {busy
-          ? "נרשמים…"
-          : ownerRegister && ownerContactComplete
-            ? "אישור וחיבור"
-            : "הרשמה"}
+        {busy ? "נרשמים…" : "הרשמה"}
       </Button>
       {compact ? (
         <Link

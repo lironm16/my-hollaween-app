@@ -50,9 +50,21 @@ const LOST_COOKIE = "hw_pass_lost";
 export type NightPassLost = { reason: "taken" | "reset"; byName?: string };
 
 /** Same code still active with another token → taken by that holder; record gone → owner reset. */
-export async function describeNightPassLost(passId: string): Promise<NightPassLost> {
+export async function describeNightPassLost(
+  passId: string,
+  staleSessionId?: string | null,
+): Promise<NightPassLost> {
   const record = await readNightPass(passId).catch(() => null);
   if (!record) return { reason: "reset" };
+  const sessionGone =
+    Boolean(staleSessionId) &&
+    !record.sessions.some((session) => session.sessionId === staleSessionId);
+  if (sessionGone && record.history.some((event) => event.type === "reset")) {
+    return { reason: "reset" };
+  }
+  if (sessionGone) {
+    return { reason: "reset" };
+  }
   const last = record.sessions[record.sessions.length - 1];
   return {
     reason: "taken",

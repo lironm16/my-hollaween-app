@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { registerOwnerDeviceWithContact } from "@/lib/night-pass-owner-connect";
+import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { clientKey } from "@/lib/rate-limit";
 import { rateLimitShared } from "@/lib/rate-limit-store";
@@ -36,11 +37,8 @@ export async function POST(request: Request) {
     if (outcome.error === "phone") return fail(400, "נא לכתוב מספר נייד ישראלי, למשל 050-1234567.");
     if (outcome.error === "forbidden") return fail(403, "אין הרשאת עריכה לבית הזה.");
     if (outcome.error === "already") return fail(409, "המכשיר כבר רשום.");
-    if (outcome.error === "primary_slot_taken") {
-      return fail(
-        409,
-        "מכשיר אחר כבר רשום עם פרטי בעלי הבית. עורכ/ת שותף/ה — הזינו את השם והנייד שלכם, או בקשו קישור הזמנה.",
-      );
+    if (outcome.error === "full" || outcome.error === "duplicate_identity") {
+      return fail(409, nightPassRegisterErrorMessage(outcome.error));
     }
     return fail(404, "לא הצלחנו לרשום. נסו שוב.");
   }
@@ -49,7 +47,7 @@ export async function POST(request: Request) {
     {
       ok: true,
       reregistered: outcome.reregistered,
-      evicted: outcome.evicted ?? false,
+      evicted: false,
       houseId: outcome.houseId,
       editCode: outcome.editCode,
       house: outcome.house,
