@@ -18,7 +18,7 @@ function lostMessage(detail: NightPassLostDetail): string {
     return "המכשיר התנתק — בעלי הבית הסירו אותו מרשימת המכשירים.";
   }
   if (detail?.reason === "reset") {
-    return "המכשיר התנתק — קוד הכניסה אופס. פנו לבעלי הבית לקוד מעודכן.";
+    return "התנתקת מהמפה כי קוד הכניסה אופס.";
   }
   if (detail?.reason === "taken") {
     return "המכשיר התנתק — נרשם מחדש ממכשיר אחר עם אותו קוד כניסה.";
@@ -32,7 +32,7 @@ function lostDescription(detail: NightPassLostDetail): string | undefined {
     return "אפשר לבקש מבעלי הבית הזמנה להתחבר שוב.";
   }
   if (detail?.reason === "reset") {
-    return "קוד הכניסה הישן לא תקף יותר.";
+    return "פנו לבעלי הבית לקוד מעודכן.";
   }
   return undefined;
 }

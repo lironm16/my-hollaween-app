@@ -5,7 +5,7 @@ import {
   normalizeHolderName,
   normalizeIsraeliMobile,
 } from "@/lib/house-access-code";
-import type { NightPassClientSurface } from "@/lib/night-pass-client-surface";
+import type { NightPassClientBrowser, NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import {
   hashNightPassToken,
   newHouseAccessCode,
@@ -98,6 +98,7 @@ export async function redeemNightPass(input: {
   phone: string;
   priorSessionId?: string | null;
   clientSurface?: NightPassClientSurface;
+  clientBrowser?: NightPassClientBrowser;
 }): Promise<RedeemOutcome> {
   const house = await getHouseByAccessCode(input.code);
   if (!house) return { ok: false, error: "invalid" };
@@ -125,6 +126,7 @@ export async function redeemNightPass(input: {
       normalizeHolderName(session.holderName) === input.name &&
       normalizeIsraeliMobile(session.holderPhone) === input.phone;
     const surface = input.clientSurface;
+    const browser = input.clientBrowser;
     if (priorIdx >= 0) {
       outcome = "reregistered";
       sessions[priorIdx] = {
@@ -134,6 +136,7 @@ export async function redeemNightPass(input: {
         holderName: input.name,
         holderPhone: input.phone,
         ...(surface ? { clientSurface: surface } : {}),
+        ...(browser ? { clientBrowser: browser } : {}),
       };
     } else {
       if (sessions.length >= HOUSE_ACCESS_MAX_DEVICES) {
@@ -152,6 +155,7 @@ export async function redeemNightPass(input: {
         holderName: input.name,
         holderPhone: input.phone,
         ...(surface ? { clientSurface: surface } : {}),
+        ...(browser ? { clientBrowser: browser } : {}),
       });
     }
     return {
@@ -191,6 +195,7 @@ export async function registerHouseAccessDevice(input: {
   phone: string;
   priorSessionId?: string | null;
   clientSurface?: NightPassClientSurface;
+  clientBrowser?: NightPassClientBrowser;
 }): Promise<RedeemOutcome> {
   const house = await getHouse(input.houseId);
   if (!house?.editCode?.trim()) return { ok: false, error: "invalid" };
@@ -200,6 +205,7 @@ export async function registerHouseAccessDevice(input: {
     phone: input.phone,
     priorSessionId: input.priorSessionId,
     clientSurface: input.clientSurface,
+    clientBrowser: input.clientBrowser,
   });
 }
 
@@ -300,6 +306,7 @@ export type HouseAccessDeviceView = {
   registeredAt: string;
   isThisDevice: boolean;
   clientSurface?: HouseAccessSession["clientSurface"];
+  clientBrowser?: HouseAccessSession["clientBrowser"];
 };
 
 export type HouseAccessView = {
@@ -322,6 +329,7 @@ export function houseAccessView(
     holderPhone: s.holderPhone,
     registeredAt: s.registeredAt,
     clientSurface: s.clientSurface,
+    clientBrowser: s.clientBrowser,
     isThisDevice:
       (thisDeviceSessionId != null && s.sessionId === thisDeviceSessionId) ||
       (thisDeviceToken != null && sessionTokenMatches(s, thisDeviceToken)),

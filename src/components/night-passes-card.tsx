@@ -11,7 +11,11 @@ import {
   refreshNightPassState,
 } from "@/lib/night-pass-client";
 import { formatHouseAddedAt } from "@/lib/house-meta";
-import { nightPassClientSurfaceLabel } from "@/lib/night-pass-client-surface";
+import {
+  nightPassClientBrowserLabel,
+  nightPassClientSurfaceLabel,
+} from "@/lib/night-pass-client-surface";
+import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { shareHouseAccessInvite } from "@/lib/nav-links";
@@ -28,6 +32,7 @@ type AccessView = {
     registeredAt: string;
     isThisDevice: boolean;
     clientSurface?: string;
+    clientBrowser?: string;
   }[];
   resetCount: number;
 };
@@ -162,10 +167,22 @@ export function NightPassesCard({
         `/api/houses/${encodeURIComponent(houseId)}/night-passes/reset`,
         { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
       );
-      const json = (await res.json().catch(() => null)) as { error?: string } | null;
+      const json = (await res.json().catch(() => null)) as {
+        error?: string;
+        editCode?: string;
+      } | null;
       if (!res.ok) {
         toast.error(json?.error ?? "האיפוס נכשל.");
         return;
+      }
+      if (json?.editCode?.trim() && house) {
+        saveOwnedHouse({
+          id: houseId,
+          name: house.name,
+          editCode: json.editCode.trim(),
+          preview: house,
+        });
+        notifyCatalogChanged();
       }
       toast.success("קוד הכניסה אופס");
       notifyNightPassSlotsChanged();
@@ -372,6 +389,12 @@ export function NightPassesCard({
                         <span className="text-violet-400">
                           {" · "}
                           {nightPassClientSurfaceLabel(device.clientSurface)}
+                        </span>
+                      ) : null}
+                      {nightPassClientBrowserLabel(device.clientBrowser) ? (
+                        <span className="text-violet-400">
+                          {" · "}
+                          {nightPassClientBrowserLabel(device.clientBrowser)}
                         </span>
                       ) : null}
                       {device.isThisDevice ? (

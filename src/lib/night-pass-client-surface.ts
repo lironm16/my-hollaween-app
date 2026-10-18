@@ -9,6 +9,9 @@ export type NightPassClientSurface =
   | "desktop-app"
   | "other";
 
+/** Major browser engine when registered from a browser tab (not home-screen app). */
+export type NightPassClientBrowser = "safari" | "chrome" | "other";
+
 const SURFACES = new Set<NightPassClientSurface>([
   "ios-browser",
   "ios-app",
@@ -25,6 +28,23 @@ function isStandaloneDisplay(): boolean {
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
   );
+}
+
+const BROWSER_VALUES = new Set<NightPassClientBrowser>(["safari", "chrome", "other"]);
+
+export function detectNightPassClientBrowser(): NightPassClientBrowser {
+  if (typeof window === "undefined") return "other";
+  const ua = navigator.userAgent;
+  if (/CriOS|Chrome/i.test(ua) && !/Edg/i.test(ua)) return "chrome";
+  if (/Safari/i.test(ua) && !/Chrome|CriOS|Chromium|Edg/i.test(ua)) return "safari";
+  return "other";
+}
+
+export function parseNightPassClientBrowser(raw: unknown): NightPassClientBrowser | undefined {
+  if (typeof raw !== "string" || !BROWSER_VALUES.has(raw as NightPassClientBrowser)) {
+    return undefined;
+  }
+  return raw as NightPassClientBrowser;
 }
 
 export function detectNightPassClientSurface(): NightPassClientSurface {
@@ -61,5 +81,12 @@ export function nightPassClientSurfaceLabel(surface?: string | null): string | n
   if (surface === "ios-app" || surface === "android-app" || surface === "desktop-app") {
     return "אפליקיה";
   }
+  return null;
+}
+
+/** Safari / Chrome on the device list — only when we stored it at register time. */
+export function nightPassClientBrowserLabel(browser?: string | null): string | null {
+  if (browser === "safari") return "Safari";
+  if (browser === "chrome") return "Chrome";
   return null;
 }

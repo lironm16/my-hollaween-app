@@ -4,7 +4,7 @@ import { canonicalHouseId } from "@/lib/ids";
 import { houseAccessView, resetHouseAccess } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { ownerMayEdit } from "@/lib/owner-session";
-import { getHouse, updateByEditCode } from "@/lib/store";
+import { getHouse, replaceHouseEditCode } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,9 +28,19 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   if (!outcome.ok) {
     return NextResponse.json({ error: "קוד המשפחה לא נמצא." }, { status: 404, headers: NO_STORE });
   }
-  await updateByEditCode(house.id, house.editCode, { editCode: outcome.newCode });
+  const rotated = await replaceHouseEditCode(house.id, outcome.newCode);
+  if ("error" in rotated) {
+    return NextResponse.json(
+      { error: "המכשירים נותקו אך קוד הכניסה לא עודכן — נסו שוב או פנו למנהל." },
+      { status: 500, headers: NO_STORE },
+    );
+  }
   return NextResponse.json(
-    { ok: true, access: houseAccessView(outcome.record, outcome.newCode, null, null) },
+    {
+      ok: true,
+      editCode: rotated.house.editCode,
+      access: houseAccessView(outcome.record, rotated.house.editCode, null, null),
+    },
     { headers: NO_STORE },
   );
 }

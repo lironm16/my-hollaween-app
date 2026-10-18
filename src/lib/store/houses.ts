@@ -374,6 +374,40 @@ async function patchHouseDoc(
   return { house, push };
 }
 
+/**
+ * Rotate family / edit code after night-pass reset — reads Firestore when configured so warm
+ * mem cannot block the write with a stale editCode.
+ */
+export async function replaceHouseEditCode(
+  id: string,
+  newCode: string,
+): Promise<{ house: House } | { error: "missing" }> {
+  const docId = canonicalHouseId(id);
+  if (!docId) return { error: "missing" };
+  const trimmed = newCode.trim();
+  if (!trimmed) return { error: "missing" };
+
+  if (firestoreConfigured()) {
+    const remote = await readFirestoreHouse(docId);
+    if (!remote || isHouseDeleted(remote)) return { error: "missing" };
+    const house = normalizeHouse({
+      ...remote,
+      editCode: trimmed,
+      updatedAt: new Date().toISOString(),
+    });
+    await writeFirestoreHouse(house);
+    upsertMemHouse(house, house.updatedAt);
+    return { house };
+  }
+
+  const existing = await getHouse(docId);
+  if (!existing) return { error: "missing" };
+  const result = await updateByEditCode(docId, existing.editCode, { editCode: trimmed });
+  if ("error" in result && result.error) return { error: "missing" };
+  if (!("house" in result) || !result.house) return { error: "missing" };
+  return { house: result.house };
+}
+
 /** Owner patch — partial fields merged onto one house doc (1 Firestore read + 1 write). */
 export async function updateByEditCode(
   id: string,

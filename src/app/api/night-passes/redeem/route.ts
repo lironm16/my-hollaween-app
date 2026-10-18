@@ -9,7 +9,10 @@ import { toPublicHouse } from "@/lib/ids";
 import { passIdForHouse } from "@/lib/night-pass-codes";
 import { getHouse, getHouseByAccessCode } from "@/lib/store";
 import { redeemNightPass } from "@/lib/night-pass-service";
-import { parseNightPassClientSurface } from "@/lib/night-pass-client-surface";
+import {
+  parseNightPassClientBrowser,
+  parseNightPassClientSurface,
+} from "@/lib/night-pass-client-surface";
 import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
@@ -55,12 +58,14 @@ export async function POST(request: Request) {
   const priorSessionId = samePass ? cookie.sessionId : null;
 
   const clientSurface = parseNightPassClientSurface(json?.clientSurface);
+  const clientBrowser = parseNightPassClientBrowser(json?.clientBrowser);
   const outcome = await redeemNightPass({
     code,
     name,
     phone,
     priorSessionId,
     clientSurface,
+    clientBrowser,
   });
   if (!outcome.ok) {
     if (outcome.error === "full" || outcome.error === "duplicate_identity") {

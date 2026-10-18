@@ -1,5 +1,5 @@
 import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-code";
-import type { NightPassClientSurface } from "@/lib/night-pass-client-surface";
+import type { NightPassClientBrowser, NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import { toPublicHouse } from "@/lib/ids";
 import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
 import {
@@ -10,7 +10,7 @@ import {
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { currentNightPass, readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
 import { ownerHouseIds, ownerMayEdit } from "@/lib/owner-session";
-import { getHouse, updateByEditCode } from "@/lib/store";
+import { getHouse } from "@/lib/store";
 import { canonicalHouseId } from "@/lib/ids";
 
 export type OwnerDeviceConnectOutcome =
@@ -81,31 +81,13 @@ export async function ownerRegisterPrefill(preferredHouseId?: string): Promise<O
   return { eligible: false };
 }
 
-async function patchHouseContactIfMissing(
-  houseId: string,
-  editCode: string,
-  name: string,
-  phone: string,
-) {
-  const house = await getHouse(houseId);
-  if (!house) return;
-  const patch: { addedBy?: string; ownerPhone?: string } = {};
-  if (!normalizeHolderName(house.addedBy ?? "") && name) {
-    patch.addedBy = name;
-  }
-  if (!normalizeIsraeliMobile(house.ownerPhone ?? "") && phone) {
-    patch.ownerPhone = normalizeOwnerPhone(phone);
-  }
-  if (Object.keys(patch).length === 0) return;
-  await updateByEditCode(houseId, editCode, patch);
-}
-
-/** Register owner device and backfill missing house contact fields from the form. */
+/** Register owner device (does not change house contact on file). */
 export async function registerOwnerDeviceWithContact(input: {
   houseId: string;
   name: string;
   phone: string;
   clientSurface?: NightPassClientSurface;
+  clientBrowser?: NightPassClientBrowser;
 }): Promise<
   | (Extract<RedeemOutcome, { ok: true }> & {
       houseId: string;
@@ -139,10 +121,10 @@ export async function registerOwnerDeviceWithContact(input: {
     phone,
     priorSessionId: cookie?.sessionId ?? null,
     clientSurface: input.clientSurface,
+    clientBrowser: input.clientBrowser,
   });
   if (!outcome.ok) return { ok: false, error: outcome.error as string | "full" | "duplicate_identity" };
 
-  await patchHouseContactIfMissing(house.id, house.editCode, name, phone);
   await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
 
   const updated = (await getHouse(house.id)) ?? house;

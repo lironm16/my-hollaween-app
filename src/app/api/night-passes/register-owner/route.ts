@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
-import { parseNightPassClientSurface } from "@/lib/night-pass-client-surface";
+import {
+  parseNightPassClientBrowser,
+  parseNightPassClientSurface,
+} from "@/lib/night-pass-client-surface";
 import { registerOwnerDeviceWithContact } from "@/lib/night-pass-owner-connect";
 import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
 import { readNightPassSettings } from "@/lib/night-pass-store";
@@ -33,11 +36,13 @@ export async function POST(request: Request) {
   }
 
   const clientSurface = parseNightPassClientSurface(json?.clientSurface);
+  const clientBrowser = parseNightPassClientBrowser(json?.clientBrowser);
   const outcome = await registerOwnerDeviceWithContact({
     houseId,
     name,
     phone,
     clientSurface,
+    clientBrowser,
   });
   if (!outcome.ok) {
     if (outcome.error === "name") return fail(400, "נא לכתוב שם (2–40 תווים).");
