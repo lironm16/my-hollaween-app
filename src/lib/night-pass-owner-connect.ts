@@ -1,7 +1,12 @@
 import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-code";
 import { toPublicHouse } from "@/lib/ids";
 import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
-import { registerHouseAccessDevice, type RedeemOutcome } from "@/lib/night-pass-service";
+import {
+  ensureHouseAccess,
+  houseAccessSessionForDevice,
+  registerHouseAccessDevice,
+  type RedeemOutcome,
+} from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { currentNightPass, readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
 import { ownerHouseIds, ownerMayEdit } from "@/lib/owner-session";
@@ -23,6 +28,8 @@ export type OwnerRegisterPrefill = {
   houseName?: string;
   name?: string;
   phone?: string;
+  /** Name + mobile on file — user confirms in popup instead of silent register. */
+  contactComplete?: boolean;
 };
 
 function mobileForNightPass(raw: string): string {
@@ -68,6 +75,7 @@ export async function ownerRegisterPrefill(preferredHouseId?: string): Promise<O
       houseName: house.name,
       name,
       phone,
+      contactComplete: Boolean(name && phone),
     };
   }
   return { eligible: false };
@@ -124,6 +132,24 @@ export async function registerOwnerDeviceWithContact(input: {
   }
 
   const cookie = await readNightPassCookie();
+  const record = await ensureHouseAccess(house.id);
+  const primaryName = normalizeHolderName(house.addedBy ?? "");
+  const primaryPhone = mobileForNightPass(String(house.ownerPhone ?? ""));
+  const usesPrimaryIdentity =
+    Boolean(primaryName && primaryPhone) && name === primaryName && phone === primaryPhone;
+  if (usesPrimaryIdentity) {
+    const priorSessionId = cookie?.sessionId ?? null;
+    const taken = record.sessions.some(
+      (session) =>
+        session.sessionId !== priorSessionId &&
+        mobileForNightPass(session.holderPhone) === primaryPhone &&
+        normalizeHolderName(session.holderName) === primaryName,
+    );
+    if (taken) {
+      return { ok: false, error: "primary_slot_taken" };
+    }
+  }
+
   const outcome = await registerHouseAccessDevice({
     houseId: house.id,
     name,
@@ -144,72 +170,38 @@ export async function registerOwnerDeviceWithContact(input: {
   };
 }
 
-/** Register this device for event access using owner-unlocked houses (name + mobile on file). */
+/**
+ * Owner unlocked a house — never register silently; client opens confirm popup.
+ */
 export async function tryConnectOwnerDeviceForEvent(): Promise<OwnerDeviceConnectOutcome> {
   const settings = await readNightPassSettings();
   if (!settings.enabled) return { connected: false, reason: "disabled" };
   if (await currentNightPass()) return { connected: false, reason: "already" };
 
-  const owned = await ownerHouseIds();
-  if (owned.length === 0) return { connected: false, reason: "no_owner_houses" };
+  const prefill = await ownerRegisterPrefill();
+  if (!prefill.eligible || !prefill.houseId) {
+    return { connected: false, reason: "no_owner_houses" };
+  }
 
-  const cookie = await readNightPassCookie();
-  let missingContactHouseId: string | undefined;
-  let sawCompleteContact = false;
-  for (const id of owned) {
-    const house = await getHouse(id);
-    if (!house) continue;
-    const { name, phone } = contactFromHouse(house);
-    if (!name || !phone) {
-      missingContactHouseId = missingContactHouseId ?? house.id;
-      continue;
-    }
-    sawCompleteContact = true;
-    const outcome = await registerHouseAccessDevice({
-      houseId: house.id,
-      name,
-      phone,
-      priorSessionId: cookie?.sessionId ?? null,
-    });
-    if (outcome.ok) {
-      await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
-      return { connected: true, houseId: house.id };
-    }
-  }
-  if (missingContactHouseId) {
-    return {
-      connected: false,
-      reason: "missing_contact",
-      needsRegistration: true,
-      houseId: missingContactHouseId,
-    };
-  }
   return {
     connected: false,
-    reason: sawCompleteContact ? "register_failed" : "no_owner_houses",
+    reason: "missing_contact",
+    needsRegistration: true,
+    houseId: prefill.houseId,
   };
 }
 
-/** Same as add-house auto-connect for one house row. */
+/** Unlock / add-house — no silent event registration (confirm popup only). */
 export async function tryConnectOwnerDeviceForHouse(
   houseId: string,
   options?: { allowWhenDisabled?: boolean },
 ): Promise<boolean> {
   const settings = await readNightPassSettings();
   if (!settings.enabled && !options?.allowWhenDisabled) return false;
-  if (await currentNightPass()) return true;
-  const house = await getHouse(houseId);
-  if (!house) return false;
-  const { name, phone } = contactFromHouse(house);
-  if (!phone || !name) return false;
+  const pass = await currentNightPass();
+  if (!pass) return false;
+  if (canonicalHouseId(pass.houseId) !== canonicalHouseId(houseId)) return false;
   const cookie = await readNightPassCookie();
-  const outcome = await registerHouseAccessDevice({
-    houseId: house.id,
-    name,
-    phone,
-    priorSessionId: cookie?.sessionId ?? null,
-  });
-  if (!outcome.ok) return false;
-  await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
-  return true;
+  if (!cookie) return false;
+  return Boolean(houseAccessSessionForDevice(pass, cookie.sessionId, cookie.token));
 }

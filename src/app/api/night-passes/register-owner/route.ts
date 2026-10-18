@@ -36,6 +36,12 @@ export async function POST(request: Request) {
     if (outcome.error === "phone") return fail(400, "נא לכתוב מספר נייד ישראלי, למשל 050-1234567.");
     if (outcome.error === "forbidden") return fail(403, "אין הרשאת עריכה לבית הזה.");
     if (outcome.error === "already") return fail(409, "המכשיר כבר רשום.");
+    if (outcome.error === "primary_slot_taken") {
+      return fail(
+        409,
+        "מכשיר אחר כבר רשום עם פרטי בעלי הבית. עורכ/ת שותף/ה — הזינו את השם והנייד שלכם, או בקשו קישור הזמנה.",
+      );
+    }
     return fail(404, "לא הצלחנו לרשום. נסו שוב.");
   }
 

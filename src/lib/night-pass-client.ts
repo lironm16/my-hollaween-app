@@ -178,14 +178,9 @@ async function tryOwnerNightPassConnect(
     });
     if (!connect.ok) return state;
     const detail = (await connect.json()) as {
-      connected?: boolean;
       needsRegistration?: boolean;
       houseId?: string;
     };
-    if (detail.connected) {
-      const again = await fetchNightPassMe(qs);
-      return again.state ?? state;
-    }
     if (detail.needsRegistration) {
       dispatchOwnerRegisterPrompt(detail.houseId);
     }

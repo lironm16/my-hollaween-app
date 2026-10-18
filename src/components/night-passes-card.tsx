@@ -75,12 +75,18 @@ export function NightPassesCard({
   embedded = false,
   /** When false, skip the family-code block (shown elsewhere, e.g. edit-code dialog). */
   showFamilyCode = true,
+  /** Invite + reset only — for a shared toolbar row with copy. */
+  inlineActionsOnly = false,
+  /** Hide invite/reset row (list only). */
+  hideToolbar = false,
 }: {
   houseId: string;
   house?: PublicHouse | null;
   admin: boolean;
   embedded?: boolean;
   showFamilyCode?: boolean;
+  inlineActionsOnly?: boolean;
+  hideToolbar?: boolean;
 }) {
   const [data, setData] = useState<PassesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -188,11 +194,6 @@ export function NightPassesCard({
   }
   if (!data.enabled && !admin) return null;
 
-  const access = data.access;
-  const shellClass = embedded
-    ? "space-y-3"
-    : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
-
   const inviteActions = house ? (
     <SlotAction
       label="שלח הזמנה"
@@ -207,6 +208,31 @@ export function NightPassesCard({
       }
     />
   ) : null;
+
+  if (inlineActionsOnly) {
+    return (
+      <>
+        {inviteActions}
+        <SlotAction
+          label="איפוס קוד"
+          disabled={busyReset}
+          onClick={() => void resetFamilyCode()}
+          icon={
+            busyReset ? (
+              <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
+            ) : (
+              <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
+            )
+          }
+        />
+      </>
+    );
+  }
+
+  const access = data.access;
+  const shellClass = embedded
+    ? "space-y-3"
+    : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
 
   return (
     <section className={shellClass}>
@@ -253,7 +279,7 @@ export function NightPassesCard({
                 />
               </div>
             </div>
-          ) : (
+          ) : hideToolbar ? null : (
             <div className="flex flex-wrap justify-center gap-2">
               {inviteActions}
               <SlotAction
