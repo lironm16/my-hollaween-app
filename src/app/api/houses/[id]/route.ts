@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ownerPatchSchema } from "@/lib/schema";
+import { purgeHouseNightPass } from "@/lib/night-pass-service";
 import { deleteByEditCode, getHouse, loadAddressRevealSchedule, updateByEditCode } from "@/lib/store";
 import { canonicalHouseId, sameHouseId, toEditorHouse, toPublicHouse } from "@/lib/ids";
 import { scopedHousesFromDb } from "@/lib/night-pass-catalog";
@@ -161,5 +162,6 @@ export async function DELETE(
   if (!removed) {
     return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
   }
+  await purgeHouseNightPass(existing.id).catch(() => undefined);
   return NextResponse.json({ ok: true });
 }

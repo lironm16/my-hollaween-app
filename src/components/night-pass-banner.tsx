@@ -11,6 +11,9 @@ import { NIGHT_PASS_LOST_EVENT, type NightPassLostDetail } from "@/lib/night-pas
 import { hiddenHouseCountForSet } from "@/lib/night-pass-scope";
 
 function lostMessage(detail: NightPassLostDetail): string {
+  if (detail?.reason === "house_removed") {
+    return "המכשיר התנתק — הבית הוסר מהאירוע.";
+  }
   if (detail?.reason === "removed") {
     return "המכשיר התנתק — בעלי הבית הסירו אותו מרשימת המכשירים.";
   }
@@ -24,6 +27,7 @@ function lostMessage(detail: NightPassLostDetail): string {
 }
 
 function lostDescription(detail: NightPassLostDetail): string | undefined {
+  if (detail?.reason === "house_removed") return undefined;
   if (detail?.reason === "removed") {
     return "אפשר לבקש מבעלי הבית הזמנה להתחבר שוב.";
   }

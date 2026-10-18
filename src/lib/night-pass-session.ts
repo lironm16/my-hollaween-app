@@ -10,7 +10,7 @@ import {
   type NightPassRecord,
 } from "@/lib/night-pass-store";
 import { ownerHouseIds } from "@/lib/owner-session";
-import { loadAddressRevealSchedule } from "@/lib/store";
+import { getHouse, loadAddressRevealSchedule } from "@/lib/store";
 import type { NightPassViewer } from "@/lib/types";
 
 const COOKIE = "hw_pass";
@@ -47,7 +47,10 @@ export async function clearNightPassCookie() {
 
 const LOST_COOKIE = "hw_pass_lost";
 
-export type NightPassLost = { reason: "taken" | "reset" | "removed"; byName?: string };
+export type NightPassLost = {
+  reason: "taken" | "reset" | "removed" | "house_removed";
+  byName?: string;
+};
 
 /** Same code still active with another token → taken by that holder; record gone → owner reset. */
 export async function describeNightPassLost(
@@ -55,7 +58,9 @@ export async function describeNightPassLost(
   staleSessionId?: string | null,
 ): Promise<NightPassLost> {
   const record = await readNightPass(passId).catch(() => null);
-  if (!record) return { reason: "reset" };
+  if (!record) return { reason: "house_removed" };
+  const house = await getHouse(record.houseId).catch(() => undefined);
+  if (!house) return { reason: "house_removed" };
   const sessionGone =
     Boolean(staleSessionId) &&
     !record.sessions.some((session) => session.sessionId === staleSessionId);
@@ -96,7 +101,12 @@ export async function takeNightPassLost(): Promise<NightPassLost | null> {
   jar.delete(LOST_COOKIE);
   try {
     const parsed = JSON.parse(decodeURIComponent(raw)) as NightPassLost;
-    if (parsed.reason !== "taken" && parsed.reason !== "reset" && parsed.reason !== "removed") {
+    if (
+      parsed.reason !== "taken" &&
+      parsed.reason !== "reset" &&
+      parsed.reason !== "removed" &&
+      parsed.reason !== "house_removed"
+    ) {
       return null;
     }
     return parsed;

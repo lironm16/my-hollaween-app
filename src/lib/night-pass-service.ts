@@ -278,8 +278,19 @@ export async function validNightPassForToken(
   if (!/^[0-9a-f]{32}$/.test(passId) || !token || token.length > 100) return null;
   const record = await readNightPass(passId);
   if (!record) return null;
-  if (houseAccessSessionForDevice(record, sessionId, token)) return record;
-  return null;
+  if (!houseAccessSessionForDevice(record, sessionId, token)) return null;
+  const house = await getHouse(record.houseId);
+  if (!house) return null;
+  return record;
+}
+
+/** Drop device registry when a house row is removed from the event. */
+export async function purgeHouseNightPass(houseId: string) {
+  const canonical = passId(houseId);
+  for (const row of await listHouseNightPasses(houseId)) {
+    await deleteNightPass(row.id).catch(() => undefined);
+  }
+  await deleteNightPass(canonical).catch(() => undefined);
 }
 
 export type HouseAccessDeviceView = {
