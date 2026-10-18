@@ -106,8 +106,16 @@ export function useUserLocation(options?: { watch?: boolean }) {
   }, []);
 
   const fail = useCallback((err?: GeolocationPositionError) => {
-    if (err?.code === 1) setStatus("denied");
-    else setStatus("error");
+    if (err?.code === 1) {
+      setStatus("denied");
+      return;
+    }
+    // Timeout / position unavailable — keep last fix so UI stays usable (common in installed PWA).
+    if (last.current) {
+      setStatus("ready");
+      return;
+    }
+    setStatus("error");
   }, []);
 
   const startWatch = useCallback(() => {
@@ -140,20 +148,36 @@ export function useUserLocation(options?: { watch?: boolean }) {
         }
         setStatus((s) => (s === "ready" ? s : "pending"));
         if (permission === "granted") startWatch();
+
+        const finish = (pos: GeolocationPosition) => {
+          apply(pos, true);
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+          });
+        };
+
+        const onFail = (err: GeolocationPositionError, retriedFresh: boolean) => {
+          if (!retriedFresh) {
+            navigator.geolocation.getCurrentPosition(
+              finish,
+              (retryErr) => {
+                fail(retryErr);
+                resolve(last.current);
+              },
+              freshOpts,
+            );
+            return;
+          }
+          fail(err);
+          resolve(last.current);
+        };
+
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            apply(pos, true);
-            resolve({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-            });
-          },
-          (err) => {
-            fail(err);
-            resolve(last.current);
-          },
-          freshOpts,
+          finish,
+          (err) => onFail(err, false),
+          watchOpts,
         );
         if (permission !== "granted") startWatch();
       })();

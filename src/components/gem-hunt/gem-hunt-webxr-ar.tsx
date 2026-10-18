@@ -23,6 +23,7 @@ import {
   gemLabelHe,
   gemMonsterForHouse,
   GEM_WEBXR_GEO_PLACEMENT_ENABLED,
+  GEM_WEBXR_FLOAT_HEIGHT_M,
   GEM_WEBXR_HUNT_METERS,
   relativeWalkBearingDeg,
   type GemCampusQueueUi,
@@ -88,7 +89,8 @@ type Props = {
 };
 
 const AUTO_PLACE_STABLE_FRAMES = 28;
-const MODEL_SCALE = 0.52;
+/** World-space target size for GLB pets in immersive AR (meters-ish after frameModel). */
+const MODEL_SCALE = 0.74;
 
 function hashFloat(seed: string, salt: string) {
   let h = 2166136261;
@@ -262,8 +264,7 @@ export function GemHuntWebXrAr({
   setGeoLockModeRef.current = setGeoLockMode;
 
   const floatBias = hashFloat(house.id, "webxr-float");
-  const useFloat = floatBias > 0.62;
-  const floatHeight = useFloat ? 0.22 + floatBias * 0.18 : 0;
+  const floatHeight = GEM_WEBXR_FLOAT_HEIGHT_M + floatBias * 0.25;
 
   const houseVisualRef = useRef({
     houseId: house.id,

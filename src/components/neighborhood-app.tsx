@@ -150,6 +150,7 @@ import { stripPracticeHouses } from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatDistance } from "@/lib/geo";
+import { geoCanPromptLocation, geoLocationHintHe } from "@/lib/geo-location-access";
 import { buildWalkingRouteOrdered } from "@/lib/route";
 import { isRouteFullyVisited } from "@/lib/route-completion";
 import {
@@ -256,8 +257,7 @@ export function NeighborhoodApp({
   const listScrollRef = useRef<HTMLDivElement | null>(null);
   const savedListScrollTopRef = useRef(0);
   const router = useRouter();
-  const gpsAllowed =
-    geo.status === "idle" || geo.status === "pending" || geo.status === "ready";
+  const gpsAllowed = geoCanPromptLocation(geo.status);
 
   useEffect(() => {
     if (!gemHuntActive || !mapGemHouse) return;
@@ -1756,6 +1756,7 @@ export function NeighborhoodApp({
           onOpenChange={originPick.setOriginPickerOpen}
           choice={originChoice}
           gpsAllowed={gpsAllowed}
+          gpsHint={geoLocationHintHe(geo.status)}
           onChooseGps={originPick.chooseGpsOrigin}
           onChooseNeighborhood={originPick.chooseNeighborhoodOrigin}
           onChooseCustom={originPick.chooseCustomOrigin}

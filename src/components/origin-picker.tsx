@@ -51,6 +51,7 @@ export function OriginPickerSheet({
   onOpenChange,
   choice,
   gpsAllowed = true,
+  gpsHint,
   onChooseGps,
   onChooseNeighborhood,
   onChooseCustom,
@@ -60,6 +61,7 @@ export function OriginPickerSheet({
   onOpenChange: (open: boolean) => void;
   choice: DistanceOriginChoice;
   gpsAllowed?: boolean;
+  gpsHint?: string;
   onChooseGps: () => void;
   onChooseNeighborhood: () => void;
   onChooseCustom: (lat: number, lng: number, label: string) => void;
@@ -90,7 +92,7 @@ export function OriginPickerSheet({
             disabled={!gpsAllowed}
             icon={<Navigation className="size-4" />}
             label="המיקום שלי"
-            hint={gpsAllowed ? "GPS" : "אשרו גישה למיקום בהגדרות"}
+            hint={gpsHint ?? (gpsAllowed ? "GPS" : "אשרו גישה למיקום בהגדרות")}
             onClick={onChooseGps}
           />
           <OriginOption

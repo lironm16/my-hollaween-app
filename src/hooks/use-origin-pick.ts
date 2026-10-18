@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { reversePin } from "@/components/address-field";
 import { config, inNeighborhood } from "@/lib/config";
+import { geoLocationFailureToastHe } from "@/lib/geo-location-access";
+import { isStandaloneDisplay } from "@/lib/push-client";
 import { writeHomeView, type HomeView } from "@/lib/home-view";
 import type { DistanceOriginChoice, ResolvedOrigin } from "@/lib/distance-origin";
 
@@ -105,8 +107,11 @@ export function useOriginPick({
     }
     if (geoErrorToasted.current) return;
     geoErrorToasted.current = true;
-    toast.warning("לא הצלחנו לקרוא מיקום. אשרו גישה למיקום בהגדרות.");
-  }, [geoError, pinCurrentRoute, pendingRouteGps, clearPendingRouteGps]);
+    const message = geoLocationFailureToastHe(geo.status as "denied" | "error" | "unavailable", {
+      installedApp: isStandaloneDisplay(),
+    });
+    if (message) toast.warning(message);
+  }, [geoError, geo.status, pinCurrentRoute, pendingRouteGps, clearPendingRouteGps]);
 
   const panMapTo = useCallback((point: { lat: number; lng: number }) => {
     setPanTo(point);

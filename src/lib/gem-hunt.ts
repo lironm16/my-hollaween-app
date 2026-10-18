@@ -75,6 +75,8 @@ export const GEM_HELP_AFTER_SECONDS = 8;
 export const GEM_CAMERA_HFOV_DEG = 48;
 /** Android WebXR — same on-site radius for placement, encounter, and collect. */
 export const GEM_WEBXR_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
+/** WebXR geo placement — lift pets above sidewalk (meters, Y-up in viewer space). */
+export const GEM_WEBXR_FLOAT_HEIGHT_M = 1.05;
 /** Place Android AR pet at gemAnchorForHouse (GPS + anchor), not only hit-test at feet. */
 export const GEM_WEBXR_GEO_PLACEMENT_ENABLED = true;
 /** Approx. vertical FOV — used when tilting the phone up/down. */
