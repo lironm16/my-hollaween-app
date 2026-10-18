@@ -438,13 +438,19 @@ export function NeighborhoodApp({
     () => gemCapableMapHouses(mapHouses, activeHouseSet),
     [mapHouses, activeHouseSet],
   );
+  const gemAssignmentSyncHouses = useMemo(
+    () => gemCapableMapHouses(mapListHouses, activeHouseSet),
+    [mapListHouses, activeHouseSet],
+  );
   const gemMapRingHouses = useMemo(
     () => mainMapGemEligibleHouses(mapHouses, activeHouseSet, addressReveal),
     [mapHouses, activeHouseSet, addressReveal],
   );
   useEffect(() => {
-    if (gemHuntActive) syncGemMonsterAssignment(gemCapableHouses);
-  }, [gemHuntActive, gemCapableHouses]);
+    if (catalogReady && gemAssignmentSyncHouses.length > 0) {
+      syncGemMonsterAssignment(gemAssignmentSyncHouses);
+    }
+  }, [catalogReady, gemAssignmentSyncHouses]);
   const visible = useMemo(
     () => filterHouses(housesForFilters, filters, filterContext),
     [housesForFilters, filters, filterContext],

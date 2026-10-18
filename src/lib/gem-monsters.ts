@@ -535,6 +535,59 @@ let activeAssignment: ReadonlyMap<string, GemMonsterId> | null = null;
 let activeAssignmentKey = "";
 
 const GEM_ASSIGNMENT_ALGO = "spatial-v3-per-house";
+const GEM_HOUSE_MONSTER_KEY = "hw-gem-house-monster-v1";
+
+type PersistedHouseMonsters = Record<string, GemMonsterId>;
+
+function loadPersistedHouseMonsters(): Map<string, GemMonsterId> {
+  if (typeof window === "undefined") return new Map();
+  try {
+    const raw = localStorage.getItem(GEM_HOUSE_MONSTER_KEY);
+    if (!raw) return new Map();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return new Map();
+    const out = new Map<string, GemMonsterId>();
+    for (const [houseId, monsterId] of Object.entries(parsed as PersistedHouseMonsters)) {
+      if (typeof houseId === "string" && typeof monsterId === "string" && SHIPPED_MONSTER_IDS.has(monsterId)) {
+        out.set(houseId, monsterId as GemMonsterId);
+      }
+    }
+    return out;
+  } catch {
+    return new Map();
+  }
+}
+
+function savePersistedHouseMonsters(map: Map<string, GemMonsterId>) {
+  if (typeof window === "undefined") return;
+  const obj: PersistedHouseMonsters = {};
+  for (const [houseId, monsterId] of map) obj[houseId] = monsterId;
+  localStorage.setItem(GEM_HOUSE_MONSTER_KEY, JSON.stringify(obj));
+}
+
+function mergeStableHouseMonsters(
+  mapHouses: readonly GemAssignHouse[],
+  computed: ReadonlyMap<string, GemMonsterId>,
+): ReadonlyMap<string, GemMonsterId> {
+  const persisted = loadPersistedHouseMonsters();
+  let dirty = false;
+  for (const [houseId, monsterId] of computed) {
+    if (!persisted.has(houseId)) {
+      persisted.set(houseId, monsterId);
+      dirty = true;
+    }
+  }
+  if (dirty) savePersistedHouseMonsters(persisted);
+  const merged = new Map<string, GemMonsterId>();
+  for (const house of mapHouses) {
+    const stable = persisted.get(house.id) ?? computed.get(house.id);
+    if (stable) merged.set(house.id, stable);
+  }
+  for (const [houseId, monsterId] of computed) {
+    if (!merged.has(houseId)) merged.set(houseId, persisted.get(houseId) ?? monsterId);
+  }
+  return merged;
+}
 
 /** Keep map + album + collect in sync — call when the gem-eligible house list changes. */
 export function syncGemMonsterAssignment(mapHouses: readonly GemAssignHouse[]) {
@@ -544,7 +597,8 @@ export function syncGemMonsterAssignment(mapHouses: readonly GemAssignHouse[]) {
     .join("\0")}`;
   if (key === activeAssignmentKey && activeAssignment) return activeAssignment;
   rebuildGemClusterSpread(mapHouses);
-  activeAssignment = buildGemMonsterAssignment(mapHouses);
+  const computed = buildGemMonsterAssignment(mapHouses);
+  activeAssignment = mergeStableHouseMonsters(mapHouses, computed);
   activeAssignmentKey = key;
   return activeAssignment;
 }
@@ -560,6 +614,8 @@ export function gemMonsterForHouse(house: GemMonsterHouseRef): GemMonsterId {
   }
   void house.theme;
   void house.kind;
+  const persisted = loadPersistedHouseMonsters().get(house.id);
+  if (persisted) return persisted;
   const assigned = activeAssignment?.get(house.id);
   if (assigned) return assigned;
   return hashMonsterForHouse(house.id);

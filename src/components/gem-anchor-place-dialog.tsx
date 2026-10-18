@@ -281,14 +281,12 @@ export function GemAnchorPlaceDialog({
             <button
               type="button"
               dir="rtl"
-              className="gem-anchor-place-map__footer absolute inset-x-2 bottom-2 z-[510] flex max-w-[calc(100%-1rem)] items-center gap-2 rounded-lg bg-black/65 px-2.5 py-1.5 text-start ring-1 ring-orange-500/30 backdrop-blur-sm"
+              className="gem-anchor-place-map__footer absolute inset-x-2 bottom-2 z-[510] flex max-w-[calc(100%-1rem)] flex-col items-start gap-0.5 rounded-lg bg-black/65 px-2.5 py-1.5 text-start ring-1 ring-orange-500/30 backdrop-blur-sm"
               title={`${mapDistanceLine} · ${coordsText}`}
               onClick={() => void copyText(coordsText, "הקואורדינטות הועתקו")}
             >
-              <span className="min-w-0 flex-1 truncate text-sm leading-tight text-violet-100">
-                {mapDistanceLine}
-              </span>
-              <span dir="ltr" className="shrink-0 font-mono text-xs tabular-nums text-orange-100">
+              <span className="w-full text-sm leading-snug text-violet-100">{mapDistanceLine}</span>
+              <span dir="ltr" className="font-mono text-xs tabular-nums text-orange-100">
                 {coordsText}
               </span>
             </button>

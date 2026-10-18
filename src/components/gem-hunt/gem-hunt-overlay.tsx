@@ -70,6 +70,7 @@ import {
   GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
+  gemFoundOnScreenBannerHe,
 } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
@@ -591,7 +592,7 @@ export function GemHuntOverlay({
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
   const inOnsiteBand = sim || canCollectNow;
-  const repeatFoundBannerHe = repeatVisit ? `מצאתם שוב את ${gemLabelHe(monsterId)}` : null;
+  const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(repeatVisit, gemLabelHe(monsterId));
   const topCollectBanner =
     phase === "collecting" && !repeatVisit
       ? campusSession
@@ -688,19 +689,6 @@ export function GemHuntOverlay({
       headingStatus === "denied" ||
       headingStatus === "idle" ||
       heading == null);
-  const showNavArrow = encounterMode
-    ? encounterPhase === "approach" &&
-      hintPanel === "nav" &&
-      !centerReveal &&
-      huntArrowDeg != null &&
-      liveLoc != null &&
-      !sim
-    : hintPanel === "nav" &&
-      !centerReveal &&
-      huntArrowDeg != null &&
-      liveLoc != null &&
-      !sim;
-
   const campusTapCollect =
     campusSession && phase === "visible" && (canCollectNow || sim || encounterCollectLatchedRef.current);
 
@@ -734,11 +722,28 @@ export function GemHuntOverlay({
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
   const hideHuntHintControls = showHuntGem && phase === "visible" && inOnsiteBand;
-  const repeatFoundBanner =
-    repeatFoundBannerHe &&
+  const gemFoundInView =
+    showHuntGem &&
+    phase === "visible" &&
     inOnsiteBand &&
-    (phase === "visible" || phase === "collecting") &&
-    (showHuntGem || phase === "collecting");
+    (encounterMode
+      ? encounterPhase === "encounter" && gemAtCenter
+      : gemAtCenter || pinCollectReady);
+  const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
+  const showNavArrow = encounterMode
+    ? encounterPhase === "approach" &&
+      showWalkNavGuide &&
+      !centerReveal &&
+      huntArrowDeg != null &&
+      liveLoc != null &&
+      !sim
+    : showWalkNavGuide &&
+      !centerReveal &&
+      huntArrowDeg != null &&
+      liveLoc != null &&
+      !sim;
+  const showFoundOnScreenBanner =
+    phase === "collecting" || (phase === "visible" && showHuntGem && inOnsiteBand);
 
   const gemEncounterWiggle =
     encounterPhase === "resolve-hit" ||
@@ -891,12 +896,12 @@ export function GemHuntOverlay({
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
       ) : null}
-      {phase === "collecting" && repeatFoundBannerHe ? (
+      {phase === "collecting" && showFoundOnScreenBanner ? (
         <p
           className="gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--collect is-exploding"
           role="status"
         >
-          {repeatFoundBannerHe}
+          {foundOnScreenBannerHe}
         </p>
       ) : null}
 
@@ -990,9 +995,9 @@ export function GemHuntOverlay({
 
       {showHuntUi && phase !== "collecting" && showLegacyFooter && !hideFooterChrome ? (
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
-          {repeatFoundBanner ? (
+          {showFoundOnScreenBanner && phase !== "collecting" ? (
             <p className="gem-hunt-overlay__found-again-banner" role="status">
-              {repeatFoundBannerHe}
+              {foundOnScreenBannerHe}
             </p>
           ) : null}
           <div className="gem-hunt-overlay__footer-stack">
@@ -1019,7 +1024,7 @@ export function GemHuntOverlay({
                   אפשרו כיוון (Safari) — לחץ כדי שהחץ יזוז
                 </button>
               ) : null}
-              {hintPanel === "nav" ? (
+              {showWalkNavGuide ? (
                 <div
                   className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                   role="region"

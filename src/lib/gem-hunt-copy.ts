@@ -48,6 +48,11 @@ export function gemClusterSessionSummaryHe(total: number, newCount: number): str
 export const GEM_MAP_COMPLETE_TITLE_HE = "כל השדונים נמצאו!";
 
 export const GEM_COLLECT_NEW_HE = "כל הכבוד!! מצאתם שדון חדש!";
+
+/** Footer while the gem is on screen (new vs repeat — same placement, different copy). */
+export function gemFoundOnScreenBannerHe(repeatVisit: boolean, petNameHe: string): string {
+  return repeatVisit ? `מצאתם שוב את ${petNameHe}` : `מצאתם חדש — ${petNameHe}!`;
+}
 export const GEM_ALBUM_SLOTS_HE = "שדונים באוסף";
 export const GEM_ALBUM_ALL_HE = "כל השדונים";
 

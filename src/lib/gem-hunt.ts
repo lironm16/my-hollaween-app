@@ -58,7 +58,7 @@ export const GEM_APPROACH_METERS = 50;
 export const GEM_WORLD_PIN_MAX_METERS = 15;
 export const GEM_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
 /** iOS camera hunt — tighter sidewalk radius (neighbors + GPS). */
-export const GEM_IOS_HUNT_METERS = 5;
+export const GEM_IOS_HUNT_METERS = 10;
 /** @deprecated Stand-still gate removed — kept for copy/tests that reference the old value. */
 export const GEM_STILL_SECONDS = 0;
 /** Compass cone — gem may appear when facing within this many degrees of the house. */

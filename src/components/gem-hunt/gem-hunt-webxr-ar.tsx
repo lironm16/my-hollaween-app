@@ -70,6 +70,7 @@ import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
 import {
   GEM_AR_LOCATING_HE,
   GEM_COLLECT_NEW_HE,
+  gemFoundOnScreenBannerHe,
   GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
@@ -451,6 +452,24 @@ export function GemHuntWebXrAr({
 
   showApproachScreenGemRef.current = showApproachScreenGem;
 
+  const inOnsiteBand = simulateInRange || canCollectNow || inWebXrHuntBand;
+  const showHuntGemOnScreen =
+    showTellMeCenterGem ||
+    showApproachScreenGem ||
+    (sessionActive && placed && showArGem && inOnsiteBand);
+  const gemFoundInView =
+    sessionActive &&
+    phase === "placed" &&
+    inOnsiteBand &&
+    showHuntGemOnScreen &&
+    (encounterMode
+      ? encounterPhase === "encounter" &&
+        (showTellMeCenterGem ||
+          gemVisibleInCam ||
+          (placed && showArGem && !userDismissedCenterGem))
+      : showTellMeCenterGem || gemVisibleInCam);
+  const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
+
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
       markEncounterTutorialSeen();
@@ -491,13 +510,13 @@ export function GemHuntWebXrAr({
   const showNavArrow = encounterMode
     ? sessionActive &&
       encounterPhase === "approach" &&
-      hintPanel === "nav" &&
+      showWalkNavGuide &&
       !centerReveal &&
       huntArrowDeg != null &&
       liveLoc != null &&
       !simulateInRange
     : sessionActive &&
-      hintPanel === "nav" &&
+      showWalkNavGuide &&
       !centerReveal &&
       huntArrowDeg != null &&
       liveLoc != null &&
@@ -648,8 +667,7 @@ export function GemHuntWebXrAr({
     geoLockMode === "pending" &&
     GEM_WEBXR_GEO_PLACEMENT_ENABLED;
 
-  const inOnsiteBand = simulateInRange || canCollectNow || inWebXrHuntBand;
-  const repeatFoundBannerHe = repeatVisit ? `מצאתם שוב את ${gemLabelHe(monsterId)}` : null;
+  const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(repeatVisit, gemLabelHe(monsterId));
   const topCollectBanner =
     phase === "collecting" && !repeatVisit
       ? campusSession
@@ -663,11 +681,9 @@ export function GemHuntWebXrAr({
     phase === "placed" &&
     inOnsiteBand &&
     (showArGem || showTellMeCenterGem);
-  const repeatFoundBanner =
-    repeatFoundBannerHe &&
-    inOnsiteBand &&
-    (phase === "placed" || phase === "collecting") &&
-    (showArGem || showTellMeCenterGem || phase === "collecting");
+  const showFoundOnScreenBanner =
+    phase === "collecting" ||
+    (phase === "placed" && showHuntGemOnScreen && inOnsiteBand);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -1223,12 +1239,12 @@ export function GemHuntWebXrAr({
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
       ) : null}
-      {phase === "collecting" && repeatFoundBannerHe ? (
+      {phase === "collecting" && showFoundOnScreenBanner ? (
         <p
           className="gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--collect is-exploding"
           role="status"
         >
-          {repeatFoundBannerHe}
+          {foundOnScreenBannerHe}
         </p>
       ) : null}
 
@@ -1332,9 +1348,9 @@ export function GemHuntWebXrAr({
         className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt gem-hunt-webxr__footer"
         dir="rtl"
       >
-        {repeatFoundBanner && phase !== "collecting" ? (
+        {showFoundOnScreenBanner && phase !== "collecting" ? (
           <p className="gem-hunt-overlay__found-again-banner" role="status">
-            {repeatFoundBannerHe}
+            {foundOnScreenBannerHe}
           </p>
         ) : null}
         {error ? (
@@ -1367,7 +1383,7 @@ export function GemHuntWebXrAr({
                   לחצו על החיה במרחב (או «גלה לי») כדי לאסוף — ואז הדוכן הבא.
                 </p>
               ) : null}
-              {showSessionFooter && hintPanel === "nav" ? (
+              {showSessionFooter && showWalkNavGuide ? (
                 <div
                   className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                   role="region"

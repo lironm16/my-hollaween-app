@@ -13183,6 +13183,14 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay--ios .gem-hunt-overlay__gem-hit.is-inspect360.is-center-collect {
   top: clamp(45%, calc(50% + 0.5rem), 49%);
+  width: calc(var(--gem-cam-box) * 1.12);
+  max-width: calc(var(--gem-cam-box) * 1.12);
+  height: calc(var(--gem-cam-box) * 1.12);
+}
+.gem-hunt-overlay--ios .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-hunt-overlay__gem-dance {
+  width: var(--gem-cam-box);
+  height: var(--gem-cam-box);
+  margin: auto;
 }
 .gem-hunt-overlay__tap-collect-caption {
   position: absolute;
