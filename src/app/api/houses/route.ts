@@ -8,6 +8,7 @@ import { loadDb } from "@/lib/store/core";
 import { toEditorHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
+import { tryConnectOwnerDeviceForHouse } from "@/lib/night-pass-owner-connect";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readIncludeEndpoint } from "@/lib/push";
 
@@ -50,9 +51,18 @@ export async function POST(request: Request) {
     } catch {
       /* owner cookie is optional — house is already saved */
     }
+    let deviceConnected = false;
+    try {
+      deviceConnected = await tryConnectOwnerDeviceForHouse(house.house.id, {
+        allowWhenDisabled: admin,
+      });
+    } catch {
+      /* pass optional */
+    }
     return NextResponse.json({
       house: toEditorHouse(house.house),
       editCode: house.house.editCode,
+      deviceConnected,
       push: house.push,
     });
   } catch (error) {

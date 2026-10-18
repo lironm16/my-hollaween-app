@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import type { NightPassClientBrowser, NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import {
   firestoreConfigured,
   metaDoc,
@@ -7,30 +8,31 @@ import {
   resolveAdminFirestore,
 } from "@/lib/firestore-admin";
 
-export const NIGHT_PASS_SLOTS = [1, 2, 3, 4] as const;
-export type NightPassSlot = (typeof NIGHT_PASS_SLOTS)[number];
-
 export type NightPassEvent = {
-  type: "registered" | "reregistered" | "reset";
+  type: "registered" | "reregistered" | "reset" | "evicted" | "removed";
   at: string;
   name?: string;
   phone?: string;
+  sessionId?: string;
 };
 
+export type HouseAccessSession = {
+  sessionId: string;
+  tokenHash: string;
+  registeredAt: string;
+  holderName: string;
+  holderPhone: string;
+  /** Set on register — browser tab vs home-screen / PWA app. */
+  clientSurface?: NightPassClientSurface;
+  /** Safari / Chrome when registered from a browser tab. */
+  clientBrowser?: NightPassClientBrowser;
+};
+
+/** Device registry for one house — family code is always house.editCode. */
 export type NightPassRecord = {
-  /** Lookup id derived from the code (see passIdForCode). */
   id: string;
   houseId: string;
-  slot: NightPassSlot;
-  /** Shown to the house owner so it can be shared again. Never sent to visitors. */
-  code: string;
-  status: "unused" | "active";
-  holderName: string | null;
-  holderPhone: string | null;
-  /** sha256 of the device token; only the last registration matches. */
-  tokenHash: string | null;
-  registeredAt: string | null;
-  registrations: number;
+  sessions: HouseAccessSession[];
   resetCount: number;
   history: NightPassEvent[];
   createdAt: string;
@@ -111,7 +113,6 @@ export async function readNightPassSettings(): Promise<NightPassSettings> {
       value = { enabled: Boolean(row?.enabled), updatedAt: row?.updatedAt };
     } catch (error) {
       console.error("[night-passes] settings read failed", error);
-      if (settingsMem) return settingsMem.value;
     }
   } else {
     value = (await readLocal()).settings;
@@ -120,11 +121,11 @@ export async function readNightPassSettings(): Promise<NightPassSettings> {
   return value;
 }
 
-export async function writeNightPassSettings(next: { enabled: boolean }): Promise<NightPassSettings> {
-  const value: NightPassSettings = { enabled: next.enabled, updatedAt: new Date().toISOString() };
+export async function writeNightPassSettings(next: NightPassSettings) {
+  const value = { ...next, updatedAt: new Date().toISOString() };
   if (firestoreConfigured()) {
     await resolveAdminFirestore();
-    await metaDoc("nightPasses").set(value, { merge: true });
+    await metaDoc("nightPasses").set(value);
   } else {
     await withLocalLock(async () => {
       const file = await readLocal();
@@ -161,7 +162,7 @@ export async function listHouseNightPasses(houseId: string): Promise<NightPassRe
     rows = Object.values((await readLocal()).passes).filter((row) => row.houseId === houseId);
   }
   for (const row of rows) passMem.set(row.id, { value: row, at: Date.now() });
-  return rows.sort((a, b) => a.slot - b.slot);
+  return rows;
 }
 
 /** Read-modify-write one pass atomically. `mutate` returns the next record, or null to leave it. */

@@ -12,6 +12,7 @@ import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-f
 import { Button, buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged, rememberPublishedHouse } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
+import { refreshNightPassState } from "@/lib/night-pass-client";
 import { publishHouse } from "@/lib/publish-house";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { senderPushEndpoint } from "@/lib/push-client";
@@ -69,6 +70,7 @@ export default function AddPage() {
       });
       rememberPublishedHouse(preview);
       notifyCatalogChanged();
+      void refreshNightPassState({ force: true });
       // Success UI only after the server confirmed the house.
       setDone({ id: preview.id, editCode, name: preview.name, house: preview });
     } catch (error) {
@@ -112,7 +114,7 @@ export default function AddPage() {
                   type="button"
                   variant="outline"
                   className="w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
-                  onClick={() => openOwnerPasses(done.id)}
+                  onClick={() => openOwnerPasses(done.house, done.editCode)}
                 >
                   חבר מכשירים
                 </Button>

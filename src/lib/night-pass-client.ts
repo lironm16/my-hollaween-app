@@ -1,5 +1,6 @@
 import type { AddressRevealAudience } from "@/lib/address-reveal";
 import { readAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
+import { loadOwnedHouses } from "@/lib/offline-db";
 import type { CatalogDelta, NightPassViewer } from "@/lib/types";
 
 /** Mirror of `GET /api/night-passes/me`. */
@@ -19,12 +20,22 @@ export const NIGHT_PASS_CHANGED_EVENT = "hw-night-pass-changed";
 /** This device's pass stopped working (re-registered elsewhere or reset by the owner). */
 export const NIGHT_PASS_LOST_EVENT = "hw-night-pass-lost";
 
-export type NightPassLostDetail = { reason: "taken" | "reset"; byName?: string } | null;
+export type NightPassLostDetail = {
+  reason: "taken" | "reset" | "removed" | "house_removed";
+  byName?: string;
+} | null;
 
 function readLostDetail(value: unknown): NightPassLostDetail {
   if (!value || typeof value !== "object") return null;
   const raw = value as { reason?: unknown; byName?: unknown };
-  if (raw.reason !== "taken" && raw.reason !== "reset") return null;
+  if (
+    raw.reason !== "taken" &&
+    raw.reason !== "reset" &&
+    raw.reason !== "removed" &&
+    raw.reason !== "house_removed"
+  ) {
+    return null;
+  }
   return {
     reason: raw.reason,
     ...(typeof raw.byName === "string" && raw.byName.trim() ? { byName: raw.byName.trim() } : {}),
@@ -32,6 +43,25 @@ function readLostDetail(value: unknown): NightPassLostDetail {
 }
 /** Owner codes list changed (pair, reset, re-register). */
 export const NIGHT_PASSES_SLOTS_CHANGED_EVENT = "hw-night-passes-changed";
+/** Owner unlocked a house but contact on file is incomplete — open register without code. */
+export const NIGHT_PASS_OWNER_REGISTER_EVENT = "hw-night-pass-owner-register";
+
+export type NightPassOwnerRegisterDetail = { houseId?: string };
+
+const ownerRegisterPrompted = new Set<string>();
+
+/** Auto-open owner register (no entrance code) once per house per tab session. */
+export function dispatchOwnerRegisterPrompt(houseId?: string) {
+  if (typeof window === "undefined") return;
+  const key = houseId?.trim() || "*";
+  if (ownerRegisterPrompted.has(key)) return;
+  ownerRegisterPrompted.add(key);
+  window.dispatchEvent(
+    new CustomEvent<NightPassOwnerRegisterDetail>(NIGHT_PASS_OWNER_REGISTER_EVENT, {
+      detail: houseId?.trim() ? { houseId: houseId.trim() } : {},
+    }),
+  );
+}
 
 export function notifyNightPassSlotsChanged() {
   if (typeof window === "undefined") return;
@@ -104,6 +134,72 @@ const MIN_REFETCH_MS = 10_000;
 /** Intentional «התנתקות» — do not show «pass lost» toast. */
 let suppressNextPassLostEvent = false;
 
+const ownerUnlockAttempted = new Set<string>();
+
+if (typeof window !== "undefined") {
+  window.addEventListener("hw-owned-changed", () => ownerUnlockAttempted.clear());
+}
+
+async function fetchNightPassMe(qs: string): Promise<{ json: { lost?: unknown }; state: NightPassState | null }> {
+  const res = await fetch(`/api/night-passes/me${qs}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) return { json: {}, state: null };
+  const json = (await res.json()) as { lost?: unknown };
+  return { json, state: asState(json) };
+}
+
+/** Server owner session is the signed hw_owner cookie — restore it from saved edit codes. */
+async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
+  const owned = loadOwnedHouses();
+  if (!owned.length) return false;
+  let anyOk = false;
+  for (const house of owned.slice(0, 8)) {
+    const code = house.editCode?.trim();
+    if (!code || ownerUnlockAttempted.has(house.id)) continue;
+    ownerUnlockAttempted.add(house.id);
+    try {
+      const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/unlock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editCode: code }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) anyOk = true;
+    } catch {
+      /* offline */
+    }
+  }
+  return anyOk;
+}
+
+async function tryOwnerNightPassConnect(
+  qs: string,
+  state: NightPassState,
+): Promise<NightPassState> {
+  if (!state.enabled || state.registered || state.viewer !== "owner") return state;
+  try {
+    const connect = await fetch("/api/night-passes/connect-owner", {
+      method: "POST",
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!connect.ok) return state;
+    const detail = (await connect.json()) as {
+      needsRegistration?: boolean;
+      houseId?: string;
+    };
+    if (detail.needsRegistration) {
+      dispatchOwnerRegisterPrompt(detail.houseId);
+    }
+  } catch {
+    /* optional */
+  }
+  return state;
+}
+
 /** Ask the server who this device is. Network failure keeps the last known state. */
 export function refreshNightPassState(options?: { force?: boolean }): Promise<NightPassState | null> {
   if (inflight) return inflight;
@@ -114,14 +210,19 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
   inflight = (async () => {
     try {
       const qs = readAdminPreviewAsUser() ? "?asUser=1" : "";
-      const res = await fetch(`/api/night-passes/me${qs}`, {
-        cache: "no-store",
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!res.ok) return null;
-      const json = (await res.json()) as { lost?: unknown };
-      const next = asState(json);
-      if (!next) return null;
+      const first = await fetchNightPassMe(qs);
+      if (!first.state) return null;
+      let next = first.state;
+      const json = first.json;
+      if (next.enabled && !next.registered && next.viewer === "public" && loadOwnedHouses().length > 0) {
+        if (await restoreOwnerSessionFromLocalHouses()) {
+          const again = await fetchNightPassMe(qs);
+          if (again.state) next = again.state;
+        }
+      }
+      if (next.viewer === "owner") {
+        next = await tryOwnerNightPassConnect(qs, next);
+      }
       const lost = readLostDetail(json.lost);
       const prev = readNightPassState();
       if (JSON.stringify(prev) !== JSON.stringify(next)) {

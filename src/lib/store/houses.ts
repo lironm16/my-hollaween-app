@@ -1,3 +1,4 @@
+import { houseEditCodesMatch, normalizeHouseAccessCode } from "@/lib/house-access-code";
 import { canonicalAddressForBuilding } from "@/lib/house-clusters";
 import {
   canonicalHouseId,
@@ -109,11 +110,21 @@ export async function getHouse(id: string): Promise<House | undefined> {
   }
 
   const cached = houseFromWarmCaches(id);
-  if (cached) return cached;
+  if (cached && !isHouseDeleted(cached)) return cached;
 
   const found = findHouseIn((await loadDb()).houses, id);
-  if (found) return found;
-  return findHouseIn((await loadDb(true)).houses, id);
+  if (found && !isHouseDeleted(found)) return found;
+  const stale = findHouseIn((await loadDb(true)).houses, id);
+  if (stale && !isHouseDeleted(stale)) return stale;
+  return undefined;
+}
+
+/** Resolve the single family / edit code to a house row. */
+export async function getHouseByAccessCode(rawCode: unknown): Promise<House | undefined> {
+  const code = normalizeHouseAccessCode(rawCode);
+  if (!code) return undefined;
+  const houses = await getAllHouses();
+  return houses.find((house) => houseEditCodesMatch(house.editCode, code));
 }
 
 function nextPublicId(db: { houses: House[] }, kind: HouseInput["kind"]) {
@@ -279,6 +290,7 @@ function sanitizeOwnerPatch(
     const normalized = normalizeOwnerPhone(String(patch.ownerPhone ?? ""));
     next.ownerPhone = normalized || null;
   }
+  if (patch.editCode !== undefined) next.editCode = patch.editCode.trim();
   return next;
 }
 
@@ -360,6 +372,40 @@ async function patchHouseDoc(
 
   const push = await dispatchHousePush(prev, house, undefined, patch, options?.includeEndpoint);
   return { house, push };
+}
+
+/**
+ * Rotate family / edit code after night-pass reset — reads Firestore when configured so warm
+ * mem cannot block the write with a stale editCode.
+ */
+export async function replaceHouseEditCode(
+  id: string,
+  newCode: string,
+): Promise<{ house: House } | { error: "missing" }> {
+  const docId = canonicalHouseId(id);
+  if (!docId) return { error: "missing" };
+  const trimmed = newCode.trim();
+  if (!trimmed) return { error: "missing" };
+
+  if (firestoreConfigured()) {
+    const remote = await readFirestoreHouse(docId);
+    if (!remote || isHouseDeleted(remote)) return { error: "missing" };
+    const house = normalizeHouse({
+      ...remote,
+      editCode: trimmed,
+      updatedAt: new Date().toISOString(),
+    });
+    await writeFirestoreHouse(house);
+    upsertMemHouse(house, house.updatedAt);
+    return { house };
+  }
+
+  const existing = await getHouse(docId);
+  if (!existing) return { error: "missing" };
+  const result = await updateByEditCode(docId, existing.editCode, { editCode: trimmed });
+  if ("error" in result && result.error) return { error: "missing" };
+  if (!("house" in result) || !result.house) return { error: "missing" };
+  return { house: result.house };
 }
 
 /** Owner patch — partial fields merged onto one house doc (1 Firestore read + 1 write). */

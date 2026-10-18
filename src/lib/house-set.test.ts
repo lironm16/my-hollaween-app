@@ -93,8 +93,8 @@ describe("resolveViewerHouseSet", () => {
     ],
   };
 
-  it("shows all houses on preview when the catalog is stub-only", () => {
-    assert.equal(resolveViewerHouseSet(stubsOnly, false, "real", { previewDeployment: true }), "all");
+  it("keeps real-only for visitors on preview (same as production)", () => {
+    assert.equal(resolveViewerHouseSet(stubsOnly, false, "real", { previewDeployment: true }), "real");
   });
 
   it("keeps real filter on production even when the catalog is stub-only", () => {
@@ -102,8 +102,8 @@ describe("resolveViewerHouseSet", () => {
     assert.equal(resolveViewerHouseSet(stubsOnly, false, "real"), "real");
   });
 
-  it("shows real and stubs on preview when both exist", () => {
-    assert.equal(resolveViewerHouseSet(mixed, false, "real", { previewDeployment: true }), "all");
+  it("keeps real-only on preview when real and stubs both exist", () => {
+    assert.equal(resolveViewerHouseSet(mixed, false, "real", { previewDeployment: true }), "real");
   });
 
   it("respects admin house-set preference", () => {

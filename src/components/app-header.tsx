@@ -145,7 +145,7 @@ export function AppHeader({
             ) : null}
             {showRegisteredPass ? (
               <div className="px-1 pb-1">
-                <NightPassDeviceStrip compact pass={nightPass} />
+                <NightPassDeviceStrip compact pass={nightPass} showDisconnect={false} />
               </div>
             ) : null}
             <Link

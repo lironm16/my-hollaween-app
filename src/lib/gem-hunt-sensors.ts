@@ -81,19 +81,30 @@ function stopStreamTracks(stream: MediaStream | null | undefined) {
   });
 }
 
-export function releaseGemHuntCamera(video?: HTMLVideoElement | null) {
-  const fromVideo =
-    video?.srcObject instanceof MediaStream ? video.srcObject : null;
-  if (video) {
-    try {
-      video.pause();
-    } catch {
-      /* ignore */
-    }
-    stopStreamTracks(fromVideo);
-    video.srcObject = null;
+function releaseVideoElement(el: HTMLVideoElement) {
+  const fromVideo = el.srcObject instanceof MediaStream ? el.srcObject : null;
+  try {
+    el.pause();
+  } catch {
+    /* ignore */
   }
+  stopStreamTracks(fromVideo);
+  el.srcObject = null;
+  try {
+    el.load();
+  } catch {
+    /* ignore */
+  }
+}
+
+export function releaseGemHuntCamera(video?: HTMLVideoElement | null) {
+  if (video) releaseVideoElement(video);
   stopGemHuntCameraStream();
+  if (typeof document === "undefined") return;
+  const root = document.getElementById("gem-hunt-portal-root");
+  root?.querySelectorAll("video").forEach((node) => {
+    if (node instanceof HTMLVideoElement) releaseVideoElement(node);
+  });
 }
 
 if (typeof document !== "undefined") {

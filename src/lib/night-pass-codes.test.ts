@@ -1,33 +1,31 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  formatNightPassCode,
+  HOUSE_ACCESS_CODE_LENGTH,
   maskPhone,
-  newNightPassCode,
   normalizeHolderName,
   normalizeIsraeliMobile,
   normalizeNightPassCode,
-} from "@/lib/night-pass-codes";
+} from "@/lib/house-access-code";
+import { newHouseAccessCode } from "@/lib/night-pass-codes.impl";
 
 describe("night pass codes", () => {
-  it("generates 8-char codes from the unambiguous alphabet", () => {
+  it("generates 6-digit entrance codes", () => {
     for (let i = 0; i < 50; i += 1) {
-      const code = newNightPassCode();
-      assert.match(code, /^[A-HJKMNP-Z2-9]{8}$/);
-      assert.equal(normalizeNightPassCode(code), code);
+      const code = newHouseAccessCode();
+      assert.equal(code.length, HOUSE_ACCESS_CODE_LENGTH);
+      assert.match(code, /^\d{6}$/);
     }
   });
 
-  it("accepts lowercase, dashes and spaces", () => {
-    assert.equal(normalizeNightPassCode("k7qm-3xpa"), "K7QM3XPA");
-    assert.equal(normalizeNightPassCode(" K7QM 3XPA "), "K7QM3XPA");
-    assert.equal(formatNightPassCode("K7QM3XPA"), "K7QM-3XPA");
+  it("accepts legacy 4-char codes for lookup", () => {
+    assert.equal(normalizeNightPassCode(" k7qm "), "K7QM");
   });
 
-  it("rejects wrong length and ambiguous characters", () => {
-    assert.equal(normalizeNightPassCode("K7QM3XP"), null);
-    assert.equal(normalizeNightPassCode("K7QM3XP0"), null);
-    assert.equal(normalizeNightPassCode("K7QM3XPI"), null);
+  it("rejects wrong length and ambiguous characters for legacy codes", () => {
+    assert.equal(normalizeNightPassCode("K7Q"), null);
+    assert.equal(normalizeNightPassCode("K7QM3XPA"), null);
+    assert.equal(normalizeNightPassCode("K7QI"), null);
     assert.equal(normalizeNightPassCode(42), null);
   });
 

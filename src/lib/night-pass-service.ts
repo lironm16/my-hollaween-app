@@ -1,20 +1,26 @@
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import {
-  formatNightPassCode,
+  formatHouseAccessCode,
+  HOUSE_ACCESS_MAX_DEVICES,
+  normalizeHolderName,
+  normalizeIsraeliMobile,
+} from "@/lib/house-access-code";
+import type { NightPassClientBrowser, NightPassClientSurface } from "@/lib/night-pass-client-surface";
+import {
   hashNightPassToken,
-  newNightPassCode,
-  passIdForCode,
+  newHouseAccessCode,
+  passIdForHouse,
 } from "@/lib/night-pass-codes";
 import {
-  NIGHT_PASS_SLOTS,
   deleteNightPass,
   listHouseNightPasses,
   readNightPass,
   updateNightPass,
+  type HouseAccessSession,
   type NightPassEvent,
   type NightPassRecord,
-  type NightPassSlot,
 } from "@/lib/night-pass-store";
+import { getHouse, getHouseByAccessCode } from "@/lib/store/houses";
 
 const HISTORY_MAX = 20;
 
@@ -22,177 +28,317 @@ function withEvent(history: NightPassEvent[], event: NightPassEvent) {
   return [...history, event].slice(-HISTORY_MAX);
 }
 
-async function createPass(
+function sessionTokenMatches(session: HouseAccessSession, token: string) {
+  const expected = Buffer.from(session.tokenHash);
+  const got = Buffer.from(hashNightPassToken(token));
+  return expected.length === got.length && timingSafeEqual(expected, got);
+}
+
+function sortSessions(sessions: HouseAccessSession[]) {
+  return [...sessions].sort((a, b) => a.registeredAt.localeCompare(b.registeredAt));
+}
+
+function passId(houseId: string) {
+  return passIdForHouse(houseId);
+}
+
+async function createHouseAccessRecord(
   houseId: string,
-  slot: NightPassSlot,
   carry?: Pick<NightPassRecord, "resetCount" | "history">,
 ): Promise<NightPassRecord> {
-  for (let attempt = 0; attempt < 6; attempt += 1) {
-    const code = newNightPassCode();
-    const id = passIdForCode(code);
-    const now = new Date().toISOString();
-    const record: NightPassRecord = {
-      id,
-      houseId,
-      slot,
-      code,
-      status: "unused",
-      holderName: null,
-      holderPhone: null,
-      tokenHash: null,
-      registeredAt: null,
-      registrations: 0,
-      resetCount: carry?.resetCount ?? 0,
-      history: carry?.history ?? [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    let created = false as boolean;
-    await updateNightPass(id, (current) => {
-      if (current) return null;
-      created = true;
-      return record;
-    });
-    if (created) return record;
+  const id = passId(houseId);
+  const now = new Date().toISOString();
+  const record: NightPassRecord = {
+    id,
+    houseId,
+    sessions: [],
+    resetCount: carry?.resetCount ?? 0,
+    history: carry?.history ?? [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  let created = false;
+  await updateNightPass(id, (current) => {
+    if (current) return null;
+    created = true;
+    return record;
+  });
+  if (!created) {
+    const existing = await readNightPass(id);
+    if (existing) return existing;
+    throw new Error("HOUSE_ACCESS_CREATE_FAILED");
   }
-  throw new Error("NIGHT_PASS_CODE_COLLISION");
+  return record;
 }
 
-/** The house's four passes, creating any missing slot (first owner visit / older houses). */
-export async function ensureHouseNightPasses(houseId: string): Promise<NightPassRecord[]> {
-  let rows = await listHouseNightPasses(houseId);
-  const missing = NIGHT_PASS_SLOTS.filter((slot) => !rows.some((row) => row.slot === slot));
-  if (missing.length === 0) return dedupeSlots(rows);
-  for (const slot of missing) await createPass(houseId, slot);
-  rows = await listHouseNightPasses(houseId);
-  return dedupeSlots(rows);
-}
-
-/** Two concurrent first visits can both create a slot — keep the oldest, drop the rest. */
-async function dedupeSlots(rows: NightPassRecord[]) {
-  const keep = new Map<NightPassSlot, NightPassRecord>();
-  const extra: NightPassRecord[] = [];
-  for (const row of [...rows].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
-    const current = keep.get(row.slot);
-    if (!current) keep.set(row.slot, row);
-    else if (row.status === "active" && current.status !== "active") {
-      extra.push(current);
-      keep.set(row.slot, row);
-    } else extra.push(row);
+/** Device sessions for a house — family code is only `house.editCode`. */
+export async function ensureHouseAccess(houseId: string): Promise<NightPassRecord> {
+  const id = passId(houseId);
+  for (const row of await listHouseNightPasses(houseId)) {
+    if (row.id !== id) await deleteNightPass(row.id).catch(() => undefined);
   }
-  for (const row of extra) {
-    if (row.status !== "active") await deleteNightPass(row.id).catch(() => undefined);
-  }
-  return [...keep.values()].sort((a, b) => a.slot - b.slot);
+  const existing = await readNightPass(id);
+  if (existing) return existing;
+  return createHouseAccessRecord(houseId);
 }
 
 export type RedeemOutcome =
-  | { ok: true; record: NightPassRecord; token: string; reregistered: boolean }
-  | { ok: false; error: "invalid" };
+  | {
+      ok: true;
+      record: NightPassRecord;
+      token: string;
+      sessionId: string;
+      reregistered: boolean;
+    }
+  | { ok: false; error: "invalid" | "full" | "duplicate_identity" };
 
-/**
- * Register a device on a pass. Each redeem replaces the device token — only the last device stays valid.
- */
 export async function redeemNightPass(input: {
   code: string;
   name: string;
   phone: string;
+  priorSessionId?: string | null;
+  clientSurface?: NightPassClientSurface;
+  clientBrowser?: NightPassClientBrowser;
 }): Promise<RedeemOutcome> {
-  const id = passIdForCode(input.code);
+  const house = await getHouseByAccessCode(input.code);
+  if (!house) return { ok: false, error: "invalid" };
+
+  await ensureHouseAccess(house.id);
+  const id = passId(house.id);
   const token = randomBytes(24).toString("base64url");
   const tokenHash = hashNightPassToken(token);
-  let outcome = "invalid" as "invalid" | "registered" | "reregistered";
+  const sessionId = randomUUID();
+  let outcome: "invalid" | "registered" | "reregistered" = "invalid";
+  let failError: "full" | "duplicate_identity" | null = null;
+
   const record = await updateNightPass(id, (current) => {
-    if (!current || current.code !== input.code) {
+    if (!current) {
       outcome = "invalid";
       return null;
     }
-    const again = current.status === "active";
-    outcome = again ? "reregistered" : "registered";
     const now = new Date().toISOString();
+    let sessions = [...current.sessions];
+    const priorIdx =
+      input.priorSessionId != null
+        ? sessions.findIndex((s) => s.sessionId === input.priorSessionId)
+        : -1;
+    const sameIdentity = (session: HouseAccessSession) =>
+      normalizeHolderName(session.holderName) === input.name &&
+      normalizeIsraeliMobile(session.holderPhone) === input.phone;
+    const surface = input.clientSurface;
+    const browser = input.clientBrowser;
+    if (priorIdx >= 0) {
+      outcome = "reregistered";
+      sessions[priorIdx] = {
+        ...sessions[priorIdx]!,
+        tokenHash,
+        registeredAt: now,
+        holderName: input.name,
+        holderPhone: input.phone,
+        ...(surface ? { clientSurface: surface } : {}),
+        ...(browser ? { clientBrowser: browser } : {}),
+      };
+    } else {
+      if (sessions.length >= HOUSE_ACCESS_MAX_DEVICES) {
+        failError = "full";
+        return null;
+      }
+      if (sessions.some((session) => sameIdentity(session))) {
+        failError = "duplicate_identity";
+        return null;
+      }
+      outcome = "registered";
+      sessions.push({
+        sessionId,
+        tokenHash,
+        registeredAt: now,
+        holderName: input.name,
+        holderPhone: input.phone,
+        ...(surface ? { clientSurface: surface } : {}),
+        ...(browser ? { clientBrowser: browser } : {}),
+      });
+    }
     return {
       ...current,
-      status: "active",
-      holderName: input.name,
-      holderPhone: input.phone,
-      tokenHash,
-      registeredAt: now,
-      registrations: current.registrations + 1,
+      sessions,
+      updatedAt: now,
       history: withEvent(current.history, {
-        type: again ? "reregistered" : "registered",
+        type: outcome === "reregistered" ? "reregistered" : "registered",
         at: now,
         name: input.name,
         phone: input.phone,
       }),
-      updatedAt: now,
     };
   });
+
+  if (failError) return { ok: false, error: failError };
   if (outcome === "invalid" || !record) {
     return { ok: false, error: "invalid" };
   }
-  return { ok: true, record, token, reregistered: outcome === "reregistered" };
+  const activeSessionId =
+    outcome === "reregistered"
+      ? (record.sessions.find((s) => sessionTokenMatches(s, token))?.sessionId ?? sessionId)
+      : sessionId;
+  return {
+    ok: true,
+    record,
+    token,
+    sessionId: activeSessionId,
+    reregistered: outcome === "reregistered",
+  };
+}
+
+/** Owner device on add-house — no typed code. */
+export async function registerHouseAccessDevice(input: {
+  houseId: string;
+  name: string;
+  phone: string;
+  priorSessionId?: string | null;
+  clientSurface?: NightPassClientSurface;
+  clientBrowser?: NightPassClientBrowser;
+}): Promise<RedeemOutcome> {
+  const house = await getHouse(input.houseId);
+  if (!house?.editCode?.trim()) return { ok: false, error: "invalid" };
+  return redeemNightPass({
+    code: house.editCode,
+    name: input.name,
+    phone: input.phone,
+    priorSessionId: input.priorSessionId,
+    clientSurface: input.clientSurface,
+    clientBrowser: input.clientBrowser,
+  });
 }
 
 export type ResetOutcome =
-  | { ok: true; record: NightPassRecord }
+  | { ok: true; record: NightPassRecord; newCode: string }
   | { ok: false; error: "missing" };
 
-/** New code for a slot; the device registered on the old code loses access on its next sync. */
-export async function resetNightPassSlot(
+/** New family code on the house — all device sessions cleared. */
+/** Owner removes one paired device — frees a slot without resetting the family code. */
+export async function removeHouseAccessSession(
   houseId: string,
-  slot: NightPassSlot,
-  _options: { admin: boolean },
-): Promise<ResetOutcome> {
-  const rows = await ensureHouseNightPasses(houseId);
-  const current = rows.find((row) => row.slot === slot);
-  if (!current) return { ok: false, error: "missing" };
-  const record = await createPass(houseId, slot, {
-    resetCount: current.resetCount + 1,
-    history: withEvent(current.history, {
-      type: "reset",
-      at: new Date().toISOString(),
-      ...(current.holderName ? { name: current.holderName } : {}),
-      ...(current.holderPhone ? { phone: current.holderPhone } : {}),
-    }),
+  sessionId: string,
+): Promise<boolean> {
+  const id = passId(houseId);
+  let removed = false;
+  await updateNightPass(id, (current) => {
+    if (!current) return null;
+    const target = current.sessions.find((s) => s.sessionId === sessionId);
+    if (!target) return null;
+    removed = true;
+    const now = new Date().toISOString();
+    return {
+      ...current,
+      sessions: current.sessions.filter((s) => s.sessionId !== sessionId),
+      updatedAt: now,
+      history: withEvent(current.history, {
+        type: "removed",
+        at: now,
+        name: target.holderName,
+        phone: target.holderPhone,
+        sessionId,
+      }),
+    };
   });
-  await deleteNightPass(current.id);
-  return { ok: true, record };
+  return removed;
 }
 
-/** Pass for a device cookie — only the most recent registration's token matches. */
+export async function resetHouseAccess(houseId: string): Promise<ResetOutcome> {
+  const record = await ensureHouseAccess(houseId);
+  const newCode = newHouseAccessCode();
+  const now = new Date().toISOString();
+  const next = await updateNightPass(record.id, (current) => {
+    if (!current) return null;
+    return {
+      ...current,
+      sessions: [],
+      resetCount: current.resetCount + 1,
+      history: withEvent(current.history, { type: "reset", at: now }),
+      updatedAt: now,
+    };
+  });
+  if (!next) return { ok: false, error: "missing" };
+  return { ok: true, record: next, newCode };
+}
+
+export function houseAccessSessionForDevice(
+  record: NightPassRecord,
+  sessionId: string | null | undefined,
+  token: string | null | undefined,
+): HouseAccessSession | null {
+  if (sessionId) {
+    const byId = record.sessions.find((s) => s.sessionId === sessionId);
+    if (byId) return byId;
+  }
+  if (token) {
+    return record.sessions.find((s) => sessionTokenMatches(s, token)) ?? null;
+  }
+  return null;
+}
+
 export async function validNightPassForToken(
   passId: string,
   token: string,
+  sessionId?: string | null,
 ): Promise<NightPassRecord | null> {
   if (!/^[0-9a-f]{32}$/.test(passId) || !token || token.length > 100) return null;
   const record = await readNightPass(passId);
-  if (!record || record.status !== "active" || !record.tokenHash) return null;
-  const expected = Buffer.from(record.tokenHash);
-  const got = Buffer.from(hashNightPassToken(token));
-  if (expected.length !== got.length || !timingSafeEqual(expected, got)) return null;
+  if (!record) return null;
+  if (!houseAccessSessionForDevice(record, sessionId, token)) return null;
+  const house = await getHouse(record.houseId);
+  if (!house) return null;
   return record;
 }
 
-export type NightPassSlotView = {
-  slot: NightPassSlot;
-  code: string;
-  status: "unused" | "active";
-  holderName: string | null;
-  holderPhone: string | null;
-  registeredAt: string | null;
-  registrations: number;
+/** Drop device registry when a house row is removed from the event. */
+export async function purgeHouseNightPass(houseId: string) {
+  const canonical = passId(houseId);
+  for (const row of await listHouseNightPasses(houseId)) {
+    await deleteNightPass(row.id).catch(() => undefined);
+  }
+  await deleteNightPass(canonical).catch(() => undefined);
+}
+
+export type HouseAccessDeviceView = {
+  sessionId: string;
+  holderName: string;
+  holderPhone: string;
+  registeredAt: string;
+  isThisDevice: boolean;
+  clientSurface?: HouseAccessSession["clientSurface"];
+  clientBrowser?: HouseAccessSession["clientBrowser"];
+};
+
+export type HouseAccessView = {
+  familyCode: string;
+  connectedCount: number;
+  maxDevices: number;
+  devices: HouseAccessDeviceView[];
   resetCount: number;
 };
 
-export function nightPassSlotView(record: NightPassRecord, _admin: boolean): NightPassSlotView {
+export function houseAccessView(
+  record: NightPassRecord,
+  familyCode: string,
+  thisDeviceSessionId: string | null | undefined,
+  thisDeviceToken: string | null | undefined,
+): HouseAccessView {
+  const devices = record.sessions.map((s) => ({
+    sessionId: s.sessionId,
+    holderName: s.holderName,
+    holderPhone: s.holderPhone,
+    registeredAt: s.registeredAt,
+    clientSurface: s.clientSurface,
+    clientBrowser: s.clientBrowser,
+    isThisDevice:
+      (thisDeviceSessionId != null && s.sessionId === thisDeviceSessionId) ||
+      (thisDeviceToken != null && sessionTokenMatches(s, thisDeviceToken)),
+  }));
   return {
-    slot: record.slot,
-    code: formatNightPassCode(record.code),
-    status: record.status,
-    holderName: record.holderName,
-    holderPhone: record.holderPhone,
-    registeredAt: record.registeredAt,
-    registrations: record.registrations,
+    familyCode: formatHouseAccessCode(familyCode),
+    connectedCount: devices.length,
+    maxDevices: HOUSE_ACCESS_MAX_DEVICES,
+    devices,
     resetCount: record.resetCount,
   };
 }

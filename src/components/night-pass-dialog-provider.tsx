@@ -11,73 +11,158 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
-import { NightPassesCard } from "@/components/night-passes-card";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { readNightPassState } from "@/lib/night-pass-client";
-import { NIGHT_PASS_REGISTER_SUBTITLE } from "@/lib/night-pass-copy";
+import { useNightPass } from "@/hooks/use-night-pass";
+import {
+  NIGHT_PASS_ALREADY_REGISTERED_BODY,
+  NIGHT_PASS_ALREADY_REGISTERED_TITLE,
+} from "@/lib/night-pass-copy";
+import {
+  NIGHT_PASS_OWNER_REGISTER_EVENT,
+  readNightPassState,
+  refreshNightPassState,
+  type NightPassOwnerRegisterDetail,
+} from "@/lib/night-pass-client";
+import type { PublicHouse } from "@/lib/types";
 
 type NightPassDialogContextValue = {
-  openRegister: (initialCode?: string) => void;
-  openOwnerPasses: (houseId: string) => void;
+  openRegister: (initialCode?: string, inviteToken?: string) => void;
+  /** Owner unlocked a house — register for the event without an entrance code. */
+  openOwnerRegister: (houseId?: string) => void;
+  /** After add-house — same dialog as ⋮ → קוד עריכה ומכשירים. */
+  openOwnerPasses: (house: PublicHouse, editCode: string) => void;
 };
 
 const NightPassDialogContext = createContext<NightPassDialogContextValue | null>(null);
 
 export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const { admin } = useAdminSession();
+  const nightPass = useNightPass();
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerCode, setRegisterCode] = useState("");
+  const [registerInvite, setRegisterInvite] = useState("");
+  const [ownerRegisterMode, setOwnerRegisterMode] = useState(false);
+  const [ownerRegisterHouseId, setOwnerRegisterHouseId] = useState("");
+  const [alreadyRegisteredOpen, setAlreadyRegisteredOpen] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
-  const [ownerHouseId, setOwnerHouseId] = useState<string | null>(null);
+  const [ownerHouse, setOwnerHouse] = useState<PublicHouse | null>(null);
+  const [ownerEditCode, setOwnerEditCode] = useState("");
 
-  const openRegister = useCallback((initialCode = "") => {
+  const openRegister = useCallback((initialCode = "", inviteToken = "") => {
     const code = initialCode.replace(/[\s-]/g, "").toUpperCase();
-    if (readNightPassState().registered && !code) return;
+    const invite = inviteToken.trim();
+    if (readNightPassState().registered && !code && !invite) return;
+    setOwnerRegisterMode(false);
+    setOwnerRegisterHouseId("");
     setRegisterCode(code);
+    setRegisterInvite(invite);
     setRegisterOpen(true);
   }, []);
 
-  const openOwnerPasses = useCallback((houseId: string) => {
-    setOwnerHouseId(houseId);
+  const openOwnerRegister = useCallback((houseId = "") => {
+    if (readNightPassState().registered) return;
+    setOwnerRegisterMode(true);
+    setRegisterCode("");
+    setRegisterInvite("");
+    setOwnerRegisterHouseId(houseId.trim());
+    setRegisterOpen(true);
+  }, []);
+
+  useEffect(() => {
+    const onOwnerRegister = (event: Event) => {
+      const detail = (event as CustomEvent<NightPassOwnerRegisterDetail>).detail;
+      openOwnerRegister(detail?.houseId ?? "");
+    };
+    window.addEventListener(NIGHT_PASS_OWNER_REGISTER_EVENT, onOwnerRegister);
+    return () => window.removeEventListener(NIGHT_PASS_OWNER_REGISTER_EVENT, onOwnerRegister);
+  }, [openOwnerRegister]);
+
+  const openOwnerPasses = useCallback((house: PublicHouse, editCode: string) => {
+    setOwnerHouse(house);
+    setOwnerEditCode(editCode);
     setOwnerOpen(true);
   }, []);
 
   const value = useMemo(
-    () => ({ openRegister, openOwnerPasses }),
-    [openRegister, openOwnerPasses],
+    () => ({ openRegister, openOwnerRegister, openOwnerPasses }),
+    [openRegister, openOwnerRegister, openOwnerPasses],
   );
 
   return (
     <NightPassDialogContext.Provider value={value}>
       <Suspense fallback={null}>
-        <PassQueryOpener openRegister={openRegister} />
+        <PassQueryOpener
+          openRegister={openRegister}
+          onInviteForRegisteredDevice={() => setAlreadyRegisteredOpen(true)}
+        />
       </Suspense>
       {children}
       <HouseEditModal
-        open={registerOpen}
-        onClose={() => setRegisterOpen(false)}
+        open={alreadyRegisteredOpen}
+        onClose={() => setAlreadyRegisteredOpen(false)}
         title="מכשיר מחובר"
-        subtitle={NIGHT_PASS_REGISTER_SUBTITLE}
+      >
+        <div className="space-y-4">
+          <div className="rounded-xl bg-emerald-950/70 px-4 py-5 text-center ring-2 ring-emerald-400/40">
+            <p className="text-xl font-semibold text-emerald-100">{NIGHT_PASS_ALREADY_REGISTERED_TITLE}</p>
+            <p className="mt-2 text-base leading-relaxed text-emerald-200/95">
+              {NIGHT_PASS_ALREADY_REGISTERED_BODY}
+            </p>
+          </div>
+          <Button
+            type="button"
+            className="h-11 w-full bg-emerald-500 text-black hover:bg-emerald-400"
+            onClick={() => setAlreadyRegisteredOpen(false)}
+          >
+            סגירה
+          </Button>
+        </div>
+      </HouseEditModal>
+      <HouseEditModal
+        open={registerOpen}
+        onClose={() => {
+          setRegisterOpen(false);
+          setOwnerRegisterMode(false);
+          setOwnerRegisterHouseId("");
+        }}
+        title={ownerRegisterMode ? "חיבור לאירוע" : "מכשיר מחובר"}
       >
         <NightPassRegisterPanel
-          key={registerOpen ? registerCode || "open" : "closed"}
+          key={
+            registerOpen
+              ? ownerRegisterMode
+                ? `owner-${ownerRegisterHouseId || "any"}`
+                : registerCode || registerInvite || "open"
+              : "closed"
+          }
           initialCode={registerCode}
+          inviteToken={registerInvite}
+          ownerRegister={ownerRegisterMode}
+          ownerHouseId={ownerRegisterHouseId || undefined}
           compact
           onRegistered={() => setRegisterOpen(false)}
           onNavigateAway={() => setRegisterOpen(false)}
+          onAlreadyRegistered={() => {
+            setRegisterOpen(false);
+            setAlreadyRegisteredOpen(true);
+          }}
         />
       </HouseEditModal>
-      <HouseEditModal
-        open={ownerOpen}
-        onClose={() => setOwnerOpen(false)}
-        title="4 מכשירים לאירוע"
-      >
-        {ownerHouseId ? (
-          <NightPassesCard houseId={ownerHouseId} admin={admin} embedded />
-        ) : null}
-      </HouseEditModal>
+      {ownerHouse && ownerEditCode ? (
+        <EditCodeDialog
+          open={ownerOpen}
+          house={ownerHouse}
+          editCode={ownerEditCode}
+          admin={admin}
+          nightPassesEnabled={nightPass.enabled}
+          onClose={() => setOwnerOpen(false)}
+        />
+      ) : null}
     </NightPassDialogContext.Provider>
   );
 }
@@ -97,13 +182,47 @@ export function useNightPassDialogOptional() {
 
 function PassQueryOpener({
   openRegister,
+  onInviteForRegisteredDevice,
 }: {
-  openRegister: (initialCode?: string) => void;
+  openRegister: (initialCode?: string, inviteToken?: string) => void;
+  onInviteForRegisteredDevice: () => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    const invite = searchParams.get("invite") ?? "";
+    if (invite) {
+      void (async () => {
+        const next = new URLSearchParams(searchParams.toString());
+        next.delete("invite");
+        const qs = next.toString();
+        router.replace(qs ? `/?${qs}` : "/");
+
+        try {
+          const prefill = await fetch(
+            `/api/night-passes/invite-prefill?invite=${encodeURIComponent(invite)}`,
+            { cache: "no-store" },
+          );
+          const json = (await prefill.json()) as { ok?: boolean };
+          if (!json.ok) {
+            toast.error("הבית הוסר מהאירוע — לא ניתן להירשם מהזמנה הזו.");
+            return;
+          }
+        } catch {
+          toast.error("לא הצלחנו לבדוק את ההזמנה. נסו שוב.");
+          return;
+        }
+
+        const state = (await refreshNightPassState({ force: true })) ?? readNightPassState();
+        if (state.registered) {
+          onInviteForRegisteredDevice();
+        } else {
+          openRegister("", invite);
+        }
+      })();
+      return;
+    }
     if (searchParams.get("openPass") !== "1") return;
     const code = searchParams.get("c") ?? "";
     openRegister(code);
@@ -112,7 +231,7 @@ function PassQueryOpener({
     next.delete("c");
     const qs = next.toString();
     router.replace(qs ? `/?${qs}` : "/");
-  }, [openRegister, router, searchParams]);
+  }, [openRegister, onInviteForRegisteredDevice, router, searchParams]);
 
   return null;
 }

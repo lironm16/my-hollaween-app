@@ -139,9 +139,8 @@ export function catalogHasRealHouses(catalog: { houses: readonly StubFlagHouse[]
 }
 
 /**
- * Non-admins normally see only real houses. On Vercel Preview deployments, show
- * rehearsal stubs too (real + stubs) so QA can test schools and edge cases.
- * Production visitors always stay on real-only.
+ * Non-admins see real houses only (preview URLs match production visitors).
+ * Admins on preview may fall back to «all» when the catalog is stub-only for QA.
  */
 export function resolveViewerHouseSet(
   catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,
@@ -156,7 +155,6 @@ export function resolveViewerHouseSet(
     if (preview && stubOnly && preferred === "real") return "all";
     return preferred;
   }
-  if (preview && catalog?.houses.length) return "all";
   return "real";
 }
 

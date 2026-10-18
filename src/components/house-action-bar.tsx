@@ -11,7 +11,6 @@ import {
   Pencil,
   QrCode,
   Share2,
-  Ticket,
 } from "lucide-react";
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
@@ -62,7 +61,8 @@ export function HouseActionBar({
   gemCollected: _gemCollected,
   onToggleGem: _onToggleGem,
   onToggleEdit,
-  onNightPasses,
+  admin = false,
+  nightPassesEnabled = false,
   onPlaceGem,
   onShowOnMap,
   onShowInList,
@@ -85,7 +85,8 @@ export function HouseActionBar({
   gemCollected?: boolean;
   onToggleGem?: () => void;
   onToggleEdit?: () => void;
-  onNightPasses?: () => void;
+  admin?: boolean;
+  nightPassesEnabled?: boolean;
   /** Owner/admin — view and move the house gem hiding spot. */
   onPlaceGem?: () => void;
   onShowOnMap?: () => void;
@@ -190,17 +191,9 @@ export function HouseActionBar({
     if (editCode) {
       items.push({
         id: "edit-code",
-        label: "קוד עריכה",
+        label: "קוד עריכה ומכשירים",
         icon: <KeyRound className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: () => setEditCodeOpen(true),
-      });
-    }
-    if (onNightPasses) {
-      items.push({
-        id: "night-passes",
-        label: "חיבור מכשירים",
-        icon: <Ticket className={MENU_ICON_CLASS} strokeWidth={2.2} />,
-        onClick: onNightPasses,
       });
     }
     if (onPlaceGem) {
@@ -354,6 +347,8 @@ export function HouseActionBar({
           open={editCodeOpen}
           house={house}
           editCode={editCode}
+          admin={admin}
+          nightPassesEnabled={nightPassesEnabled}
           onClose={() => setEditCodeOpen(false)}
         />
       ) : null}

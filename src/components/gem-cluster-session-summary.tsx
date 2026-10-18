@@ -18,10 +18,13 @@ export function GemClusterSessionSummary({
   open,
   catches,
   onClose,
+  onOpenStickerBook,
 }: {
   open: boolean;
   catches: GemClusterSessionCatch[];
   onClose: () => void;
+  /** Opens the sticker album (replaces plain «סגור»). */
+  onOpenStickerBook: () => void;
 }) {
   if (!open || catches.length === 0) return null;
 
@@ -71,9 +74,9 @@ export function GemClusterSessionSummary({
         <Button
           type="button"
           className="min-h-12 w-full py-3 text-lg font-semibold bg-orange-500 text-black hover:bg-orange-400"
-          onClick={onClose}
+          onClick={onOpenStickerBook}
         >
-          סגור
+          אוסף המדבקות
         </Button>
       </div>
     </HouseEditModal>

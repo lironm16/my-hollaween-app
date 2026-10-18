@@ -864,7 +864,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     });
     const unsubscribePreview = subscribeAdminPreviewAsUser(() => {
       clearSessionHouseDetails();
-      void refreshNightPassState({ force: true });
+      void (async () => {
+        await refreshNightPassState({ force: true });
+        if (await syncCatalogScope()) await refresh(true);
+      })();
     });
 
     const onRehearsalClock = () => {

@@ -42,11 +42,7 @@ import {
 export type GemHuntOpenPrepare = () => Promise<UserLocation | null | void>;
 import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected } from "@/lib/gem-progress";
-import {
-  isGemHuntOrientationGranted,
-  prepareGemHuntSensors,
-  releaseGemHuntCamera,
-} from "@/lib/gem-hunt-sensors";
+import { prepareGemHuntSensors, releaseGemHuntCamera } from "@/lib/gem-hunt-sensors";
 import {
   clearAllGemAnchorOverrides,
   clearGemAnchorOverride,
@@ -151,7 +147,7 @@ export function GemHuntPanel({
 
     await prepareGemHuntSensors({
       requestCamera: !xrSession,
-      requestOrientation: !isGemHuntOrientationGranted(),
+      requestOrientation: false,
     });
     if (gen !== huntOpenGenRef.current) {
       void endGemHuntWebXrSession(xrSession);

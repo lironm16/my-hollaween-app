@@ -21,8 +21,10 @@ import type { PublicHouse } from "@/lib/types";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
+import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { catalogRemovedViewOnlyEditPage } from "@/lib/labels";
+import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/house-access-code";
 
 export default function EditPage() {
   return (
@@ -104,7 +106,9 @@ function EditPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ editCode: code }),
       });
-      const data = await readApiJson<{ error?: string; house?: PublicHouse }>(res);
+      const data = await readApiJson<{ error?: string; house?: PublicHouse; deviceConnected?: boolean }>(
+        res,
+      );
       if (pickedIdRef.current !== target.id) return false;
       if (!res.ok || !data.house) {
         if (!options?.quiet) {
@@ -119,6 +123,10 @@ function EditPageContent() {
         editCode: code,
         preview: data.house,
       });
+      await refreshNightPassState({ force: true });
+      if (data.deviceConnected) {
+        notifyNightPassSlotsChanged();
+      }
       return true;
     } catch {
       if (pickedIdRef.current !== target.id) return false;
@@ -236,11 +244,12 @@ function EditPageContent() {
                 id="edit-code"
                 value={editCode}
                 onChange={(event) => setEditCode(event.target.value)}
-                inputMode="numeric"
+                autoCapitalize="characters"
                 autoComplete="one-time-code"
                 placeholder="6 ספרות"
-                className="h-10 bg-[#12081a] tracking-widest"
-                maxLength={12}
+                className="h-10 bg-[#12081a] font-mono tracking-widest"
+                maxLength={HOUSE_ACCESS_CODE_LENGTH}
+                inputMode="numeric"
               />
               <Button
                 type="button"
@@ -279,7 +288,9 @@ function EditPageContent() {
             </Button>
           )
         ) : null}
-        {house && !editFlow.flow ? <NightPassesCard houseId={house.id} admin={admin} /> : null}
+        {house && !editFlow.flow ? (
+          <NightPassesCard houseId={house.id} house={house} admin={admin} />
+        ) : null}
         </div>
       </main>
       <HouseEditFlowPanels

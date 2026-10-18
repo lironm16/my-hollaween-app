@@ -45,7 +45,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
-import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
@@ -115,7 +114,6 @@ function MyCollectionsPageContent() {
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
   const nightPass = useNightPass();
-  const { openOwnerPasses } = useNightPassDialog();
   const { filters } = useHouseFilters();
 
   const catalogHouses = useMemo(() => {
@@ -249,9 +247,7 @@ function MyCollectionsPageContent() {
       editCodeFor:
         tab === "mine" ? (id) => owned.find((item) => item.id === id)?.editCode : undefined,
       onEdit: tab === "mine" ? requestEdit : undefined,
-      nightPassesEnabled: nightPass.enabled,
-      onNightPasses:
-        tab === "mine" ? (house) => openOwnerPasses(house.id) : undefined,
+      nightPassesEnabled: tab === "mine" && nightPass.enabled,
       onPlaceGem:
         tab === "mine" && gemCardActionsEnabled
           ? (house) => openGemPlacer(house, owned.find((item) => item.id === house.id)?.editCode)
@@ -297,7 +293,6 @@ function MyCollectionsPageContent() {
     editFlow.flow?.house.id,
     owned,
     nightPass.enabled,
-    openOwnerPasses,
     router,
     filters,
     now,
