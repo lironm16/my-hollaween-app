@@ -61,8 +61,8 @@ export function gemFoundOnScreenBannerHe(
   petNameHe: string,
   isNewGemType: boolean,
 ): string {
-  if (isNewGemType && !repeatVisit) return GEM_FOUND_NEW_ON_SCREEN_HE;
-  return `מצאתם שוב את ${petNameHe}`;
+  if (isNewGemType && !repeatVisit) return `מצאתם שדון חדש — ${petNameHe}!`;
+  return `מצאת שוב את ${petNameHe}!`;
 }
 export const GEM_ALBUM_SLOTS_HE = "שדונים באוסף";
 export const GEM_ALBUM_ALL_HE = "כל השדונים";

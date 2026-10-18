@@ -186,8 +186,6 @@ export function GemHuntWebXrAr({
   const userDismissedCenterGemRef = useRef(false);
   const centerRevealRef = useRef(false);
   const encounterCollectLatchedRef = useRef(false);
-  const tellMeCollectArmedRef = useRef(false);
-  const [tellMeCollectArmed, setTellMeCollectArmed] = useState(false);
   const foundDistanceMRef = useRef<number | null>(null);
   const collectFinishRef = useRef<number | null>(null);
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
@@ -222,21 +220,6 @@ export function GemHuntWebXrAr({
   useEffect(() => {
     centerRevealRef.current = centerReveal;
   }, [centerReveal]);
-
-  useEffect(() => {
-    if (!centerReveal) {
-      tellMeCollectArmedRef.current = false;
-      setTellMeCollectArmed(false);
-      return;
-    }
-    tellMeCollectArmedRef.current = false;
-    setTellMeCollectArmed(false);
-    const armTimer = window.setTimeout(() => {
-      tellMeCollectArmedRef.current = true;
-      setTellMeCollectArmed(true);
-    }, 520);
-    return () => window.clearTimeout(armTimer);
-  }, [centerReveal, house.id]);
 
   useEffect(() => {
     beginMapListOverlayCapture();
@@ -373,21 +356,12 @@ export function GemHuntWebXrAr({
       encounterCollectLatchedRef.current ||
       simulateInRange;
     const tellMeCenter = centerRevealRef.current;
-    const tellMeReady =
-      tellMeCenter &&
-      tellMeCollectArmedRef.current &&
-      (simulateInRange ||
-        tellMeInRange ||
-        inWebXrHuntBand ||
-        encounterCollectLatchedRef.current ||
-        campusSession);
+    const tellMeReady = tellMeCenter;
     if (!inBand && !tellMeReady) return;
     if (!placed && !tellMeCenter) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
-    if (campusSession) {
-      onCollectPersistRef.current?.(monsterId);
-    }
+    onCollectPersistRef.current?.(monsterId);
     collectingRef.current = true;
     setPhase("collecting");
     setAlbumRevealNewFriend(campusSession ? true : newAlbumFriend);
@@ -642,15 +616,27 @@ export function GemHuntWebXrAr({
   const offerEncounterCollectRef = useRef(offerEncounterCollect);
   offerEncounterCollectRef.current = offerEncounterCollect;
 
-  const canTapTellMeCenter = showTellMeCenterGem && tellMeCollectArmed;
+  const tellMeGemAtCenter = showTellMeCenterGem;
+  const gemTapCollectEnabled = gemTapCollectReady({
+    phase,
+    gemAtCenter: tellMeGemAtCenter,
+    centerReveal,
+    campusSession,
+    encounterMode,
+    encounterPhase,
+    canCollectNow,
+    simulate: simulateInRange,
+    pinCollectReady: false,
+  });
 
   const onTellMeCenterTap = useCallback(() => {
-    if (!showTellMeCenterGem || !tellMeCollectArmedRef.current) return;
-    if (!canTapTellMeCenter) return;
-    encounterCollectLatchedRef.current = true;
-    markEncounterTutorialSeen();
+    if (!showTellMeCenterGem) return;
+    if (encounterMode && encounterPhase === "encounter") {
+      encounterCollectLatchedRef.current = true;
+      markEncounterTutorialSeen();
+    }
     handleCollectRef.current();
-  }, [canTapTellMeCenter, showTellMeCenterGem]);
+  }, [encounterMode, encounterPhase, showTellMeCenterGem]);
 
   const handleClose = useCallback(() => {
     if (phase === "collecting" && !campusSession) return;
@@ -1271,6 +1257,8 @@ export function GemHuntWebXrAr({
         encounterMode && "is-encounter-mode",
         phase === "collecting" && "is-collecting",
         sessionActive && "is-session-active",
+        campusSession && "is-campus-queue",
+        (centerReveal || campusSession) && "is-tell-me-active",
       )}
       dir="rtl"
     >
@@ -1349,7 +1337,8 @@ export function GemHuntWebXrAr({
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
               "is-ring-center is-center-collect is-collect-layer is-tell-me-center",
-              canTapTellMeCenter && "is-tap-collect-ready",
+              gemTapCollectEnabled && "is-tap-collect-ready",
+              "is-tell-me-center-active",
             )}
           >
             <div className="gem-hunt-overlay__gem-dance" data-collect-dance={danceIndex}>
@@ -1361,7 +1350,7 @@ export function GemHuntWebXrAr({
                 tapCollect={false}
                 celebrateVariant={danceIndex}
                 zoom={gemTellMeCenterModelZoom()}
-                onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
+                onInspectTap={onTellMeCenterTap}
               />
             </div>
           </div>

@@ -75,6 +75,12 @@ function clusterHouseListIndex(cluster: readonly PublicHouse[], houseId: string)
   return i >= 0 ? i + 1 : null;
 }
 
+/** Single-house map FAB hunt — same header chrome as cluster (title only). */
+export function gemSingleHuntQueueHeadline(house: PublicHouse): GemClusterQueueUi {
+  const boothTitle = house.name?.trim() || house.arrival?.trim() || "בית";
+  return { boothTitle, boothSubtitle: "" };
+}
+
 export function gemClusterQueueHeadline(
   house: PublicHouse,
   cluster: readonly PublicHouse[],

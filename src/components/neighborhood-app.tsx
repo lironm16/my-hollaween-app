@@ -69,6 +69,7 @@ import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
 import {
   firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
+  gemSingleHuntQueueHeadline,
   gemClusterSessionMembers,
   nextClusterGemHouse,
   skipClusterGemHouse,
@@ -680,6 +681,12 @@ export function NeighborhoodApp({
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;
     return gemClusterQueueHeadline(mapGemHouse, mapGemClusterMembers);
   }, [mapGemHouse, mapGemClusterMembers]);
+
+  const mapGemHuntQueueUi = useMemo(() => {
+    if (!mapGemHouse) return undefined;
+    if (mapGemClusterMembers) return mapGemClusterQueueUi;
+    return gemSingleHuntQueueHeadline(mapGemHouse);
+  }, [mapGemHouse, mapGemClusterMembers, mapGemClusterQueueUi]);
 
   const mapGemFabHeadline = useMemo(() => {
     const headlineFor = (house: PublicHouse, cluster: PublicHouse[] | null) => {
@@ -1950,31 +1957,29 @@ export function NeighborhoodApp({
           }
           encounterMode={!mapGemClusterMembers}
           repeatVisit={!mapGemClusterMembers && gems.collected(mapGemHouse.id)}
-          campusQueue={mapGemClusterQueueUi}
+          campusQueue={mapGemHuntQueueUi}
           onClusterFinishSession={
             mapGemClusterMembers ? finishMapGemClusterSession : undefined
           }
           onClusterSkipHouse={mapGemClusterMembers ? skipMapGemClusterHouse : undefined}
           clusterSkipAvailable={mapGemClusterSkipAvailable}
           clusterFinishAvailable={mapGemClusterCatchCount > 0}
-          onCollectPersist={
-            mapGemClusterMembers
-              ? (monsterId) => {
-                  const h = mapGemHouse;
-                  const before = loadGemCollected();
-                  const isNew =
-                    !gems.collected(h.id) && !isGemTypeInCollection(monsterId, before);
-                  mapGemClusterSessionRef.current.push({
-                    house: h,
-                    monsterId,
-                    isNew,
-                  });
-                  gems.collect(h.id, monsterId);
-                  setMapGemClusterCatchCount((n) => n + 1);
-                  celebrateGemCollect();
-                }
-              : undefined
-          }
+          onCollectPersist={(monsterId) => {
+            const h = mapGemHouse;
+            if (mapGemClusterMembers) {
+              const before = loadGemCollected();
+              const isNew =
+                !gems.collected(h.id) && !isGemTypeInCollection(monsterId, before);
+              mapGemClusterSessionRef.current.push({
+                house: h,
+                monsterId,
+                isNew,
+              });
+              setMapGemClusterCatchCount((n) => n + 1);
+            }
+            gems.collect(h.id, monsterId);
+            if (mapGemClusterMembers) celebrateGemCollect();
+          }}
           onCampusStepComplete={
             mapGemClusterMembers
               ? () => {

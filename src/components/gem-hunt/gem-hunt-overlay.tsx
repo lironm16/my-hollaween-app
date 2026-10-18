@@ -178,8 +178,6 @@ export function GemHuntOverlay({
   const huntClosingRef = useRef(false);
   /** True once user starts collect or enters encounter in band — avoids GPS flicker blocking finish. */
   const encounterCollectLatchedRef = useRef(false);
-  const tellMeCollectArmedRef = useRef(false);
-  const [tellMeCollectArmed, setTellMeCollectArmed] = useState(false);
   const foundDistanceMRef = useRef<number | null>(null);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
@@ -320,21 +318,6 @@ export function GemHuntOverlay({
   }, [house.id]);
 
   useEffect(() => {
-    if (!centerReveal) {
-      tellMeCollectArmedRef.current = false;
-      setTellMeCollectArmed(false);
-      return;
-    }
-    tellMeCollectArmedRef.current = false;
-    setTellMeCollectArmed(false);
-    const armTimer = window.setTimeout(() => {
-      tellMeCollectArmedRef.current = true;
-      setTellMeCollectArmed(true);
-    }, 520);
-    return () => window.clearTimeout(armTimer);
-  }, [centerReveal, house.id]);
-
-  useEffect(() => {
     if (!campusSession) return;
     if (phase === "collecting") return;
     if (!canCollectNow && !sim) return;
@@ -461,24 +444,18 @@ export function GemHuntOverlay({
     if (phase !== "visible") return;
     const inCollectBand =
       canCollectNow || encounterCollectLatchedRef.current || sim;
-    const tellMeReady =
-      centerReveal &&
-      tellMeCollectArmedRef.current &&
-      (sim || tellMeInRange || inCollectBand);
+    const tellMeReady = centerReveal;
     const viaTellMe = tellMeReady && !encounterMode;
     const viaTellMeEncounter = tellMeReady && encounterMode;
     const viaPinned =
       !centerReveal && inCollectBand && gemWorldPinVisible(pinDisplay ?? pinPlacement);
     const viaEncounter = encounterMode && inCollectBand;
-    const viaCampus =
-      campusSession &&
-      (inCollectBand || (centerReveal && tellMeCollectArmedRef.current));
+    const viaCampus = campusSession && (inCollectBand || centerReveal);
     if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter && !viaCampus) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
-    if (campusSession) {
-      onCollectPersistRef.current?.(monsterId);
-    } else if (newAlbumFriend) {
+    onCollectPersistRef.current?.(monsterId);
+    if (!campusSession && newAlbumFriend) {
       releaseGemHuntCamera(videoRef.current);
     }
     setPhase("collecting");
@@ -731,12 +708,9 @@ export function GemHuntOverlay({
       headingStatus === "denied" ||
       headingStatus === "idle" ||
       heading == null);
-  const canTapTellMeCenter = centerReveal && gemAtCenter && tellMeCollectArmed;
-
   const gemTapCollectEnabled = gemTapCollectReady({
     phase,
     gemAtCenter,
-    tellMeCollectArmed,
     centerReveal,
     campusSession,
     encounterMode,
@@ -750,7 +724,6 @@ export function GemHuntOverlay({
 
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
-    if (centerReveal && !tellMeCollectArmedRef.current) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([12, 28, 18]);
     }
@@ -760,7 +733,6 @@ export function GemHuntOverlay({
   }, [encounterPhase, onTreatSuccess, centerReveal]);
 
   const handleGemInspectTap = useCallback(() => {
-    if (centerReveal && !tellMeCollectArmedRef.current) return;
     if (encounterMode && encounterPhase === "encounter" && gemAtCenter) {
       if (centerReveal || repeatVisitLatched) {
         handleCollect();
@@ -885,6 +857,7 @@ export function GemHuntOverlay({
         platformMod,
         encounterMode && "is-encounter-mode",
         campusSession && "is-campus-queue",
+        (centerReveal || campusSession) && "is-tell-me-active",
       )}
       dir="rtl"
     >
@@ -1030,9 +1003,7 @@ export function GemHuntOverlay({
                     : 1
                 }
                 celebrateVariant={collectDanceIndex}
-                onInspectTap={
-                  gemTapCollectEnabled ? handleGemInspectTap : undefined
-                }
+                onInspectTap={handleGemInspectTap}
               />
             </div>
           </div>

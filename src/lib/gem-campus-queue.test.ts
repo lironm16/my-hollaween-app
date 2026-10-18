@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
+  gemSingleHuntQueueHeadline,
   gemClusterSessionMembers,
   nextClusterGemHouse,
 } from "@/lib/gem-campus-queue";
@@ -69,6 +70,13 @@ describe("gem cluster queue", () => {
     assert.equal(nextClusterGemHouse(members, isCollected, "b")?.id, "c");
     collected.add("c");
     assert.equal(nextClusterGemHouse(members, isCollected, "c"), null);
+  });
+
+  it("single hunt header uses house title", () => {
+    const h = house("solo", "בית לביא", 1, "שדון");
+    const ui = gemSingleHuntQueueHeadline(h);
+    assert.equal(ui.boothTitle, "בית לביא");
+    assert.equal(ui.boothSubtitle, "");
   });
 
   it("formats school booth subtitle; street clusters use title only", () => {

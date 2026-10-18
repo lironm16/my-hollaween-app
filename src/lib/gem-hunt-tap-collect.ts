@@ -4,7 +4,6 @@ import type { GemEncounterPhase } from "@/lib/gem-encounter";
 export function gemTapCollectReady(args: {
   phase: string;
   gemAtCenter: boolean;
-  tellMeCollectArmed: boolean;
   centerReveal: boolean;
   campusSession: boolean;
   encounterMode: boolean;
@@ -15,7 +14,7 @@ export function gemTapCollectReady(args: {
 }): boolean {
   const huntActive = args.phase === "visible" || args.phase === "placed";
   if (!huntActive || !args.gemAtCenter) return false;
-  if ((args.centerReveal || args.campusSession) && args.tellMeCollectArmed) {
+  if (args.centerReveal || args.campusSession) {
     return true;
   }
   if (args.encounterMode && args.encounterPhase === "encounter") {

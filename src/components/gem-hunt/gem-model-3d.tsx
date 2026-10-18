@@ -178,10 +178,11 @@ export function GemModel3D({
       let lastTapMs = 0;
       let tapFromPointer = false;
       const fireInspectTap = () => {
+        if (!onInspectTapRef.current) return;
         const now = Date.now();
-        if (now - lastTapMs < 520) return;
+        if (now - lastTapMs < 280) return;
         lastTapMs = now;
-        onInspectTapRef.current?.();
+        onInspectTapRef.current();
       };
       const onUp = () => {
         if (moved) return;

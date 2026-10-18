@@ -10199,30 +10199,64 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__found-again-banner--collect {
   position: absolute;
   left: 50%;
-  top: calc(42% + min(52vw, 15rem));
+  top: calc(48% + min(58vw, 17rem));
   bottom: auto;
   z-index: 14;
-  width: min(94vw, 26rem);
+  width: min(96vw, 28rem);
   margin: 0;
   transform: translateX(-50%);
   pointer-events: none;
+  font-size: clamp(1.45rem, 6.2vw, 2.05rem);
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: 0.02em;
+  color: #fef08a;
+  text-shadow: 0 0 22px rgb(251 191 36 / 0.75),
+    0 0 48px rgb(249 115 22 / 0.35),
+    0 3px 16px rgb(0 0 0 / 0.92);
 }
 .gem-hunt-overlay__found-again-banner.is-exploding {
-  animation: gem-found-again-banner-pop 0.85s cubic-bezier(0.22, 1.25, 0.48, 1) both;
+  animation: gem-found-again-banner-pop 1s cubic-bezier(0.18, 1.35, 0.42, 1) both;
 }
 @keyframes gem-found-again-banner-pop {
   0% {
     opacity: 0;
-    transform: translateX(-50%) scale(0.92);
+    transform: translateX(-50%) scale(0.78) translateY(12px);
+    filter: blur(4px);
   }
-  55% {
+  45% {
     opacity: 1;
-    transform: translateX(-50%) scale(1.03);
+    transform: translateX(-50%) scale(1.08) translateY(-4px);
+    filter: blur(0);
+  }
+  70% {
+    transform: translateX(-50%) scale(0.98) translateY(0);
   }
   100% {
     opacity: 1;
-    transform: translateX(-50%) scale(1);
+    transform: translateX(-50%) scale(1) translateY(0);
+    filter: blur(0);
   }
+}
+.gem-hunt-overlay.is-tell-me-active .gem-hunt-overlay__stage.is-gem-interactive,
+.gem-hunt-webxr.is-tell-me-active .gem-hunt-overlay__stage.is-gem-interactive {
+  z-index: 58;
+}
+.gem-hunt-overlay.is-tell-me-active .gem-hunt-overlay__gem-hit.is-inspect360.is-tell-me-center,
+.gem-hunt-webxr.is-tell-me-active .gem-hunt-overlay__gem-hit.is-inspect360.is-tell-me-center {
+  z-index: 59;
+}
+.gem-hunt-overlay.is-tell-me-active .gem-hunt-overlay__footer--hunt,
+.gem-hunt-webxr.is-tell-me-active .gem-hunt-overlay__footer--hunt {
+  pointer-events: none;
+}
+.gem-hunt-overlay.is-tell-me-active .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__hint-btn,
+.gem-hunt-overlay.is-tell-me-active .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__cluster-btn,
+.gem-hunt-overlay.is-tell-me-active .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__walk-maps,
+.gem-hunt-webxr.is-tell-me-active .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__hint-btn,
+.gem-hunt-webxr.is-tell-me-active .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__cluster-btn,
+.gem-hunt-webxr.is-tell-me-active .gem-hunt-overlay__footer--hunt .gem-hunt-overlay__walk-maps {
+  pointer-events: auto;
 }
 @keyframes gem-collect-banner-pop {
   0% {
