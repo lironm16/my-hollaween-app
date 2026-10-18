@@ -28,6 +28,26 @@ export function firstClusterGemHouseToHunt(
 }
 
 /** Next house in cluster order after `justCollectedId` (members sorted by booth/unit). */
+/** Next uncollected house after `currentId` without requiring a collect on `currentId`. */
+export function skipClusterGemHouse(
+  members: readonly PublicHouse[],
+  isCollected: (houseId: string) => boolean,
+  currentId: string,
+): PublicHouse | null {
+  const startIdx = members.findIndex((h) => h.id === currentId);
+  if (startIdx >= 0) {
+    for (let i = startIdx + 1; i < members.length; i += 1) {
+      const h = members[i]!;
+      if (!isCollected(h.id)) return h;
+    }
+  }
+  for (const h of members) {
+    if (h.id === currentId) continue;
+    if (!isCollected(h.id)) return h;
+  }
+  return null;
+}
+
 export function nextClusterGemHouse(
   members: readonly PublicHouse[],
   isCollected: (houseId: string) => boolean,

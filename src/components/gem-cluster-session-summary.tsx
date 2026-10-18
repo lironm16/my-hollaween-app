@@ -32,7 +32,6 @@ export function GemClusterSessionSummary({
       open={open}
       onClose={onClose}
       title={gemClusterSessionSummaryHe(catches.length, newCount)}
-      subtitle="סיום מציאת שדונים בכתובת"
     >
       <div className="space-y-4">
         <ul

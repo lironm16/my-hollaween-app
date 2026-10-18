@@ -49,9 +49,18 @@ export const GEM_MAP_COMPLETE_TITLE_HE = "כל השדונים נמצאו!";
 
 export const GEM_COLLECT_NEW_HE = "כל הכבוד!! מצאתם שדון חדש!";
 
-/** Footer while the gem is on screen (new vs repeat — same placement, different copy). */
-export function gemFoundOnScreenBannerHe(repeatVisit: boolean, petNameHe: string): string {
-  return repeatVisit ? `מצאתם שוב את ${petNameHe}` : `מצאתם חדש — ${petNameHe}!`;
+export const GEM_FOUND_NEW_ON_SCREEN_HE = "מצאתם שדון חדש!";
+export const GEM_CLUSTER_SKIP_HE = "דלג לשדון הבא";
+export const GEM_CLUSTER_FINISH_HE = "סיום מציאה";
+
+/** Footer while the gem is on screen (new sticker vs repeat — same placement, different copy). */
+export function gemFoundOnScreenBannerHe(
+  repeatVisit: boolean,
+  petNameHe: string,
+  isNewGemType: boolean,
+): string {
+  if (isNewGemType && !repeatVisit) return GEM_FOUND_NEW_ON_SCREEN_HE;
+  return `מצאתם שוב את ${petNameHe}`;
 }
 export const GEM_ALBUM_SLOTS_HE = "שדונים באוסף";
 export const GEM_ALBUM_ALL_HE = "כל השדונים";

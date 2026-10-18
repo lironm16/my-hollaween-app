@@ -32,7 +32,6 @@ import {
   gemLabelHe,
   gemMonsterForHouse,
   gemScreenPlacement,
-  gemAndroidArCollectWhenVisible,
   gemWorldPinApproachVisible,
   gemWorldPinVisible,
   relativeWalkBearingDeg,
@@ -66,8 +65,8 @@ import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import {
   GEM_CAMPUS_TAP_SAVE_HE,
-  GEM_COLLECT_NEW_HE,
-  GEM_FOUND_CHEER_HE,
+  GEM_CLUSTER_FINISH_HE,
+  GEM_CLUSTER_SKIP_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
   gemFoundOnScreenBannerHe,
@@ -119,6 +118,8 @@ export function GemHuntOverlay({
   campusQueue,
   onCollectPersist,
   onCampusStepComplete,
+  onClusterFinishSession,
+  onClusterSkipHouse,
 }: {
   house: PublicHouse;
   userLocation: UserLocation | null;
@@ -137,6 +138,9 @@ export function GemHuntOverlay({
   campusQueue?: GemCampusQueueUi;
   onCollectPersist?: (monsterId: GemMonsterId) => void;
   onCampusStepComplete?: (monsterId: GemMonsterId) => void;
+  /** Multi-house session — end early and show summary. */
+  onClusterFinishSession?: () => void;
+  onClusterSkipHouse?: () => void;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
@@ -195,6 +199,9 @@ export function GemHuntOverlay({
   const [albumRevealPhase, setAlbumRevealPhase] = useState<"enter" | "landed">("enter");
   /** Snapshot at tap — album sticker was new before this collect. */
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
+  /** Latched when `house.id` changes — avoid flip to repeat mid-cluster after persist. */
+  const [repeatVisitLatched, setRepeatVisitLatched] = useState(repeatVisit);
+  const [isNewGemTypeLatched, setIsNewGemTypeLatched] = useState(true);
   const [albumShowActions, setAlbumShowActions] = useState(false);
   const [compassRetry, setCompassRetry] = useState(0);
   const [platformMod, setPlatformMod] = useState<"gem-hunt-overlay--android" | "gem-hunt-overlay--ios" | null>(
@@ -210,6 +217,11 @@ export function GemHuntOverlay({
     setCenterReveal(false);
     setUserDismissedCenterGem(false);
     setHintPanel(null);
+    setRepeatVisitLatched(repeatVisit);
+    const entries = loadGemCollected();
+    setIsNewGemTypeLatched(!repeatVisit && !isGemTypeInCollection(monsterId, entries));
+    // Latch per house — ignore repeatVisit flipping after in-session collect (cluster queue).
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- monsterId/repeatVisit are for this house.id
   }, [house.id]);
 
   const { heading, pitch: devicePitch, status: headingStatus } = useDeviceHeading(true, compassRetry);
@@ -248,17 +260,7 @@ export function GemHuntOverlay({
   }, [anchor, placementLoc, heading, devicePitch]);
   const pinDisplay = useSmoothedGemPlacement(pinPlacement, house.id);
   const worldPinPlacementEarly = pinDisplay ?? pinPlacement;
-  const canCollectNow =
-    collectEnabled ||
-    sim ||
-    inDistanceBand ||
-    (isAndroidLike() &&
-      gemAndroidArCollectWhenVisible(
-        false,
-        collectEnabled,
-        inDistanceBand,
-        worldPinPlacementEarly,
-      ));
+  const canCollectNow = collectEnabled || sim || inDistanceBand;
   /** Scan/pan/facing reveal when in range (or admin simulate). */
   const allowAutoReveal = canCollectNow;
 
@@ -433,7 +435,7 @@ export function GemHuntOverlay({
     const viaCampus = campusSession && inCollectBand;
     if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter && !viaCampus) return;
     const entries = loadGemCollected();
-    const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
+    const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
     if (campusSession) {
       onCollectPersistRef.current?.(monsterId);
     } else if (newAlbumFriend) {
@@ -448,7 +450,7 @@ export function GemHuntOverlay({
     setAlbumRevealNewFriend(campusSession ? true : newAlbumFriend);
     const overlayMs = campusSession
       ? GEM_CAMPUS_COLLECT_MS
-      : encounterMode && repeatVisit
+      : encounterMode && repeatVisitLatched
         ? GEM_ENCOUNTER_CELEBRATE_MS
         : GEM_COLLECT_OVERLAY_MS;
     collectFinishRef.current = window.setTimeout(() => {
@@ -481,13 +483,15 @@ export function GemHuntOverlay({
     phase,
     pinDisplay,
     pinPlacement,
-    repeatVisit,
+    repeatVisitLatched,
   ]);
 
   const finishRepeatEncounter = useCallback(() => {
     releaseGemHuntCamera(videoRef.current);
     onClose();
   }, [onClose]);
+
+  const encounterRepeatVisit = campusSession ? false : repeatVisitLatched;
 
   const petRevealedForEncounter = phase === "visible" || phase === "collecting";
   const inRangeForEncounter = canCollectNow;
@@ -500,7 +504,7 @@ export function GemHuntOverlay({
   } = useGemEncounterPhase({
     enabled: encounterMode,
     sessionKey: house.id,
-    repeatVisit,
+    repeatVisit: encounterRepeatVisit,
     collectEnabled: canCollectNow,
     petRevealed: petRevealedForEncounter,
     inRange: inRangeForEncounter,
@@ -592,15 +596,11 @@ export function GemHuntOverlay({
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
   const inOnsiteBand = sim || canCollectNow;
-  const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(repeatVisit, gemLabelHe(monsterId));
-  const topCollectBanner =
-    phase === "collecting" && !repeatVisit
-      ? campusSession
-        ? GEM_FOUND_CHEER_HE
-        : albumRevealNewFriend
-          ? GEM_COLLECT_NEW_HE
-          : null
-      : null;
+  const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(
+    repeatVisitLatched,
+    gemLabelHe(monsterId),
+    isNewGemTypeLatched,
+  );
 
   function handleClose() {
     if (phase === "collecting" && !campusSession) return;
@@ -650,7 +650,7 @@ export function GemHuntOverlay({
     !gemAtCenter &&
     worldPinPlacement != null &&
     (gemWorldPinVisible(worldPinPlacement, huntBandM) ||
-      gemWorldPinApproachVisible(worldPinPlacement));
+      (!isAndroidLike() && gemWorldPinApproachVisible(worldPinPlacement)));
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =
@@ -842,17 +842,6 @@ export function GemHuntOverlay({
         </div>
       ) : null}
       <div className="gem-hunt-overlay__shade" aria-hidden />
-      {topCollectBanner ? (
-        <p
-          className={cn(
-            "gem-hunt-overlay__collect-banner",
-            phase === "collecting" && "is-exploding",
-          )}
-          role="status"
-        >
-          {topCollectBanner}
-        </p>
-      ) : null}
       {encounterMode ? (
         <GemEncounterLayer
           house={house}
@@ -1094,6 +1083,30 @@ export function GemHuntOverlay({
                   </div>
                 ) : null}
             </div>
+            {campusSession && onClusterFinishSession && onClusterSkipHouse ? (
+              <div className="gem-hunt-overlay__cluster-actions pointer-events-auto">
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__cluster-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClusterSkipHouse();
+                  }}
+                >
+                  {GEM_CLUSTER_SKIP_HE}
+                </button>
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__cluster-btn gem-hunt-overlay__cluster-btn--primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClusterFinishSession();
+                  }}
+                >
+                  {GEM_CLUSTER_FINISH_HE}
+                </button>
+              </div>
+            ) : null}
           </div>
         </footer>
       ) : null}

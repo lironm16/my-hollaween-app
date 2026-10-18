@@ -121,7 +121,8 @@ describe("gem hunt geo", () => {
       }
     }
     assert.ok(place);
-    assert.equal(gemAndroidArCollectWhenVisible(false, true, false, place), true);
+    assert.equal(gemAndroidArCollectWhenVisible(false, true, false, place), false);
+    assert.equal(gemAndroidArCollectWhenVisible(false, true, true, place), true);
     assert.equal(gemAndroidArCollectWhenVisible(false, true, false, null), false);
   });
 

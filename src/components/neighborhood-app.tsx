@@ -70,6 +70,7 @@ import {
   firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
   nextClusterGemHouse,
+  skipClusterGemHouse,
 } from "@/lib/gem-campus-queue";
 import {
   firstClusterGemHouseInProximity,
@@ -663,6 +664,25 @@ export function NeighborhoodApp({
       setMapGemCheerMonster(null);
     }, GEM_CHEER_MS);
   }, []);
+
+  const finishMapGemClusterSession = useCallback(() => {
+    const session = [...mapGemClusterSessionRef.current];
+    mapGemClusterSessionRef.current = [];
+    const members = mapGemClusterMembers;
+    closeMapGemHunt();
+    if (session.length > 0 && members && members.length >= 2) {
+      setClusterGemSessionSummary(session);
+    } else if (session.length === 1) {
+      showMapGemCheer(session[0]!.house, session[0]!.monsterId);
+    }
+  }, [closeMapGemHunt, mapGemClusterMembers, showMapGemCheer]);
+
+  const skipMapGemClusterHouse = useCallback(() => {
+    if (!mapGemClusterMembers || !mapGemHouse) return;
+    const next = skipClusterGemHouse(mapGemClusterMembers, gems.collected, mapGemHouse.id);
+    if (next) setMapGemHouse(next);
+    else finishMapGemClusterSession();
+  }, [finishMapGemClusterSession, gems.collected, mapGemClusterMembers, mapGemHouse]);
 
   useEffect(() => {
     return () => {
@@ -1846,7 +1866,12 @@ export function NeighborhoodApp({
             mapGemClusterMembers ? undefined : pinMapGemNavigationTarget
           }
           encounterMode={!mapGemClusterMembers || isIosLike()}
+          repeatVisit={!mapGemClusterMembers && gems.collected(mapGemHouse.id)}
           campusQueue={mapGemClusterQueueUi}
+          onClusterFinishSession={
+            mapGemClusterMembers ? finishMapGemClusterSession : undefined
+          }
+          onClusterSkipHouse={mapGemClusterMembers ? skipMapGemClusterHouse : undefined}
           onCollectPersist={
             mapGemClusterMembers
               ? (monsterId) => {

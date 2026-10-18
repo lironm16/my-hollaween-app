@@ -25,7 +25,7 @@ import {
   gemMonsterForHouse,
   gemAndroidArCollectWhenVisible,
   gemScreenPlacement,
-  gemWorldPinApproachVisible,
+  gemWorldPinVisible,
   GEM_WEBXR_GEO_PLACEMENT_ENABLED,
   GEM_WEBXR_FLOAT_HEIGHT_M,
   GEM_WEBXR_HUNT_METERS,
@@ -69,9 +69,9 @@ import { useGemTellMeButton } from "@/hooks/use-gem-tell-me-button";
 import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
 import {
   GEM_AR_LOCATING_HE,
-  GEM_COLLECT_NEW_HE,
+  GEM_CLUSTER_FINISH_HE,
+  GEM_CLUSTER_SKIP_HE,
   gemFoundOnScreenBannerHe,
-  GEM_FOUND_CHEER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
 } from "@/lib/gem-hunt-copy";
@@ -95,7 +95,8 @@ type Props = {
 
 const AUTO_PLACE_STABLE_FRAMES = 28;
 /** World-space target size for GLB pets in immersive AR (meters-ish after frameModel). */
-const MODEL_SCALE = 0.74;
+/** Sized to match iOS «גלה לי» inspect360 frame (after GEM_TELL_ME_CENTER_ZOOM). */
+const MODEL_SCALE = 0.82;
 
 function hashFloat(seed: string, salt: string) {
   let h = 2166136261;
@@ -152,10 +153,14 @@ export function GemHuntWebXrAr({
   campusQueue,
   onCollectPersist,
   onCampusStepComplete,
+  onClusterFinishSession,
+  onClusterSkipHouse,
 }: Props & {
   campusQueue?: GemCampusQueueUi;
   onCollectPersist?: (monsterId: GemMonsterId) => void;
   onCampusStepComplete?: (monsterId: GemMonsterId) => void;
+  onClusterFinishSession?: () => void;
+  onClusterSkipHouse?: () => void;
 }) {
   const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const monsterId = gemMonsterForHouse(house);
@@ -175,6 +180,8 @@ export function GemHuntWebXrAr({
   const encounterCollectLatchedRef = useRef(false);
   const collectFinishRef = useRef<number | null>(null);
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
+  const [repeatVisitLatched, setRepeatVisitLatched] = useState(repeatVisit);
+  const [isNewGemTypeLatched, setIsNewGemTypeLatched] = useState(true);
   const [compassRetry, setCompassRetry] = useState(0);
   const [sessionActive, setSessionActive] = useState(Boolean(initialWebXrSession));
   const [platformMod, setPlatformMod] = useState<"gem-hunt-webxr--android" | "gem-hunt-webxr--ios" | null>(
@@ -190,6 +197,10 @@ export function GemHuntWebXrAr({
     setCenterReveal(false);
     setUserDismissedCenterGem(false);
     setHintPanel(null);
+    setRepeatVisitLatched(repeatVisit);
+    const entries = loadGemCollected();
+    setIsNewGemTypeLatched(!repeatVisit && !isGemTypeInCollection(monsterId, entries));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- latch per house.id
   }, [house.id]);
 
   useEffect(() => {
@@ -263,19 +274,17 @@ export function GemHuntWebXrAr({
   geoTargetRef.current = { lat: anchor.lat, lng: anchor.lng };
   simulateInRangeRef.current = simulateInRange;
   const approachScreenPin = pinDisplay ?? pinPlacement;
-  const gemVisibleInCam =
-    !simulateInRange &&
-    approachScreenPin != null &&
-    gemWorldPinApproachVisible(approachScreenPin);
   const distanceM =
     liveLoc != null ? gemDistanceMeters(liveLoc, house) : null;
   const inWebXrHuntBand =
     simulateInRange ||
     (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_WEBXR_HUNT_METERS);
-  const inWebXrCollectZone =
-    simulateInRange ||
-    inWebXrHuntBand ||
-    (isAndroidLike() && gemVisibleInCam);
+  const gemVisibleInCam =
+    !simulateInRange &&
+    inWebXrHuntBand &&
+    approachScreenPin != null &&
+    gemWorldPinVisible(approachScreenPin, GEM_WEBXR_HUNT_METERS);
+  const inWebXrCollectZone = simulateInRange || inWebXrHuntBand;
   const tellMeInRange = gemTellMeInRange(liveLoc, house, simulateInRange);
   /** Android: onsite GPS band or gem visible in camera (up to approach range). */
   const canCollectNow =
@@ -329,7 +338,7 @@ export function GemHuntWebXrAr({
     if (!inBand && !tellMeCenter) return;
     if (!placed && !tellMeCenter) return;
     const entries = loadGemCollected();
-    const newAlbumFriend = !repeatVisit && !isGemTypeInCollection(monsterId, entries);
+    const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
     if (campusSession) {
       onCollectPersistRef.current?.(monsterId);
     }
@@ -342,7 +351,7 @@ export function GemHuntWebXrAr({
     if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
     const overlayMs = campusSession
       ? GEM_CAMPUS_COLLECT_MS
-      : encounterMode && repeatVisit
+      : encounterMode && repeatVisitLatched
         ? GEM_ENCOUNTER_CELEBRATE_MS
         : GEM_COLLECT_OVERLAY_MS;
     collectFinishRef.current = window.setTimeout(() => {
@@ -397,7 +406,7 @@ export function GemHuntWebXrAr({
   } = useGemEncounterPhase({
     enabled: encounterMode && sessionActive,
     sessionKey: house.id,
-    repeatVisit,
+    repeatVisit: campusSession ? false : repeatVisitLatched,
     collectEnabled: canCollectNow || centerReveal || simulateInRange,
     petRevealed: petRevealedForEncounter,
     inRange: inRangeForEncounter,
@@ -667,15 +676,11 @@ export function GemHuntWebXrAr({
     geoLockMode === "pending" &&
     GEM_WEBXR_GEO_PLACEMENT_ENABLED;
 
-  const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(repeatVisit, gemLabelHe(monsterId));
-  const topCollectBanner =
-    phase === "collecting" && !repeatVisit
-      ? campusSession
-        ? GEM_FOUND_CHEER_HE
-        : albumRevealNewFriend
-          ? GEM_COLLECT_NEW_HE
-          : null
-      : null;
+  const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(
+    repeatVisitLatched,
+    gemLabelHe(monsterId),
+    isNewGemTypeLatched,
+  );
   const hideHuntHintControls =
     sessionActive &&
     phase === "placed" &&
@@ -1224,18 +1229,6 @@ export function GemHuntWebXrAr({
         <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn pointer-events-auto" />
       </header>
 
-      {topCollectBanner ? (
-        <p
-          className={cn(
-            "gem-hunt-overlay__collect-banner",
-            phase === "collecting" && "is-exploding",
-          )}
-          role="status"
-        >
-          {topCollectBanner}
-        </p>
-      ) : null}
-
       {phase === "collecting" ? (
         <div className="gem-hunt-overlay__collect-flash" aria-hidden />
       ) : null}
@@ -1445,6 +1438,30 @@ export function GemHuntWebXrAr({
                     />
                   ) : null}
                 </div>
+              </div>
+            ) : null}
+            {campusSession && onClusterFinishSession && onClusterSkipHouse ? (
+              <div className="gem-hunt-overlay__cluster-actions pointer-events-auto">
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__cluster-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClusterSkipHouse();
+                  }}
+                >
+                  {GEM_CLUSTER_SKIP_HE}
+                </button>
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__cluster-btn gem-hunt-overlay__cluster-btn--primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClusterFinishSession();
+                  }}
+                >
+                  {GEM_CLUSTER_FINISH_HE}
+                </button>
               </div>
             ) : null}
           </div>

@@ -5170,9 +5170,35 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   font-size: clamp(1.05rem, 4.4vw, 1.35rem);
   font-weight: 800;
   line-height: 1.25;
-  color: #ecfdf5;
-  background: linear-gradient(180deg, rgb(22 163 74 / 0.92) 0%, rgb(21 128 61 / 0.95) 100%);
-  box-shadow: 0 4px 18px rgb(0 0 0 / 0.35);
+  color: #1c0a00;
+  background: linear-gradient(180deg, #fde68a 0%, #fbbf24 55%, #f59e0b 100%);
+  box-shadow:
+    0 4px 18px rgb(0 0 0 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.35);
+}
+.gem-hunt-overlay__cluster-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+.gem-hunt-overlay__cluster-btn {
+  flex: 1 1 8.5rem;
+  min-height: 2.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(251 191 36 / 0.45);
+  padding: 0.55rem 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background: rgb(42 22 56 / 0.88);
+  color: #fde68a;
+}
+.gem-hunt-overlay__cluster-btn--primary {
+  border-color: rgb(251 146 60 / 0.65);
+  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+  color: #1c0a00;
 }
 .gem-hunt-overlay__found-again-banner--collect {
   position: absolute;

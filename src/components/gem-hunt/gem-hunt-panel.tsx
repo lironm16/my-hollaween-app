@@ -56,7 +56,12 @@ import {
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import { cn } from "@/lib/utils";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
-import { gemClusterQueueHeadline, nextClusterGemHouse } from "@/lib/gem-campus-queue";
+import {
+  GemClusterSessionSummary,
+  type GemClusterSessionCatch,
+} from "@/components/gem-cluster-session-summary";
+import { gemClusterQueueHeadline, nextClusterGemHouse, skipClusterGemHouse } from "@/lib/gem-campus-queue";
+import { isGemTypeInCollection } from "@/lib/gem-progress";
 
 export function GemHuntPanel({
   house,
@@ -89,6 +94,10 @@ export function GemHuntPanel({
   const [gemCheer, setGemCheer] = useState(false);
   const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
   const cheerTimerRef = useRef<number | null>(null);
+  const huntClusterSessionRef = useRef<GemClusterSessionCatch[]>([]);
+  const [clusterSessionSummary, setClusterSessionSummary] = useState<GemClusterSessionCatch[] | null>(
+    null,
+  );
   const huntOpenGenRef = useRef(0);
   const [androidArReady, setAndroidArReady] = useState(false);
 
@@ -187,6 +196,7 @@ export function GemHuntPanel({
     setHuntOpen(false);
     setHuntTargetHouse(null);
     setHuntClusterMembers(null);
+    huntClusterSessionRef.current = [];
   }
 
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
@@ -220,6 +230,33 @@ export function GemHuntPanel({
       }, GEM_CHEER_MS);
     }
   }
+
+  const finishHuntClusterSession = useCallback(() => {
+    const session = [...huntClusterSessionRef.current];
+    huntClusterSessionRef.current = [];
+    const members = huntClusterMembers;
+    closeHunt();
+    if (session.length > 0 && members && members.length >= 2) {
+      setClusterSessionSummary(session);
+    } else if (session.length === 1) {
+      const item = session[0]!;
+      setGemCheerPet(item.monsterId);
+      setGemCheer(true);
+      if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
+      cheerTimerRef.current = window.setTimeout(() => {
+        cheerTimerRef.current = null;
+        setGemCheer(false);
+        setGemCheerPet(null);
+      }, GEM_CHEER_MS);
+    }
+  }, [huntClusterMembers]);
+
+  const skipHuntClusterHouse = useCallback(() => {
+    if (!huntClusterMembers || !huntTargetHouse) return;
+    const next = skipClusterGemHouse(huntClusterMembers, gems.collected, huntTargetHouse.id);
+    if (next) setHuntTargetHouse(next);
+    else finishHuntClusterSession();
+  }, [finishHuntClusterSession, gems.collected, huntClusterMembers, huntTargetHouse]);
 
   return (
     <>
@@ -363,14 +400,19 @@ export function GemHuntPanel({
           deferCameraUntilInRange={false}
           collectEnabled={huntCanCollect}
           encounterMode={!huntClusterMembers}
-          repeatVisit={gems.collected(huntTargetHouse.id)}
+          repeatVisit={!huntClusterMembers && gems.collected(huntTargetHouse.id)}
           tellMeHuntRadiusEnforced={tellMeHuntRadiusEnforced}
           initialWebXrSession={bootWebXrSession}
           campusQueue={huntClusterQueueUi}
           onCollectPersist={
             huntClusterMembers
               ? (monsterId) => {
-                  gems.collect(huntTargetHouse.id, monsterId);
+                  const h = huntTargetHouse;
+                  const before = loadGemCollected();
+                  const isNew =
+                    !gems.collected(h.id) && !isGemTypeInCollection(monsterId, before);
+                  huntClusterSessionRef.current.push({ house: h, monsterId, isNew });
+                  gems.collect(h.id, monsterId);
                 }
               : undefined
           }
@@ -386,12 +428,21 @@ export function GemHuntPanel({
                     setHuntTargetHouse(next);
                     return;
                   }
-                  closeHunt();
+                  finishHuntClusterSession();
                 }
               : undefined
           }
+          onClusterFinishSession={huntClusterMembers ? finishHuntClusterSession : undefined}
+          onClusterSkipHouse={huntClusterMembers ? skipHuntClusterHouse : undefined}
           onClose={closeHunt}
           onCollect={onCollect}
+        />
+      ) : null}
+      {clusterSessionSummary ? (
+        <GemClusterSessionSummary
+          open
+          catches={clusterSessionSummary}
+          onClose={() => setClusterSessionSummary(null)}
         />
       ) : null}
     </>

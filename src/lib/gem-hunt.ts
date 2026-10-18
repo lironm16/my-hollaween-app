@@ -66,15 +66,15 @@ export const GEM_FACING_TOLERANCE_DEG = 60;
 /** Guaranteed gem reveal after this many seconds of panning in range. */
 export const GEM_SCAN_REVEAL_SECONDS = 5;
 /** «גלה לי» center view — inspect360 framing leaves wide orbit margins, so zoom in (iOS + Android DOM overlay). */
-export const GEM_TELL_ME_CENTER_ZOOM = 1.58;
+export const GEM_TELL_ME_CENTER_ZOOM = 1.501;
 /** Guaranteed gem reveal after this much pan rotation (degrees). */
 export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */
 export const GEM_HELP_AFTER_SECONDS = 8;
 /** Approx. phone camera horizontal field of view — for pinning gem on screen. */
 export const GEM_CAMERA_HFOV_DEG = 48;
-/** Android WebXR — same on-site radius for placement, encounter, and collect. */
-export const GEM_WEBXR_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
+/** Android WebXR — match iOS hunt band (10 m). */
+export const GEM_WEBXR_HUNT_METERS = GEM_IOS_HUNT_METERS;
 /** WebXR geo placement — lift pets above sidewalk (meters, Y-up in viewer space). */
 export const GEM_WEBXR_FLOAT_HEIGHT_M = 1.05;
 /** Place Android AR pet at gemAnchorForHouse (GPS + anchor), not only hit-test at feet. */
@@ -363,17 +363,16 @@ export function gemWorldPinApproachVisible(
   return placement.distanceM <= maxDistanceM;
 }
 
-/** Android immersive AR — collect when the gem is on camera (in view), not only within GPS hunt meters. */
+/** Android immersive AR — collect only within the hunt GPS band (same as iOS). */
 export function gemAndroidArCollectWhenVisible(
   simulate: boolean,
   collectEnabled: boolean,
   inHuntBand: boolean,
-  placement: GemScreenPlacement | null,
+  _placement: GemScreenPlacement | null,
 ) {
   if (simulate) return true;
   if (!collectEnabled) return false;
-  if (inHuntBand) return true;
-  return gemWorldPinApproachVisible(placement);
+  return inHuntBand;
 }
 
 /** Gem pin overlaps the on-screen hunt ring (visual / legacy; collect no longer requires this). */
