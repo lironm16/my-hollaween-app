@@ -66,7 +66,9 @@ export const GEM_FACING_TOLERANCE_DEG = 60;
 /** Guaranteed gem reveal after this many seconds of panning in range. */
 export const GEM_SCAN_REVEAL_SECONDS = 5;
 /** «גלה לי» center view — inspect360 framing leaves wide orbit margins, so zoom in (iOS + Android DOM overlay). */
-export const GEM_TELL_ME_CENTER_ZOOM = 1.501;
+export const GEM_TELL_ME_CENTER_ZOOM = 1.58;
+/** Model scale inside the fixed hunt frame (frame CSS unchanged). */
+export const GEM_HUNT_MODEL_ZOOM_INSET = 0.95;
 /** Guaranteed gem reveal after this much pan rotation (degrees). */
 export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */
@@ -75,8 +77,9 @@ export const GEM_HELP_AFTER_SECONDS = 8;
 export const GEM_CAMERA_HFOV_DEG = 48;
 /** Android WebXR — match iOS hunt band (10 m). */
 export const GEM_WEBXR_HUNT_METERS = GEM_IOS_HUNT_METERS;
-/** WebXR geo placement — lift pets above sidewalk (meters, Y-up in viewer space). */
+/** WebXR geo placement — lift pets above sidewalk (meters, Y-up in viewer space). Android uses ~ground. */
 export const GEM_WEBXR_FLOAT_HEIGHT_M = 1.05;
+export const GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M = 0.04;
 /** Place Android AR pet at gemAnchorForHouse (GPS + anchor), not only hit-test at feet. */
 export const GEM_WEBXR_GEO_PLACEMENT_ENABLED = true;
 /** Approx. vertical FOV — used when tilting the phone up/down. */

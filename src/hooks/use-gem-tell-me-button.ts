@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GEM_TELL_ME_OUT_OF_RANGE_MESSAGE } from "@/lib/gem-tell-me-gate";
 
 export function useGemTellMeButton({
@@ -28,9 +28,13 @@ export function useGemTellMeButton({
   }, [showRangeError]);
 
   const readyHighlight = inRange && !centerReveal;
+  const lastToggleRef = useRef(0);
 
   const onTellMeClick = useCallback(() => {
     if (blocked) return;
+    const now = Date.now();
+    if (now - lastToggleRef.current < 480) return;
+    lastToggleRef.current = now;
     if (centerReveal) {
       onDeactivate();
       return;

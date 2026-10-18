@@ -174,6 +174,14 @@ export function GemHuntPanel({
     return gemClusterQueueHeadline(huntTargetHouse, huntClusterMembers);
   }, [huntClusterMembers, huntTargetHouse]);
 
+  const [clusterCatchCount, setClusterCatchCount] = useState(0);
+  const clusterSkipAvailable = useMemo(() => {
+    if (!huntClusterMembers || !huntTargetHouse) return false;
+    return huntClusterMembers.some(
+      (h) => h.id !== huntTargetHouse.id && !gems.collected(h.id),
+    );
+  }, [huntClusterMembers, huntTargetHouse, gems.collectedIds]);
+
   const huntCanCollect = canCollectGem(
     userLocation,
     huntHouse,
@@ -197,6 +205,7 @@ export function GemHuntPanel({
     setHuntTargetHouse(null);
     setHuntClusterMembers(null);
     huntClusterSessionRef.current = [];
+    setClusterCatchCount(0);
   }
 
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
@@ -413,9 +422,12 @@ export function GemHuntPanel({
                     !gems.collected(h.id) && !isGemTypeInCollection(monsterId, before);
                   huntClusterSessionRef.current.push({ house: h, monsterId, isNew });
                   gems.collect(h.id, monsterId);
+                  setClusterCatchCount((n) => n + 1);
                 }
               : undefined
           }
+          clusterSkipAvailable={clusterSkipAvailable}
+          clusterFinishAvailable={clusterCatchCount > 0}
           onCampusStepComplete={
             huntClusterMembers
               ? () => {

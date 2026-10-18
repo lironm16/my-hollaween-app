@@ -176,24 +176,29 @@ export function GemModel3D({
         if (dx * dx + dy * dy > 1600) moved = true;
       };
       let lastTapMs = 0;
+      let tapFromPointer = false;
       const fireInspectTap = () => {
         const now = Date.now();
-        if (now - lastTapMs < 450) return;
+        if (now - lastTapMs < 520) return;
         lastTapMs = now;
         onInspectTapRef.current?.();
       };
       const onUp = () => {
         if (moved) return;
+        tapFromPointer = true;
         fireInspectTap();
+        window.setTimeout(() => {
+          tapFromPointer = false;
+        }, 420);
       };
       /** iOS Safari often delivers click/touchend without a reliable pointerup on WebGL canvas. */
       const onClick = (event: MouseEvent) => {
-        if (moved) return;
+        if (moved || tapFromPointer) return;
         event.preventDefault();
         fireInspectTap();
       };
       const onTouchEnd = (event: TouchEvent) => {
-        if (moved || event.changedTouches.length !== 1) return;
+        if (moved || tapFromPointer || event.changedTouches.length !== 1) return;
         event.preventDefault();
         fireInspectTap();
       };

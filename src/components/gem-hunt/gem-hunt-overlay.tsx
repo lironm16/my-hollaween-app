@@ -23,6 +23,7 @@ import {
   gemDistanceMeters,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
+  GEM_HUNT_MODEL_ZOOM_INSET,
   GEM_TELL_ME_CENTER_ZOOM,
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
@@ -120,6 +121,8 @@ export function GemHuntOverlay({
   onCampusStepComplete,
   onClusterFinishSession,
   onClusterSkipHouse,
+  clusterSkipAvailable = false,
+  clusterFinishAvailable = false,
 }: {
   house: PublicHouse;
   userLocation: UserLocation | null;
@@ -141,6 +144,8 @@ export function GemHuntOverlay({
   /** Multi-house session — end early and show summary. */
   onClusterFinishSession?: () => void;
   onClusterSkipHouse?: () => void;
+  clusterSkipAvailable?: boolean;
+  clusterFinishAvailable?: boolean;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
@@ -370,7 +375,7 @@ export function GemHuntOverlay({
       cancelled = true;
       streamRef.current = null;
     };
-  }, [house.id, cameraRetry, sim]);
+  }, [cameraRetry, sim]);
 
   useEffect(() => {
     if (phase !== "scanning" || revealedRef.current) return;
@@ -487,9 +492,10 @@ export function GemHuntOverlay({
   ]);
 
   const finishRepeatEncounter = useCallback(() => {
+    if (campusSession) return;
     releaseGemHuntCamera(videoRef.current);
     onClose();
-  }, [onClose]);
+  }, [campusSession, onClose]);
 
   const encounterRepeatVisit = campusSession ? false : repeatVisitLatched;
 
@@ -742,8 +748,7 @@ export function GemHuntOverlay({
       huntArrowDeg != null &&
       liveLoc != null &&
       !sim;
-  const showFoundOnScreenBanner =
-    phase === "collecting" || (phase === "visible" && showHuntGem && inOnsiteBand);
+  const showFoundOnScreenBanner = phase === "collecting";
 
   const gemEncounterWiggle =
     encounterPhase === "resolve-hit" ||
@@ -955,7 +960,9 @@ export function GemHuntOverlay({
                 spinWhileCollect={false}
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
-                zoom={gemAtCenter ? GEM_TELL_ME_CENTER_ZOOM : 1}
+                zoom={
+                  gemAtCenter ? GEM_TELL_ME_CENTER_ZOOM * GEM_HUNT_MODEL_ZOOM_INSET : 1
+                }
                 celebrateVariant={collectDanceIndex}
                 onInspectTap={
                   campusQuickTapGem
@@ -984,11 +991,6 @@ export function GemHuntOverlay({
 
       {showHuntUi && phase !== "collecting" && showLegacyFooter && !hideFooterChrome ? (
         <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
-          {showFoundOnScreenBanner ? (
-            <p className="gem-hunt-overlay__found-again-banner" role="status">
-              {foundOnScreenBannerHe}
-            </p>
-          ) : null}
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
               {tellMeButton.showRangeError ? (
@@ -997,11 +999,6 @@ export function GemHuntOverlay({
                   role="alert"
                 >
                   {tellMeButton.rangeErrorMessage}
-                </p>
-              ) : null}
-              {showEncounterFooter && encounterPhase === "encounter" ? (
-                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
-                  סובבו את החיה באצבע. למציאה — הקישו עליה.
                 </p>
               ) : null}
               {showNavCompassPrompt && !encounterMode ? (
@@ -1083,28 +1080,32 @@ export function GemHuntOverlay({
                   </div>
                 ) : null}
             </div>
-            {campusSession && onClusterFinishSession && onClusterSkipHouse ? (
+            {campusSession && (clusterSkipAvailable || clusterFinishAvailable) ? (
               <div className="gem-hunt-overlay__cluster-actions pointer-events-auto">
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__cluster-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClusterSkipHouse();
-                  }}
-                >
-                  {GEM_CLUSTER_SKIP_HE}
-                </button>
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__cluster-btn gem-hunt-overlay__cluster-btn--primary"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClusterFinishSession();
-                  }}
-                >
-                  {GEM_CLUSTER_FINISH_HE}
-                </button>
+                {clusterSkipAvailable && onClusterSkipHouse ? (
+                  <button
+                    type="button"
+                    className="gem-hunt-overlay__cluster-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClusterSkipHouse();
+                    }}
+                  >
+                    {GEM_CLUSTER_SKIP_HE}
+                  </button>
+                ) : null}
+                {clusterFinishAvailable && onClusterFinishSession ? (
+                  <button
+                    type="button"
+                    className="gem-hunt-overlay__cluster-btn gem-hunt-overlay__cluster-btn--primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClusterFinishSession();
+                    }}
+                  >
+                    {GEM_CLUSTER_FINISH_HE}
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>

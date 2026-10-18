@@ -36,6 +36,8 @@ export type GemHuntExperienceProps = {
   onCampusStepComplete?: (monsterId: GemMonsterId) => void;
   onClusterFinishSession?: () => void;
   onClusterSkipHouse?: () => void;
+  clusterSkipAvailable?: boolean;
+  clusterFinishAvailable?: boolean;
   /** Map roving hunt — pick closest gem before «גלה לי» / «רמז» (sticky until next tap). */
   onBeforeNavigationAssist?: () => void;
 };
@@ -90,6 +92,8 @@ export function GemHuntExperience(props: GemHuntExperienceProps) {
         onCampusStepComplete={props.onCampusStepComplete}
         onClusterFinishSession={props.onClusterFinishSession}
         onClusterSkipHouse={props.onClusterSkipHouse}
+        clusterSkipAvailable={props.clusterSkipAvailable}
+        clusterFinishAvailable={props.clusterFinishAvailable}
         onBeforeNavigationAssist={props.onBeforeNavigationAssist}
         onClose={props.onClose}
         onCollect={props.onCollect}

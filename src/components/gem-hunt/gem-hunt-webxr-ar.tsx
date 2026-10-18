@@ -16,7 +16,9 @@ import {
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_FACING_TOLERANCE_DEG,
+  GEM_HUNT_MODEL_ZOOM_INSET,
   GEM_TELL_ME_CENTER_ZOOM,
+  GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   bearingDegrees,
   gemAnchorForHouse,
@@ -155,12 +157,16 @@ export function GemHuntWebXrAr({
   onCampusStepComplete,
   onClusterFinishSession,
   onClusterSkipHouse,
+  clusterSkipAvailable = false,
+  clusterFinishAvailable = false,
 }: Props & {
   campusQueue?: GemCampusQueueUi;
   onCollectPersist?: (monsterId: GemMonsterId) => void;
   onCampusStepComplete?: (monsterId: GemMonsterId) => void;
   onClusterFinishSession?: () => void;
   onClusterSkipHouse?: () => void;
+  clusterSkipAvailable?: boolean;
+  clusterFinishAvailable?: boolean;
 }) {
   const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const monsterId = gemMonsterForHouse(house);
@@ -307,9 +313,11 @@ export function GemHuntWebXrAr({
   setGeoLockModeRef.current = setGeoLockMode;
 
   const floatBias = hashFloat(house.id, "webxr-float");
-  const floatHeight = GEM_WEBXR_FLOAT_HEIGHT_M + floatBias * 0.25;
-  /** All WebXR pets hover — drives bob/shadow animation in the XR render loop. */
-  const useFloat = true;
+  const floatHeight = isAndroidLike()
+    ? GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M
+    : GEM_WEBXR_FLOAT_HEIGHT_M + floatBias * 0.25;
+  /** iOS WebXR tell-me uses float; Android AR pets stay on the sidewalk. */
+  const useFloat = !isAndroidLike();
 
   const houseVisualRef = useRef({
     houseId: house.id,
@@ -386,8 +394,9 @@ export function GemHuntWebXrAr({
   ]);
 
   const finishRepeatEncounter = useCallback(() => {
+    if (campusSession) return;
     onClose();
-  }, [onClose]);
+  }, [campusSession, onClose]);
 
   const showArGem =
     (placed || centerReveal) && (phase === "collecting" || !userDismissedCenterGem);
@@ -686,9 +695,7 @@ export function GemHuntWebXrAr({
     phase === "placed" &&
     inOnsiteBand &&
     (showArGem || showTellMeCenterGem);
-  const showFoundOnScreenBanner =
-    phase === "collecting" ||
-    (phase === "placed" && showHuntGemOnScreen && inOnsiteBand);
+  const showFoundOnScreenBanner = phase === "collecting";
 
   useEffect(() => {
     const host = hostRef.current;
@@ -1297,7 +1304,7 @@ export function GemHuntWebXrAr({
                 spinWhileCollect={false}
                 tapCollect={false}
                 celebrateVariant={danceIndex}
-                zoom={GEM_TELL_ME_CENTER_ZOOM}
+                zoom={GEM_TELL_ME_CENTER_ZOOM * GEM_HUNT_MODEL_ZOOM_INSET}
                 onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
               />
             </div>
@@ -1341,11 +1348,6 @@ export function GemHuntWebXrAr({
         className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt gem-hunt-webxr__footer"
         dir="rtl"
       >
-        {showFoundOnScreenBanner && phase !== "collecting" ? (
-          <p className="gem-hunt-overlay__found-again-banner" role="status">
-            {foundOnScreenBannerHe}
-          </p>
-        ) : null}
         {error ? (
           <p className="gem-hunt-webxr__error" role="alert">
             {error} — עוברים למצב מצלמה…
@@ -1364,11 +1366,6 @@ export function GemHuntWebXrAr({
               {showWebXrGeoHint ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
                   {GEM_AR_LOCATING_HE}
-                </p>
-              ) : null}
-              {showEncounterFooter && encounterPhase === "encounter" ? (
-                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
-                  סובבו את החיה באצבע. למציאה — הקישו עליה.
                 </p>
               ) : null}
               {campusSession && placed && phase !== "collecting" && !encounterMode ? (
@@ -1440,28 +1437,32 @@ export function GemHuntWebXrAr({
                 </div>
               </div>
             ) : null}
-            {campusSession && onClusterFinishSession && onClusterSkipHouse ? (
+            {campusSession && (clusterSkipAvailable || clusterFinishAvailable) ? (
               <div className="gem-hunt-overlay__cluster-actions pointer-events-auto">
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__cluster-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClusterSkipHouse();
-                  }}
-                >
-                  {GEM_CLUSTER_SKIP_HE}
-                </button>
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__cluster-btn gem-hunt-overlay__cluster-btn--primary"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClusterFinishSession();
-                  }}
-                >
-                  {GEM_CLUSTER_FINISH_HE}
-                </button>
+                {clusterSkipAvailable && onClusterSkipHouse ? (
+                  <button
+                    type="button"
+                    className="gem-hunt-overlay__cluster-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClusterSkipHouse();
+                    }}
+                  >
+                    {GEM_CLUSTER_SKIP_HE}
+                  </button>
+                ) : null}
+                {clusterFinishAvailable && onClusterFinishSession ? (
+                  <button
+                    type="button"
+                    className="gem-hunt-overlay__cluster-btn gem-hunt-overlay__cluster-btn--primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClusterFinishSession();
+                    }}
+                  >
+                    {GEM_CLUSTER_FINISH_HE}
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>
