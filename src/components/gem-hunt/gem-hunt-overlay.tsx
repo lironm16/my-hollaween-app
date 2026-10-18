@@ -32,6 +32,7 @@ import {
   gemLabelHe,
   gemMonsterForHouse,
   gemScreenPlacement,
+  gemAndroidArCollectWhenVisible,
   gemWorldPinApproachVisible,
   gemWorldPinVisible,
   relativeWalkBearingDeg,
@@ -231,9 +232,6 @@ export function GemHuntOverlay({
   const inDistanceBand =
     liveLoc != null && !sim && gemDistanceMeters(liveLoc, house) <= huntBandM;
   const tellMeInRange = gemTellMeInRange(liveLoc ?? effectiveLoc, house, sim);
-  const canCollectNow = collectEnabled || sim || inDistanceBand;
-  /** Scan/pan/facing reveal when in range (or admin simulate). */
-  const allowAutoReveal = canCollectNow;
 
   /** Freshest GPS for AR pin — keeps the gem on the sidewalk anchor, not on the user. */
   const placementLoc = walkViewer ?? effectiveLoc;
@@ -248,6 +246,20 @@ export function GemHuntOverlay({
     return gemScreenPlacement(placementLoc, anchor, heading, devicePitch);
   }, [anchor, placementLoc, heading, devicePitch]);
   const pinDisplay = useSmoothedGemPlacement(pinPlacement, house.id);
+  const worldPinPlacementEarly = pinDisplay ?? pinPlacement;
+  const canCollectNow =
+    collectEnabled ||
+    sim ||
+    inDistanceBand ||
+    (isAndroidLike() &&
+      gemAndroidArCollectWhenVisible(
+        false,
+        collectEnabled,
+        inDistanceBand,
+        worldPinPlacementEarly,
+      ));
+  /** Scan/pan/facing reveal when in range (or admin simulate). */
+  const allowAutoReveal = canCollectNow;
 
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
@@ -632,7 +644,7 @@ export function GemHuntOverlay({
             (encounterPhase === "approach" || encounterPhase === "encounter")) ||
           (!encounterMode && gemVisible) ||
           (campusSession && (canCollectNow || sim)))));
-  const worldPinPlacement = pinDisplay ?? pinPlacement;
+  const worldPinPlacement = worldPinPlacementEarly;
   const showWorldGemSprite =
     !gemAtCenter &&
     worldPinPlacement != null &&

@@ -363,6 +363,19 @@ export function gemWorldPinApproachVisible(
   return placement.distanceM <= maxDistanceM;
 }
 
+/** Android immersive AR — collect when the gem is on camera (in view), not only within GPS hunt meters. */
+export function gemAndroidArCollectWhenVisible(
+  simulate: boolean,
+  collectEnabled: boolean,
+  inHuntBand: boolean,
+  placement: GemScreenPlacement | null,
+) {
+  if (simulate) return true;
+  if (!collectEnabled) return false;
+  if (inHuntBand) return true;
+  return gemWorldPinApproachVisible(placement);
+}
+
 /** Gem pin overlaps the on-screen hunt ring (visual / legacy; collect no longer requires this). */
 export function gemInScanRing(
   placement: GemScreenPlacement | null,

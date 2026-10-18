@@ -12,6 +12,7 @@ import {
   gemScreenPlacement,
   gemWorldPinVisible,
   gemWorldPinApproachVisible,
+  gemAndroidArCollectWhenVisible,
   GEM_APPROACH_METERS,
   gemPlacementDisplaySnap,
   GEM_WORLD_PIN_MAX_METERS,
@@ -100,6 +101,28 @@ describe("gem hunt geo", () => {
     assert.ok(place, "expected a sample point in approach band");
     assert.equal(gemWorldPinVisible(place), false);
     assert.equal(gemWorldPinApproachVisible(place), true);
+  });
+
+  it("allows Android AR collect when gem is in camera view beyond hunt band", () => {
+    const anchor = gemAnchorForHouse(house);
+    let place = null as ReturnType<typeof gemScreenPlacement>;
+    for (let step = 0.00005; step <= 0.00045; step += 0.00002) {
+      const user = { lat: house.lat + step, lng: house.lng };
+      const heading = bearingDegrees(user, anchor);
+      const candidate = gemScreenPlacement(user, anchor, heading, -12);
+      if (
+        candidate &&
+        candidate.inView &&
+        candidate.distanceM > GEM_WORLD_PIN_MAX_METERS &&
+        candidate.distanceM <= GEM_APPROACH_METERS
+      ) {
+        place = candidate;
+        break;
+      }
+    }
+    assert.ok(place);
+    assert.equal(gemAndroidArCollectWhenVisible(false, true, false, place), true);
+    assert.equal(gemAndroidArCollectWhenVisible(false, true, false, null), false);
   });
 
   it("maps anchor bearing to horizontal screen position", () => {

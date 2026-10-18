@@ -23,6 +23,7 @@ import {
   gemDistanceMeters,
   gemLabelHe,
   gemMonsterForHouse,
+  gemAndroidArCollectWhenVisible,
   gemScreenPlacement,
   gemWorldPinApproachVisible,
   GEM_WEBXR_GEO_PLACEMENT_ENABLED,
@@ -260,18 +261,38 @@ export function GemHuntWebXrAr({
   liveLocRef.current = liveLoc;
   geoTargetRef.current = { lat: anchor.lat, lng: anchor.lng };
   simulateInRangeRef.current = simulateInRange;
+  const approachScreenPin = pinDisplay ?? pinPlacement;
+  const gemVisibleInCam =
+    !simulateInRange &&
+    approachScreenPin != null &&
+    gemWorldPinApproachVisible(approachScreenPin);
   const distanceM =
     liveLoc != null ? gemDistanceMeters(liveLoc, house) : null;
   const inWebXrHuntBand =
     simulateInRange ||
     (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_WEBXR_HUNT_METERS);
+  const inWebXrCollectZone =
+    simulateInRange ||
+    inWebXrHuntBand ||
+    (isAndroidLike() && gemVisibleInCam);
   const tellMeInRange = gemTellMeInRange(liveLoc, house, simulateInRange);
-  /** Same on-site radius as iOS camera hunt (GEM_WEBXR_HUNT_METERS). */
+  /** Android: onsite GPS band or gem visible in camera (up to approach range). */
   const canCollectNow =
-    inWebXrHuntBand && (simulateInRange || collectEnabled);
-  const canCollect = canCollectNow && inWebXrHuntBand && placed;
+    inWebXrCollectZone &&
+    gemAndroidArCollectWhenVisible(
+      simulateInRange,
+      collectEnabled,
+      inWebXrHuntBand,
+      approachScreenPin,
+    );
+  const canCollect = canCollectNow && (placed || gemVisibleInCam) && inWebXrCollectZone;
   const inWebXrHuntBandRef = useRef(inWebXrHuntBand);
   inWebXrHuntBandRef.current = inWebXrHuntBand;
+  const inWebXrCollectZoneRef = useRef(inWebXrCollectZone);
+  inWebXrCollectZoneRef.current = inWebXrCollectZone;
+  const gemVisibleInCamRef = useRef(gemVisibleInCam);
+  gemVisibleInCamRef.current = gemVisibleInCam;
+  const showApproachScreenGemRef = useRef(false);
   const setGeoLockModeRef = useRef(setGeoLockMode);
   setGeoLockModeRef.current = setGeoLockMode;
 
@@ -362,9 +383,10 @@ export function GemHuntWebXrAr({
     (placed || centerReveal) && (phase === "collecting" || !userDismissedCenterGem);
 
   const petRevealedForEncounter =
-    sessionActive && showArGem && (placed || centerReveal);
+    sessionActive &&
+    ((showArGem && (placed || centerReveal)) || gemVisibleInCam);
   const inRangeForEncounter =
-    inWebXrHuntBand || centerReveal || simulateInRange;
+    inWebXrCollectZone || centerReveal || simulateInRange;
 
   const {
     encounterPhase,
@@ -416,7 +438,6 @@ export function GemHuntWebXrAr({
   const showTellMeCenterGem =
     centerReveal && sessionActive && phase !== "collecting" && !userDismissedCenterGem;
 
-  const approachScreenPin = pinDisplay ?? pinPlacement;
   const showApproachScreenGem =
     sessionActive &&
     encounterMode &&
@@ -424,10 +445,11 @@ export function GemHuntWebXrAr({
     !showTellMeCenterGem &&
     !userDismissedCenterGem &&
     phase !== "collecting" &&
-    encounterPhase === "approach" &&
-    approachScreenPin != null &&
-    gemWorldPinApproachVisible(approachScreenPin) &&
-    !(placed && inWebXrHuntBand);
+    (encounterPhase === "approach" || encounterPhase === "encounter") &&
+    gemVisibleInCam &&
+    !(placed && inWebXrHuntBand && showArGem);
+
+  showApproachScreenGemRef.current = showApproachScreenGem;
 
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
@@ -498,7 +520,20 @@ export function GemHuntWebXrAr({
     ) {
       return;
     }
-    if ((!placed && !centerRevealRef.current) || !showArGem) return;
+    if (
+      !showArGem &&
+      !showApproachScreenGemRef.current &&
+      !centerRevealRef.current
+    ) {
+      return;
+    }
+    if (
+      !placed &&
+      !centerRevealRef.current &&
+      !showApproachScreenGemRef.current
+    ) {
+      return;
+    }
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([12, 28, 18]);
     }
@@ -682,7 +717,7 @@ export function GemHuntWebXrAr({
 
     const pushGeoSample = () => {
       const loc = liveLocRef.current;
-      if (!loc || !inWebXrHuntBandRef.current) return;
+      if (!loc || !inWebXrCollectZoneRef.current) return;
       const acc = loc.accuracy ?? 99;
       if (acc > 28) return;
       geoSamples.push({ lat: loc.lat, lng: loc.lng, accuracy: loc.accuracy });
@@ -695,7 +730,7 @@ export function GemHuntWebXrAr({
       viewerSpace: XRReferenceSpace,
     ) => {
       if (isPlaced || !GEM_WEBXR_GEO_PLACEMENT_ENABLED) return;
-      if (!inWebXrHuntBandRef.current) return;
+      if (!inWebXrCollectZoneRef.current) return;
 
       const assist = placeAssistRef.current;
       const target = geoTargetRef.current;
@@ -981,7 +1016,7 @@ export function GemHuntWebXrAr({
         const allowHitTestFallback =
           !GEM_WEBXR_GEO_PLACEMENT_ENABLED || performance.now() - startTime > 10_000;
 
-        if (!isPlaced && GEM_WEBXR_GEO_PLACEMENT_ENABLED && inWebXrHuntBandRef.current) {
+        if (!isPlaced && GEM_WEBXR_GEO_PLACEMENT_ENABLED && inWebXrCollectZoneRef.current) {
           geoAttemptFrame += 1;
           if (geoAttemptFrame % 12 === 0 || placeAssistRef.current.forceOnce) {
             void tryLockGeoPlacement(frame, ref, viewerSpace);
@@ -990,7 +1025,7 @@ export function GemHuntWebXrAr({
 
         if (
           !isPlaced &&
-          inWebXrHuntBandRef.current &&
+          inWebXrCollectZoneRef.current &&
           allowHitTestFallback &&
           hits.length > 0
         ) {
@@ -1201,20 +1236,34 @@ export function GemHuntWebXrAr({
 
       {showApproachScreenGem && approachScreenPin ? (
         <div
-          className="gem-hunt-overlay__stage gem-hunt-webxr__approach-stage pointer-events-none"
-          aria-hidden
+          className="gem-hunt-overlay__stage gem-hunt-webxr__approach-stage is-gem-interactive"
+          aria-hidden={false}
         >
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-revealed is-approach-preview",
               !approachScreenPin.inView && "is-off-screen",
+              canCollectNow && encounterPhase === "encounter" && "is-tap-collect-ready",
             )}
             style={{
               left: `${approachScreenPin.xPercent}%`,
               top: `${approachScreenPin.yPercent}%`,
             }}
           >
-            <GemSprite house={house} mode="3d" size="lg" tapCollect={false} spinWhileCollect={false} />
+            <GemSprite
+              house={house}
+              mode="3d"
+              size="lg"
+              tapCollect={canCollectNow && encounterPhase === "encounter"}
+              spinWhileCollect={false}
+              onInspectTap={() => {
+                if (encounterPhase === "approach") {
+                  setEncounterPhase("encounter");
+                  return;
+                }
+                if (encounterPhase === "encounter") offerEncounterCollect();
+              }}
+            />
           </div>
         </div>
       ) : null}
