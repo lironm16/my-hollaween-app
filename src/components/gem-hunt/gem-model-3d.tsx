@@ -258,7 +258,7 @@ export function GemModel3D({
         ? size === "sm"
           ? 0.55
           : size === "fill"
-            ? 2.28
+            ? 2.35
             : 1.38
         : size === "sm"
           ? 0.55

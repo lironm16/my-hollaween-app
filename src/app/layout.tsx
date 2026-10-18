@@ -72,7 +72,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
         <link rel="stylesheet" href={`/app.css?v=${appVersion()}`} />
-        <meta name="hw-build" content="2026-10-14-route-path-v4" />
+        <meta name="hw-build" content="2026-10-18-gem-cam-merge-v1" />
         <meta name="hw-version" content={appVersion()} />
         <link rel="stylesheet" href={`/shell.css?v=${appVersion()}`} />
       </head>
