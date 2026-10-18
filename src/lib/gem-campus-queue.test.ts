@@ -73,7 +73,7 @@ describe("gem cluster queue", () => {
   });
 
   it("single hunt header uses house title", () => {
-    const h = house("solo", "בית לביא", 1, "שדון");
+    const h = house("solo", "כתובת", 1, "בית לביא");
     const ui = gemSingleHuntQueueHeadline(h);
     assert.equal(ui.boothTitle, "בית לביא");
     assert.equal(ui.boothSubtitle, "");
