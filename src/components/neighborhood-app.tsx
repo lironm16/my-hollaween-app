@@ -1948,7 +1948,7 @@ export function NeighborhoodApp({
           onBeforeNavigationAssist={
             mapGemClusterMembers ? undefined : pinMapGemNavigationTarget
           }
-          encounterMode={!mapGemClusterMembers || isIosLike()}
+          encounterMode={!mapGemClusterMembers}
           repeatVisit={!mapGemClusterMembers && gems.collected(mapGemHouse.id)}
           campusQueue={mapGemClusterQueueUi}
           onClusterFinishSession={

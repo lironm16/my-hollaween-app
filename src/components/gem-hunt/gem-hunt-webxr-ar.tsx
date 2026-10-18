@@ -65,6 +65,7 @@ import {
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { getGemHuntDomOverlayRoot, getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
+import { gemHuntFooterVisible } from "@/lib/gem-hunt-footer";
 import { cn } from "@/lib/utils";
 import { GemHuntTellMeButton } from "@/components/gem-hunt/gem-hunt-tell-me-button";
 import { useGemTellMeButton } from "@/hooks/use-gem-tell-me-button";
@@ -74,7 +75,6 @@ import {
   GEM_CLUSTER_FINISH_HE,
   GEM_CLUSTER_SKIP_HE,
   gemFoundOnScreenBannerHe,
-  GEM_TELL_ME_COLLECT_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
 } from "@/lib/gem-hunt-copy";
@@ -393,11 +393,7 @@ export function GemHuntWebXrAr({
       navigator.vibrate([20, 40, 60]);
     }
     if (collectFinishRef.current != null) window.clearTimeout(collectFinishRef.current);
-    const overlayMs = campusSession
-      ? GEM_CAMPUS_COLLECT_MS
-      : encounterMode && repeatVisitLatched
-        ? GEM_ENCOUNTER_CELEBRATE_MS
-        : GEM_COLLECT_OVERLAY_MS;
+    const overlayMs = campusSession ? GEM_CAMPUS_COLLECT_MS : GEM_COLLECT_OVERLAY_MS;
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
       if (campusSession) {
@@ -587,12 +583,22 @@ export function GemHuntWebXrAr({
     encounterMode &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
-  const showSessionFooter =
-    sessionActive && phase !== "collecting" && (!encounterMode || showEncounterFooter) && !hideFooterChrome;
+  const showSessionFooter = gemHuntFooterVisible({
+    phase,
+    encounterMode,
+    encounterPhase,
+    centerReveal,
+    campusSession,
+    sessionActive,
+  });
 
   const offerEncounterCollect = useCallback(() => {
     if (centerRevealRef.current) return;
     if (encounterPhase !== "encounter") return;
+    if (repeatVisitLatched) {
+      handleCollectRef.current();
+      return;
+    }
     if (
       !canCollectNow &&
       !encounterCollectLatchedRef.current &&
@@ -626,6 +632,7 @@ export function GemHuntWebXrAr({
     encounterPhase,
     onTreatSuccess,
     placed,
+    repeatVisitLatched,
     showArGem,
     simulateInRange,
   ]);
@@ -1342,7 +1349,7 @@ export function GemHuntWebXrAr({
                 tapCollect={false}
                 celebrateVariant={danceIndex}
                 zoom={gemTellMeCenterModelZoom()}
-                onInspectTap={undefined}
+                onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
               />
             </div>
           </div>
@@ -1435,20 +1442,6 @@ export function GemHuntWebXrAr({
                 sessionActive && "is-hidden",
               )}
             />
-            {showSessionFooter && canTapTellMeCenter ? (
-              <div className="gem-hunt-overlay__footer-controls gem-hunt-overlay__footer-controls--tell-me-collect">
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__campus-save-btn gem-hunt-overlay__tell-me-collect-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTellMeCenterTap();
-                  }}
-                >
-                  {GEM_TELL_ME_COLLECT_HE}
-                </button>
-              </div>
-            ) : null}
             {showSessionFooter && !hideHuntHintControls ? (
               <div className="gem-hunt-overlay__footer-controls">
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">

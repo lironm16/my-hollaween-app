@@ -5207,11 +5207,13 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-overlay__found-again-banner--collect {
   position: absolute;
   left: 50%;
-  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
-  z-index: 12;
+  top: calc(42% + min(52vw, 15rem));
+  bottom: auto;
+  z-index: 14;
   width: min(94vw, 26rem);
   margin: 0;
   transform: translateX(-50%);
+  pointer-events: none;
 }
 .gem-hunt-overlay__found-again-banner.is-exploding {
   animation: gem-found-again-banner-pop 0.85s cubic-bezier(0.22, 1.25, 0.48, 1) both;
@@ -8037,9 +8039,6 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
     transform: translateY(-10%) scale(1.015);
   }
 }
-.gem-hunt-overlay__tell-me-collect-btn {
-  margin-bottom: 0.35rem;
-}
 .gem-hunt-overlay--ios .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 canvas,
 .gem-hunt-overlay--ios .gem-hunt-overlay__gem-hit.is-center-collect.is-inspect360 .gem-model-3d {
   overflow: visible;
@@ -8091,6 +8090,10 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 }
 .gem-hunt-overlay__gem-hit.is-tell-me-center.is-inspect360 .gem-hunt-overlay__gem-dance {
   height: var(--gem-cam-box);
+}
+.gem-hunt-overlay__gem-hit.is-tell-me-center.is-tap-collect-ready.is-inspect360 .gem-hunt-overlay__gem-dance,
+.gem-hunt-overlay__gem-hit.is-tell-me-center.is-tap-collect-ready.is-inspect360 canvas {
+  cursor: pointer;
 }
 .gem-hunt-overlay__gem-hit.is-campus-tap.is-center-collect {
   top: 40%;

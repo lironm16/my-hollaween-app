@@ -68,13 +68,13 @@ import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import {
   GEM_CAMPUS_TAP_SAVE_HE,
-  GEM_TELL_ME_COLLECT_HE,
   GEM_CLUSTER_FINISH_HE,
   GEM_CLUSTER_SKIP_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
   gemFoundOnScreenBannerHe,
 } from "@/lib/gem-hunt-copy";
+import { gemHuntFooterVisible } from "@/lib/gem-hunt-footer";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -488,9 +488,7 @@ export function GemHuntOverlay({
     setAlbumRevealNewFriend(campusSession ? true : newAlbumFriend);
     const overlayMs = campusSession
       ? GEM_CAMPUS_COLLECT_MS
-      : encounterMode && repeatVisitLatched
-        ? GEM_ENCOUNTER_CELEBRATE_MS
-        : GEM_COLLECT_OVERLAY_MS;
+      : GEM_COLLECT_OVERLAY_MS;
     collectFinishRef.current = window.setTimeout(() => {
       collectFinishRef.current = null;
       if (campusSession) {
@@ -734,17 +732,18 @@ export function GemHuntOverlay({
   const campusTapCollect =
     campusSession && phase === "visible" && (canCollectNow || sim || encounterCollectLatchedRef.current);
 
+  const canTapTellMeCenter = centerReveal && gemAtCenter && tellMeCollectArmed;
+
   const canTapCollect =
     phase === "visible" &&
-    (campusTapCollect ||
+    (canTapTellMeCenter ||
+      campusTapCollect ||
       (encounterMode &&
         encounterPhase === "encounter" &&
         gemAtCenter) ||
       (canCollectNow &&
         ((centerReveal && !encounterMode) ||
           (!encounterMode && (pinCollectReady || sim)))));
-
-  const canTapTellMeCenter = centerReveal && gemAtCenter && tellMeCollectArmed;
 
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
@@ -760,7 +759,7 @@ export function GemHuntOverlay({
   const handleGemInspectTap = useCallback(() => {
     if (centerReveal && !tellMeCollectArmedRef.current) return;
     if (encounterMode && encounterPhase === "encounter" && gemAtCenter) {
-      if (centerReveal) {
+      if (centerReveal || repeatVisitLatched) {
         handleCollect();
         return;
       }
@@ -776,6 +775,7 @@ export function GemHuntOverlay({
     offerEncounterCollect,
     canTapCollect,
     handleCollect,
+    repeatVisitLatched,
   ]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
@@ -820,10 +820,13 @@ export function GemHuntOverlay({
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
   const campusQuickTapGem = campusSession && !encounterMode && !centerReveal;
-  const showLegacyFooter =
-    !encounterMode ||
-    showEncounterFooter ||
-    (campusSession && phase === "visible");
+  const showLegacyFooter = gemHuntFooterVisible({
+    phase,
+    encounterMode,
+    encounterPhase,
+    centerReveal,
+    campusSession,
+  });
   const hideFooterChrome =
     encounterMode && encounterUiChromeHidden(encounterPhase);
 
@@ -1027,8 +1030,7 @@ export function GemHuntOverlay({
                 onInspectTap={
                   campusQuickTapGem
                     ? undefined
-                    : canTapCollect ||
-                        (encounterMode && encounterPhase === "encounter" && gemAtCenter)
+                    : canTapCollect || canTapTellMeCenter
                       ? handleGemInspectTap
                       : undefined
                 }
@@ -1094,18 +1096,6 @@ export function GemHuntOverlay({
               ) : null}
             </div>
             <div className="gem-hunt-overlay__footer-controls">
-              {centerReveal && phase === "visible" && canTapTellMeCenter ? (
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__campus-save-btn gem-hunt-overlay__tell-me-collect-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleGemInspectTap();
-                  }}
-                >
-                  {GEM_TELL_ME_COLLECT_HE}
-                </button>
-              ) : null}
               {campusSession && phase === "visible" && !encounterMode ? (
                 <button
                   type="button"
