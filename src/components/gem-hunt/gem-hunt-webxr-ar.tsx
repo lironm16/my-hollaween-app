@@ -19,6 +19,7 @@ import {
   gemTellMeCenterModelZoom,
   gemHuntGemStayVisible,
   GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M,
+  GEM_WEBXR_MODEL_SCALE_ANDROID,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   bearingDegrees,
   gemAnchorForHouse,
@@ -100,7 +101,7 @@ type Props = {
 const AUTO_PLACE_STABLE_FRAMES = 28;
 /** World-space target size for GLB pets in immersive AR (meters-ish after frameModel). */
 /** Sized to match iOS «גלה לי» inspect360 frame (after GEM_TELL_ME_CENTER_ZOOM). */
-const MODEL_SCALE = 0.82;
+const MODEL_SCALE_IOS_WEBXR = 0.82;
 
 function hashFloat(seed: string, salt: string) {
   let h = 2166136261;
@@ -329,13 +330,16 @@ export function GemHuntWebXrAr({
   const floatHeight = isAndroidLike()
     ? GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M
     : GEM_WEBXR_FLOAT_HEIGHT_M + floatBias * 0.25;
-  /** iOS WebXR tell-me uses float; Android AR pets stay on the sidewalk. */
-  const useFloat = !isAndroidLike();
+  const androidImmersiveAr = isAndroidLike();
+  /** Gentle bob so world gems read above the floor (both platforms). */
+  const useFloat = true;
+  const worldModelScale = androidImmersiveAr ? GEM_WEBXR_MODEL_SCALE_ANDROID : MODEL_SCALE_IOS_WEBXR;
 
   const houseVisualRef = useRef({
     houseId: house.id,
     glbPath: meta.glbPath,
     floatHeight,
+    modelScale: worldModelScale,
     danceIndex,
     lat: house.lat,
     lng: house.lng,
@@ -344,6 +348,7 @@ export function GemHuntWebXrAr({
     houseId: house.id,
     glbPath: meta.glbPath,
     floatHeight,
+    modelScale: worldModelScale,
     danceIndex,
     lat: house.lat,
     lng: house.lng,
@@ -504,7 +509,9 @@ export function GemHuntWebXrAr({
             gemVisibleInCam ||
             (placed && showArGem && !userDismissedCenterGem))
         : showTellMeCenterGem || gemVisibleInCam);
-  const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
+  const androidWebXrUi = platformMod === "gem-hunt-webxr--android";
+  const showWalkNavGuide =
+    !androidWebXrUi && hintPanel === "nav" && !gemFoundInView;
 
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
@@ -543,20 +550,22 @@ export function GemHuntWebXrAr({
     liveLoc != null && !simulateInRange
       ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
       : null;
-  const showNavArrow = encounterMode
-    ? sessionActive &&
-      encounterPhase === "approach" &&
-      showWalkNavGuide &&
-      !centerReveal &&
-      huntArrowDeg != null &&
-      liveLoc != null &&
-      !simulateInRange
-    : sessionActive &&
-      showWalkNavGuide &&
-      !centerReveal &&
-      huntArrowDeg != null &&
-      liveLoc != null &&
-      !simulateInRange;
+  const showNavArrow =
+    !androidWebXrUi &&
+    (encounterMode
+      ? sessionActive &&
+        encounterPhase === "approach" &&
+        showWalkNavGuide &&
+        !centerReveal &&
+        huntArrowDeg != null &&
+        liveLoc != null &&
+        !simulateInRange
+      : sessionActive &&
+        showWalkNavGuide &&
+        !centerReveal &&
+        huntArrowDeg != null &&
+        liveLoc != null &&
+        !simulateInRange);
   const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
   const showEncounterFooter =
     encounterMode &&
@@ -712,6 +721,7 @@ export function GemHuntWebXrAr({
   });
 
   const showWebXrGeoHint =
+    !androidWebXrUi &&
     sessionActive &&
     !placed &&
     phase !== "collecting" &&
@@ -950,7 +960,7 @@ export function GemHuntWebXrAr({
         (gltf) => {
           if (disposed) return;
           const model = gltf.scene;
-          frameModel(model, MODEL_SCALE);
+          frameModel(model, vis.modelScale);
           model.traverse((obj) => {
             if (!(obj instanceof THREE.Mesh)) return;
             const mat = obj.material;
@@ -1087,6 +1097,9 @@ export function GemHuntWebXrAr({
           }
         }
 
+        const hideFloorReticle =
+          isAndroidLike() && GEM_WEBXR_GEO_PLACEMENT_ENABLED;
+
         if (
           !isPlaced &&
           inWebXrCollectZoneRef.current &&
@@ -1095,8 +1108,8 @@ export function GemHuntWebXrAr({
         ) {
           const pose = hits[0]!.getPose(ref);
           if (pose) {
-            reticle.visible = true;
             reticle.matrix.fromArray(pose.transform.matrix);
+            reticle.visible = !hideFloorReticle;
             stableHitFrames += 1;
             const assist = placeAssistRef.current;
             const threshold = assist.fast ? 8 : AUTO_PLACE_STABLE_FRAMES;

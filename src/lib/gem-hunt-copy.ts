@@ -80,7 +80,7 @@ export const gemPanelApproachHe = (m: number) => `התקרבו ל־${m} מ׳ ל�
 export const gemPanelOpenCameraHe = (m: number) => `~${m} מ׳ לשדון — פתחו מצלמה`;
 
 export const GEM_TELL_ME_RANGE_HE = "יש להתקרב לשדון כדי להשתמש ב«גלה לי»";
-export const GEM_AR_LOCATING_HE = "מאתרים את השדון על המדרכה (אותה נקודה כמו במפה)…";
+export const GEM_AR_LOCATING_HE = "מאתרים את השדון (אותה נקודה כמו במפה)…";
 export const GEM_BEARING_ARIA_HE = (label: string, distance?: string) =>
   `כיוון השדון: ${label}${distance ?? ""}`;
 
