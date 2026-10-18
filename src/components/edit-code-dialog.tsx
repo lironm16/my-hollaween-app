@@ -55,27 +55,25 @@ export function EditCodeDialog({
             onFocus={(event) => event.target.select()}
           />
           {showDevices ? (
-            <div className="flex w-full flex-wrap gap-2">
+            <div className="flex w-full flex-wrap items-center justify-center gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9 min-w-0 flex-1 basis-[calc(33%-0.35rem)] gap-1.5 border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15 sm:basis-auto sm:flex-initial"
+                className="h-9 w-auto max-w-full shrink-0 gap-1.5 whitespace-nowrap border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15"
                 onClick={() => void copyText(editCode.replace(/\s/g, ""), "קוד הכניסה הועתק")}
               >
                 <Copy className="size-4 shrink-0" strokeWidth={2.2} />
                 <span className="text-sm">העתק</span>
               </Button>
-              <div className="flex min-w-0 flex-1 basis-[calc(66%-0.35rem)] gap-2 sm:basis-auto sm:flex-initial">
-                <NightPassesCard
-                  houseId={house.id}
-                  house={house}
-                  admin={admin}
-                  embedded
-                  showFamilyCode={false}
-                  inlineActionsOnly
-                />
-              </div>
+              <NightPassesCard
+                houseId={house.id}
+                house={house}
+                admin={admin}
+                embedded
+                showFamilyCode={false}
+                inlineActionsOnly
+              />
             </div>
           ) : (
             <Button

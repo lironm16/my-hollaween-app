@@ -81,7 +81,7 @@ function SlotAction({
       size="sm"
       variant="outline"
       disabled={disabled}
-      className="h-9 min-w-0 flex-1 gap-1.5 border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15 sm:flex-initial"
+      className="h-9 w-auto max-w-full shrink-0 gap-1.5 whitespace-nowrap border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15"
       onClick={onClick}
     >
       {icon}
