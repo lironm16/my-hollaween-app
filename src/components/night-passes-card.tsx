@@ -427,31 +427,23 @@ export function NightPassesCard({
             )}
             {access.connectedCount < access.maxDevices
               ? Array.from({ length: access.maxDevices - access.connectedCount }).map((_, i) => (
-                  <li key={`empty-${i}`} className="flex items-start gap-2 px-3 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-center text-base font-medium text-emerald-400/95">פנוי</p>
+                  <li key={`empty-${i}`} className="px-3 py-3">
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <p className="text-base font-medium text-emerald-400/95">פנוי</p>
                       {showConnectMe ? (
-                        <div className="mt-2 flex justify-center">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="h-9 border-emerald-500/35 text-emerald-100 hover:bg-emerald-950/40"
-                            onClick={() => passDialog?.openOwnerRegister(houseId)}
-                          >
-                            חבר אותי
-                          </Button>
-                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-9 border-emerald-500/35 text-emerald-100 hover:bg-emerald-950/40"
+                          onClick={() => passDialog?.openOwnerRegister(houseId)}
+                        >
+                          חבר אותי
+                        </Button>
                       ) : (
-                        <p className="mt-1 text-center text-sm text-violet-500/75">—</p>
+                        <p className="text-sm text-violet-500/75">—</p>
                       )}
                     </div>
-                    <span
-                      className="inline-flex h-9 w-[3.25rem] shrink-0 items-center justify-center text-sm opacity-0"
-                      aria-hidden
-                    >
-                      הסרה
-                    </span>
                   </li>
                 ))
               : null}
