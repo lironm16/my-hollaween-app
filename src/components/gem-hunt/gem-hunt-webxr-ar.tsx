@@ -66,6 +66,7 @@ import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-list-suspend";
 import { getGemHuntDomOverlayRoot, getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { gemHuntFooterVisible } from "@/lib/gem-hunt-footer";
+import { gemTapCollectReady } from "@/lib/gem-hunt-tap-collect";
 import { cn } from "@/lib/utils";
 import { GemHuntTellMeButton } from "@/components/gem-hunt/gem-hunt-tell-me-button";
 import { useGemTellMeButton } from "@/hooks/use-gem-tell-me-button";
@@ -378,7 +379,8 @@ export function GemHuntWebXrAr({
       (simulateInRange ||
         tellMeInRange ||
         inWebXrHuntBand ||
-        encounterCollectLatchedRef.current);
+        encounterCollectLatchedRef.current ||
+        campusSession);
     if (!inBand && !tellMeReady) return;
     if (!placed && !tellMeCenter) return;
     const entries = loadGemCollected();
@@ -735,6 +737,7 @@ export function GemHuntWebXrAr({
   );
   const hideHuntHintControls =
     !centerReveal &&
+    !campusSession &&
     sessionActive &&
     phase === "placed" &&
     inOnsiteBand &&
@@ -1225,6 +1228,15 @@ export function GemHuntWebXrAr({
       mixer = null;
     };
   }, [encounterMode, onFallbackCamera]);
+
+  /** Cluster — same as iOS: auto center gem when in hunt band (tap demon to collect). */
+  useEffect(() => {
+    if (!campusSession || !sessionActive) return;
+    if (phase === "collecting") return;
+    if (!canCollectNow && !simulateInRange) return;
+    setCenterReveal(true);
+    encounterCollectLatchedRef.current = true;
+  }, [campusSession, sessionActive, house.id, canCollectNow, simulateInRange, phase]);
 
   /** Cluster queue — swap GLB + sidewalk anchor without ending the WebXR session. */
   useEffect(() => {

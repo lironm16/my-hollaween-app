@@ -67,7 +67,6 @@ import {
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import {
-  GEM_CAMPUS_TAP_SAVE_HE,
   GEM_CLUSTER_FINISH_HE,
   GEM_CLUSTER_SKIP_HE,
   GEM_WALK_MAPS_ARIA_HE,
@@ -75,6 +74,7 @@ import {
   gemFoundOnScreenBannerHe,
 } from "@/lib/gem-hunt-copy";
 import { gemHuntFooterVisible } from "@/lib/gem-hunt-footer";
+import { gemTapCollectReady } from "@/lib/gem-hunt-tap-collect";
 import { cn } from "@/lib/utils";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
@@ -470,7 +470,9 @@ export function GemHuntOverlay({
     const viaPinned =
       !centerReveal && inCollectBand && gemWorldPinVisible(pinDisplay ?? pinPlacement);
     const viaEncounter = encounterMode && inCollectBand;
-    const viaCampus = campusSession && inCollectBand;
+    const viaCampus =
+      campusSession &&
+      (inCollectBand || (centerReveal && tellMeCollectArmedRef.current));
     if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter && !viaCampus) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
@@ -729,21 +731,22 @@ export function GemHuntOverlay({
       headingStatus === "denied" ||
       headingStatus === "idle" ||
       heading == null);
-  const campusTapCollect =
-    campusSession && phase === "visible" && (canCollectNow || sim || encounterCollectLatchedRef.current);
-
   const canTapTellMeCenter = centerReveal && gemAtCenter && tellMeCollectArmed;
 
-  const canTapCollect =
-    phase === "visible" &&
-    (canTapTellMeCenter ||
-      campusTapCollect ||
-      (encounterMode &&
-        encounterPhase === "encounter" &&
-        gemAtCenter) ||
-      (canCollectNow &&
-        ((centerReveal && !encounterMode) ||
-          (!encounterMode && (pinCollectReady || sim)))));
+  const gemTapCollectEnabled = gemTapCollectReady({
+    phase,
+    gemAtCenter,
+    tellMeCollectArmed,
+    centerReveal,
+    campusSession,
+    encounterMode,
+    encounterPhase,
+    canCollectNow,
+    simulate: sim,
+    pinCollectReady,
+  });
+
+  const canTapCollect = gemTapCollectEnabled;
 
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
@@ -780,7 +783,11 @@ export function GemHuntOverlay({
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
   const hideHuntHintControls =
-    !centerReveal && showHuntGem && phase === "visible" && gemVisibleBand;
+    !centerReveal &&
+    !campusSession &&
+    showHuntGem &&
+    phase === "visible" &&
+    gemVisibleBand;
   const gemFoundInView =
     showHuntGem &&
     phase === "visible" &&
@@ -819,7 +826,6 @@ export function GemHuntOverlay({
     encounterMode &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     phase !== "collecting";
-  const campusQuickTapGem = campusSession && !encounterMode && !centerReveal;
   const showLegacyFooter = gemHuntFooterVisible({
     phase,
     encounterMode,
@@ -979,15 +985,17 @@ export function GemHuntOverlay({
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed",
-              campusQuickTapGem ? "is-campus-tap" : "is-inspect360",
+              "is-inspect360",
               gemAtCenter ? "is-ring-center is-center-collect" : "is-pinned is-revealed",
               centerReveal && gemAtCenter && "is-tell-me-center",
               !gemAtCenter && worldLockRevealed && pinPlacement && !pinPlacement.inView && "is-off-screen",
               phase === "collecting" && "is-collecting",
               !gemAtCenter && pinCollectReady && "is-collect-ready-gem",
               !canCollectNow && phase === "visible" && "is-awaiting-still",
-              canTapCollect && "is-tap-collect-ready",
-              centerReveal && gemAtCenter && "is-tell-me-center-active",
+              gemTapCollectEnabled && "is-tap-collect-ready",
+              (centerReveal || campusSession) &&
+                gemAtCenter &&
+                "is-tell-me-center-active",
             )}
             style={
               gemAtCenter || !pinDisplay
@@ -1005,17 +1013,12 @@ export function GemHuntOverlay({
                 gemEncounterWiggle && "is-encounter-wiggle",
               )}
               data-collect-dance={collectDanceIndex}
-              onClick={(e) => {
-                if (!campusTapCollect) return;
-                e.stopPropagation();
-                handleGemInspectTap();
-              }}
             >
               <GemSprite
                 house={house}
-                mode={campusQuickTapGem ? "3d" : "inspect360"}
+                mode="inspect360"
                 size="fill"
-                tapCollect={campusQuickTapGem}
+                tapCollect={false}
                 spinWhileCollect={false}
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
@@ -1028,11 +1031,7 @@ export function GemHuntOverlay({
                 }
                 celebrateVariant={collectDanceIndex}
                 onInspectTap={
-                  campusQuickTapGem
-                    ? undefined
-                    : canTapCollect || canTapTellMeCenter
-                      ? handleGemInspectTap
-                      : undefined
+                  gemTapCollectEnabled ? handleGemInspectTap : undefined
                 }
               />
             </div>
@@ -1096,19 +1095,6 @@ export function GemHuntOverlay({
               ) : null}
             </div>
             <div className="gem-hunt-overlay__footer-controls">
-              {campusSession && phase === "visible" && !encounterMode ? (
-                <button
-                  type="button"
-                  className="gem-hunt-overlay__campus-save-btn"
-                  disabled={!canTapCollect}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleGemInspectTap();
-                  }}
-                >
-                  {GEM_CAMPUS_TAP_SAVE_HE}
-                </button>
-              ) : null}
                 {!hideHuntHintControls ? (
                   <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                     <button

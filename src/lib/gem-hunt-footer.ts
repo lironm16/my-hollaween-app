@@ -17,10 +17,12 @@ export function gemHuntFooterVisible(args: {
   const showEncounterFooter =
     args.encounterMode &&
     (args.encounterPhase === "approach" || args.encounterPhase === "encounter");
+  const huntActive =
+    args.phase === "visible" || args.phase === "placed" || args.phase === "scanning";
   return (
     !args.encounterMode ||
     showEncounterFooter ||
     args.centerReveal ||
-    (args.campusSession && args.phase === "visible")
+    (args.campusSession && huntActive)
   );
 }
