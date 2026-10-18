@@ -14,6 +14,7 @@ import {
   NIGHT_PASS_REGISTER_SUBTITLE,
 } from "@/lib/night-pass-copy";
 import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
+import { detectNightPassClientSurface } from "@/lib/night-pass-client-surface";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -137,11 +138,12 @@ export function NightPassRegisterPanel({
         : hasInvite
           ? "/api/night-passes/redeem-invite"
           : "/api/night-passes/redeem";
+      const clientSurface = detectNightPassClientSurface();
       const body = ownerRegister
-        ? { houseId: resolvedOwnerHouseId || ownerHouseId?.trim(), name, phone }
+        ? { houseId: resolvedOwnerHouseId || ownerHouseId?.trim(), name, phone, clientSurface }
         : hasInvite
-          ? { invite: inviteToken.trim(), name, phone }
-          : { code, name, phone };
+          ? { invite: inviteToken.trim(), name, phone, clientSurface }
+          : { code, name, phone, clientSurface };
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

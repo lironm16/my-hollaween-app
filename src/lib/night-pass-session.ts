@@ -47,7 +47,7 @@ export async function clearNightPassCookie() {
 
 const LOST_COOKIE = "hw_pass_lost";
 
-export type NightPassLost = { reason: "taken" | "reset"; byName?: string };
+export type NightPassLost = { reason: "taken" | "reset" | "removed"; byName?: string };
 
 /** Same code still active with another token → taken by that holder; record gone → owner reset. */
 export async function describeNightPassLost(
@@ -59,11 +59,15 @@ export async function describeNightPassLost(
   const sessionGone =
     Boolean(staleSessionId) &&
     !record.sessions.some((session) => session.sessionId === staleSessionId);
-  if (sessionGone && record.history.some((event) => event.type === "reset")) {
-    return { reason: "reset" };
-  }
-  if (sessionGone) {
-    return { reason: "reset" };
+  if (sessionGone && staleSessionId) {
+    const removed = [...record.history]
+      .reverse()
+      .find((event) => event.type === "removed" && event.sessionId === staleSessionId);
+    if (removed) return { reason: "removed" };
+    if (record.history.some((event) => event.type === "reset")) {
+      return { reason: "reset" };
+    }
+    return { reason: "removed" };
   }
   const last = record.sessions[record.sessions.length - 1];
   return {
@@ -73,8 +77,8 @@ export async function describeNightPassLost(
 }
 
 /** Why this device's pass stopped working — read once by `/api/night-passes/me`. */
-async function rememberNightPassLost(passId: string) {
-  const lost = await describeNightPassLost(passId);
+async function rememberNightPassLost(passId: string, staleSessionId?: string | null) {
+  const lost = await describeNightPassLost(passId, staleSessionId);
   const jar = await cookies();
   jar.set(LOST_COOKIE, encodeURIComponent(JSON.stringify(lost)), {
     httpOnly: true,
@@ -92,7 +96,9 @@ export async function takeNightPassLost(): Promise<NightPassLost | null> {
   jar.delete(LOST_COOKIE);
   try {
     const parsed = JSON.parse(decodeURIComponent(raw)) as NightPassLost;
-    if (parsed.reason !== "taken" && parsed.reason !== "reset") return null;
+    if (parsed.reason !== "taken" && parsed.reason !== "reset" && parsed.reason !== "removed") {
+      return null;
+    }
     return parsed;
   } catch {
     return null;
@@ -106,7 +112,7 @@ export async function currentNightPass(): Promise<NightPassRecord | null> {
   try {
     const pass = await validNightPassForToken(cookie.passId, cookie.token, cookie.sessionId);
     if (!pass) {
-      await rememberNightPassLost(cookie.passId);
+      await rememberNightPassLost(cookie.passId, cookie.sessionId);
       await clearNightPassCookie();
     }
     return pass;

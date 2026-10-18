@@ -11,13 +11,26 @@ import { NIGHT_PASS_LOST_EVENT, type NightPassLostDetail } from "@/lib/night-pas
 import { hiddenHouseCountForSet } from "@/lib/night-pass-scope";
 
 function lostMessage(detail: NightPassLostDetail): string {
-  if (detail?.reason === "taken") {
-    return detail.byName
-      ? `המכשיר התנתק — ${detail.byName} נרשם עם קוד הכניסה שלכם במכשיר אחר.`
-      : "המכשיר התנתק — מישהו נרשם עם קוד הכניסה שלכם במכשיר אחר.";
+  if (detail?.reason === "removed") {
+    return "המכשיר התנתק — בעלי הבית הסירו אותו מרשימת המכשירים.";
   }
-  if (detail?.reason === "reset") return "המכשיר התנתק — קוד הכניסה אופס. התחברו מחדש עם הקוד החדש.";
-  return "המכשיר הזה אינו רשום יותר — קוד הכניסה שוחרר או הועבר למכשיר אחר.";
+  if (detail?.reason === "reset") {
+    return "המכשיר התנתק — קוד הכניסה אופס. פנו לבעלי הבית לקוד מעודכן.";
+  }
+  if (detail?.reason === "taken") {
+    return "המכשיר התנתק — נרשם מחדש ממכשיר אחר עם אותו קוד כניסה.";
+  }
+  return "המכשיר התנתק — אין יותר גישה מאובטחת במכשיר הזה.";
+}
+
+function lostDescription(detail: NightPassLostDetail): string | undefined {
+  if (detail?.reason === "removed") {
+    return "אפשר לבקש מבעלי הבית הזמנה להתחבר שוב.";
+  }
+  if (detail?.reason === "reset") {
+    return "קוד הכניסה הישן לא תקף יותר.";
+  }
+  return undefined;
 }
 
 /** Map strip: invite code when not registered. Registered users see status only in the side menu. */
@@ -27,11 +40,14 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
   const passDialog = useNightPassDialogOptional();
 
   useEffect(() => {
-    const onLost = (event: Event) =>
-      toast.message(lostMessage((event as CustomEvent<NightPassLostDetail>).detail ?? null), {
-        description: "צריכים קוד כניסה חדש? פנו לבעלי הבית.",
+    const onLost = (event: Event) => {
+      const detail = (event as CustomEvent<NightPassLostDetail>).detail ?? null;
+      const description = lostDescription(detail);
+      toast.message(lostMessage(detail), {
+        ...(description ? { description } : {}),
         duration: 12_000,
       });
+    };
     window.addEventListener(NIGHT_PASS_LOST_EVENT, onLost);
     return () => window.removeEventListener(NIGHT_PASS_LOST_EVENT, onLost);
   }, []);

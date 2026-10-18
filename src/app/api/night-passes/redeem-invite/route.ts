@@ -3,6 +3,7 @@ import { isAdmin } from "@/lib/admin";
 import { parseHouseAccessInviteToken } from "@/lib/house-access-invite";
 import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-code";
 import { registerHouseAccessDevice } from "@/lib/night-pass-service";
+import { parseNightPassClientSurface } from "@/lib/night-pass-client-surface";
 import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
@@ -43,11 +44,13 @@ export async function POST(request: Request) {
   }
 
   const cookie = await readNightPassCookie();
+  const clientSurface = parseNightPassClientSurface(json?.clientSurface);
   const outcome = await registerHouseAccessDevice({
     houseId: house.id,
     name,
     phone,
     priorSessionId: cookie?.sessionId ?? null,
+    clientSurface,
   });
   if (!outcome.ok) {
     if (outcome.error === "full" || outcome.error === "duplicate_identity") {

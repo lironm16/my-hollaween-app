@@ -1,4 +1,5 @@
 import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-code";
+import type { NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import { toPublicHouse } from "@/lib/ids";
 import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
 import {
@@ -104,6 +105,7 @@ export async function registerOwnerDeviceWithContact(input: {
   houseId: string;
   name: string;
   phone: string;
+  clientSurface?: NightPassClientSurface;
 }): Promise<
   | (Extract<RedeemOutcome, { ok: true }> & {
       houseId: string;
@@ -136,6 +138,7 @@ export async function registerOwnerDeviceWithContact(input: {
     name,
     phone,
     priorSessionId: cookie?.sessionId ?? null,
+    clientSurface: input.clientSurface,
   });
   if (!outcome.ok) return { ok: false, error: outcome.error as string | "full" | "duplicate_identity" };
 

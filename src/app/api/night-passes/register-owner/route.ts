@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
+import { parseNightPassClientSurface } from "@/lib/night-pass-client-surface";
 import { registerOwnerDeviceWithContact } from "@/lib/night-pass-owner-connect";
 import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
 import { readNightPassSettings } from "@/lib/night-pass-store";
@@ -31,7 +32,13 @@ export async function POST(request: Request) {
     return fail(429, "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.");
   }
 
-  const outcome = await registerOwnerDeviceWithContact({ houseId, name, phone });
+  const clientSurface = parseNightPassClientSurface(json?.clientSurface);
+  const outcome = await registerOwnerDeviceWithContact({
+    houseId,
+    name,
+    phone,
+    clientSurface,
+  });
   if (!outcome.ok) {
     if (outcome.error === "name") return fail(400, "נא לכתוב שם (2–40 תווים).");
     if (outcome.error === "phone") return fail(400, "נא לכתוב מספר נייד ישראלי, למשל 050-1234567.");

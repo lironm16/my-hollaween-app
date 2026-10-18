@@ -5,6 +5,7 @@ import {
   normalizeHolderName,
   normalizeIsraeliMobile,
 } from "@/lib/house-access-code";
+import type { NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import {
   hashNightPassToken,
   newHouseAccessCode,
@@ -96,6 +97,7 @@ export async function redeemNightPass(input: {
   name: string;
   phone: string;
   priorSessionId?: string | null;
+  clientSurface?: NightPassClientSurface;
 }): Promise<RedeemOutcome> {
   const house = await getHouseByAccessCode(input.code);
   if (!house) return { ok: false, error: "invalid" };
@@ -122,14 +124,16 @@ export async function redeemNightPass(input: {
     const sameIdentity = (session: HouseAccessSession) =>
       normalizeHolderName(session.holderName) === input.name &&
       normalizeIsraeliMobile(session.holderPhone) === input.phone;
+    const surface = input.clientSurface;
     if (priorIdx >= 0) {
       outcome = "reregistered";
       sessions[priorIdx] = {
-        sessionId: sessions[priorIdx]!.sessionId,
+        ...sessions[priorIdx]!,
         tokenHash,
         registeredAt: now,
         holderName: input.name,
         holderPhone: input.phone,
+        ...(surface ? { clientSurface: surface } : {}),
       };
     } else {
       if (sessions.length >= HOUSE_ACCESS_MAX_DEVICES) {
@@ -147,6 +151,7 @@ export async function redeemNightPass(input: {
         registeredAt: now,
         holderName: input.name,
         holderPhone: input.phone,
+        ...(surface ? { clientSurface: surface } : {}),
       });
     }
     return {
@@ -185,6 +190,7 @@ export async function registerHouseAccessDevice(input: {
   name: string;
   phone: string;
   priorSessionId?: string | null;
+  clientSurface?: NightPassClientSurface;
 }): Promise<RedeemOutcome> {
   const house = await getHouse(input.houseId);
   if (!house?.editCode?.trim()) return { ok: false, error: "invalid" };
@@ -193,6 +199,7 @@ export async function registerHouseAccessDevice(input: {
     name: input.name,
     phone: input.phone,
     priorSessionId: input.priorSessionId,
+    clientSurface: input.clientSurface,
   });
 }
 
@@ -219,10 +226,11 @@ export async function removeHouseAccessSession(
       sessions: current.sessions.filter((s) => s.sessionId !== sessionId),
       updatedAt: now,
       history: withEvent(current.history, {
-        type: "evicted",
+        type: "removed",
         at: now,
         name: target.holderName,
         phone: target.holderPhone,
+        sessionId,
       }),
     };
   });
@@ -280,6 +288,7 @@ export type HouseAccessDeviceView = {
   holderPhone: string;
   registeredAt: string;
   isThisDevice: boolean;
+  clientSurface?: HouseAccessSession["clientSurface"];
 };
 
 export type HouseAccessView = {
@@ -301,6 +310,7 @@ export function houseAccessView(
     holderName: s.holderName,
     holderPhone: s.holderPhone,
     registeredAt: s.registeredAt,
+    clientSurface: s.clientSurface,
     isThisDevice:
       (thisDeviceSessionId != null && s.sessionId === thisDeviceSessionId) ||
       (thisDeviceToken != null && sessionTokenMatches(s, thisDeviceToken)),

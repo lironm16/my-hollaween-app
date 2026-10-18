@@ -11,6 +11,7 @@ import {
   refreshNightPassState,
 } from "@/lib/night-pass-client";
 import { formatHouseAddedAt } from "@/lib/house-meta";
+import { nightPassClientSurfaceLabel } from "@/lib/night-pass-client-surface";
 import { shareHouseAccessInvite } from "@/lib/nav-links";
 import type { PublicHouse } from "@/lib/types";
 
@@ -24,6 +25,7 @@ type AccessView = {
     holderPhone: string;
     registeredAt: string;
     isThisDevice: boolean;
+    clientSurface?: "ios-browser" | "ios-app" | "other";
   }[];
   resetCount: number;
 };
@@ -277,13 +279,17 @@ export function NightPassesCard({
     ? "space-y-3"
     : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
 
+  const devicesHeading = access
+    ? `מכשירים והזמנות · מכשירים מחוברים: ${access.connectedCount}/${access.maxDevices}`
+    : "מכשירים והזמנות";
+
   return (
     <section className={shellClass}>
       {!embedded ? (
-        <h2 className="text-center text-lg font-medium text-orange-200">מכשירים והזמנות</h2>
+        <h2 className="text-center text-lg font-medium text-orange-200">{devicesHeading}</h2>
       ) : embedded ? (
         <h3 className="border-t border-orange-500/20 pt-4 text-center text-base font-medium text-orange-200">
-          מכשירים והזמנות
+          {devicesHeading}
         </h3>
       ) : null}
       {!data.enabled ? (
@@ -292,9 +298,6 @@ export function NightPassesCard({
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
       {access ? (
         <>
-          <p className="text-center text-sm text-violet-200">
-            מכשירים מחוברים: {access.connectedCount}/{access.maxDevices}
-          </p>
           {showFamilyCode ? (
             <div className="flex flex-col items-center gap-2 rounded-xl bg-black/30 px-3 py-4 ring-1 ring-orange-500/20">
               <span className="text-sm text-violet-300">קוד כניסה</span>
@@ -361,6 +364,12 @@ export function NightPassesCard({
                     </p>
                     <p className="text-center text-sm text-violet-400">
                       {formatHouseAddedAt(device.registeredAt)}
+                      {nightPassClientSurfaceLabel(device.clientSurface) ? (
+                        <>
+                          {" · "}
+                          {nightPassClientSurfaceLabel(device.clientSurface)}
+                        </>
+                      ) : null}
                     </p>
                   </div>
                   <Button

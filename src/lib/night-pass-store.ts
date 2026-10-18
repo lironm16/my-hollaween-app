@@ -8,10 +8,11 @@ import {
 } from "@/lib/firestore-admin";
 
 export type NightPassEvent = {
-  type: "registered" | "reregistered" | "reset" | "evicted";
+  type: "registered" | "reregistered" | "reset" | "evicted" | "removed";
   at: string;
   name?: string;
   phone?: string;
+  sessionId?: string;
 };
 
 export type HouseAccessSession = {
@@ -20,6 +21,8 @@ export type HouseAccessSession = {
   registeredAt: string;
   holderName: string;
   holderPhone: string;
+  /** Set on register — iOS browser vs home-screen app. */
+  clientSurface?: "ios-browser" | "ios-app" | "other";
 };
 
 /** Device registry for one house — family code is always house.editCode. */

@@ -20,12 +20,12 @@ export const NIGHT_PASS_CHANGED_EVENT = "hw-night-pass-changed";
 /** This device's pass stopped working (re-registered elsewhere or reset by the owner). */
 export const NIGHT_PASS_LOST_EVENT = "hw-night-pass-lost";
 
-export type NightPassLostDetail = { reason: "taken" | "reset"; byName?: string } | null;
+export type NightPassLostDetail = { reason: "taken" | "reset" | "removed"; byName?: string } | null;
 
 function readLostDetail(value: unknown): NightPassLostDetail {
   if (!value || typeof value !== "object") return null;
   const raw = value as { reason?: unknown; byName?: unknown };
-  if (raw.reason !== "taken" && raw.reason !== "reset") return null;
+  if (raw.reason !== "taken" && raw.reason !== "reset" && raw.reason !== "removed") return null;
   return {
     reason: raw.reason,
     ...(typeof raw.byName === "string" && raw.byName.trim() ? { byName: raw.byName.trim() } : {}),
