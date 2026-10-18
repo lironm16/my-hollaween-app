@@ -44,12 +44,23 @@ type PassesResponse = {
   error?: string;
 };
 
-function PassesSkeleton() {
+/** Matches connected-device row layout so loading does not look like blank boxes. */
+function PassesDevicesSkeleton({ embedded }: { embedded?: boolean }) {
   return (
-    <div className="space-y-3 rounded-xl ring-1 ring-orange-500/20">
-      <div className="mx-auto h-8 w-32 animate-pulse rounded-md bg-violet-950/80" />
-      <div className="h-20 animate-pulse rounded-xl bg-black/30" />
-    </div>
+    <section className={embedded ? "space-y-3" : "mt-4 space-y-3"}>
+      <div className="mx-auto h-6 w-52 max-w-full animate-pulse rounded-md bg-violet-950/80" />
+      <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <li key={i} className="flex items-start gap-2 px-3 py-3">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="mx-auto h-5 w-[min(100%,14rem)] animate-pulse rounded bg-violet-950/70" />
+              <div className="mx-auto h-4 w-24 animate-pulse rounded bg-violet-950/50" />
+            </div>
+            <div className="h-9 w-[3.25rem] shrink-0 animate-pulse rounded-md bg-violet-950/60" />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -70,7 +81,7 @@ function SlotAction({
       size="sm"
       variant="outline"
       disabled={disabled}
-      className="h-9 gap-1.5 border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15"
+      className="h-9 min-w-0 flex-1 gap-1.5 border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15 sm:flex-initial"
       onClick={onClick}
     >
       {icon}
@@ -247,23 +258,10 @@ export function NightPassesCard({
     }
   }
 
-  if (loading && !data) {
-    return (
-      <section className={embedded ? "space-y-3" : "mt-4 space-y-3"}>
-        <PassesSkeleton />
-      </section>
-    );
-  }
-
-  if (!data) {
-    return error ? <p className="text-sm text-red-300">{error}</p> : null;
-  }
-  if (!data.enabled && !admin) return null;
-
   const inviteActions = house ? (
     <SlotAction
       label="שלח הזמנה"
-      disabled={busyShare}
+      disabled={busyShare || (loading && !data)}
       onClick={() => void shareInvite()}
       icon={
         busyShare ? (
@@ -281,7 +279,7 @@ export function NightPassesCard({
         {inviteActions}
         <SlotAction
           label="איפוס קוד"
-          disabled={busyReset}
+          disabled={busyReset || (loading && !data)}
           onClick={() => void resetFamilyCode()}
           icon={
             busyReset ? (
@@ -294,6 +292,15 @@ export function NightPassesCard({
       </>
     );
   }
+
+  if (loading && !data) {
+    return <PassesDevicesSkeleton embedded={embedded} />;
+  }
+
+  if (!data) {
+    return error ? <p className="text-sm text-red-300">{error}</p> : null;
+  }
+  if (!data.enabled && !admin) return null;
 
   const access = data.access;
   const shellClass = embedded
@@ -420,22 +427,31 @@ export function NightPassesCard({
             )}
             {access.connectedCount < access.maxDevices
               ? Array.from({ length: access.maxDevices - access.connectedCount }).map((_, i) => (
-                  <li
-                    key={`empty-${i}`}
-                    className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-emerald-400/90"
-                  >
-                    <span>פנוי</span>
-                    {showConnectMe ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-8 border-emerald-500/35 text-emerald-100 hover:bg-emerald-950/40"
-                        onClick={() => passDialog?.openOwnerRegister(houseId)}
-                      >
-                        חבר אותי
-                      </Button>
-                    ) : null}
+                  <li key={`empty-${i}`} className="flex items-start gap-2 px-3 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-center text-base font-medium text-emerald-400/95">פנוי</p>
+                      {showConnectMe ? (
+                        <div className="mt-2 flex justify-center">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-9 border-emerald-500/35 text-emerald-100 hover:bg-emerald-950/40"
+                            onClick={() => passDialog?.openOwnerRegister(houseId)}
+                          >
+                            חבר אותי
+                          </Button>
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-center text-sm text-violet-500/75">—</p>
+                      )}
+                    </div>
+                    <span
+                      className="inline-flex h-9 w-[3.25rem] shrink-0 items-center justify-center text-sm opacity-0"
+                      aria-hidden
+                    >
+                      הסרה
+                    </span>
                   </li>
                 ))
               : null}
