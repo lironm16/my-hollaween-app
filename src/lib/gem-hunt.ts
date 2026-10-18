@@ -354,6 +354,15 @@ export function gemWorldPinVisible(
   return placement.distanceM <= maxDistanceM;
 }
 
+/** Show compass-pinned gem on camera when far but anchor is in the view cone (collect still uses hunt band). */
+export function gemWorldPinApproachVisible(
+  placement: GemScreenPlacement | null,
+  maxDistanceM = GEM_APPROACH_METERS,
+) {
+  if (!placement?.inView) return false;
+  return placement.distanceM <= maxDistanceM;
+}
+
 /** Gem pin overlaps the on-screen hunt ring (visual / legacy; collect no longer requires this). */
 export function gemInScanRing(
   placement: GemScreenPlacement | null,

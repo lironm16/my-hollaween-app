@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { movedAtLeast } from "@/lib/geo";
+import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 
 export type GemHuntLocation = {
   lat: number;
@@ -15,17 +17,34 @@ const HUNT_WATCH: PositionOptions = {
   timeout: 12_000,
 };
 
+const HUNT_POLL: PositionOptions = {
+  enableHighAccuracy: true,
+  maximumAge: 2_000,
+  timeout: 10_000,
+};
+
+/** Ignore GPS jitter smaller than this while walking (meters). */
+const HUNT_GPS_MOVE_METERS = 2;
+
 /** High-frequency location for gem hunt walk-around (does not replace map GPS hook). */
 export function useGemHuntLocation(enabled: boolean) {
   const [location, setLocation] = useState<GemHuntLocation | null>(null);
   const watchRef = useRef<number | null>(null);
+  const pollRef = useRef<number | null>(null);
+  const lastRef = useRef<GemHuntLocation | null>(null);
 
-  const apply = useCallback((pos: GeolocationPosition) => {
-    setLocation({
+  const apply = useCallback((pos: GeolocationPosition, force = false) => {
+    const next: GemHuntLocation = {
       lat: pos.coords.latitude,
       lng: pos.coords.longitude,
       accuracy: pos.coords.accuracy,
-    });
+    };
+    const prev = lastRef.current;
+    if (!force && prev && !movedAtLeast(prev, next, HUNT_GPS_MOVE_METERS)) {
+      return;
+    }
+    lastRef.current = next;
+    setLocation(next);
   }, []);
 
   useEffect(() => {
@@ -34,16 +53,41 @@ export function useGemHuntLocation(enabled: boolean) {
         navigator.geolocation.clearWatch(watchRef.current);
         watchRef.current = null;
       }
+      if (pollRef.current != null) {
+        window.clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+      lastRef.current = null;
       return;
     }
     if (!navigator.geolocation) return;
 
-    navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
-    watchRef.current =     watchRef.current = navigator.geolocation.watchPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
+    navigator.geolocation.getCurrentPosition((pos) => apply(pos, true), () => {}, HUNT_WATCH);
+    watchRef.current = navigator.geolocation.watchPosition(
+      (pos) => apply(pos, false),
+      () => {},
+      HUNT_WATCH,
+    );
+
+    /** WebXR / installed PWA: watch callbacks can stall — poll keeps distance hints moving. */
+    if (isAndroidLike()) {
+      pollRef.current = window.setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => apply(pos, false),
+          () => {},
+          HUNT_POLL,
+        );
+      }, 1800);
+    }
+
     return () => {
       if (watchRef.current != null) {
         navigator.geolocation.clearWatch(watchRef.current);
         watchRef.current = null;
+      }
+      if (pollRef.current != null) {
+        window.clearInterval(pollRef.current);
+        pollRef.current = null;
       }
     };
   }, [enabled, apply]);

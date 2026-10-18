@@ -32,6 +32,7 @@ import {
   gemLabelHe,
   gemMonsterForHouse,
   gemScreenPlacement,
+  gemWorldPinApproachVisible,
   gemWorldPinVisible,
   relativeWalkBearingDeg,
   type GemMonsterId,
@@ -44,7 +45,7 @@ import { beginMapListOverlayCapture, endMapListOverlayCapture } from "@/lib/map-
 import { googleMapsNavigateUrl } from "@/lib/route";
 import { isGemTypeInCollection, loadGemCollected } from "@/lib/gem-progress";
 import { GemCollectAlbumReveal } from "@/components/gem-hunt/gem-collect-album-reveal";
-import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
+import { useGemHuntLiveLocation } from "@/hooks/use-gem-hunt-live-location";
 import { useSmoothedGemPlacement } from "@/hooks/use-smoothed-gem-placement";
 import { gemWorldYawRad } from "@/lib/gem-world-yaw";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
@@ -209,21 +210,20 @@ export function GemHuntOverlay({
     setHintPanel(null);
   }, [house.id]);
 
-  const huntGps = useGemHuntLocation(!sim);
-
   const { heading, pitch: devicePitch, status: headingStatus } = useDeviceHeading(true, compassRetry);
 
-  const walkViewer =
-    huntGps ??
-    (effectiveLoc
-      ? { lat: effectiveLoc.lat, lng: effectiveLoc.lng, accuracy: effectiveLoc.accuracy ?? 12 }
-      : null);
-
   /** Live GPS for distance, hints, and in-range — not the snapshot from hunt open. */
-  const liveLoc = useMemo(() => {
-    if (sim) return effectiveLoc;
-    return walkViewer ?? effectiveLoc;
-  }, [sim, walkViewer, effectiveLoc]);
+  const liveLoc = useGemHuntLiveLocation({
+    huntGpsEnabled: true,
+    simulate: sim,
+    simulateLoc: { lat: house.lat, lng: house.lng, accuracy: 5 },
+    seedLoc: userLocation,
+  });
+
+  const walkViewer =
+    sim || !liveLoc
+      ? null
+      : { lat: liveLoc.lat, lng: liveLoc.lng, accuracy: liveLoc.accuracy ?? 12 };
 
   const distanceM =
     liveLoc != null && !sim ? gemDistanceMeters(liveLoc, house) : null;
@@ -632,8 +632,12 @@ export function GemHuntOverlay({
             (encounterPhase === "approach" || encounterPhase === "encounter")) ||
           (!encounterMode && gemVisible) ||
           (campusSession && (canCollectNow || sim)))));
+  const worldPinPlacement = pinDisplay ?? pinPlacement;
   const showWorldGemSprite =
-    !gemAtCenter && gemWorldPinVisible(pinDisplay ?? pinPlacement, huntBandM);
+    !gemAtCenter &&
+    worldPinPlacement != null &&
+    (gemWorldPinVisible(worldPinPlacement, huntBandM) ||
+      gemWorldPinApproachVisible(worldPinPlacement));
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =

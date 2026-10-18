@@ -9,7 +9,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ARButton } from "three/addons/webxr/ARButton.js";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
-import { useGemHuntLocation } from "@/hooks/use-gem-hunt-location";
+import { useGemHuntLiveLocation } from "@/hooks/use-gem-hunt-live-location";
+import { useSmoothedGemPlacement } from "@/hooks/use-smoothed-gem-placement";
 import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import {
   GEM_CAMPUS_COLLECT_MS,
@@ -22,6 +23,8 @@ import {
   gemDistanceMeters,
   gemLabelHe,
   gemMonsterForHouse,
+  gemScreenPlacement,
+  gemWorldPinApproachVisible,
   GEM_WEBXR_GEO_PLACEMENT_ENABLED,
   GEM_WEBXR_FLOAT_HEIGHT_M,
   GEM_WEBXR_HUNT_METERS,
@@ -205,7 +208,7 @@ export function GemHuntWebXrAr({
     };
   }, []);
 
-  const { heading } = useDeviceHeading(true, compassRetry);
+  const { heading, pitch: devicePitch } = useDeviceHeading(true, compassRetry);
   const headingRef = useRef<number | null>(heading);
   const liveLocRef = useRef<typeof userLocation>(null);
   const geoTargetRef = useRef({ lat: anchor.lat, lng: anchor.lng });
@@ -242,8 +245,17 @@ export function GemHuntWebXrAr({
   const effectiveLoc = simulateInRange
     ? { lat: house.lat, lng: house.lng, accuracy: 5 }
     : userLocation;
-  const huntGps = useGemHuntLocation(!simulateInRange);
-  const liveLoc = simulateInRange ? effectiveLoc : huntGps ?? userLocation;
+  const liveLoc = useGemHuntLiveLocation({
+    huntGpsEnabled: true,
+    simulate: simulateInRange,
+    simulateLoc: { lat: house.lat, lng: house.lng, accuracy: 5 },
+    seedLoc: userLocation,
+  });
+  const pinPlacement = useMemo(() => {
+    if (!liveLoc || simulateInRange || heading == null) return null;
+    return gemScreenPlacement(liveLoc, anchor, heading, devicePitch);
+  }, [liveLoc, anchor, heading, devicePitch, simulateInRange]);
+  const pinDisplay = useSmoothedGemPlacement(pinPlacement, house.id);
   headingRef.current = heading;
   liveLocRef.current = liveLoc;
   geoTargetRef.current = { lat: anchor.lat, lng: anchor.lng };
@@ -403,6 +415,19 @@ export function GemHuntWebXrAr({
   /** DOM center gem only for «גלה לי» — world AR model handles on-site placement taps. */
   const showTellMeCenterGem =
     centerReveal && sessionActive && phase !== "collecting" && !userDismissedCenterGem;
+
+  const approachScreenPin = pinDisplay ?? pinPlacement;
+  const showApproachScreenGem =
+    sessionActive &&
+    encounterMode &&
+    !simulateInRange &&
+    !showTellMeCenterGem &&
+    !userDismissedCenterGem &&
+    phase !== "collecting" &&
+    encounterPhase === "approach" &&
+    approachScreenPin != null &&
+    gemWorldPinApproachVisible(approachScreenPin) &&
+    !(placed && inWebXrHuntBand);
 
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
@@ -1173,6 +1198,26 @@ export function GemHuntWebXrAr({
       ) : null}
 
       <div ref={hostRef} className="gem-hunt-webxr__host" />
+
+      {showApproachScreenGem && approachScreenPin ? (
+        <div
+          className="gem-hunt-overlay__stage gem-hunt-webxr__approach-stage pointer-events-none"
+          aria-hidden
+        >
+          <div
+            className={cn(
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-revealed is-approach-preview",
+              !approachScreenPin.inView && "is-off-screen",
+            )}
+            style={{
+              left: `${approachScreenPin.xPercent}%`,
+              top: `${approachScreenPin.yPercent}%`,
+            }}
+          >
+            <GemSprite house={house} mode="3d" size="lg" tapCollect={false} spinWhileCollect={false} />
+          </div>
+        </div>
+      ) : null}
 
       {showTellMeCenterGem ? (
         <div
