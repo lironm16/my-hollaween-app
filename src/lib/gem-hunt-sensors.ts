@@ -46,6 +46,24 @@ export function getGemHuntCameraStream() {
 export function stopGemHuntCameraStream() {
   sharedCameraStream?.getTracks().forEach((t) => t.stop());
   sharedCameraStream = null;
+  if (typeof document === "undefined") return;
+  document.querySelectorAll("video").forEach((video) => {
+    const src = video.srcObject;
+    if (!(src instanceof MediaStream)) return;
+    src.getTracks().forEach((t) => {
+      try {
+        t.stop();
+      } catch {
+        /* ignore */
+      }
+    });
+    video.srcObject = null;
+    try {
+      video.pause();
+    } catch {
+      /* ignore */
+    }
+  });
 }
 
 /**

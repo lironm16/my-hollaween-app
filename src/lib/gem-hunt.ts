@@ -81,9 +81,9 @@ export const GEM_SCAN_REVEAL_SECONDS = 5;
 /** «גלה לי» center view — inspect360 framing leaves wide orbit margins, so zoom in (iOS + Android DOM overlay). */
 export const GEM_TELL_ME_CENTER_ZOOM = 1.58;
 /** Model scale inside the fixed hunt frame (frame CSS unchanged). */
-export const GEM_HUNT_MODEL_ZOOM_INSET = 0.95;
+export const GEM_HUNT_MODEL_ZOOM_INSET = 0.86;
 /** Android «גלה לי» DOM overlay — smaller model inside the same frame. */
-export const GEM_HUNT_MODEL_ZOOM_ANDROID_INSET = 0.82;
+export const GEM_HUNT_MODEL_ZOOM_ANDROID_INSET = 0.66;
 
 /** Camera zoom for centered inspect360 (frame CSS unchanged). */
 export function gemTellMeCenterModelZoom(): number {
@@ -91,6 +91,11 @@ export function gemTellMeCenterModelZoom(): number {
     return GEM_TELL_ME_CENTER_ZOOM * GEM_HUNT_MODEL_ZOOM_ANDROID_INSET;
   }
   return GEM_TELL_ME_CENTER_ZOOM * GEM_HUNT_MODEL_ZOOM_INSET;
+}
+
+/** Onsite center gem — match tell-me framing (same perceived size). */
+export function gemHuntOnsiteCenterModelZoom(): number {
+  return gemTellMeCenterModelZoom();
 }
 /** Guaranteed gem reveal after this much pan rotation (degrees). */
 export const GEM_SCAN_PAN_DEGREES = 180;

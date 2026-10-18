@@ -518,12 +518,13 @@ export function NeighborhoodApp({
       setMapGemWebXrSession(xrSession);
 
       await prepareGemHuntSensors({
-        requestCamera: !xrSession,
+        requestCamera: false,
         requestOrientation: !isGemHuntOrientationGranted(),
       });
       if (gen !== mapGemOpenGenRef.current) {
         void endGemHuntWebXrSession(xrSession);
         releaseGemHuntCamera();
+        stopGemHuntCameraStream();
         return;
       }
 

@@ -25,6 +25,7 @@ import {
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   gemTellMeCenterModelZoom,
+  gemHuntOnsiteCenterModelZoom,
   gemHuntGemStayVisible,
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
@@ -67,6 +68,7 @@ import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import {
   GEM_CAMPUS_TAP_SAVE_HE,
+  GEM_TELL_ME_COLLECT_HE,
   GEM_CLUSTER_FINISH_HE,
   GEM_CLUSTER_SKIP_HE,
   GEM_WALK_MAPS_ARIA_HE,
@@ -459,8 +461,12 @@ export function GemHuntOverlay({
     if (phase !== "visible") return;
     const inCollectBand =
       canCollectNow || encounterCollectLatchedRef.current || sim;
-    const viaTellMe = centerReveal && inCollectBand && !encounterMode;
-    const viaTellMeEncounter = centerReveal && inCollectBand && encounterMode;
+    const tellMeReady =
+      centerReveal &&
+      tellMeCollectArmedRef.current &&
+      (sim || tellMeInRange || inCollectBand);
+    const viaTellMe = tellMeReady && !encounterMode;
+    const viaTellMeEncounter = tellMeReady && encounterMode;
     const viaPinned =
       !centerReveal && inCollectBand && gemWorldPinVisible(pinDisplay ?? pinPlacement);
     const viaEncounter = encounterMode && inCollectBand;
@@ -516,6 +522,7 @@ export function GemHuntOverlay({
     pinDisplay,
     pinPlacement,
     repeatVisitLatched,
+    tellMeInRange,
   ]);
 
   const finishRepeatEncounter = useCallback(() => {
@@ -737,14 +744,7 @@ export function GemHuntOverlay({
         ((centerReveal && !encounterMode) ||
           (!encounterMode && (pinCollectReady || sim)))));
 
-  const canTapTellMeCenter =
-    centerReveal &&
-    gemAtCenter &&
-    tellMeCollectArmed &&
-    (sim ||
-      canCollectNow ||
-      encounterCollectLatchedRef.current ||
-      (encounterMode && encounterPhase === "encounter"));
+  const canTapTellMeCenter = centerReveal && gemAtCenter && tellMeCollectArmed;
 
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
@@ -984,7 +984,7 @@ export function GemHuntOverlay({
               !gemAtCenter && pinCollectReady && "is-collect-ready-gem",
               !canCollectNow && phase === "visible" && "is-awaiting-still",
               canTapCollect && "is-tap-collect-ready",
-              canTapTellMeCenter && "is-tell-me-tap-ready",
+              centerReveal && gemAtCenter && "is-tell-me-center-active",
             )}
             style={
               gemAtCenter || !pinDisplay
@@ -1016,7 +1016,13 @@ export function GemHuntOverlay({
                 spinWhileCollect={false}
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
-                zoom={gemAtCenter ? gemTellMeCenterModelZoom() : 1}
+                zoom={
+                  gemAtCenter
+                    ? centerReveal
+                      ? gemTellMeCenterModelZoom()
+                      : gemHuntOnsiteCenterModelZoom()
+                    : 1
+                }
                 celebrateVariant={collectDanceIndex}
                 onInspectTap={
                   campusQuickTapGem
@@ -1028,18 +1034,6 @@ export function GemHuntOverlay({
                 }
               />
             </div>
-            {centerReveal && gemAtCenter ? (
-              <button
-                type="button"
-                className="gem-hunt-overlay__gem-tap-target"
-                aria-label="איסוף השדון"
-                disabled={!canTapTellMeCenter}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleGemInspectTap();
-                }}
-              />
-            ) : null}
           </div>
         ) : null}
       </div>
@@ -1100,6 +1094,18 @@ export function GemHuntOverlay({
               ) : null}
             </div>
             <div className="gem-hunt-overlay__footer-controls">
+              {centerReveal && phase === "visible" && canTapTellMeCenter ? (
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__campus-save-btn gem-hunt-overlay__tell-me-collect-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleGemInspectTap();
+                  }}
+                >
+                  {GEM_TELL_ME_COLLECT_HE}
+                </button>
+              ) : null}
               {campusSession && phase === "visible" && !encounterMode ? (
                 <button
                   type="button"

@@ -74,6 +74,7 @@ import {
   GEM_CLUSTER_FINISH_HE,
   GEM_CLUSTER_SKIP_HE,
   gemFoundOnScreenBannerHe,
+  GEM_TELL_ME_COLLECT_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
 } from "@/lib/gem-hunt-copy";
@@ -371,7 +372,14 @@ export function GemHuntWebXrAr({
       encounterCollectLatchedRef.current ||
       simulateInRange;
     const tellMeCenter = centerRevealRef.current;
-    if (!inBand && !tellMeCenter) return;
+    const tellMeReady =
+      tellMeCenter &&
+      tellMeCollectArmedRef.current &&
+      (simulateInRange ||
+        tellMeInRange ||
+        inWebXrHuntBand ||
+        encounterCollectLatchedRef.current);
+    if (!inBand && !tellMeReady) return;
     if (!placed && !tellMeCenter) return;
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
@@ -419,6 +427,7 @@ export function GemHuntWebXrAr({
     placed,
     repeatVisit,
     simulateInRange,
+    tellMeInRange,
   ]);
 
   const finishRepeatEncounter = useCallback(() => {
@@ -624,15 +633,7 @@ export function GemHuntWebXrAr({
   const offerEncounterCollectRef = useRef(offerEncounterCollect);
   offerEncounterCollectRef.current = offerEncounterCollect;
 
-  const canTapTellMeCenter =
-    showTellMeCenterGem &&
-    tellMeCollectArmed &&
-    (simulateInRange ||
-      centerReveal ||
-      (encounterMode
-        ? encounterPhase === "encounter" &&
-          (canCollectNow || encounterCollectLatchedRef.current)
-        : canCollectNow));
+  const canTapTellMeCenter = showTellMeCenterGem && tellMeCollectArmed;
 
   const onTellMeCenterTap = useCallback(() => {
     if (!showTellMeCenterGem || !tellMeCollectArmedRef.current) return;
@@ -1341,16 +1342,9 @@ export function GemHuntWebXrAr({
                 tapCollect={false}
                 celebrateVariant={danceIndex}
                 zoom={gemTellMeCenterModelZoom()}
-                onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
+                onInspectTap={undefined}
               />
             </div>
-            <button
-              type="button"
-              className="gem-hunt-overlay__gem-tap-target"
-              aria-label="איסוף השדון"
-              disabled={!canTapTellMeCenter}
-              onClick={onTellMeCenterTap}
-            />
           </div>
         </div>
       ) : null}
@@ -1441,6 +1435,20 @@ export function GemHuntWebXrAr({
                 sessionActive && "is-hidden",
               )}
             />
+            {showSessionFooter && canTapTellMeCenter ? (
+              <div className="gem-hunt-overlay__footer-controls gem-hunt-overlay__footer-controls--tell-me-collect">
+                <button
+                  type="button"
+                  className="gem-hunt-overlay__campus-save-btn gem-hunt-overlay__tell-me-collect-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTellMeCenterTap();
+                  }}
+                >
+                  {GEM_TELL_ME_COLLECT_HE}
+                </button>
+              </div>
+            ) : null}
             {showSessionFooter && !hideHuntHintControls ? (
               <div className="gem-hunt-overlay__footer-controls">
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
