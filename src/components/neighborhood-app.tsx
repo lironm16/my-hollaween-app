@@ -233,6 +233,8 @@ export function NeighborhoodApp({
   const [mapGemHouse, setMapGemHouse] = useState<PublicHouse | null>(null);
   /** Sorted cluster houses when gem camera runs as one multi-unit session. */
   const [mapGemClusterMembers, setMapGemClusterMembers] = useState<PublicHouse[] | null>(null);
+  /** True only for the floating map FAB — roving target + cluster-style header. */
+  const [mapGemFabRoving, setMapGemFabRoving] = useState(false);
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
   const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
@@ -487,7 +489,12 @@ export function NeighborhoodApp({
   const { resetForNavigation } = selection;
 
   const bootMapGemHunt = useCallback(
-    async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
+    async (
+      house: PublicHouse,
+      clusterMembers: PublicHouse[] | null,
+      options?: { fabRoving?: boolean },
+    ) => {
+      const fabRoving = Boolean(options?.fabRoving);
       const gen = ++mapGemOpenGenRef.current;
       preloadGemHuntChunks();
       getGemHuntPortalRoot();
@@ -503,6 +510,7 @@ export function NeighborhoodApp({
       setMapGemWebXrSession(null);
       setMapGemGps(gps);
       setMapGemClusterMembers(clusterMembers);
+      setMapGemFabRoving(fabRoving);
       flushSync(() => {
         setMapGemHouse(house);
       });
@@ -558,7 +566,7 @@ export function NeighborhoodApp({
       if (!gemHouseHuntAllowed(house)) return;
       mapGemClusterSessionRef.current = [];
       setMapGemClusterCatchCount(0);
-      await bootMapGemHunt(house, null);
+      await bootMapGemHunt(house, null, { fabRoving: false });
     },
     [bootMapGemHunt, gemHouseHuntAllowed, gems],
   );
@@ -573,7 +581,7 @@ export function NeighborhoodApp({
       if (!target) return;
       mapGemClusterSessionRef.current = [];
       setMapGemClusterCatchCount(0);
-      await bootMapGemHunt(target, houses);
+      await bootMapGemHunt(target, houses, { fabRoving: false });
     },
     [bootMapGemHunt, gemHouseHuntAllowed, gems.collected, gps],
   );
@@ -609,6 +617,7 @@ export function NeighborhoodApp({
     setMapGemWebXrSession(null);
     setMapGemHouse(null);
     setMapGemClusterMembers(null);
+    setMapGemFabRoving(false);
     setMapGemGps(null);
     setMapGemClusterCatchCount(0);
     restoreAfterGemHunt();
@@ -640,7 +649,7 @@ export function NeighborhoodApp({
     }
     mapGemClusterSessionRef.current = [];
     setMapGemClusterCatchCount(0);
-    await bootMapGemHunt(huntHouse, clusterMembers);
+    await bootMapGemHunt(huntHouse, clusterMembers, { fabRoving: true });
   }, [
     mapGemHouse,
     fabGemHuntPool,
@@ -653,7 +662,7 @@ export function NeighborhoodApp({
   ]);
 
   useEffect(() => {
-    if (!mapGemHouse || mapGemClusterMembers) return;
+    if (!mapGemHouse || mapGemClusterMembers || !mapGemFabRoving) return;
     const user = gps ?? mapGemGps;
     if (!user) return;
     const next = pickMapRovingGemHuntHouse(
@@ -670,6 +679,7 @@ export function NeighborhoodApp({
   }, [
     mapGemHouse,
     mapGemClusterMembers,
+    mapGemFabRoving,
     gps,
     mapGemGps,
     fabGemHuntPool,
@@ -685,8 +695,9 @@ export function NeighborhoodApp({
   const mapGemHuntQueueUi = useMemo(() => {
     if (!mapGemHouse) return undefined;
     if (mapGemClusterMembers) return mapGemClusterQueueUi;
-    return gemSingleHuntQueueHeadline(mapGemHouse);
-  }, [mapGemHouse, mapGemClusterMembers, mapGemClusterQueueUi]);
+    if (mapGemFabRoving) return gemSingleHuntQueueHeadline(mapGemHouse);
+    return undefined;
+  }, [mapGemHouse, mapGemClusterMembers, mapGemClusterQueueUi, mapGemFabRoving]);
 
   const mapGemFabHeadline = useMemo(() => {
     const headlineFor = (house: PublicHouse, cluster: PublicHouse[] | null) => {
@@ -1953,7 +1964,7 @@ export function NeighborhoodApp({
           initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
           onBeforeNavigationAssist={
-            mapGemClusterMembers ? undefined : pinMapGemNavigationTarget
+            mapGemFabRoving && !mapGemClusterMembers ? pinMapGemNavigationTarget : undefined
           }
           encounterMode={!mapGemClusterMembers}
           repeatVisit={!mapGemClusterMembers && gems.collected(mapGemHouse.id)}
