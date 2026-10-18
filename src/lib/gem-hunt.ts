@@ -1,4 +1,4 @@
-import { isIosLike } from "@/lib/gem-hunt-ar-platform";
+import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
 import { parseGemAnchorPlacement } from "@/lib/gem-anchor-placement";
 import { getPlacedGemAnchor } from "@/lib/gem-placed-anchors";
@@ -69,6 +69,16 @@ export const GEM_SCAN_REVEAL_SECONDS = 5;
 export const GEM_TELL_ME_CENTER_ZOOM = 1.58;
 /** Model scale inside the fixed hunt frame (frame CSS unchanged). */
 export const GEM_HUNT_MODEL_ZOOM_INSET = 0.95;
+/** Android «גלה לי» DOM overlay — smaller model inside the same frame. */
+export const GEM_HUNT_MODEL_ZOOM_ANDROID_INSET = 0.82;
+
+/** Camera zoom for centered inspect360 (frame CSS unchanged). */
+export function gemTellMeCenterModelZoom(): number {
+  if (typeof navigator !== "undefined" && isAndroidLike()) {
+    return GEM_TELL_ME_CENTER_ZOOM * GEM_HUNT_MODEL_ZOOM_ANDROID_INSET;
+  }
+  return GEM_TELL_ME_CENTER_ZOOM * GEM_HUNT_MODEL_ZOOM_INSET;
+}
 /** Guaranteed gem reveal after this much pan rotation (degrees). */
 export const GEM_SCAN_PAN_DEGREES = 180;
 /** Show "can't see it?" help after this many seconds in hunt mode. */

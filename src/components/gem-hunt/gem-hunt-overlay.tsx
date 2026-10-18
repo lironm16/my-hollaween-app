@@ -23,8 +23,7 @@ import {
   gemDistanceMeters,
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
-  GEM_HUNT_MODEL_ZOOM_INSET,
-  GEM_TELL_ME_CENTER_ZOOM,
+  gemTellMeCenterModelZoom,
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
@@ -175,6 +174,7 @@ export function GemHuntOverlay({
   const huntClosingRef = useRef(false);
   /** True once user starts collect or enters encounter in band — avoids GPS flicker blocking finish. */
   const encounterCollectLatchedRef = useRef(false);
+  const tellMeCollectArmedRef = useRef(false);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [, setShowHelp] = useState(false);
@@ -305,6 +305,18 @@ export function GemHuntOverlay({
     huntClosingRef.current = false;
     encounterCollectLatchedRef.current = false;
   }, [house.id]);
+
+  useEffect(() => {
+    if (!centerReveal) {
+      tellMeCollectArmedRef.current = false;
+      return;
+    }
+    tellMeCollectArmedRef.current = false;
+    const armTimer = window.setTimeout(() => {
+      tellMeCollectArmedRef.current = true;
+    }, 520);
+    return () => window.clearTimeout(armTimer);
+  }, [centerReveal, house.id]);
 
   useEffect(() => {
     if (!campusSession) return;
@@ -710,21 +722,35 @@ export function GemHuntOverlay({
 
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
+    if (centerReveal && !tellMeCollectArmedRef.current) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([12, 28, 18]);
     }
     encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
     onTreatSuccess();
-  }, [encounterPhase, onTreatSuccess]);
+  }, [encounterPhase, onTreatSuccess, centerReveal]);
 
   const handleGemInspectTap = useCallback(() => {
+    if (centerReveal && !tellMeCollectArmedRef.current) return;
     if (encounterMode && encounterPhase === "encounter" && gemAtCenter) {
+      if (centerReveal) {
+        handleCollect();
+        return;
+      }
       offerEncounterCollect();
       return;
     }
     if (canTapCollect) handleCollect();
-  }, [encounterMode, encounterPhase, gemAtCenter, offerEncounterCollect, canTapCollect, handleCollect]);
+  }, [
+    centerReveal,
+    encounterMode,
+    encounterPhase,
+    gemAtCenter,
+    offerEncounterCollect,
+    canTapCollect,
+    handleCollect,
+  ]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
   const hideHuntHintControls = showHuntGem && phase === "visible" && inOnsiteBand;
@@ -732,9 +758,11 @@ export function GemHuntOverlay({
     showHuntGem &&
     phase === "visible" &&
     inOnsiteBand &&
-    (encounterMode
-      ? encounterPhase === "encounter" && gemAtCenter
-      : gemAtCenter || pinCollectReady);
+    (centerReveal && gemAtCenter
+      ? true
+      : encounterMode
+        ? encounterPhase === "encounter" && gemAtCenter
+        : gemAtCenter || pinCollectReady);
   const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
   const showNavArrow = encounterMode
     ? encounterPhase === "approach" &&
@@ -961,7 +989,7 @@ export function GemHuntOverlay({
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
                 zoom={
-                  gemAtCenter ? GEM_TELL_ME_CENTER_ZOOM * GEM_HUNT_MODEL_ZOOM_INSET : 1
+                  centerReveal && gemAtCenter ? gemTellMeCenterModelZoom() : 1
                 }
                 celebrateVariant={collectDanceIndex}
                 onInspectTap={

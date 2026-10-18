@@ -16,8 +16,7 @@ import {
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_FACING_TOLERANCE_DEG,
-  GEM_HUNT_MODEL_ZOOM_INSET,
-  GEM_TELL_ME_CENTER_ZOOM,
+  gemTellMeCenterModelZoom,
   GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   bearingDegrees,
@@ -184,6 +183,7 @@ export function GemHuntWebXrAr({
   const userDismissedCenterGemRef = useRef(false);
   const centerRevealRef = useRef(false);
   const encounterCollectLatchedRef = useRef(false);
+  const tellMeCollectArmedRef = useRef(false);
   const collectFinishRef = useRef<number | null>(null);
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
   const [repeatVisitLatched, setRepeatVisitLatched] = useState(repeatVisit);
@@ -216,6 +216,18 @@ export function GemHuntWebXrAr({
   useEffect(() => {
     centerRevealRef.current = centerReveal;
   }, [centerReveal]);
+
+  useEffect(() => {
+    if (!centerReveal) {
+      tellMeCollectArmedRef.current = false;
+      return;
+    }
+    tellMeCollectArmedRef.current = false;
+    const armTimer = window.setTimeout(() => {
+      tellMeCollectArmedRef.current = true;
+    }, 520);
+    return () => window.clearTimeout(armTimer);
+  }, [centerReveal, house.id]);
 
   useEffect(() => {
     beginMapListOverlayCapture();
@@ -416,7 +428,7 @@ export function GemHuntWebXrAr({
     enabled: encounterMode && sessionActive,
     sessionKey: house.id,
     repeatVisit: campusSession ? false : repeatVisitLatched,
-    collectEnabled: canCollectNow || centerReveal || simulateInRange,
+    collectEnabled: canCollectNow || simulateInRange,
     petRevealed: petRevealedForEncounter,
     inRange: inRangeForEncounter,
     onEncounterCollect: handleCollect,
@@ -433,11 +445,11 @@ export function GemHuntWebXrAr({
     if (
       encounterMode &&
       encounterPhase === "encounter" &&
-      (canCollectNow || simulateInRange || centerReveal)
+      (canCollectNow || simulateInRange)
     ) {
       encounterCollectLatchedRef.current = true;
     }
-  }, [encounterMode, encounterPhase, canCollectNow, simulateInRange, centerReveal]);
+  }, [encounterMode, encounterPhase, canCollectNow, simulateInRange]);
 
   /** «גלה לי» during approach — skip wait (iOS parity). */
   useEffect(() => {
@@ -480,12 +492,14 @@ export function GemHuntWebXrAr({
     phase === "placed" &&
     inOnsiteBand &&
     showHuntGemOnScreen &&
-    (encounterMode
-      ? encounterPhase === "encounter" &&
-        (showTellMeCenterGem ||
-          gemVisibleInCam ||
-          (placed && showArGem && !userDismissedCenterGem))
-      : showTellMeCenterGem || gemVisibleInCam);
+    (showTellMeCenterGem
+      ? true
+      : encounterMode
+        ? encounterPhase === "encounter" &&
+          (showTellMeCenterGem ||
+            gemVisibleInCam ||
+            (placed && showArGem && !userDismissedCenterGem))
+        : showTellMeCenterGem || gemVisibleInCam);
   const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
 
   const treatSwipe = useTreatSwipe({
@@ -548,6 +562,7 @@ export function GemHuntWebXrAr({
     sessionActive && phase !== "collecting" && (!encounterMode || showEncounterFooter) && !hideFooterChrome;
 
   const offerEncounterCollect = useCallback(() => {
+    if (centerRevealRef.current) return;
     if (encounterPhase !== "encounter") return;
     if (
       !canCollectNow &&
@@ -591,21 +606,18 @@ export function GemHuntWebXrAr({
 
   const canTapTellMeCenter =
     showTellMeCenterGem &&
+    tellMeCollectArmedRef.current &&
     (encounterMode
-      ? encounterPhase === "encounter" ||
-        (centerReveal && encounterPhase === "approach" && (canCollectNow || simulateInRange))
-      : canCollectNow || centerReveal || simulateInRange);
+      ? encounterPhase === "encounter"
+      : canCollectNow || simulateInRange);
 
   const onTellMeCenterTap = useCallback(() => {
+    if (!showTellMeCenterGem || !tellMeCollectArmedRef.current) return;
     if (!canTapTellMeCenter) return;
-    if (encounterMode) {
-      encounterCollectLatchedRef.current = true;
-      markEncounterTutorialSeen();
-      onTreatSuccessRef.current();
-      return;
-    }
+    encounterCollectLatchedRef.current = true;
+    markEncounterTutorialSeen();
     handleCollectRef.current();
-  }, [canTapTellMeCenter, encounterMode]);
+  }, [canTapTellMeCenter, showTellMeCenterGem]);
 
   const handleClose = useCallback(() => {
     if (phase === "collecting" && !campusSession) return;
@@ -965,14 +977,14 @@ export function GemHuntWebXrAr({
     const onSelect = () => {
       if (collectingRef.current) return;
       if (isPlaced) {
+        /** «גלה לי» — collect only via explicit DOM tap (not WebXR select / encounter chain). */
+        if (centerRevealRef.current) return;
         if (encounterMode) {
           const ep = encounterPhaseRef.current;
           if (
             ep === "encounter" &&
             !userDismissedCenterGemRef.current &&
-            (canCollectRef.current ||
-              encounterCollectLatchedRef.current ||
-              centerRevealRef.current)
+            (canCollectRef.current || encounterCollectLatchedRef.current)
           ) {
             offerEncounterCollectRef.current();
             return;
@@ -1304,7 +1316,7 @@ export function GemHuntWebXrAr({
                 spinWhileCollect={false}
                 tapCollect={false}
                 celebrateVariant={danceIndex}
-                zoom={GEM_TELL_ME_CENTER_ZOOM * GEM_HUNT_MODEL_ZOOM_INSET}
+                zoom={gemTellMeCenterModelZoom()}
                 onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
               />
             </div>

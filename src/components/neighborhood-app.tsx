@@ -89,6 +89,7 @@ import {
   isGemHuntOrientationGranted,
   prepareGemHuntSensors,
   releaseGemHuntCamera,
+  stopGemHuntCameraStream,
 } from "@/lib/gem-hunt-sensors";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
@@ -596,6 +597,7 @@ export function NeighborhoodApp({
     mapGemOpenGenRef.current += 1;
     mapGemNavPinRef.current = null;
     releaseGemHuntCamera();
+    stopGemHuntCameraStream();
     void endGemHuntWebXrSession(mapGemWebXrSession);
     setMapGemWebXrSession(null);
     setMapGemHouse(null);
