@@ -265,6 +265,8 @@ export function GemHuntWebXrAr({
 
   const floatBias = hashFloat(house.id, "webxr-float");
   const floatHeight = GEM_WEBXR_FLOAT_HEIGHT_M + floatBias * 0.25;
+  /** All WebXR pets hover — drives bob/shadow animation in the XR render loop. */
+  const useFloat = true;
 
   const houseVisualRef = useRef({
     houseId: house.id,
