@@ -627,9 +627,12 @@ export function GemHuntWebXrAr({
   const canTapTellMeCenter =
     showTellMeCenterGem &&
     tellMeCollectArmed &&
-    (encounterMode
-      ? encounterPhase === "encounter"
-      : canCollectNow || simulateInRange);
+    (simulateInRange ||
+      centerReveal ||
+      (encounterMode
+        ? encounterPhase === "encounter" &&
+          (canCollectNow || encounterCollectLatchedRef.current)
+        : canCollectNow));
 
   const onTellMeCenterTap = useCallback(() => {
     if (!showTellMeCenterGem || !tellMeCollectArmedRef.current) return;
@@ -723,6 +726,7 @@ export function GemHuntWebXrAr({
     isNewGemTypeLatched,
   );
   const hideHuntHintControls =
+    !centerReveal &&
     sessionActive &&
     phase === "placed" &&
     inOnsiteBand &&

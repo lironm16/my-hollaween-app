@@ -594,6 +594,10 @@ export function NeighborhoodApp({
     selection.closeSelection();
   }, [selection]);
 
+  useEffect(() => {
+    if (!mapGemHouse) stopGemHuntCameraStream();
+  }, [mapGemHouse]);
+
   const closeMapGemHunt = useCallback(() => {
     mapGemOpenGenRef.current += 1;
     mapGemNavPinRef.current = null;

@@ -12,6 +12,7 @@ import {
   prepareGemHuntSensors,
   requestGemHuntOrientationPermission,
   releaseGemHuntCamera,
+  stopGemHuntCameraStream,
 } from "@/lib/gem-hunt-sensors";
 import { gemCollectDanceIndex } from "@/lib/gem-collect-dance";
 import {
@@ -348,6 +349,7 @@ export function GemHuntOverlay({
       huntClosingRef.current = true;
       document.body.style.overflow = prev;
       releaseGemHuntCamera(videoRef.current);
+      stopGemHuntCameraStream();
       endMapListOverlayCapture();
     };
   }, []);
@@ -648,6 +650,7 @@ export function GemHuntOverlay({
       video.style.pointerEvents = "none";
     }
     releaseGemHuntCamera(video);
+    stopGemHuntCameraStream();
     onClose();
   }
 
@@ -734,6 +737,15 @@ export function GemHuntOverlay({
         ((centerReveal && !encounterMode) ||
           (!encounterMode && (pinCollectReady || sim)))));
 
+  const canTapTellMeCenter =
+    centerReveal &&
+    gemAtCenter &&
+    tellMeCollectArmed &&
+    (sim ||
+      canCollectNow ||
+      encounterCollectLatchedRef.current ||
+      (encounterMode && encounterPhase === "encounter"));
+
   const offerEncounterCollect = useCallback(() => {
     if (encounterPhase !== "encounter") return;
     if (centerReveal && !tellMeCollectArmedRef.current) return;
@@ -767,7 +779,8 @@ export function GemHuntOverlay({
   ]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
-  const hideHuntHintControls = showHuntGem && phase === "visible" && gemVisibleBand;
+  const hideHuntHintControls =
+    !centerReveal && showHuntGem && phase === "visible" && gemVisibleBand;
   const gemFoundInView =
     showHuntGem &&
     phase === "visible" &&
@@ -971,6 +984,7 @@ export function GemHuntOverlay({
               !gemAtCenter && pinCollectReady && "is-collect-ready-gem",
               !canCollectNow && phase === "visible" && "is-awaiting-still",
               canTapCollect && "is-tap-collect-ready",
+              canTapTellMeCenter && "is-tell-me-tap-ready",
             )}
             style={
               gemAtCenter || !pinDisplay
@@ -1002,9 +1016,7 @@ export function GemHuntOverlay({
                 spinWhileCollect={false}
                 worldYawRad={gemAtCenter ? null : worldYawRad}
                 motion={gemMotion}
-                zoom={
-                  centerReveal && gemAtCenter ? gemTellMeCenterModelZoom() : 1
-                }
+                zoom={gemAtCenter ? gemTellMeCenterModelZoom() : 1}
                 celebrateVariant={collectDanceIndex}
                 onInspectTap={
                   campusQuickTapGem
@@ -1016,6 +1028,18 @@ export function GemHuntOverlay({
                 }
               />
             </div>
+            {centerReveal && gemAtCenter ? (
+              <button
+                type="button"
+                className="gem-hunt-overlay__gem-tap-target"
+                aria-label="איסוף השדון"
+                disabled={!canTapTellMeCenter}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleGemInspectTap();
+                }}
+              />
+            ) : null}
           </div>
         ) : null}
       </div>
