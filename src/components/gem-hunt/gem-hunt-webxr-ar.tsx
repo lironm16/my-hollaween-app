@@ -17,6 +17,7 @@ import {
   GEM_COLLECT_OVERLAY_MS,
   GEM_FACING_TOLERANCE_DEG,
   gemTellMeCenterModelZoom,
+  gemHuntGemStayVisible,
   GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   bearingDegrees,
@@ -184,6 +185,8 @@ export function GemHuntWebXrAr({
   const centerRevealRef = useRef(false);
   const encounterCollectLatchedRef = useRef(false);
   const tellMeCollectArmedRef = useRef(false);
+  const [tellMeCollectArmed, setTellMeCollectArmed] = useState(false);
+  const foundDistanceMRef = useRef<number | null>(null);
   const collectFinishRef = useRef<number | null>(null);
   const [albumRevealNewFriend, setAlbumRevealNewFriend] = useState(true);
   const [repeatVisitLatched, setRepeatVisitLatched] = useState(repeatVisit);
@@ -202,6 +205,7 @@ export function GemHuntWebXrAr({
   useEffect(() => {
     setCenterReveal(false);
     setUserDismissedCenterGem(false);
+    foundDistanceMRef.current = null;
     setHintPanel(null);
     setRepeatVisitLatched(repeatVisit);
     const entries = loadGemCollected();
@@ -220,11 +224,14 @@ export function GemHuntWebXrAr({
   useEffect(() => {
     if (!centerReveal) {
       tellMeCollectArmedRef.current = false;
+      setTellMeCollectArmed(false);
       return;
     }
     tellMeCollectArmedRef.current = false;
+    setTellMeCollectArmed(false);
     const armTimer = window.setTimeout(() => {
       tellMeCollectArmedRef.current = true;
+      setTellMeCollectArmed(true);
     }, 520);
     return () => window.clearTimeout(armTimer);
   }, [centerReveal, house.id]);
@@ -297,6 +304,15 @@ export function GemHuntWebXrAr({
   const inWebXrHuntBand =
     simulateInRange ||
     (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_WEBXR_HUNT_METERS);
+
+  useEffect(() => {
+    if (simulateInRange) return;
+    if (!inWebXrHuntBand || distanceM == null) return;
+    if (foundDistanceMRef.current == null) {
+      foundDistanceMRef.current = distanceM;
+    }
+  }, [distanceM, inWebXrHuntBand, simulateInRange]);
+
   const gemVisibleInCam =
     !simulateInRange &&
     inWebXrHuntBand &&
@@ -482,15 +498,19 @@ export function GemHuntWebXrAr({
 
   showApproachScreenGemRef.current = showApproachScreenGem;
 
+  const inGemStayVisibleBand =
+    simulateInRange ||
+    gemHuntGemStayVisible(distanceM, foundDistanceMRef.current, inWebXrHuntBand);
   const inOnsiteBand = simulateInRange || canCollectNow || inWebXrHuntBand;
+  const gemVisibleBand = inGemStayVisibleBand;
   const showHuntGemOnScreen =
     showTellMeCenterGem ||
     showApproachScreenGem ||
-    (sessionActive && placed && showArGem && inOnsiteBand);
+    (sessionActive && placed && showArGem && gemVisibleBand);
   const gemFoundInView =
     sessionActive &&
     phase === "placed" &&
-    inOnsiteBand &&
+    gemVisibleBand &&
     showHuntGemOnScreen &&
     (showTellMeCenterGem
       ? true
@@ -606,7 +626,7 @@ export function GemHuntWebXrAr({
 
   const canTapTellMeCenter =
     showTellMeCenterGem &&
-    tellMeCollectArmedRef.current &&
+    tellMeCollectArmed &&
     (encounterMode
       ? encounterPhase === "encounter"
       : canCollectNow || simulateInRange);
@@ -1320,6 +1340,13 @@ export function GemHuntWebXrAr({
                 onInspectTap={canTapTellMeCenter ? onTellMeCenterTap : undefined}
               />
             </div>
+            <button
+              type="button"
+              className="gem-hunt-overlay__gem-tap-target"
+              aria-label="איסוף השדון"
+              disabled={!canTapTellMeCenter}
+              onClick={onTellMeCenterTap}
+            />
           </div>
         </div>
       ) : null}
@@ -1378,11 +1405,6 @@ export function GemHuntWebXrAr({
               {showWebXrGeoHint ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
                   {GEM_AR_LOCATING_HE}
-                </p>
-              ) : null}
-              {campusSession && placed && phase !== "collecting" && !encounterMode ? (
-                <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="note">
-                  לחצו על החיה במרחב (או «גלה לי») כדי לאסוף — ואז הדוכן הבא.
                 </p>
               ) : null}
               {showSessionFooter && showWalkNavGuide ? (

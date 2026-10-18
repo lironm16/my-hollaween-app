@@ -59,6 +59,19 @@ export const GEM_WORLD_PIN_MAX_METERS = 15;
 export const GEM_HUNT_METERS = GEM_WORLD_PIN_MAX_METERS;
 /** iOS camera hunt — tighter sidewalk radius (neighbors + GPS). */
 export const GEM_IOS_HUNT_METERS = 10;
+/** After reveal, keep the on-screen gem until the user walks this far past the distance at find. */
+export const GEM_HUNT_FOUND_STAY_VISIBLE_M = 5;
+
+/** Stay in «found» view when GPS flickers out of hunt band until user walks away from find spot. */
+export function gemHuntGemStayVisible(
+  distanceM: number | null,
+  foundDistanceM: number | null,
+  inHuntBand: boolean,
+): boolean {
+  if (inHuntBand) return true;
+  if (distanceM == null || foundDistanceM == null) return false;
+  return distanceM <= foundDistanceM + GEM_HUNT_FOUND_STAY_VISIBLE_M;
+}
 /** @deprecated Stand-still gate removed — kept for copy/tests that reference the old value. */
 export const GEM_STILL_SECONDS = 0;
 /** Compass cone — gem may appear when facing within this many degrees of the house. */

@@ -25,6 +25,8 @@ import {
   headingDelta,
   userWithinGemHuntRange,
   withinGemHuntMeters,
+  gemHuntGemStayVisible,
+  GEM_HUNT_FOUND_STAY_VISIBLE_M,
   GEM_ANCHOR_MIN_METERS,
   GEM_ANCHOR_MAX_METERS,
 } from "@/lib/gem-hunt";
@@ -124,6 +126,20 @@ describe("gem hunt geo", () => {
     assert.equal(gemAndroidArCollectWhenVisible(false, true, false, place), false);
     assert.equal(gemAndroidArCollectWhenVisible(false, true, true, place), true);
     assert.equal(gemAndroidArCollectWhenVisible(false, true, false, null), false);
+  });
+
+  it("keeps found gem visible until user walks past find distance + buffer", () => {
+    const foundAt = 8;
+    assert.equal(gemHuntGemStayVisible(foundAt, foundAt, true), true);
+    assert.equal(gemHuntGemStayVisible(foundAt + 3, foundAt, false), true);
+    assert.equal(
+      gemHuntGemStayVisible(foundAt + GEM_HUNT_FOUND_STAY_VISIBLE_M, foundAt, false),
+      true,
+    );
+    assert.equal(
+      gemHuntGemStayVisible(foundAt + GEM_HUNT_FOUND_STAY_VISIBLE_M + 0.5, foundAt, false),
+      false,
+    );
   });
 
   it("maps anchor bearing to horizontal screen position", () => {

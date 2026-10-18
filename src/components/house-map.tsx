@@ -858,6 +858,7 @@ type Props = {
   gemCamFabEnabled?: boolean;
   gemCamFabHuntOpen?: boolean;
   gemCamFabNearSignal?: boolean;
+  gemCamFabHeadline?: string | null;
   onOpenGemCamFab?: () => void;
   /** Owner/admin gem placement — draggable demon around the selected house. */
   gemAnchorEdit?: GemAnchorEditState | null;
@@ -912,6 +913,7 @@ export function HouseMap({
   gemCamFabEnabled = false,
   gemCamFabHuntOpen = false,
   gemCamFabNearSignal = false,
+  gemCamFabHeadline = null,
   onOpenGemCamFab,
   gemAnchorEdit = null,
   routeModeActive = false,
@@ -1245,6 +1247,7 @@ export function HouseMap({
           gemUi={gemCamFabEnabled}
           huntOpen={gemCamFabHuntOpen}
           nearSignal={gemCamFabNearSignal}
+          targetHeadline={gemCamFabHeadline}
           onOpenHunt={onOpenGemCamFab}
         />
       ) : null}

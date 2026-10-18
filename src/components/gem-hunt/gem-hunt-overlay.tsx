@@ -24,6 +24,7 @@ import {
   GEM_SCAN_PAN_DEGREES,
   GEM_SCAN_REVEAL_SECONDS,
   gemTellMeCenterModelZoom,
+  gemHuntGemStayVisible,
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
@@ -175,6 +176,8 @@ export function GemHuntOverlay({
   /** True once user starts collect or enters encounter in band — avoids GPS flicker blocking finish. */
   const encounterCollectLatchedRef = useRef(false);
   const tellMeCollectArmedRef = useRef(false);
+  const [tellMeCollectArmed, setTellMeCollectArmed] = useState(false);
+  const foundDistanceMRef = useRef<number | null>(null);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [, setShowHelp] = useState(false);
@@ -266,16 +269,22 @@ export function GemHuntOverlay({
   const pinDisplay = useSmoothedGemPlacement(pinPlacement, house.id);
   const worldPinPlacementEarly = pinDisplay ?? pinPlacement;
   const canCollectNow = collectEnabled || sim || inDistanceBand;
+  const inGemStayVisibleBand =
+    sim ||
+    gemHuntGemStayVisible(distanceM, foundDistanceMRef.current, inDistanceBand);
   /** Scan/pan/facing reveal when in range (or admin simulate). */
   const allowAutoReveal = canCollectNow;
 
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
     revealedRef.current = true;
+    if (distanceM != null && !sim) {
+      foundDistanceMRef.current = distanceM;
+    }
     setPhase("visible");
     setHint("found");
     setHintPanel(null);
-  }, []);
+  }, [distanceM, sim]);
 
   /** In range: skip 5s scan wait so footer + «גלה לי» work immediately. */
   useEffect(() => {
@@ -289,6 +298,7 @@ export function GemHuntOverlay({
     lastHeadingRef.current = heading;
     facingSinceRef.current = null;
     revealedRef.current = false;
+    foundDistanceMRef.current = null;
     setPhase("scanning");
     setHint("scan");
     setShowHelp(false);
@@ -309,11 +319,14 @@ export function GemHuntOverlay({
   useEffect(() => {
     if (!centerReveal) {
       tellMeCollectArmedRef.current = false;
+      setTellMeCollectArmed(false);
       return;
     }
     tellMeCollectArmedRef.current = false;
+    setTellMeCollectArmed(false);
     const armTimer = window.setTimeout(() => {
       tellMeCollectArmedRef.current = true;
+      setTellMeCollectArmed(true);
     }, 520);
     return () => window.clearTimeout(armTimer);
   }, [centerReveal, house.id]);
@@ -614,6 +627,7 @@ export function GemHuntOverlay({
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
   const inOnsiteBand = sim || canCollectNow;
+  const gemVisibleBand = inGemStayVisibleBand;
   const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(
     repeatVisitLatched,
     gemLabelHe(monsterId),
@@ -648,7 +662,7 @@ export function GemHuntOverlay({
   /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
   /** Show when anchor bearing is in the camera cone — gated by activeGemHuntMeters(). */
   const encounterForcesCenter =
-    inOnsiteBand &&
+    gemVisibleBand &&
     !userDismissedCenterGem &&
     encounterMode &&
     (encounterPhase === "encounter" ||
@@ -657,7 +671,7 @@ export function GemHuntOverlay({
   const gemAtCenter =
     !userDismissedCenterGem &&
     ((centerReveal && gemVisible) ||
-      (inOnsiteBand &&
+      (gemVisibleBand &&
         (encounterForcesCenter ||
           (encounterMode &&
             (encounterPhase === "approach" || encounterPhase === "encounter")) ||
@@ -753,11 +767,11 @@ export function GemHuntOverlay({
   ]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
-  const hideHuntHintControls = showHuntGem && phase === "visible" && inOnsiteBand;
+  const hideHuntHintControls = showHuntGem && phase === "visible" && gemVisibleBand;
   const gemFoundInView =
     showHuntGem &&
     phase === "visible" &&
-    inOnsiteBand &&
+    gemVisibleBand &&
     (centerReveal && gemAtCenter
       ? true
       : encounterMode

@@ -69,6 +69,7 @@ import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
 import {
   firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
+  gemClusterSessionMembers,
   nextClusterGemHouse,
   skipClusterGemHouse,
 } from "@/lib/gem-campus-queue";
@@ -614,11 +615,36 @@ export function NeighborhoodApp({
     }
     if (fabGemHuntPool.length === 0) return;
     mapGemNavPinRef.current = null;
-    const target = pickMapFabGemHuntTarget(gps, fabGemHuntPool, mapHouses, gems.collected);
-    if (!target) return;
+    const picked = pickMapFabGemHuntTarget(gps, fabGemHuntPool, mapHouses, gems.collected);
+    if (!picked) return;
+    const cluster = gemClusterSessionMembers([...mapHouses], picked);
+    let huntHouse = picked;
+    let clusterMembers: PublicHouse[] | null = null;
+    if (cluster && cluster.length >= 2) {
+      const open = cluster.filter(
+        (h) => gemHouseHuntAllowed(h) && !gems.collected(h.id),
+      );
+      if (open.length >= 2) {
+        clusterMembers = open;
+        huntHouse =
+          firstClusterGemHouseInProximity(open, gps, gems.collected) ??
+          firstClusterGemHouseToHunt(open, gems.collected) ??
+          picked;
+      }
+    }
     mapGemClusterSessionRef.current = [];
-    await bootMapGemHunt(target, null);
-  }, [mapGemHouse, fabGemHuntPool, gps, mapHouses, gems.collected, bootMapGemHunt, closeMapGemHunt]);
+    setMapGemClusterCatchCount(0);
+    await bootMapGemHunt(huntHouse, clusterMembers);
+  }, [
+    mapGemHouse,
+    fabGemHuntPool,
+    gps,
+    mapHouses,
+    gems.collected,
+    gemHouseHuntAllowed,
+    bootMapGemHunt,
+    closeMapGemHunt,
+  ]);
 
   useEffect(() => {
     if (!mapGemHouse || mapGemClusterMembers) return;
@@ -649,6 +675,44 @@ export function NeighborhoodApp({
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;
     return gemClusterQueueHeadline(mapGemHouse, mapGemClusterMembers);
   }, [mapGemHouse, mapGemClusterMembers]);
+
+  const mapGemFabHeadline = useMemo(() => {
+    const headlineFor = (house: PublicHouse, cluster: PublicHouse[] | null) => {
+      if (cluster && cluster.length >= 2) {
+        const ui = gemClusterQueueHeadline(house, cluster);
+        return [ui.boothTitle, ui.boothSubtitle].filter(Boolean).join(" · ");
+      }
+      return house.name?.trim() || house.arrival?.trim() || null;
+    };
+    if (mapGemHouse) {
+      return headlineFor(mapGemHouse, mapGemClusterMembers);
+    }
+    const user = gps ?? mapGemGps;
+    const target = pickMapFabGemHuntTarget(user, fabGemHuntPool, mapHouses, gems.collected);
+    if (!target) return null;
+    const cluster = gemClusterSessionMembers([...mapHouses], target);
+    if (cluster && cluster.length >= 2) {
+      const open = cluster.filter(
+        (h) => !gems.collected(h.id) && fabGemHuntPool.some((p) => p.id === h.id),
+      );
+      if (open.length >= 2) {
+        const hunt =
+          firstClusterGemHouseInProximity(open, user, gems.collected) ??
+          firstClusterGemHouseToHunt(open, gems.collected) ??
+          target;
+        return headlineFor(hunt, open);
+      }
+    }
+    return headlineFor(target, null);
+  }, [
+    mapGemHouse,
+    mapGemClusterMembers,
+    gps,
+    mapGemGps,
+    fabGemHuntPool,
+    mapHouses,
+    gems.collected,
+  ]);
 
   const mapGemClusterSkipAvailable = useMemo(() => {
     if (!mapGemClusterMembers || !mapGemHouse) return false;
@@ -1676,6 +1740,7 @@ export function NeighborhoodApp({
                   gemCamFabEnabled={gemUi}
                   gemCamFabHuntOpen={Boolean(mapGemHouse)}
                   gemCamFabNearSignal={mapGemNearSignal}
+                  gemCamFabHeadline={mapGemFabHeadline}
                   onOpenGemCamFab={() => void openGemHuntFromMapFab()}
                 />
               {view === "map" && originPick.originPickActive ? (

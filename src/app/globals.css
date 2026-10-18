@@ -2914,11 +2914,14 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 }
 
 .map-add-house-fab,
-.map-demon-cam-fab {
+.map-demon-cam-fab-stack {
   position: absolute;
   left: 2.15rem;
   z-index: 1100;
   bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px));
+}
+.map-add-house-fab,
+.map-demon-cam-fab {
   appearance: none;
   border: 0;
 }
@@ -7809,9 +7812,12 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
   pointer-events: auto;
 }
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit.is-collect-layer {
-  pointer-events: none;
+  pointer-events: auto;
   max-height: none;
   overflow: visible;
+}
+.gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-hit.is-collect-layer.is-tell-me-center {
+  position: relative;
 }
 .gem-hunt-webxr__tell-me-stage .gem-hunt-overlay__gem-tap-target {
   border: none;

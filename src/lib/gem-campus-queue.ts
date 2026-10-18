@@ -70,13 +70,21 @@ export function nextClusterGemHouse(
 /** @deprecated Use {@link nextClusterGemHouse}. */
 export const nextCampusGemHouse = nextClusterGemHouse;
 
+function clusterHouseListIndex(cluster: readonly PublicHouse[], houseId: string): number | null {
+  const i = cluster.findIndex((h) => h.id === houseId);
+  return i >= 0 ? i + 1 : null;
+}
+
 export function gemClusterQueueHeadline(
   house: PublicHouse,
   cluster: readonly PublicHouse[],
 ): GemClusterQueueUi {
   const boothTitle = house.name?.trim() || house.arrival?.trim() || "בית";
   const booth = clusterBoothLabel(house, cluster);
-  return { boothTitle, boothSubtitle: booth ?? "" };
+  const idx = clusterHouseListIndex(cluster, house.id);
+  const listLine = idx != null && cluster.length > 1 ? `${idx} מתוך ${cluster.length}` : null;
+  const boothSubtitle = [listLine, booth].filter(Boolean).join(" · ");
+  return { boothTitle, boothSubtitle };
 }
 
 /** @deprecated Use {@link gemClusterQueueHeadline}. */
