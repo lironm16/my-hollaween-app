@@ -638,6 +638,19 @@ export function NeighborhoodApp({
     else finishMapGemClusterSession();
   }, [finishMapGemClusterSession, gems.collected, mapGemClusterMembers, mapGemHouse]);
 
+  const openClusterGemStickerBook = useCallback(() => {
+    setClusterGemSessionSummary((session) => {
+      if (!session?.length) return null;
+      const last = session[session.length - 1]!;
+      const celebrate =
+        gemMapRingHouses.length > 0
+          ? gemBagCelebrateAfterCollect(gemMapRingHouses, loadGemCollected(), last.house.id, last.monsterId)
+          : null;
+      router.push(gemBagCollectHref(last.monsterId, celebrate));
+      return null;
+    });
+  }, [gemMapRingHouses, router]);
+
   useEffect(() => {
     return () => {
       if (mapGemCheerTimerRef.current != null) window.clearTimeout(mapGemCheerTimerRef.current);
@@ -1334,7 +1347,12 @@ export function NeighborhoodApp({
           : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => requestHouseEdit(house, true),
       nightPassesEnabled: nightPass.enabled,
-      onNightPasses: (house) => openOwnerPasses(house.id),
+      onNightPasses: (house) => {
+        const editCode = adminDeviceOwnerPowers(admin, gemPreviewAsUser)
+          ? editCodeById.get(house.id)
+          : owned.find((item) => item.id === house.id)?.editCode;
+        if (editCode) openOwnerPasses(house, editCode);
+      },
       onPlaceGem: gemUi
         ? (house) =>
             openGemPlacer(
@@ -1773,6 +1791,7 @@ export function NeighborhoodApp({
           open
           catches={clusterGemSessionSummary}
           onClose={() => setClusterGemSessionSummary(null)}
+          onOpenStickerBook={openClusterGemStickerBook}
         />
       ) : null}
       {gemPlacerDialog}

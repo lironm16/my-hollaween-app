@@ -204,6 +204,22 @@ export function GemHuntPanel({
     setClusterCatchCount(0);
   }
 
+  function openClusterStickerBook() {
+    if (!clusterSessionSummary?.length) return;
+    const last = clusterSessionSummary[clusterSessionSummary.length - 1]!;
+    const celebrate =
+      mapHousesForCelebrate.length > 0
+        ? gemBagCelebrateAfterCollect(
+            mapHousesForCelebrate,
+            loadGemCollected(),
+            last.house.id,
+            last.monsterId,
+          )
+        : null;
+    setClusterSessionSummary(null);
+    router.push(gemBagCollectHref(last.monsterId, celebrate));
+  }
+
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {
     const collectedBefore = loadGemCollected();
     const celebrate =
@@ -451,6 +467,7 @@ export function GemHuntPanel({
           open
           catches={clusterSessionSummary}
           onClose={() => setClusterSessionSummary(null)}
+          onOpenStickerBook={openClusterStickerBook}
         />
       ) : null}
     </>
