@@ -30,6 +30,7 @@ type AccessView = {
     holderName: string;
     holderPhone: string;
     registeredAt: string;
+    role: "owner" | "editor";
     isThisDevice: boolean;
     clientSurface?: string;
     clientBrowser?: string;
@@ -41,6 +42,13 @@ type PassesResponse = {
   enabled: boolean;
   access: AccessView | null;
   thisDeviceRegistered: boolean;
+  myRole?: "owner" | "editor";
+  permissions?: {
+    canPromoteOwner: boolean;
+    canRemoveDevices: boolean;
+    canResetCode: boolean;
+    canShareInvite: boolean;
+  };
   error?: string;
 };
 
@@ -117,6 +125,7 @@ export function NightPassesCard({
   const [busyReset, setBusyReset] = useState(false);
   const [busyShare, setBusyShare] = useState(false);
   const [busyRemoveId, setBusyRemoveId] = useState<string | null>(null);
+  const [busyRoleId, setBusyRoleId] = useState<string | null>(null);
   const passDialog = useNightPassDialogOptional();
   const nightPass = useNightPass();
 
@@ -205,6 +214,31 @@ export function NightPassesCard({
     }
   }
 
+  async function setDeviceRole(sessionId: string, role: "owner" | "editor") {
+    setBusyRoleId(sessionId);
+    try {
+      const res = await fetch(
+        `/api/houses/${encodeURIComponent(houseId)}/night-passes/role`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, role }),
+        },
+      );
+      const json = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        toast.error(json?.error ?? "עדכון התפקיד נכשל.");
+        return;
+      }
+      toast.success(role === "owner" ? "מוגדר/ת כבעל/ת בית" : "מוגדר/ת כעורך/ת");
+      notifyNightPassSlotsChanged();
+      await refreshNightPassState({ force: true });
+      await load();
+    } finally {
+      setBusyRoleId(null);
+    }
+  }
+
   async function removeDevice(sessionId: string, isThisDevice: boolean) {
     if (
       !window.confirm(
@@ -258,7 +292,14 @@ export function NightPassesCard({
     }
   }
 
-  const inviteActions = house ? (
+  const perms = data?.permissions;
+  const canShareInvite = admin || Boolean(perms?.canShareInvite);
+  const canResetCode = admin || Boolean(perms?.canResetCode);
+  const canRemoveDevices = admin || Boolean(perms?.canRemoveDevices);
+  const canPromoteOwner = admin || Boolean(perms?.canPromoteOwner);
+
+  const inviteActions =
+    house && canShareInvite ? (
     <SlotAction
       label="שלח הזמנה"
       disabled={busyShare || (loading && !data)}
@@ -273,22 +314,26 @@ export function NightPassesCard({
     />
   ) : null;
 
+  const resetAction = canResetCode ? (
+    <SlotAction
+      label="איפוס קוד"
+      disabled={busyReset || (loading && !data)}
+      onClick={() => void resetFamilyCode()}
+      icon={
+        busyReset ? (
+          <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
+        ) : (
+          <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
+        )
+      }
+    />
+  ) : null;
+
   if (inlineActionsOnly) {
     return (
       <>
         {inviteActions}
-        <SlotAction
-          label="איפוס קוד"
-          disabled={busyReset || (loading && !data)}
-          onClick={() => void resetFamilyCode()}
-          icon={
-            busyReset ? (
-              <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
-            ) : (
-              <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
-            )
-          }
-        />
+        {resetAction}
       </>
     );
   }
@@ -345,35 +390,13 @@ export function NightPassesCard({
                   icon={<Copy className="size-4 shrink-0" strokeWidth={2.2} />}
                 />
                 {inviteActions}
-                <SlotAction
-                  label="איפוס קוד"
-                  disabled={busyReset}
-                  onClick={() => void resetFamilyCode()}
-                  icon={
-                    busyReset ? (
-                      <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
-                    ) : (
-                      <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
-                    )
-                  }
-                />
+                {resetAction}
               </div>
             </div>
           ) : hideToolbar ? null : (
             <div className="flex flex-wrap justify-center gap-2">
               {inviteActions}
-              <SlotAction
-                label="איפוס קוד"
-                disabled={busyReset}
-                onClick={() => void resetFamilyCode()}
-                icon={
-                  busyReset ? (
-                    <Loader2 className="size-4 shrink-0 animate-spin" strokeWidth={2.2} />
-                  ) : (
-                    <KeyRound className="size-4 shrink-0" strokeWidth={2.2} />
-                  )
-                }
-              />
+              {resetAction}
             </div>
           )}
           <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
@@ -409,19 +432,49 @@ export function NightPassesCard({
                       ) : null}
                     </p>
                     <p className="text-center text-sm text-violet-400">
+                      {device.role === "owner" ? "בעל/ת בית" : "עורך/ת"}
+                      {" · "}
                       {formatHouseAddedAt(device.registeredAt)}
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={busyRemoveId === device.sessionId}
-                    className="shrink-0 border-red-500/30 text-sm text-red-200 hover:bg-red-950/40"
-                    onClick={() => void removeDevice(device.sessionId, device.isThisDevice)}
-                  >
-                    {busyRemoveId === device.sessionId ? "…" : "הסרה"}
-                  </Button>
+                  <div className="flex shrink-0 flex-col items-stretch gap-1.5">
+                    {canPromoteOwner && device.role === "editor" ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={busyRoleId === device.sessionId}
+                        className="border-orange-500/35 text-sm text-orange-100 hover:bg-orange-500/10"
+                        onClick={() => void setDeviceRole(device.sessionId, "owner")}
+                      >
+                        {busyRoleId === device.sessionId ? "…" : "בעל/ת בית"}
+                      </Button>
+                    ) : null}
+                    {canPromoteOwner && device.role === "owner" ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={busyRoleId === device.sessionId}
+                        className="text-sm text-violet-300 hover:bg-white/5"
+                        onClick={() => void setDeviceRole(device.sessionId, "editor")}
+                      >
+                        {busyRoleId === device.sessionId ? "…" : "עורך/ת בלבד"}
+                      </Button>
+                    ) : null}
+                    {canRemoveDevices ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={busyRemoveId === device.sessionId}
+                        className="border-red-500/30 text-sm text-red-200 hover:bg-red-950/40"
+                        onClick={() => void removeDevice(device.sessionId, device.isThisDevice)}
+                      >
+                        {busyRemoveId === device.sessionId ? "…" : "הסרה"}
+                      </Button>
+                    ) : null}
+                  </div>
                 </li>
               ))
             )}

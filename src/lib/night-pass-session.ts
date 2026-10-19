@@ -9,7 +9,11 @@ import {
   readNightPassSettings,
   type NightPassRecord,
 } from "@/lib/night-pass-store";
+import { sessionIsOwner } from "@/lib/house-access-role";
+import { sameHouseId } from "@/lib/ids";
+import { houseAccessSessionForDevice } from "@/lib/night-pass-service";
 import { ownerHouseIds } from "@/lib/owner-session";
+import type { HouseAccessSession } from "@/lib/night-pass-store";
 import { getHouse, loadAddressRevealSchedule } from "@/lib/store";
 import type { NightPassViewer } from "@/lib/types";
 
@@ -171,4 +175,19 @@ export async function resolveNightPassViewer(options?: {
 
 export function readAsUserParam(request: Request) {
   return new URL(request.url).searchParams.get("asUser") === "1";
+}
+
+/** Active night-pass session on this house for the current device, if any. */
+export async function deviceSessionOnHouse(
+  houseId: string,
+): Promise<HouseAccessSession | null> {
+  const pass = await currentNightPass();
+  if (!pass || !sameHouseId(pass.houseId, houseId)) return null;
+  const cookie = await readNightPassCookie();
+  if (!cookie) return null;
+  return houseAccessSessionForDevice(pass, cookie.sessionId, cookie.token);
+}
+
+export async function deviceHasOwnerRoleOnHouse(houseId: string) {
+  return sessionIsOwner(await deviceSessionOnHouse(houseId));
 }

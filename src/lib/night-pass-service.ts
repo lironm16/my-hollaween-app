@@ -1,5 +1,11 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import {
+  countOwnerSessions,
+  normalizeHouseAccessRole,
+  sessionIsOwner,
+  type HouseAccessRole,
+} from "@/lib/house-access-role";
+import {
   formatHouseAccessCode,
   HOUSE_ACCESS_MAX_DEVICES,
   normalizeHolderName,
@@ -99,6 +105,7 @@ export async function redeemNightPass(input: {
   priorSessionId?: string | null;
   clientSurface?: NightPassClientSurface;
   clientBrowser?: NightPassClientBrowser;
+  role?: HouseAccessRole;
 }): Promise<RedeemOutcome> {
   const house = await getHouseByAccessCode(input.code);
   if (!house) return { ok: false, error: "invalid" };
@@ -127,6 +134,7 @@ export async function redeemNightPass(input: {
       normalizeIsraeliMobile(session.holderPhone) === input.phone;
     const surface = input.clientSurface;
     const browser = input.clientBrowser;
+    const role = input.role ?? "editor";
     if (priorIdx >= 0) {
       outcome = "reregistered";
       sessions[priorIdx] = {
@@ -135,6 +143,7 @@ export async function redeemNightPass(input: {
         registeredAt: now,
         holderName: input.name,
         holderPhone: input.phone,
+        role: sessions[priorIdx]!.role ?? role,
         ...(surface ? { clientSurface: surface } : {}),
         ...(browser ? { clientBrowser: browser } : {}),
       };
@@ -154,6 +163,7 @@ export async function redeemNightPass(input: {
         registeredAt: now,
         holderName: input.name,
         holderPhone: input.phone,
+        role,
         ...(surface ? { clientSurface: surface } : {}),
         ...(browser ? { clientBrowser: browser } : {}),
       });
@@ -196,6 +206,7 @@ export async function registerHouseAccessDevice(input: {
   priorSessionId?: string | null;
   clientSurface?: NightPassClientSurface;
   clientBrowser?: NightPassClientBrowser;
+  role?: HouseAccessRole;
 }): Promise<RedeemOutcome> {
   const house = await getHouse(input.houseId);
   if (!house?.editCode?.trim()) return { ok: false, error: "invalid" };
@@ -206,7 +217,92 @@ export async function registerHouseAccessDevice(input: {
     priorSessionId: input.priorSessionId,
     clientSurface: input.clientSurface,
     clientBrowser: input.clientBrowser,
+    role: input.role ?? "editor",
   });
+}
+
+export async function updateHouseAccessSessionRole(input: {
+  houseId: string;
+  targetSessionId: string;
+  role: HouseAccessRole;
+  callerSessionId: string;
+}): Promise<{ ok: true } | { ok: false; error: "missing" | "forbidden" | "last_owner" }> {
+  const id = passId(input.houseId);
+  let result: { ok: true } | { ok: false; error: "missing" | "forbidden" | "last_owner" } = {
+    ok: false,
+    error: "missing",
+  };
+  await updateNightPass(id, (current) => {
+    if (!current) return null;
+    const sessions = [...current.sessions];
+    const callerIdx = sessions.findIndex((s) => s.sessionId === input.callerSessionId);
+    const targetIdx = sessions.findIndex((s) => s.sessionId === input.targetSessionId);
+    if (callerIdx < 0 || targetIdx < 0) {
+      result = { ok: false, error: "missing" };
+      return null;
+    }
+    const caller = sessions[callerIdx]!;
+    const target = sessions[targetIdx]!;
+    const callerRole = normalizeHouseAccessRole(caller.role);
+    const nextRole = input.role;
+    const owners = countOwnerSessions(sessions);
+
+    if (nextRole === "owner") {
+      if (!sessionIsOwner(caller)) {
+        result = { ok: false, error: "forbidden" };
+        return null;
+      }
+    } else if (callerRole !== "owner" && callerRole !== "editor") {
+      result = { ok: false, error: "forbidden" };
+      return null;
+    }
+
+    const targetWasOwner = sessionIsOwner(target);
+    if (targetWasOwner && nextRole === "editor" && owners <= 1) {
+      result = { ok: false, error: "last_owner" };
+      return null;
+    }
+
+    sessions[targetIdx] = { ...target, role: nextRole };
+    result = { ok: true };
+    return {
+      ...current,
+      sessions,
+      updatedAt: new Date().toISOString(),
+    };
+  });
+  return result;
+}
+
+/** Admin — set role without caller permission checks (still enforces ≥1 owner). */
+export async function adminSetHouseAccessSessionRole(
+  houseId: string,
+  targetSessionId: string,
+  role: HouseAccessRole,
+): Promise<{ ok: true } | { ok: false; error: "missing" | "last_owner" }> {
+  const id = passId(houseId);
+  let result: { ok: true } | { ok: false; error: "missing" | "last_owner" } = {
+    ok: false,
+    error: "missing",
+  };
+  await updateNightPass(id, (current) => {
+    if (!current) return null;
+    const sessions = [...current.sessions];
+    const targetIdx = sessions.findIndex((s) => s.sessionId === targetSessionId);
+    if (targetIdx < 0) {
+      result = { ok: false, error: "missing" };
+      return null;
+    }
+    const target = sessions[targetIdx]!;
+    if (sessionIsOwner(target) && role === "editor" && countOwnerSessions(sessions) <= 1) {
+      result = { ok: false, error: "last_owner" };
+      return null;
+    }
+    sessions[targetIdx] = { ...target, role };
+    result = { ok: true };
+    return { ...current, sessions, updatedAt: new Date().toISOString() };
+  });
+  return result;
 }
 
 export type ResetOutcome =
@@ -304,6 +400,7 @@ export type HouseAccessDeviceView = {
   holderName: string;
   holderPhone: string;
   registeredAt: string;
+  role: HouseAccessRole;
   isThisDevice: boolean;
   clientSurface?: HouseAccessSession["clientSurface"];
   clientBrowser?: HouseAccessSession["clientBrowser"];
@@ -328,6 +425,7 @@ export function houseAccessView(
     holderName: s.holderName,
     holderPhone: s.holderPhone,
     registeredAt: s.registeredAt,
+    role: normalizeHouseAccessRole(s.role),
     clientSurface: s.clientSurface,
     clientBrowser: s.clientBrowser,
     isThisDevice:

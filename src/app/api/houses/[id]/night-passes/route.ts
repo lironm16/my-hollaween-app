@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
+import { normalizeHouseAccessRole, sessionIsOwner } from "@/lib/house-access-role";
 import { canonicalHouseId } from "@/lib/ids";
 import { ensureHouseAccess, houseAccessView } from "@/lib/night-pass-service";
-import { currentNightPass, readNightPassCookie } from "@/lib/night-pass-session";
+import { currentNightPass, deviceSessionOnHouse, readNightPassCookie } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
-import { ownerMayEdit } from "@/lib/owner-session";
 import { getHouse } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -12,13 +12,17 @@ export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "private, no-store" };
 
-/** Family code + connected devices — owner (hw_owner cookie) or admin only. */
+/** Family code + connected devices — registered device on this house (editor or owner) or admin. */
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id: rawId } = await context.params;
   const id = canonicalHouseId(rawId);
   const admin = await isAdmin();
-  if (!admin && !(await ownerMayEdit(id))) {
-    return NextResponse.json({ error: "צריך לפתוח את הבית לעריכה." }, { status: 403, headers: NO_STORE });
+  const mySession = admin ? null : await deviceSessionOnHouse(id);
+  if (!admin && !mySession) {
+    return NextResponse.json(
+      { error: "צריך מכשיר רשום לבית הזה כדי לראות את הרשימה." },
+      { status: 403, headers: NO_STORE },
+    );
   }
   const settings = await readNightPassSettings();
   if (!settings.enabled && !admin) {
@@ -39,11 +43,20 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     sameHouse ? cookie?.sessionId : null,
     sameHouse ? cookie?.token : null,
   );
+  const myRole = admin ? ("owner" as const) : normalizeHouseAccessRole(mySession?.role);
+  const isOwner = admin || sessionIsOwner(mySession);
   return NextResponse.json(
     {
       enabled: settings.enabled,
       access,
       thisDeviceRegistered: access.devices.some((d) => d.isThisDevice),
+      myRole,
+      permissions: {
+        canPromoteOwner: isOwner,
+        canRemoveDevices: isOwner,
+        canResetCode: isOwner,
+        canShareInvite: isOwner || myRole === "editor",
+      },
     },
     { headers: NO_STORE },
   );

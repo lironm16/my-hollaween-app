@@ -22,6 +22,8 @@ export type HouseAccessSession = {
   registeredAt: string;
   holderName: string;
   holderPhone: string;
+  /** Device admin vs edit-only; default editor on invite/code, owner on add-house. */
+  role?: "owner" | "editor";
   /** Set on register — browser tab vs home-screen / PWA app. */
   clientSurface?: NightPassClientSurface;
   /** Safari / Chrome when registered from a browser tab. */

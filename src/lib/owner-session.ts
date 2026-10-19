@@ -2,9 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { adminPassword } from "@/lib/admin";
 import { canonicalHouseId, sameHouseId } from "@/lib/ids";
-import { normalizeIsraeliMobile } from "@/lib/house-access-code";
-import { houseAccessSessionForDevice } from "@/lib/night-pass-service";
-import { currentNightPass, readNightPassCookie } from "@/lib/night-pass-session";
+import { deviceHasOwnerRoleOnHouse } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { getHouse } from "@/lib/store/houses";
 
@@ -64,12 +62,6 @@ function parseCookie(value: string | undefined): OwnerCookieEntry[] {
   return entries;
 }
 
-function ownerPhoneMatches(sessionPhone: string, housePhone: string | null | undefined) {
-  const a = normalizeIsraeliMobile(sessionPhone);
-  const b = normalizeIsraeliMobile(String(housePhone ?? ""));
-  return Boolean(a && b && a === b);
-}
-
 async function cookieEntryValid(entry: OwnerCookieEntry): Promise<boolean> {
   const house = await getHouse(entry.id);
   if (!house) return false;
@@ -127,23 +119,14 @@ export async function ownerMayEdit(id: string) {
   return cookieEntryValid(entry);
 }
 
-/** Reset codes, invites, owner-only night-pass registration — not co-editors from invite/family code. */
+/** Reset codes, remove devices, promote to owner — session role owner on this house. */
 export async function primaryOwnerMayManage(id: string): Promise<boolean> {
   const needle = canonicalHouseId(id);
   if (!needle) return false;
-  const house = await getHouse(needle);
-  if (!house) return false;
+  if (!(await getHouse(needle))) return false;
   const settings = await readNightPassSettings();
   if (!settings.enabled) {
     return ownerMayEdit(needle);
   }
-  const pass = await currentNightPass();
-  if (!pass || !sameHouseId(pass.houseId, needle)) return false;
-  const cookie = await readNightPassCookie();
-  const session =
-    cookie != null
-      ? houseAccessSessionForDevice(pass, cookie.sessionId, cookie.token)
-      : null;
-  if (!session) return false;
-  return ownerPhoneMatches(session.holderPhone, house.ownerPhone);
+  return deviceHasOwnerRoleOnHouse(needle);
 }

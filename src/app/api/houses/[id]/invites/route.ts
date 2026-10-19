@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { createHouseAccessInviteToken, houseAccessInviteUrl } from "@/lib/house-access-invite";
 import { canonicalHouseId } from "@/lib/ids";
-import { primaryOwnerMayManage } from "@/lib/owner-session";
+import { deviceSessionOnHouse } from "@/lib/night-pass-session";
+import { readNightPassSettings } from "@/lib/night-pass-store";
 import { getHouse } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -14,9 +15,9 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   const { id: rawId } = await context.params;
   const id = canonicalHouseId(rawId);
   const admin = await isAdmin();
-  if (!admin && !(await primaryOwnerMayManage(id))) {
+  if (!admin && (await readNightPassSettings()).enabled && !(await deviceSessionOnHouse(id))) {
     return NextResponse.json(
-      { error: "רק בעל/ת הבית יכול/ה ליצור הזמנות." },
+      { error: "צריך מכשיר רשום לבית הזה כדי לשלוח הזמנה." },
       { status: 403, headers: NO_STORE },
     );
   }

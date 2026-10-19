@@ -2,6 +2,7 @@ import { normalizeHolderName, normalizeIsraeliMobile } from "@/lib/house-access-
 import type { NightPassClientBrowser, NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import { toPublicHouse } from "@/lib/ids";
 import { isValidOwnerPhone, normalizeOwnerPhone } from "@/lib/owner-phone";
+import type { HouseAccessRole } from "@/lib/house-access-role";
 import {
   houseAccessSessionForDevice,
   registerHouseAccessDevice,
@@ -88,6 +89,7 @@ export async function registerOwnerDeviceWithContact(input: {
   phone: string;
   clientSurface?: NightPassClientSurface;
   clientBrowser?: NightPassClientBrowser;
+  role?: HouseAccessRole;
 }): Promise<
   | (Extract<RedeemOutcome, { ok: true }> & {
       houseId: string;
@@ -110,11 +112,6 @@ export async function registerOwnerDeviceWithContact(input: {
   const house = await getHouse(id);
   if (!house?.editCode?.trim()) return { ok: false, error: "invalid" };
 
-  const onFile = contactFromHouse(house);
-  if (!onFile.name || !onFile.phone || name !== onFile.name || phone !== onFile.phone) {
-    return { ok: false, error: "forbidden" };
-  }
-
   if (await currentNightPass()) {
     return { ok: false, error: "already" };
   }
@@ -127,6 +124,7 @@ export async function registerOwnerDeviceWithContact(input: {
     priorSessionId: cookie?.sessionId ?? null,
     clientSurface: input.clientSurface,
     clientBrowser: input.clientBrowser,
+    role: input.role ?? "editor",
   });
   if (!outcome.ok) return { ok: false, error: outcome.error as string | "full" | "duplicate_identity" };
 
@@ -182,6 +180,7 @@ export async function autoRegisterCreatorDeviceAfterHouseCreate(input: {
     phone: input.phone,
     clientSurface: input.clientSurface,
     clientBrowser: input.clientBrowser,
+    role: "owner",
   });
   return outcome.ok;
 }
