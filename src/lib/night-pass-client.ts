@@ -1,6 +1,6 @@
 import type { AddressRevealAudience } from "@/lib/address-reveal";
 import { readAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
-import { loadOwnedHouses } from "@/lib/offline-db";
+import { clearOwnedHouseEditCode, loadOwnedHouses } from "@/lib/offline-db";
 import type { CatalogDelta, NightPassViewer } from "@/lib/types";
 
 /** Mirror of `GET /api/night-passes/me`. */
@@ -24,11 +24,12 @@ export const NIGHT_PASS_LOST_EVENT = "hw-night-pass-lost";
 export type NightPassLostDetail = {
   reason: "taken" | "reset" | "removed" | "house_removed";
   byName?: string;
+  houseId?: string;
 } | null;
 
 function readLostDetail(value: unknown): NightPassLostDetail {
   if (!value || typeof value !== "object") return null;
-  const raw = value as { reason?: unknown; byName?: unknown };
+  const raw = value as { reason?: unknown; byName?: unknown; houseId?: unknown };
   if (
     raw.reason !== "taken" &&
     raw.reason !== "reset" &&
@@ -40,6 +41,7 @@ function readLostDetail(value: unknown): NightPassLostDetail {
   return {
     reason: raw.reason,
     ...(typeof raw.byName === "string" && raw.byName.trim() ? { byName: raw.byName.trim() } : {}),
+    ...(typeof raw.houseId === "string" && raw.houseId.trim() ? { houseId: raw.houseId.trim() } : {}),
   };
 }
 /** Owner codes list changed (pair, reset, re-register). */
@@ -176,6 +178,7 @@ async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
         signal: AbortSignal.timeout(8000),
       });
       if (res.ok) anyOk = true;
+      else if (res.status === 403) clearOwnedHouseEditCode(house.id);
     } catch {
       /* offline */
     }
@@ -214,6 +217,12 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
           prev.enabled && prev.registered && next.enabled && !next.registered;
         if (registrationLost) {
           void fetch("/api/night-passes/disconnect", { method: "POST", cache: "no-store" });
+          if (
+            lost?.houseId &&
+            (lost.reason === "reset" || lost.reason === "removed" || lost.reason === "taken")
+          ) {
+            clearOwnedHouseEditCode(lost.houseId);
+          }
           if (suppressNextPassLostEvent) {
             suppressNextPassLostEvent = false;
           } else {

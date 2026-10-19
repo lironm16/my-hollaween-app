@@ -279,6 +279,13 @@ export function removeOwnedHouse(id: string) {
   }
 }
 
+/** After code reset — drop cached edit code so the device stops auto-filling the old one. */
+export function clearOwnedHouseEditCode(id: string) {
+  const row = loadOwnedHouses().find((h) => h.id === id);
+  if (!row?.editCode?.trim()) return;
+  saveOwnedHouse({ ...row, editCode: "" });
+}
+
 export function rememberPublishedHouse(house: PublicHouse) {
   const cached = loadCatalogCacheSync();
   if (!cached?.houses?.length) return;

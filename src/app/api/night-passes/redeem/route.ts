@@ -13,9 +13,13 @@ import {
   parseNightPassClientBrowser,
   parseNightPassClientSurface,
 } from "@/lib/night-pass-client-surface";
-import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
-import { readNightPassSettings } from "@/lib/night-pass-store";
+import {
+  NIGHT_PASS_CODE_NOT_FOUND_HE,
+  NIGHT_PASS_CODE_RESET_HE,
+  nightPassRegisterErrorMessage,
+} from "@/lib/night-pass-register-errors";
+import { readNightPass, readNightPassSettings } from "@/lib/night-pass-store";
 import { clientKey } from "@/lib/rate-limit";
 import { rateLimitShared } from "@/lib/rate-limit-store";
 
@@ -44,9 +48,19 @@ export async function POST(request: Request) {
     return fail(429, "rate", "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.");
   }
   if (!code) {
-    return fail(404, "invalid", "קוד הכניסה לא נמצא. בדקו את הקוד ונסו שוב.");
+    return fail(404, "invalid", NIGHT_PASS_CODE_NOT_FOUND_HE);
   }
   const house = await getHouseByAccessCode(code);
+  if (!house) {
+    const cookie = await readNightPassCookie();
+    if (cookie?.passId) {
+      const prior = await readNightPass(cookie.passId).catch(() => null);
+      if (prior && (await getHouse(prior.houseId))) {
+        return fail(404, "code_reset", NIGHT_PASS_CODE_RESET_HE);
+      }
+    }
+    return fail(404, "invalid", NIGHT_PASS_CODE_NOT_FOUND_HE);
+  }
   if (house && !(await rateLimitShared(`night-pass-house:${passIdForHouse(house.id)}`, 10, WINDOW_MS))) {
     return fail(429, "rate", "יותר מדי ניסיונות לקוד הזה. נסו שוב מאוחר יותר.");
   }
@@ -70,7 +84,7 @@ export async function POST(request: Request) {
     if (outcome.error === "full" || outcome.error === "duplicate_identity") {
       return fail(409, outcome.error, nightPassRegisterErrorMessage(outcome.error));
     }
-    return fail(404, "invalid", "קוד הכניסה לא נמצא. בדקו את הקוד ונסו שוב.");
+    return fail(404, outcome.error === "invalid" ? "invalid" : "invalid", nightPassRegisterErrorMessage(outcome.error));
   }
   await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
   const registeredHouse = await getHouse(outcome.record.houseId);

@@ -27,7 +27,13 @@ export async function POST(
     return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404 });
   }
   if (!body?.editCode || house.editCode !== body.editCode) {
-    return NextResponse.json({ error: "קוד העריכה שגוי." }, { status: 403 });
+    return NextResponse.json(
+      {
+        error:
+          "קוד העריכה שגוי. אם אופס לאחרונה — בקשו מבעל הבית את הקוד החדש או הזמנה.",
+      },
+      { status: 403 },
+    );
   }
   await grantOwnerHouse(id);
   let deviceConnected = false;

@@ -18,7 +18,7 @@ import {
   detectNightPassClientBrowser,
   detectNightPassClientSurface,
 } from "@/lib/night-pass-client-surface";
-import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
+import { clearOwnedHouseEditCode, loadOwnedHouses, notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -187,6 +187,7 @@ export function NightPassRegisterPanel({
       });
       const json = (await res.json().catch(() => null)) as {
         error?: string;
+        code?: string;
         reregistered?: boolean;
         evicted?: boolean;
         houseId?: string;
@@ -194,6 +195,14 @@ export function NightPassRegisterPanel({
         house?: PublicHouse;
       } | null;
       if (!res.ok) {
+        const typed = code.replace(/\s/g, "");
+        if (typed && (json?.code === "code_reset" || json?.code === "invalid")) {
+          for (const owned of loadOwnedHouses()) {
+            if (owned.editCode.replace(/\s/g, "") === typed) {
+              clearOwnedHouseEditCode(owned.id);
+            }
+          }
+        }
         setError(json?.error ?? "ההרשמה נכשלה. נסו שוב.");
         return;
       }

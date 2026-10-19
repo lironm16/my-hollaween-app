@@ -54,6 +54,7 @@ const LOST_COOKIE = "hw_pass_lost";
 export type NightPassLost = {
   reason: "taken" | "reset" | "removed" | "house_removed";
   byName?: string;
+  houseId?: string;
 };
 
 /** Same code still active with another token → taken by that holder; record gone → owner reset. */
@@ -64,7 +65,8 @@ export async function describeNightPassLost(
   const record = await readNightPass(passId).catch(() => null);
   if (!record) return { reason: "house_removed" };
   const house = await getHouse(record.houseId).catch(() => undefined);
-  if (!house) return { reason: "house_removed" };
+  if (!house) return { reason: "house_removed", houseId: record.houseId };
+  const houseId = record.houseId;
   const sessionGone =
     Boolean(staleSessionId) &&
     !record.sessions.some((session) => session.sessionId === staleSessionId);
@@ -72,15 +74,16 @@ export async function describeNightPassLost(
     const removed = [...record.history]
       .reverse()
       .find((event) => event.type === "removed" && event.sessionId === staleSessionId);
-    if (removed) return { reason: "removed" };
+    if (removed) return { reason: "removed", houseId };
     if (record.history.some((event) => event.type === "reset")) {
-      return { reason: "reset" };
+      return { reason: "reset", houseId };
     }
-    return { reason: "removed" };
+    return { reason: "removed", houseId };
   }
   const last = record.sessions[record.sessions.length - 1];
   return {
     reason: "taken",
+    houseId,
     ...(last?.holderName ? { byName: last.holderName } : {}),
   };
 }
