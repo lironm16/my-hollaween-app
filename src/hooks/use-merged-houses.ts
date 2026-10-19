@@ -16,35 +16,11 @@ import {
 import { canViewHouseLocationDetails, type AddressRevealContext } from "@/lib/address-reveal";
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
 import type { OwnedHouse } from "@/lib/offline-db";
+import { publicHouseFromOwnedBookmark } from "@/lib/owned-bookmark-house";
 
 function ownedBookmarkHouse(item: OwnedHouse): PublicHouse | null {
   if (item.preview) return item.preview;
-  const name = item.name?.trim();
-  if (!name) return null;
-  return {
-    id: item.id,
-    name,
-    theme: "pumpkin",
-    address: "",
-    arrival: "",
-    description: "",
-    lat: 0,
-    lng: 0,
-    treats: [],
-    visit: "come",
-    scareLevel: "mild",
-    openFrom: "",
-    openTo: "",
-    notes: "",
-    accessible: true,
-    soldOut: false,
-    adminFrozen: false,
-    ownerFrozenUntil: null,
-    photoUrl: "",
-    createdAt: "",
-    updatedAt: "",
-    deviceCacheStub: true,
-  };
+  return publicHouseFromOwnedBookmark(item);
 }
 
 function mergeIncomingHouse(

@@ -50,6 +50,7 @@ import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import type { OwnedHouse } from "@/lib/offline-db";
+import { publicHouseFromOwnedBookmark } from "@/lib/owned-bookmark-house";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
@@ -74,30 +75,7 @@ function mineHouseFromOwned(
   }
   const name = item.name?.trim() || houseName?.trim();
   if (!name) return null;
-  return {
-    id: item.id,
-    name,
-    theme: "pumpkin",
-    address: "",
-    arrival: "",
-    description: "",
-    lat: 0,
-    lng: 0,
-    treats: [],
-    visit: "come",
-    scareLevel: "mild",
-    openFrom: "",
-    openTo: "",
-    notes: "",
-    accessible: true,
-    soldOut: false,
-    adminFrozen: false,
-    ownerFrozenUntil: null,
-    photoUrl: "",
-    createdAt: "",
-    updatedAt: "",
-    deviceCacheStub: true,
-  };
+  return publicHouseFromOwnedBookmark({ id: item.id, name });
 }
 
 export default function MyCollectionsPage() {
