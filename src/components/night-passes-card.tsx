@@ -361,6 +361,14 @@ export function NightPassesCard({
   if (!data.enabled && !admin) return null;
 
   const access = data.access;
+  const ownerDeviceCount = access?.devices.filter((d) => d.role === "owner").length ?? 0;
+
+  function canChangeDeviceRole(device: AccessView["devices"][number]) {
+    if (!canPromoteOwner) return false;
+    if (device.role === "editor") return true;
+    return ownerDeviceCount > 1;
+  }
+
   const shellClass = embedded
     ? "space-y-3"
     : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
@@ -452,7 +460,7 @@ export function NightPassesCard({
                       <span className="font-medium text-violet-100">
                         {houseAccessRoleLabel(device.role)}
                       </span>
-                      {canPromoteOwner ? (
+                      {canChangeDeviceRole(device) ? (
                         <>
                           {" · "}
                           <button
