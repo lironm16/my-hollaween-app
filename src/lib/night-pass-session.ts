@@ -164,6 +164,8 @@ export async function resolveNightPassViewer(options?: {
   ]);
   const viewer: Exclude<NightPassViewer, "legacy"> =
     admin && !options?.asUser ? "admin" : pass ? "pass" : owned.length ? "owner" : "public";
+  const ownedIds = new Set(owned.map(canonicalHouseId));
+  if (pass?.houseId) ownedIds.add(canonicalHouseId(pass.houseId));
   return {
     enabled: true,
     viewer,
@@ -171,7 +173,7 @@ export async function resolveNightPassViewer(options?: {
     scope: {
       viewer,
       revealed: isAddressRevealed(new Date(), schedule),
-      ownedIds: new Set(owned.map(canonicalHouseId)),
+      ownedIds,
     },
   };
 }

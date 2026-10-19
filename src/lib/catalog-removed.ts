@@ -42,10 +42,23 @@ export function isCatalogRemoved(id: string | undefined | null) {
   return readEntries().some((entry) => entry.id === id);
 }
 
-/** View/navigate locally; no edit entry points on cards when removed from the catalog. */
-export function deviceHouseEditAllowed(id: string | undefined | null) {
+/** Night-pass on this house — still show it on the map even if a scope sync marked it «removed». */
+export function isCatalogRemovedForDevice(
+  id: string | undefined | null,
+  linkedPassHouseId?: string | null,
+) {
   if (!id) return false;
-  return !isCatalogRemoved(id);
+  if (linkedPassHouseId && id === linkedPassHouseId) return false;
+  return isCatalogRemoved(id);
+}
+
+/** View/navigate locally; no edit entry points on cards when removed from the catalog. */
+export function deviceHouseEditAllowed(
+  id: string | undefined | null,
+  linkedPassHouseId?: string | null,
+) {
+  if (!id) return false;
+  return !isCatalogRemovedForDevice(id, linkedPassHouseId);
 }
 
 export function clearCatalogRemoved(id: string) {

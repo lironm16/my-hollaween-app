@@ -5,6 +5,7 @@ import {
   clearCatalogRemoved,
   deviceHouseEditAllowed,
   isCatalogRemoved,
+  isCatalogRemovedForDevice,
   noteCatalogRemovals,
   trackCatalogRemovalDelta,
 } from "@/lib/catalog-removed";
@@ -93,5 +94,12 @@ describe("catalog-removed", () => {
     noteCatalogRemovals(["a"], "2026-10-31T12:00:00.000Z");
     assert.equal(deviceHouseEditAllowed("a"), false);
     assert.equal(deviceHouseEditAllowed("b"), true);
+  });
+
+  it("keeps pass-linked houses visible after a false removal", () => {
+    noteCatalogRemovals(["a"], "2026-10-31T12:00:00.000Z");
+    assert.equal(isCatalogRemovedForDevice("a", "a"), false);
+    assert.equal(isCatalogRemovedForDevice("a", "b"), true);
+    assert.equal(deviceHouseEditAllowed("a", "a"), true);
   });
 });

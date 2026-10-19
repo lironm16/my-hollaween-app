@@ -18,6 +18,7 @@ import {
   detectNightPassClientBrowser,
   detectNightPassClientSurface,
 } from "@/lib/night-pass-client-surface";
+import { clearCatalogRemoved } from "@/lib/catalog-removed";
 import { clearOwnedHouseEditCode, loadOwnedHouses, notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -207,6 +208,7 @@ export function NightPassRegisterPanel({
         return;
       }
       if (json?.houseId) {
+        clearCatalogRemoved(json.houseId);
         saveOwnedHouse({
           id: json.houseId,
           name: json.house?.name ?? name.trim(),

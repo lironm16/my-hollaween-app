@@ -359,6 +359,8 @@ export function NeighborhoodApp({
 
   const catalogHouses = useMemo(() => resolveCatalogHouses(catalog), [catalog]);
   const restoreRedactedLocations = adminShowsPrivateHouseFields(adminForHouseSet, gemPreviewAsUser);
+  const nightPassLinkedHouseId =
+    nightPass.registered && nightPass.houseId ? nightPass.houseId : null;
   const houses = useMergedHouses({
     catalogHouses,
     owned,
@@ -366,6 +368,7 @@ export function NeighborhoodApp({
     adminHouses,
     includeCatalogWhenAdmin: true,
     restoreRedactedLocations,
+    nightPassLinkedHouseId,
   });
   /** Removed-from-catalog rows stay on «במכשיר שלי» only — inject for ?focus= from that tab. */
   const housesForMap = useMemo(() => {

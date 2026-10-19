@@ -17,6 +17,36 @@ import { canViewHouseLocationDetails, type AddressRevealContext } from "@/lib/ad
 import type { EditorHouse, House, PublicHouse } from "@/lib/types";
 import type { OwnedHouse } from "@/lib/offline-db";
 
+function ownedBookmarkHouse(item: OwnedHouse): PublicHouse | null {
+  if (item.preview) return item.preview;
+  const name = item.name?.trim();
+  if (!name) return null;
+  return {
+    id: item.id,
+    name,
+    theme: "pumpkin",
+    address: "",
+    arrival: "",
+    description: "",
+    lat: 0,
+    lng: 0,
+    treats: [],
+    visit: "come",
+    scareLevel: "mild",
+    openFrom: "",
+    openTo: "",
+    notes: "",
+    accessible: true,
+    soldOut: false,
+    adminFrozen: false,
+    ownerFrozenUntil: null,
+    photoUrl: "",
+    createdAt: "",
+    updatedAt: "",
+    deviceCacheStub: true,
+  };
+}
+
 function mergeIncomingHouse(
   current: PublicHouse | undefined,
   incoming: PublicHouse,
@@ -52,6 +82,7 @@ export function mergeVisibleHouses({
   adminHouses,
   includeCatalogWhenAdmin = false,
   restoreRedactedLocations,
+  nightPassLinkedHouseId = null,
 }: {
   catalogHouses: PublicHouse[];
   owned: OwnedHouse[];
@@ -61,6 +92,8 @@ export function mergeVisibleHouses({
   includeCatalogWhenAdmin?: boolean;
   /** Admin merge can fill address back after catalog redaction — off in תצוגת משתמש. */
   restoreRedactedLocations?: boolean;
+  /** Registered night pass on this house — keep visible even if a scope sync flagged «removed». */
+  nightPassLinkedHouseId?: string | null;
 }): PublicHouse[] {
   const restoreLocations = restoreRedactedLocations ?? admin;
   const deleted = new Set(loadDeletedHouseIds());
@@ -81,11 +114,13 @@ export function mergeVisibleHouses({
     }
   }
   for (const item of owned) {
-    if (!item.preview || deleted.has(item.id) || serverRemoved.has(item.id)) continue;
-    if (!admin && isCatalogRemoved(item.id)) continue;
+    if (deleted.has(item.id) || serverRemoved.has(item.id)) continue;
+    const bookmark = ownedBookmarkHouse(item);
+    if (!bookmark) continue;
+    if (!admin && isCatalogRemoved(item.id) && item.id !== nightPassLinkedHouseId) continue;
     const current = byId.get(item.id);
-    if (!current || Date.parse(item.preview.updatedAt) >= Date.parse(current.updatedAt || "")) {
-      byId.set(item.id, mergeIncomingHouse(current, item.preview, restoreLocations));
+    if (!current || Date.parse(bookmark.updatedAt) >= Date.parse(current.updatedAt || "")) {
+      byId.set(item.id, mergeIncomingHouse(current, bookmark, restoreLocations));
     }
   }
   for (const pending of loadPendingWrites()) {
@@ -98,7 +133,7 @@ export function mergeVisibleHouses({
   }
   return [...byId.values()].filter((house) => {
     if (deleted.has(house.id)) return false;
-    if (!admin && isCatalogRemoved(house.id)) return false;
+    if (!admin && isCatalogRemoved(house.id) && house.id !== nightPassLinkedHouseId) return false;
     return true;
   });
 }
@@ -135,6 +170,7 @@ export function useMergedHouses({
   adminHouses,
   includeCatalogWhenAdmin = false,
   restoreRedactedLocations,
+  nightPassLinkedHouseId = null,
 }: {
   catalogHouses: PublicHouse[];
   owned: OwnedHouse[];
@@ -142,6 +178,7 @@ export function useMergedHouses({
   adminHouses: House[];
   includeCatalogWhenAdmin?: boolean;
   restoreRedactedLocations?: boolean;
+  nightPassLinkedHouseId?: string | null;
 }) {
   return useMemo(
     () =>
@@ -152,7 +189,16 @@ export function useMergedHouses({
         adminHouses,
         includeCatalogWhenAdmin,
         restoreRedactedLocations,
+        nightPassLinkedHouseId,
       }),
-    [catalogHouses, owned, admin, adminHouses, includeCatalogWhenAdmin, restoreRedactedLocations],
+    [
+      catalogHouses,
+      owned,
+      admin,
+      adminHouses,
+      includeCatalogWhenAdmin,
+      restoreRedactedLocations,
+      nightPassLinkedHouseId,
+    ],
   );
 }
