@@ -76,6 +76,13 @@ describe("catalog-removed", () => {
     assert.equal(isCatalogRemoved("b"), false);
   });
 
+  it("does not mark removed when night-pass catalog audience changes", () => {
+    const prev = { ...catalog("2026-10-31T10:00:00.000Z", ["a", "b"]), scope: "public" as const };
+    const next = { ...catalog("2026-10-31T12:00:00.000Z", ["b"]), scope: "pass" as const };
+    trackCatalogRemovalDelta(prev, next, undefined);
+    assert.equal(isCatalogRemoved("a"), false);
+  });
+
   it("clears removal when the house returns to the catalog", () => {
     noteCatalogRemovals(["a"], "2026-10-31T12:00:00.000Z");
     clearCatalogRemoved("a");

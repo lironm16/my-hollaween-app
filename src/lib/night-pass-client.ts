@@ -1,5 +1,6 @@
 import type { AddressRevealAudience } from "@/lib/address-reveal";
 import { readAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
+import { reconcileCatalogRemovedWithServer } from "@/lib/server-removed-houses";
 import { clearOwnedHouseEditCode, loadOwnedHouses } from "@/lib/offline-db";
 import type { CatalogDelta, NightPassViewer } from "@/lib/types";
 
@@ -217,10 +218,10 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
           prev.enabled && prev.registered && next.enabled && !next.registered;
         if (registrationLost) {
           void fetch("/api/night-passes/disconnect", { method: "POST", cache: "no-store" });
-          if (
-            lost?.houseId &&
-            (lost.reason === "reset" || lost.reason === "removed" || lost.reason === "taken")
-          ) {
+          reconcileCatalogRemovedWithServer();
+          if (lost?.houseId && lost.reason === "reset") {
+            clearOwnedHouseEditCode(lost.houseId);
+          } else if (lost?.houseId && (lost.reason === "removed" || lost.reason === "taken")) {
             clearOwnedHouseEditCode(lost.houseId);
           }
           if (suppressNextPassLostEvent) {

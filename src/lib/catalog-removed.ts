@@ -1,4 +1,4 @@
-import type { Catalog } from "@/lib/types";
+import type { Catalog, NightPassViewer } from "@/lib/types";
 
 const CATALOG_REMOVED_KEY = "hw-catalog-removed";
 const MAX_ENTRIES = 120;
@@ -69,6 +69,10 @@ export function noteCatalogRemovals(ids: string[], removedAt: string) {
   writeEntries(merged);
 }
 
+function catalogAudienceKey(scope: NightPassViewer | undefined): string {
+  return scope ?? "legacy";
+}
+
 /** Persist catalog deletes (owner or admin) from sync so local previews can show status. */
 export function trackCatalogRemovalDelta(
   prev: Catalog | null,
@@ -78,7 +82,9 @@ export function trackCatalogRemovalDelta(
   if (typeof window === "undefined") return;
   const nextIds = new Set(next.houses.map((house) => house.id));
   const removed = new Set(explicitRemoved ?? []);
-  if (prev) {
+  const sameAudience =
+    !prev || catalogAudienceKey(prev.scope) === catalogAudienceKey(next.scope);
+  if (prev && sameAudience) {
     for (const house of prev.houses) {
       if (!nextIds.has(house.id)) removed.add(house.id);
     }

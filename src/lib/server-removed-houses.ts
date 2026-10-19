@@ -65,3 +65,12 @@ export function noteServerRemovedHouses(ids: string[]) {
   noteCatalogRemovals(gone, new Date().toISOString());
   window.dispatchEvent(new Event("hw-owned-changed"));
 }
+
+/** Drop false «הוסר מהמפה» labels when the server did not delete those houses. */
+export function reconcileCatalogRemovedWithServer() {
+  if (typeof window === "undefined") return;
+  const serverRemoved = new Set(loadServerRemovedHouseIds());
+  for (const entry of loadCatalogRemovedEntries()) {
+    if (!serverRemoved.has(entry.id)) clearCatalogRemoved(entry.id);
+  }
+}
