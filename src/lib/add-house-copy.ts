@@ -10,9 +10,9 @@ export function addHouseSuccessSubtitle(
   opts?: { registeredForEvent?: boolean },
 ) {
   if (opts?.registeredForEvent) {
-    return `«${name}» על המפה, וגם נרשמתם לאירוע.`;
+    return `${name} על המפה, וגם נרשמתם לאירוע.`;
   }
-  return `«${name}» על המפה.`;
+  return `${name} על המפה.`;
 }
 
 export const ADD_HOUSE_SUCCESS_MAP = "צפו בבית במפה";
