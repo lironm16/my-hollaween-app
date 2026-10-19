@@ -8,7 +8,7 @@ export const NIGHT_PASS_OWNER_REGISTER_SUBTITLE =
   "בעלי בית — בדקו את הפרטים ולחצו אישור כדי לחבר את המכשיר לאירוע. לא צריך קוד כניסה.";
 
 export const NIGHT_PASS_OWNER_COEDITOR_HINT =
-  "עורכ/ת עם קוד עריכה? הזינו את השם והנייד שלכם, או השתמשו בקישור הזמנה מבעלי הבית.";
+  "עורך עם קוד עריכה? הזינו את השם והנייד שלכם, או השתמשו בקישור הזמנה מבעלי הבית.";
 
 /** Map banner / register entry — distinct from קוד עריכה. */
 export const NIGHT_PASS_BANNER_CTA = "יש לי קוד כניסה";

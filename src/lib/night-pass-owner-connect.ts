@@ -124,7 +124,7 @@ export async function registerOwnerDeviceWithContact(input: {
     priorSessionId: cookie?.sessionId ?? null,
     clientSurface: input.clientSurface,
     clientBrowser: input.clientBrowser,
-    role: input.role ?? "editor",
+    role: input.role ?? "owner",
   });
   if (!outcome.ok) return { ok: false, error: outcome.error as string | "full" | "duplicate_identity" };
 
