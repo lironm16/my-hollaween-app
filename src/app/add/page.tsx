@@ -27,7 +27,21 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
-import { ADD_HOUSE_CLOSED_HE } from "@/lib/add-house-copy";
+import {
+  ADD_HOUSE_CLOSED_HE,
+  ADD_HOUSE_SUCCESS_DEVICE_OK,
+  ADD_HOUSE_SUCCESS_DEVICE_PENDING,
+  ADD_HOUSE_SUCCESS_DEVICES_BTN,
+  ADD_HOUSE_SUCCESS_DEVICES_BTN_CONNECT,
+  ADD_HOUSE_SUCCESS_EDIT,
+  ADD_HOUSE_SUCCESS_EDIT_ONLY,
+  ADD_HOUSE_SUCCESS_HELP_DEVICES,
+  ADD_HOUSE_SUCCESS_HELP_EDIT,
+  ADD_HOUSE_SUCCESS_HELP_LOST_CODE,
+  ADD_HOUSE_SUCCESS_MAP,
+  ADD_HOUSE_SUCCESS_TITLE,
+  addHouseSuccessSubtitle,
+} from "@/lib/add-house-copy";
 
 export default function AddPage() {
   const router = useRouter();
@@ -104,88 +118,51 @@ export default function AddPage() {
           className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
         />
         {done ? (
-          <div className="house-added-success space-y-4 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-400/30">
-            <div className="house-added-burst" aria-hidden="true">
-              <span>🎃</span>
-              <span>✨</span>
-              <span>🍬</span>
-            </div>
+          <div className="house-added-success space-y-5 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-400/30">
             <div className="flex flex-col items-center gap-2 text-center">
-              <CheckCircle2 className="house-added-check size-14 text-emerald-400" />
-              <h1 className="font-display text-2xl text-orange-300">הבית במפה!</h1>
-              <p className="text-base text-violet-100">
-                {done.name} נשמר ומופיע במפה הציבורית של השכונה.
-              </p>
+              <CheckCircle2 className="house-added-check size-12 text-emerald-400" />
+              <h1 className="font-display text-2xl text-orange-300">{ADD_HOUSE_SUCCESS_TITLE}</h1>
+              <p className="text-base text-violet-100">{addHouseSuccessSubtitle(done.name)}</p>
             </div>
-            <PersistNote />
-            {nightPass.enabled ? (
-              <section className="space-y-3 rounded-xl bg-emerald-950/40 p-4 ring-1 ring-emerald-500/25">
-                <h2 className="text-center text-lg font-medium text-emerald-100">
-                  {done.deviceConnected
-                    ? "המכשיר הזה מחובר לבית"
-                    : "יש לכם 4 מכשירים לאירוע"}
-                </h2>
-                {done.deviceConnected ? (
-                  <p className="text-center text-sm text-emerald-200/90">
-                    אפשר לחבר עוד מכשירים (עד 4) או לשלוח הזמנה למשפחה.
-                  </p>
-                ) : null}
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
-                  onClick={() => openOwnerPasses(done.house, done.editCode)}
-                >
-                  {done.deviceConnected ? "מכשירים וקוד כניסה" : "חבר מכשירים"}
-                </Button>
-                <Link
-                  href="/help/event-device-owner"
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "lg" }),
-                    "w-full text-emerald-200/90 hover:bg-emerald-950/40",
-                  )}
-                >
-                  מדריך חיבור מכשירים (עם תמונות)
-                </Link>
-              </section>
-            ) : null}
-            <section className="space-y-2 rounded-xl bg-black/35 p-4 ring-1 ring-orange-500/20">
-              <h2 className="text-center text-lg font-medium text-orange-200">קוד עריכה</h2>
-              <p className="text-center text-sm text-violet-300">
-                לעריכת הבית מהמכשיר הזה — נשמר אוטומטית אחרי ההוספה.
+
+            <section className="space-y-3 rounded-xl bg-black/35 p-4 ring-1 ring-orange-500/20">
+              <p className="text-center text-sm leading-relaxed text-violet-200">
+                {nightPass.enabled
+                  ? done.deviceConnected
+                    ? ADD_HOUSE_SUCCESS_DEVICE_OK
+                    : ADD_HOUSE_SUCCESS_DEVICE_PENDING
+                  : ADD_HOUSE_SUCCESS_EDIT_ONLY}
               </p>
               <CodesCopy editCode={done.editCode} hideLabel />
+              {nightPass.enabled ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mx-auto w-full max-w-xs text-violet-200 hover:bg-white/5"
+                  onClick={() => openOwnerPasses(done.house, done.editCode)}
+                >
+                  {done.deviceConnected
+                    ? ADD_HOUSE_SUCCESS_DEVICES_BTN
+                    : ADD_HOUSE_SUCCESS_DEVICES_BTN_CONNECT}
+                </Button>
+              ) : null}
             </section>
+
             <div className="flex flex-col gap-2">
               <Link
-                href="/help/share-edit-code"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
-                )}
-              >
-                איך לשתף קוד עריכה?
-              </Link>
-              <Link
-                href="/help/edit-code"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
-                )}
-              >
-                איבדתם את קוד העריכה?
-              </Link>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link
                 href={`/?focus=${encodeURIComponent(done.id)}`}
-                className={cn(buttonVariants(), "bg-orange-500 text-black hover:bg-orange-400")}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "w-full bg-orange-500 text-black hover:bg-orange-400",
+                )}
               >
-                צפו בבית במפה
+                {ADD_HOUSE_SUCCESS_MAP}
               </Link>
               <Button
                 type="button"
                 variant="outline"
+                className="w-full"
                 onClick={() =>
                   editFlow.openEdit(done.house, {
                     editCode: done.editCode,
@@ -194,9 +171,39 @@ export default function AddPage() {
                   })
                 }
               >
-                לעריכה
+                {ADD_HOUSE_SUCCESS_EDIT}
               </Button>
             </div>
+
+            <p className="text-center text-sm text-violet-400">
+              <Link
+                href="/help/share-edit-code"
+                className="underline underline-offset-2 hover:text-orange-200"
+              >
+                {ADD_HOUSE_SUCCESS_HELP_EDIT}
+              </Link>
+              {nightPass.enabled ? (
+                <>
+                  <span aria-hidden="true"> · </span>
+                  <Link
+                    href="/help/event-device-owner"
+                    className="underline underline-offset-2 hover:text-orange-200"
+                  >
+                    {ADD_HOUSE_SUCCESS_HELP_DEVICES}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <span aria-hidden="true"> · </span>
+                  <Link
+                    href="/help/edit-code"
+                    className="underline underline-offset-2 hover:text-orange-200"
+                  >
+                    {ADD_HOUSE_SUCCESS_HELP_LOST_CODE}
+                  </Link>
+                </>
+              )}
+            </p>
           </div>
         ) : !canAdd ? (
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
