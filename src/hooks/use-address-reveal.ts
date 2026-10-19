@@ -33,9 +33,13 @@ export function useAddressReveal(): AddressRevealContext & {
   const { admin } = useAdminSession();
   const { previewAsUser } = useGemPreviewAsUser();
   const owned = useOwnedHouses();
-  const ownedHouseIds = useMemo(() => new Set(owned.map((item) => item.id)), [owned]);
-  const addressRevealFromCatalog = catalog?.eventSettings?.addressReveal;
   const nightPass = useNightPass();
+  const ownedHouseIds = useMemo(() => {
+    const ids = new Set(owned.map((item) => item.id));
+    if (nightPass.registered && nightPass.houseId) ids.add(nightPass.houseId);
+    return ids;
+  }, [owned, nightPass.registered, nightPass.houseId]);
+  const addressRevealFromCatalog = catalog?.eventSettings?.addressReveal;
   const audience = nightPassAudience(nightPass);
   const publicLocationIds = useMemo(
     () => (catalog?.houses ?? []).filter((house) => house.locationPublic).map((house) => house.id),

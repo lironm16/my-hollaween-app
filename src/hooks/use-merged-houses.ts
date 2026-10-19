@@ -23,6 +23,25 @@ function ownedBookmarkHouse(item: OwnedHouse): PublicHouse | null {
   return publicHouseFromOwnedBookmark(item);
 }
 
+function shouldApplyOwnedBookmark(
+  current: PublicHouse | undefined,
+  bookmark: PublicHouse,
+  nightPassLinkedHouseId: string | null,
+): boolean {
+  if (!current) return true;
+  const incomingHasAddress = Boolean(bookmark.address?.trim());
+  const currentHasAddress = Boolean(current.address?.trim());
+  if (nightPassLinkedHouseId === bookmark.id) {
+    if (bookmark.deviceCacheStub && !incomingHasAddress) return false;
+    return true;
+  }
+  if (incomingHasAddress && !currentHasAddress) return true;
+  const incStamp = Date.parse(bookmark.updatedAt || "");
+  const curStamp = Date.parse(current.updatedAt || "");
+  if (Number.isFinite(incStamp) && Number.isFinite(curStamp)) return incStamp >= curStamp;
+  return incomingHasAddress;
+}
+
 function mergeIncomingHouse(
   current: PublicHouse | undefined,
   incoming: PublicHouse,
@@ -95,7 +114,7 @@ export function mergeVisibleHouses({
     if (!bookmark) continue;
     if (!admin && isCatalogRemoved(item.id) && item.id !== nightPassLinkedHouseId) continue;
     const current = byId.get(item.id);
-    if (!current || Date.parse(bookmark.updatedAt) >= Date.parse(current.updatedAt || "")) {
+    if (shouldApplyOwnedBookmark(current, bookmark, nightPassLinkedHouseId)) {
       byId.set(item.id, mergeIncomingHouse(current, bookmark, restoreLocations));
     }
   }
