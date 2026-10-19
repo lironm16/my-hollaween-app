@@ -157,6 +157,8 @@ export type HouseInput = {
 
 export type NightPatch = {
   editCode?: string;
+  /** Server-only — bumps when family/edit code rotates (invalidates hw_owner cookie). */
+  ownerSessionEpoch?: number;
   visit?: VisitState;
   scareLevel?: ScareLevel;
   decorLevel?: DecorLevel;

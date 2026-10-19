@@ -291,6 +291,9 @@ function sanitizeOwnerPatch(
     next.ownerPhone = normalized || null;
   }
   if (patch.editCode !== undefined) next.editCode = patch.editCode.trim();
+  if (patch.ownerSessionEpoch !== undefined) {
+    next.ownerSessionEpoch = Math.max(0, Math.floor(patch.ownerSessionEpoch));
+  }
   return next;
 }
 
