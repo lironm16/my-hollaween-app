@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { distanceMeters } from "@/lib/geo";
 import { GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
+import type { PublicHouse } from "@/lib/types";
 import {
   bearingClockLabelHe,
   bearingDegrees,
@@ -243,7 +244,7 @@ describe("gem hunt geo", () => {
     const { readFileSync } = await import("node:fs");
     const { gemHuntMapHouses } = await import("@/lib/gem-monsters");
     const catalog = JSON.parse(readFileSync("public/catalog.json", "utf8")) as {
-      houses?: typeof house[];
+      houses?: PublicHouse[];
     };
     const mapHouses = gemHuntMapHouses(catalog.houses ?? [], "all");
     for (const row of mapHouses) {
