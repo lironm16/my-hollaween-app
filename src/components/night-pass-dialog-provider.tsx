@@ -224,11 +224,11 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
           }}
         />
       </HouseEditModal>
-      {ownerHouse && ownerEditCode ? (
+      {ownerHouse ? (
         <EditCodeDialog
           open={ownerOpen}
           house={ownerHouse}
-          editCode={ownerEditCode}
+          editCode={ownerEditCode.trim() || undefined}
           admin={admin}
           nightPassesEnabled={nightPass.enabled}
           onClose={() => setOwnerOpen(false)}

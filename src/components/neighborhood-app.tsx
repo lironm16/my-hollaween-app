@@ -1347,11 +1347,16 @@ export function NeighborhoodApp({
           : owned.find((item) => item.id === id)?.editCode,
       onEdit: (house) => requestHouseEdit(house, true),
       nightPassesEnabled: nightPass.enabled,
+      registeredNightPassOnHouse: (id) =>
+        nightPass.registered && Boolean(nightPass.houseId) && nightPass.houseId === id,
       onNightPasses: (house) => {
         const editCode = adminDeviceOwnerPowers(admin, gemPreviewAsUser)
           ? editCodeById.get(house.id)
           : owned.find((item) => item.id === house.id)?.editCode;
         if (editCode) openOwnerPasses(house, editCode);
+        else if (nightPass.registered && nightPass.houseId === house.id) {
+          openOwnerPasses(house, "");
+        }
       },
       onPlaceGem: gemUi
         ? (house) =>
@@ -1412,6 +1417,8 @@ export function NeighborhoodApp({
     view,
     matchedIds,
     owned,
+    nightPass.registered,
+    nightPass.houseId,
     editCodeById,
     editFlow.flow?.house.id,
     selection.showInListFromMap,

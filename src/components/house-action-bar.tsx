@@ -188,10 +188,10 @@ export function HouseActionBar({
         active: editing,
       });
     }
-    if (editCode) {
+    if (editCode || nightPassesEnabled) {
       items.push({
         id: "edit-code",
-        label: "קוד עריכה ומכשירים",
+        label: editCode ? "קוד עריכה ומכשירים" : "מכשירים מחוברים",
         icon: <KeyRound className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: () => setEditCodeOpen(true),
       });
@@ -342,7 +342,7 @@ export function HouseActionBar({
 
   return (
     <div ref={rootRef} className={cn("house-action-menu", className)} dir="rtl">
-      {editCode ? (
+      {editCode || nightPassesEnabled ? (
         <EditCodeDialog
           open={editCodeOpen}
           house={house}

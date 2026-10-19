@@ -25,6 +25,7 @@ import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { catalogRemovedViewOnlyEditPage } from "@/lib/labels";
 import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/house-access-code";
+import { useNightPass } from "@/hooks/use-night-pass";
 
 export default function EditPage() {
   return (
@@ -57,6 +58,7 @@ function EditPageContent() {
   const [busy, setBusy] = useState(false);
   const [, setPrefilled] = useState(false);
   const editFlow = useHouseEditFlow();
+  const nightPass = useNightPass();
   const pickedIdRef = useRef<string | null>(null);
   const autoOpenedIdRef = useRef<string | null>(null);
   pickedIdRef.current = picked?.id ?? null;
@@ -290,6 +292,9 @@ function EditPageContent() {
         ) : null}
         {house && !editFlow.flow ? (
           <NightPassesCard houseId={house.id} house={house} admin={admin} />
+        ) : null}
+        {picked && !house && !editFlow.flow && nightPass.registered && nightPass.houseId === picked.id ? (
+          <NightPassesCard houseId={picked.id} house={picked} admin={admin} />
         ) : null}
         </div>
       </main>

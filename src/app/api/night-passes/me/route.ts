@@ -21,6 +21,7 @@ export type NightPassMeResponse = {
   holderName?: string;
   holderPhone?: string;
   houseName?: string;
+  houseId?: string;
   lost?: NightPassLost;
 };
 
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
     ...(session?.holderName ? { holderName: session.holderName } : {}),
     ...(session?.holderPhone ? { holderPhone: maskPhone(session.holderPhone) } : {}),
     ...(house?.name ? { houseName: house.name } : {}),
+    ...(house?.id ? { houseId: house.id } : {}),
     ...(lost ? { lost } : {}),
   };
   return NextResponse.json(body, { headers: { "Cache-Control": "private, no-store" } });

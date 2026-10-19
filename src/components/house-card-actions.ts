@@ -37,6 +37,8 @@ export type HouseCardActionContext = {
   editCodeFor?: (id: string) => string | undefined;
   onEdit?: (house: PublicHouse) => void;
   nightPassesEnabled?: boolean;
+  /** This device's registered night pass is for this house id. */
+  registeredNightPassOnHouse?: (id: string) => boolean;
   onNightPasses?: (house: PublicHouse) => void;
   /** Owner/admin ⋮ «מיקום השדון» — only shown on houses this device may edit. */
   onPlaceGem?: (house: PublicHouse) => void;
@@ -63,6 +65,9 @@ export function houseCardPropsFor(
   const id = house.id;
   const isSkipped = ctx.skipped(id);
   const editAllowed = deviceHouseEditAllowed(id) && Boolean(ctx.canEdit?.(id));
+  const passOnHouse =
+    Boolean(ctx.nightPassesEnabled) && Boolean(ctx.registeredNightPassOnHouse?.(id));
+  const viewNightPassDevices = editAllowed || passOnHouse;
   const viewOnlyRemoved = !deviceHouseEditAllowed(id);
   return {
     house,
@@ -98,7 +103,7 @@ export function houseCardPropsFor(
     editCode: editAllowed ? ctx.editCodeFor?.(id) : undefined,
     showVisitPoster: editAllowed,
     admin: ctx.admin,
-    nightPassesEnabled: editAllowed && ctx.nightPassesEnabled,
+    nightPassesEnabled: viewNightPassDevices && ctx.nightPassesEnabled,
     onToggleEdit: editAllowed && ctx.onEdit ? () => ctx.onEdit!(house) : undefined,
     onPlaceGem:
       editAllowed && ctx.onPlaceGem && (ctx.gemQuickActionEligible?.(house) ?? true)

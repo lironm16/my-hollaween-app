@@ -11,6 +11,7 @@ export type NightPassState = {
   holderName?: string;
   holderPhone?: string;
   houseName?: string;
+  houseId?: string;
 };
 
 const STATE_KEY = "hw-night-pass-state";
@@ -98,6 +99,7 @@ function asState(value: unknown): NightPassState | null {
     ...(raw.holderName ? { holderName: raw.holderName } : {}),
     ...(raw.holderPhone ? { holderPhone: raw.holderPhone } : {}),
     ...(raw.houseName ? { houseName: raw.houseName } : {}),
+    ...(raw.houseId ? { houseId: raw.houseId } : {}),
   };
 }
 
