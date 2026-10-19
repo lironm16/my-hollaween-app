@@ -124,7 +124,7 @@ export async function redeemNightPass(input: {
       return null;
     }
     const now = new Date().toISOString();
-    let sessions = [...current.sessions];
+    const sessions = [...current.sessions];
     const priorIdx =
       input.priorSessionId != null
         ? sessions.findIndex((s) => s.sessionId === input.priorSessionId)
