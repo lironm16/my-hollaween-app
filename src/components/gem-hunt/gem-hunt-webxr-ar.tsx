@@ -226,7 +226,7 @@ export function GemHuntWebXrAr({
   const [geoLockMode, setGeoLockMode] = useState<"pending" | "sidewalk" | "native" | "local">(
     "pending",
   );
-  const placeAssistRef = useRef({ forceOnce: false, fast: false });
+  const placeAssistRef = useRef({ forceOnce: false, fast: false, viewerOnly: false });
 
   const rootRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -351,6 +351,10 @@ export function GemHuntWebXrAr({
     const tellMeReady = tellMeCenter;
     if (!inBand && !tellMeReady) return;
     if (!placed && !tellMeCenter) return;
+    if (tellMeCenter && !placed && isAndroidLike()) {
+      placeAssistRef.current.forceOnce = true;
+      placeAssistRef.current.viewerOnly = true;
+    }
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
     onCollectPersistRef.current?.(monsterId);
@@ -598,6 +602,10 @@ export function GemHuntWebXrAr({
     }
     encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
+    if (isAndroidLike()) {
+      handleCollectRef.current();
+      return;
+    }
     onTreatSuccess();
   }, [
     canCollectNow,
@@ -655,6 +663,7 @@ export function GemHuntWebXrAr({
     }
     placeAssistRef.current.forceOnce = false;
     placeAssistRef.current.fast = false;
+    placeAssistRef.current.viewerOnly = false;
     if (!simulateInRange && !canCollectNow && !inWebXrHuntBand) {
       setCenterReveal(false);
     }
@@ -682,6 +691,9 @@ export function GemHuntWebXrAr({
       placeAssistRef.current.forceOnce = true;
       placeAssistRef.current.fast = true;
     }
+    if (isAndroidLike()) {
+      placeAssistRef.current.viewerOnly = true;
+    }
     setCenterReveal(true);
   }, [onBeforeNavigationAssist, placed]);
 
@@ -690,6 +702,7 @@ export function GemHuntWebXrAr({
     setUserDismissedCenterGem(true);
     placeAssistRef.current.forceOnce = false;
     placeAssistRef.current.fast = false;
+    placeAssistRef.current.viewerOnly = false;
     if (encounterMode && encounterPhase === "encounter") {
       setEncounterPhase("approach");
     }
@@ -821,7 +834,9 @@ export function GemHuntWebXrAr({
               accuracy: liveLocRef.current.accuracy,
             }
           : null);
-      if (!avg || headingDeg == null) return;
+      const effectiveHeading =
+        headingDeg ?? (avg ? bearingDegrees(avg, target) : null);
+      if (!avg || effectiveHeading == null) return;
 
       if (!geoNativeTried) {
         geoNativeTried = true;
@@ -835,7 +850,7 @@ export function GemHuntWebXrAr({
         }
       }
 
-      const off = viewerLocalOffsetMeters(avg, target, headingDeg);
+      const off = viewerLocalOffsetMeters(avg, target, effectiveHeading);
       if (off.quality === "weak" && !force) return;
 
       if (anchorsEnabled && frame.createAnchor) {
@@ -968,20 +983,50 @@ export function GemHuntWebXrAr({
       },
     };
 
+    const placeGemInFrontOfViewer = (
+      frame: XRFrame,
+      ref: XRReferenceSpace,
+      viewerSpace: XRReferenceSpace,
+    ) => {
+      const viewerPose = frame.getPose(viewerSpace, ref);
+      if (!viewerPose) return false;
+      const viewerMat = new THREE.Matrix4().fromArray(viewerPose.transform.matrix);
+      const camPos = new THREE.Vector3();
+      const camQuat = new THREE.Quaternion();
+      viewerMat.decompose(camPos, camQuat, new THREE.Vector3());
+      const forward = new THREE.Vector3(0, 0, -1.45).applyQuaternion(camQuat);
+      anchorGroup.position.copy(camPos).add(forward);
+      anchorGroup.quaternion.copy(camQuat);
+      anchorGroup.matrixAutoUpdate = true;
+      if (!isPlaced) finishPlacement("local");
+      else anchorGroup.visible = true;
+      return true;
+    };
+
     const placeFromReticle = () => {
-      if (!inWebXrHuntBandRef.current) return;
-      anchorGroup.position.setFromMatrixPosition(reticle.matrix);
-      anchorGroup.quaternion.setFromRotationMatrix(reticle.matrix);
+      const tellMeForce =
+        centerRevealRef.current && arWorldGemOnTellMe && placeAssistRef.current.forceOnce;
+      if (!inWebXrHuntBandRef.current && !tellMeForce) return;
+      if (reticle.visible) {
+        anchorGroup.position.setFromMatrixPosition(reticle.matrix);
+        anchorGroup.quaternion.setFromRotationMatrix(reticle.matrix);
+      } else if (!tellMeForce) {
+        return;
+      }
       finishPlacement("local");
     };
 
     const onSelect = () => {
       if (collectingRef.current) return;
-      if (isPlaced) {
-        if (centerRevealRef.current && isAndroidLike()) {
-          handleCollectRef.current();
-          return;
+      if (centerRevealRef.current && isAndroidLike()) {
+        if (!isPlaced) {
+          placeAssistRef.current.forceOnce = true;
+          placeAssistRef.current.viewerOnly = true;
         }
+        handleCollectRef.current();
+        return;
+      }
+      if (isPlaced) {
         /** iOS WebXR — collect via DOM inspect360 tap only. */
         if (centerRevealRef.current) return;
         if (encounterMode) {
@@ -1061,9 +1106,24 @@ export function GemHuntWebXrAr({
         const allowHitTestFallback =
           !GEM_WEBXR_GEO_PLACEMENT_ENABLED || performance.now() - startTime > 10_000;
 
-        if (!isPlaced && GEM_WEBXR_GEO_PLACEMENT_ENABLED && inWebXrCollectZoneRef.current) {
+        const assist = placeAssistRef.current;
+        const tellMeViewerPlacement =
+          arWorldGemOnTellMe &&
+          centerRevealRef.current &&
+          (assist.viewerOnly || assist.forceOnce);
+
+        if (tellMeViewerPlacement) {
+          placeGemInFrontOfViewer(frame, ref, viewerSpace);
+        }
+
+        if (
+          !tellMeViewerPlacement &&
+          !isPlaced &&
+          GEM_WEBXR_GEO_PLACEMENT_ENABLED &&
+          inWebXrCollectZoneRef.current
+        ) {
           geoAttemptFrame += 1;
-          if (geoAttemptFrame % 12 === 0 || placeAssistRef.current.forceOnce) {
+          if (geoAttemptFrame % 12 === 0 || assist.forceOnce) {
             void tryLockGeoPlacement(frame, ref, viewerSpace);
           }
         }
@@ -1072,6 +1132,7 @@ export function GemHuntWebXrAr({
           isAndroidLike() && GEM_WEBXR_GEO_PLACEMENT_ENABLED;
 
         if (
+          !tellMeViewerPlacement &&
           !isPlaced &&
           inWebXrCollectZoneRef.current &&
           allowHitTestFallback &&
@@ -1082,10 +1143,13 @@ export function GemHuntWebXrAr({
             reticle.matrix.fromArray(pose.transform.matrix);
             reticle.visible = !hideFloorReticle;
             stableHitFrames += 1;
-            const assist = placeAssistRef.current;
             const threshold = assist.fast ? 8 : AUTO_PLACE_STABLE_FRAMES;
             if (assist.forceOnce) {
-              placeFromReticle();
+              if (centerRevealRef.current && arWorldGemOnTellMe && !reticle.visible) {
+                placeGemInFrontOfViewer(frame, ref, viewerSpace);
+              } else {
+                placeFromReticle();
+              }
               assist.forceOnce = false;
               assist.fast = false;
             } else if (stableHitFrames >= threshold) {
@@ -1101,8 +1165,12 @@ export function GemHuntWebXrAr({
         }
 
         if (!worldAnchor) {
+          const tellMeArVisible =
+            arWorldGemOnTellMe &&
+            centerRevealRef.current &&
+            (collectingRef.current || !userDismissedCenterGemRef.current);
           anchorGroup.visible =
-            isPlaced &&
+            (isPlaced || tellMeArVisible) &&
             (arWorldGemOnTellMe || !centerRevealRef.current) &&
             (collectingRef.current || !userDismissedCenterGemRef.current);
         }
@@ -1114,7 +1182,10 @@ export function GemHuntWebXrAr({
         ) {
           const ep = encounterPhaseRef.current;
           const wiggle =
-            ep === "resolve-wiggle1" || ep === "resolve-wiggle2" || ep === "resolve-breakout";
+            !arWorldGemOnTellMe &&
+            (ep === "resolve-wiggle1" ||
+              ep === "resolve-wiggle2" ||
+              ep === "resolve-breakout");
           const bobAmp = useFloat ? 0.055 : 0.038;
           const bob = Math.sin(t * (useFloat ? 1.6 : 2.4) + dancePhase) * bobAmp;
           pivot.position.y = floatHeight + bob;
@@ -1319,7 +1390,7 @@ export function GemHuntWebXrAr({
         </div>
       ) : null}
 
-      {!androidWebXrUi && (showCenterCollectGem || showTellMeCenterGem) ? (
+      {(showTellMeCenterGem || (!androidWebXrUi && showCenterCollectGem)) ? (
         <div
           className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage is-gem-interactive"
           aria-hidden={false}

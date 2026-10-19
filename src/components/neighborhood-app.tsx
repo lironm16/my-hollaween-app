@@ -1169,13 +1169,17 @@ export function NeighborhoodApp({
     };
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) reset();
+      if (readHomeView() === "map" || Boolean(mapGemHouse)) {
+        setWatchEnabled(true);
+        void geo.refresh();
+      }
     };
     window.addEventListener("pageshow", onPageShow);
     return () => {
       window.removeEventListener("pageshow", onPageShow);
       reset();
     };
-  }, [editFlow.close, resetForNavigation]);
+  }, [editFlow.close, geo.refresh, mapGemHouse, resetForNavigation, setWatchEnabled]);
 
   function handleHouseUpdated(next: PublicHouse) {
     editFlow.setFlow((current) =>

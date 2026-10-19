@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
+import { readGpsSessionSeed, writeGpsSessionSeed } from "@/lib/gps-session-seed";
 
 export type UserLocation = {
   lat: number;
@@ -88,10 +89,12 @@ export function useUserLocation(options?: { watch?: boolean }) {
   const [watchOverride, setWatchOverride] = useState<boolean | null>(null);
   const setWatchEnabled = useCallback((enabled: boolean) => setWatchOverride(enabled), []);
   const watchEnabled = watchOverride ?? options?.watch ?? true;
-  const [location, setLocation] = useState<UserLocation | null>(null);
-  const [status, setStatus] = useState<LocationStatus>("idle");
+  const [location, setLocation] = useState<UserLocation | null>(() => readGpsSessionSeed());
+  const [status, setStatus] = useState<LocationStatus>(() =>
+    readGpsSessionSeed() ? "ready" : "idle",
+  );
   const watchId = useRef<number | null>(null);
-  const last = useRef<UserLocation | null>(null);
+  const last = useRef<UserLocation | null>(readGpsSessionSeed());
   const lastFixAtRef = useRef(0);
 
   const stopWatch = useCallback(() => {
@@ -118,6 +121,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
     }
     last.current = next;
     lastFixAtRef.current = Date.now();
+    writeGpsSessionSeed(next);
     setLocation(next);
     setStatus("ready");
   }, []);
@@ -233,6 +237,24 @@ export function useUserLocation(options?: { watch?: boolean }) {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
+  }, [watchEnabled, restartWatch, pokeFreshFix]);
+
+  useEffect(() => {
+    const onPageShow = () => {
+      const seed = readGpsSessionSeed();
+      if (seed) {
+        last.current = seed;
+        lastFixAtRef.current = Date.now();
+        setLocation(seed);
+        setStatus("ready");
+      }
+      if (watchEnabled) {
+        restartWatch();
+        pokeFreshFix();
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
   }, [watchEnabled, restartWatch, pokeFreshFix]);
 
   useEffect(() => {
