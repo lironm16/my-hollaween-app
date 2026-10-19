@@ -260,6 +260,9 @@ export function loadOwnedHouses(): OwnedHouse[] {
 
 export function saveOwnedHouse(house: OwnedHouse) {
   try {
+    if (house.editCode?.trim()) {
+      clearHouseEditAccessRevoked(house.id);
+    }
     const next = loadOwnedHouses().filter((h) => h.id !== house.id);
     next.unshift(house);
     localStorage.setItem(MY_HOUSES_KEY, JSON.stringify(next.slice(0, 20)));
@@ -279,11 +282,65 @@ export function removeOwnedHouse(id: string) {
   }
 }
 
+const REVOKED_EDIT_ACCESS_KEY = "hw-edit-access-revoked";
+
+export function loadRevokedEditAccessHouseIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(REVOKED_EDIT_ACCESS_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((id): id is string => typeof id === "string" && id.trim().length > 0));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistRevokedEditAccessHouseIds(ids: Set<string>) {
+  try {
+    localStorage.setItem(REVOKED_EDIT_ACCESS_KEY, JSON.stringify([...ids].slice(0, 40)));
+    window.dispatchEvent(new Event("hw-edit-access-changed"));
+  } catch {
+    /* private mode */
+  }
+}
+
+export function isHouseEditAccessRevoked(id: string, cache?: Set<string>) {
+  return (cache ?? loadRevokedEditAccessHouseIds()).has(id);
+}
+
+/** Owner reset / pass lost — hide קוד עריכה ומכשירים until a new code unlocks. */
+export function markHouseEditAccessRevoked(id: string) {
+  const ids = loadRevokedEditAccessHouseIds();
+  if (ids.has(id)) return;
+  ids.add(id);
+  persistRevokedEditAccessHouseIds(ids);
+}
+
+export function clearHouseEditAccessRevoked(id: string) {
+  const ids = loadRevokedEditAccessHouseIds();
+  if (!ids.has(id)) return;
+  ids.delete(id);
+  persistRevokedEditAccessHouseIds(ids);
+}
+
 /** After code reset — drop cached edit code so the device stops auto-filling the old one. */
 export function clearOwnedHouseEditCode(id: string) {
+  markHouseEditAccessRevoked(id);
   const row = loadOwnedHouses().find((h) => h.id === id);
   if (!row?.editCode?.trim()) return;
   saveOwnedHouse({ ...row, editCode: "" });
+}
+
+/** Saved unlock on this device — not night-pass-only editors (no code stored). */
+export function localHouseEditCodeFor(id: string): string | undefined {
+  if (isHouseEditAccessRevoked(id)) return undefined;
+  const code = loadOwnedHouses().find((h) => h.id === id)?.editCode?.trim();
+  return code || undefined;
+}
+
+export function deviceMayEditHouseLocally(id: string): boolean {
+  return Boolean(localHouseEditCodeFor(id));
 }
 
 export function rememberPublishedHouse(house: PublicHouse) {

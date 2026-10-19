@@ -206,14 +206,17 @@ export function NightPassRegisterPanel({
         setError(json?.error ?? "ההרשמה נכשלה. נסו שוב.");
         return;
       }
-      if (json?.houseId && json.editCode) {
-        saveOwnedHouse({
-          id: json.houseId,
-          name: json.house?.name ?? name.trim(),
-          editCode: json.editCode,
-          preview: json.house,
-        });
-        notifyCatalogChanged();
+      if (json?.houseId) {
+        const storeEditCode = ownerRegister ? (json.editCode?.trim() ?? "") : "";
+        if (ownerRegister && storeEditCode) {
+          saveOwnedHouse({
+            id: json.houseId,
+            name: json.house?.name ?? name.trim(),
+            editCode: storeEditCode,
+            preview: json.house,
+          });
+          notifyCatalogChanged();
+        }
       }
       if (json?.reregistered) {
         await refreshNightPassState({ force: true });

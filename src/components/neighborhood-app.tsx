@@ -121,6 +121,8 @@ import { setMapListSuspended } from "@/lib/map-list-suspend";
 import { applyClockSearchParams } from "@/lib/app-clock";
 import { useAppNow } from "@/hooks/use-app-clock";
 import {
+  deviceMayEditHouseLocally,
+  localHouseEditCodeFor,
   notifyCatalogChanged,
   removeOwnedHouse,
   forgetPublishedHouse,
@@ -1191,13 +1193,15 @@ export function NeighborhoodApp({
   function requestHouseEdit(house: PublicHouse, allowDelete = false) {
     selection.setEditing(false);
     const deviceOwner = adminDeviceOwnerPowers(admin, gemPreviewAsUser);
-    const isOwned = owned.some((item) => item.id === house.id);
+    const localCode = localHouseEditCodeFor(house.id);
+    if (!deviceOwner && !localCode) {
+      toast.message("אין הרשאת עריכה — בקשו מבעל הבית קוד חדש או הזמנה.");
+      return;
+    }
     editFlow.openEdit(house, {
-      editCode: deviceOwner
-        ? editCodeById.get(house.id)
-        : owned.find((item) => item.id === house.id)?.editCode,
+      editCode: deviceOwner ? editCodeById.get(house.id) : localCode,
       admin: deviceOwner,
-      allowDelete: allowDelete || Boolean(deviceOwner || isOwned),
+      allowDelete: allowDelete || Boolean(deviceOwner || localCode),
     });
   }
 
@@ -1340,11 +1344,11 @@ export function NeighborhoodApp({
       onClusterFindAllGems: gemAdminTools ? openGemHuntForCluster : undefined,
       onClusterResetAllGems: gemAdminTools ? handleClusterResetAllGems : undefined,
       canEdit: (id) =>
-        Boolean(adminDeviceOwnerPowers(admin, gemPreviewAsUser) || owned.some((item) => item.id === id)),
+        Boolean(adminDeviceOwnerPowers(admin, gemPreviewAsUser) || deviceMayEditHouseLocally(id)),
       editCodeFor: (id) =>
         adminDeviceOwnerPowers(admin, gemPreviewAsUser)
           ? editCodeById.get(id)
-          : owned.find((item) => item.id === id)?.editCode,
+          : localHouseEditCodeFor(id),
       onEdit: (house) => requestHouseEdit(house, true),
       nightPassesEnabled: nightPass.enabled,
       registeredNightPassOnHouse: (id) =>
@@ -1352,7 +1356,7 @@ export function NeighborhoodApp({
       onNightPasses: (house) => {
         const editCode = adminDeviceOwnerPowers(admin, gemPreviewAsUser)
           ? editCodeById.get(house.id)
-          : owned.find((item) => item.id === house.id)?.editCode;
+          : localHouseEditCodeFor(house.id);
         if (editCode) openOwnerPasses(house, editCode);
         else if (nightPass.registered && nightPass.houseId === house.id) {
           openOwnerPasses(house, "");
@@ -1364,7 +1368,7 @@ export function NeighborhoodApp({
               house,
               adminDeviceOwnerPowers(admin, gemPreviewAsUser)
                 ? editCodeById.get(house.id)
-                : owned.find((item) => item.id === house.id)?.editCode,
+                : localHouseEditCodeFor(house.id),
             )
         : undefined,
       skipMetaFor: (id) => skips.meta(id),

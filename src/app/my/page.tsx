@@ -28,8 +28,10 @@ import { activeHouseSetForSession } from "@/lib/house-set";
 import { houseGemHuntUiEligible } from "@/lib/gem-monsters";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
+  deviceMayEditHouseLocally,
   forgetPublishedHouse,
   loadCatalogCacheSync,
+  localHouseEditCodeFor,
   notifyCatalogChanged,
   removeOwnedHouse,
   saveOwnedHouse,
@@ -243,11 +245,12 @@ function MyCollectionsPageContent() {
               handleRestore(id);
             }
           : undefined,
-      canEdit: tab === "mine" ? () => true : undefined,
-      editCodeFor:
-        tab === "mine" ? (id) => owned.find((item) => item.id === id)?.editCode : undefined,
+      canEdit: tab === "mine" ? (id) => deviceMayEditHouseLocally(id) : undefined,
+      editCodeFor: tab === "mine" ? (id) => localHouseEditCodeFor(id) : undefined,
       onEdit: tab === "mine" ? requestEdit : undefined,
       nightPassesEnabled: tab === "mine" && nightPass.enabled,
+      registeredNightPassOnHouse: (id) =>
+        nightPass.registered && Boolean(nightPass.houseId) && nightPass.houseId === id,
       onPlaceGem:
         tab === "mine" && gemCardActionsEnabled
           ? (house) => openGemPlacer(house, owned.find((item) => item.id === house.id)?.editCode)

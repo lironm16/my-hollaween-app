@@ -16,7 +16,15 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { activeHouseSetForSession, houseMatchesSet } from "@/lib/house-set";
-import { saveOwnedHouse, removeOwnedHouse, forgetPublishedHouse, notifyCatalogChanged } from "@/lib/offline-db";
+import {
+  clearHouseEditAccessRevoked,
+  clearOwnedHouseEditCode,
+  localHouseEditCodeFor,
+  saveOwnedHouse,
+  removeOwnedHouse,
+  forgetPublishedHouse,
+  notifyCatalogChanged,
+} from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { PersistNote } from "@/components/persist-note";
@@ -83,9 +91,10 @@ function EditPageContent() {
   }, [activeHouseSet, picked, editFlow.close]);
 
   const ownedMatch = picked ? owned.find((item) => item.id === picked.id) : undefined;
+  const localEditCode = picked ? localHouseEditCodeFor(picked.id) : undefined;
   const pickedRemovedFromCatalog = useCatalogRemoved(picked?.id);
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;
-  const needsCode = Boolean(picked) && !admin && !ownedMatch && !house;
+  const needsCode = Boolean(picked) && !admin && !localEditCode && !house;
 
   useEffect(() => {
     if (!focusId || picked) return;
@@ -113,11 +122,15 @@ function EditPageContent() {
       );
       if (pickedIdRef.current !== target.id) return false;
       if (!res.ok || !data.house) {
+        if (res.status === 403) {
+          clearOwnedHouseEditCode(target.id);
+        }
         if (!options?.quiet) {
           toast.error(data.error ?? "קוד העריכה שגוי. נסו שוב.");
         }
         return false;
       }
+      clearHouseEditAccessRevoked(data.house.id);
       setHouse(data.house);
       saveOwnedHouse({
         id: data.house.id,
@@ -153,12 +166,17 @@ function EditPageContent() {
     const mine = owned.find((item) => item.id === picked.id);
     if (!mine) {
       setEditCode("");
+      setHouse(null);
       return;
     }
     const target = picked;
-    const code = mine.editCode;
-    setEditCode(code);
-    setHouse(picked);
+    const code = localHouseEditCodeFor(picked.id) ?? "";
+    setEditCode(mine.editCode ?? "");
+    if (!code) {
+      setHouse(null);
+      return;
+    }
+    setHouse(null);
     let cancelled = false;
     void unlockWith(target, code, { quiet: true }).then((ok) => {
       if (cancelled || !ok) return;
@@ -268,9 +286,13 @@ function EditPageContent() {
             <p className="border-t border-orange-500/15 pt-3 text-base text-emerald-300">
               מצב מנהל — אפשר לערוך בלי קוד.
             </p>
-          ) : picked && ownedMatch ? (
+          ) : picked && ownedMatch && localEditCode ? (
             <p className="border-t border-orange-500/15 pt-3 text-base text-emerald-300">
               הבית שמור במכשיר הזה — נפתח לעריכה.
+            </p>
+          ) : picked && ownedMatch ? (
+            <p className="border-t border-orange-500/15 pt-3 text-base text-amber-200/95">
+              הקוד שמור במכשיר אינו תקף — הזינו קוד עריכה חדש מבעל הבית.
             </p>
           ) : null}
         </section>
