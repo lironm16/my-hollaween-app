@@ -77,6 +77,7 @@ import {
   GEM_CLUSTER_FINISH_HE,
   GEM_CLUSTER_SKIP_HE,
   gemFoundOnScreenBannerHe,
+  GEM_AT_STOP_DISCOVER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
 } from "@/lib/gem-hunt-copy";
@@ -122,21 +123,6 @@ function frameModel(object: THREE.Object3D, scaleFactor: number) {
   object.scale.setScalar(scale);
   object.position.sub(center.multiplyScalar(scale));
   object.position.y += size.y * scale * 0.02;
-}
-
-function pickIdleClip(clips: THREE.AnimationClip[]) {
-  if (clips.length === 0) return null;
-  const prefer = clips.find((c) => /idle|walk|breath|float|hover|fly|dance/i.test(c.name));
-  return prefer ?? clips[0]!;
-}
-
-/** Fake ground shadow under the model feet — not at pivot origin (floaters had a “neck ring”). */
-function placeGroundShadow(shadow: THREE.Mesh, model: THREE.Object3D) {
-  const box = new THREE.Box3().setFromObject(model);
-  shadow.position.y = box.min.y + 0.003;
-  const span = Math.max(box.max.x - box.min.x, box.max.z - box.min.z, 0.08);
-  const s = Math.min(1.05, Math.max(0.32, (span * 0.42) / 0.44));
-  shadow.scale.setScalar(s);
 }
 
 /**
@@ -270,7 +256,8 @@ export function GemHuntWebXrAr({
     ? { lat: house.lat, lng: house.lng, accuracy: 5 }
     : userLocation;
   const liveLoc = useGemHuntLiveLocation({
-    huntGpsEnabled: true,
+    /** Android: one geolocation watch (map hook) — a second watch often dies after WebXR. */
+    huntGpsEnabled: !isAndroidLike(),
     simulate: simulateInRange,
     simulateLoc: { lat: house.lat, lng: house.lng, accuracy: 5 },
     seedLoc: userLocation,
@@ -354,8 +341,22 @@ export function GemHuntWebXrAr({
     lng: house.lng,
   };
 
+  /** «גלה לי» — block WebXR/encounter auto-handoff from collecting without a gem tap. */
+  const userInitiatedCollectRef = useRef(false);
+  /** DOM inspect360 gem — only during tell-me / collect started from tell-me tap. */
+  const [collectViaTellMe, setCollectViaTellMe] = useState(false);
+  const collectViaTellMeRef = useRef(false);
+  useEffect(() => {
+    collectViaTellMeRef.current = collectViaTellMe;
+  }, [collectViaTellMe]);
+
   const handleCollect = useCallback(() => {
     if (phase === "collecting") return;
+    if (centerRevealRef.current && !userInitiatedCollectRef.current) return;
+    userInitiatedCollectRef.current = false;
+    const viaTellMe = centerRevealRef.current;
+    collectViaTellMeRef.current = viaTellMe;
+    setCollectViaTellMe(viaTellMe);
     const inBand =
       inWebXrHuntBand ||
       encounterCollectLatchedRef.current ||
@@ -471,8 +472,10 @@ export function GemHuntWebXrAr({
   const tellMeCenterSession =
     centerReveal && sessionActive && !userDismissedCenterGem;
   const showTellMeCenterGem = tellMeCenterSession && phase !== "collecting";
-  /** iOS-style collect choreography — WebXR hid the DOM gem during `collecting`. */
-  const showCenterCollectGem = phase === "collecting" && sessionActive;
+  /** DOM collect dance — only after tapping the fake center gem (not world AR collect). */
+  const showCenterCollectGem =
+    phase === "collecting" && sessionActive && collectViaTellMe;
+  const showDomFakeGem = showTellMeCenterGem || showCenterCollectGem;
 
   const showApproachScreenGem =
     sessionActive &&
@@ -510,8 +513,7 @@ export function GemHuntWebXrAr({
             (placed && showArGem && !userDismissedCenterGem))
         : showTellMeCenterGem || gemVisibleInCam);
   const androidWebXrUi = platformMod === "gem-hunt-webxr--android";
-  const showWalkNavGuide =
-    !androidWebXrUi && hintPanel === "nav" && !gemFoundInView;
+  const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
 
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
@@ -550,9 +552,7 @@ export function GemHuntWebXrAr({
     liveLoc != null && !simulateInRange
       ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
       : null;
-  const showNavArrow =
-    !androidWebXrUi &&
-    (encounterMode
+  const showNavArrow = encounterMode
       ? sessionActive &&
         encounterPhase === "approach" &&
         showWalkNavGuide &&
@@ -565,7 +565,7 @@ export function GemHuntWebXrAr({
         !centerReveal &&
         huntArrowDeg != null &&
         liveLoc != null &&
-        !simulateInRange);
+        !simulateInRange;
   const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
   const showEncounterFooter =
     encounterMode &&
@@ -614,6 +614,10 @@ export function GemHuntWebXrAr({
     }
     encounterCollectLatchedRef.current = true;
     markEncounterTutorialSeen();
+    if (isAndroidLike()) {
+      handleCollectRef.current();
+      return;
+    }
     onTreatSuccess();
   }, [
     canCollectNow,
@@ -647,6 +651,7 @@ export function GemHuntWebXrAr({
       encounterCollectLatchedRef.current = true;
       markEncounterTutorialSeen();
     }
+    userInitiatedCollectRef.current = true;
     handleCollectRef.current();
   }, [encounterMode, encounterPhase, showTellMeCenterGem]);
 
@@ -711,15 +716,6 @@ export function GemHuntWebXrAr({
     }
   }, [encounterMode, encounterPhase, setEncounterPhase]);
 
-  const tellMeButton = useGemTellMeButton({
-    enforceHuntRadius: tellMeHuntRadiusEnforced,
-    inRange: tellMeInRange,
-    centerReveal,
-    blocked: phase === "collecting" || !sessionActive,
-    onActivate: activateTellMe,
-    onDeactivate: deactivateTellMe,
-  });
-
   const showWebXrGeoHint =
     !androidWebXrUi &&
     sessionActive &&
@@ -734,13 +730,24 @@ export function GemHuntWebXrAr({
     gemLabelHe(monsterId),
     isNewGemTypeLatched,
   );
-  const hideHuntHintControls =
+  const naturalDiscoverActive =
     !centerReveal &&
-    !campusSession &&
     sessionActive &&
-    phase === "placed" &&
     inOnsiteBand &&
-    (showArGem || showTellMeCenterGem);
+    (showArGem || showApproachScreenGem || gemVisibleInCam);
+  const hideHuntHintControls =
+    !centerReveal && !campusSession && naturalDiscoverActive;
+
+  const tellMeButton = useGemTellMeButton({
+    enforceHuntRadius: tellMeHuntRadiusEnforced,
+    inRange: tellMeInRange,
+    centerReveal,
+    naturalDiscoverActive,
+    blocked: phase === "collecting" || !sessionActive,
+    onActivate: activateTellMe,
+    onDeactivate: deactivateTellMe,
+  });
+
   const showFoundOnScreenBanner = phase === "collecting";
 
   useEffect(() => {
@@ -771,7 +778,7 @@ export function GemHuntWebXrAr({
       isPlaced = true;
       stableHitFrames = 0;
       reticle.visible = false;
-      if (!centerRevealRef.current) anchorGroup.visible = true;
+      if (!centerRevealRef.current && !collectViaTellMeRef.current) anchorGroup.visible = true;
       setPlaced(true);
       setPhase("placed");
       setGeoLockModeRef.current(mode);
@@ -784,8 +791,11 @@ export function GemHuntWebXrAr({
       anchorGroup.matrixAutoUpdate = false;
       anchorGroup.matrix.fromArray(pose.transform.matrix);
       anchorGroup.matrix.decompose(anchorGroup.position, anchorGroup.quaternion, anchorGroup.scale);
+      const hideWorldForDomGem =
+        centerRevealRef.current ||
+        (collectingRef.current && collectViaTellMeRef.current);
       anchorGroup.visible =
-        !centerRevealRef.current &&
+        !hideWorldForDomGem &&
         (collectingRef.current || !userDismissedCenterGemRef.current);
     };
 
@@ -835,7 +845,9 @@ export function GemHuntWebXrAr({
               accuracy: liveLocRef.current.accuracy,
             }
           : null);
-      if (!avg || headingDeg == null) return;
+      const effectiveHeading =
+        headingDeg ?? (avg ? bearingDegrees(avg, target) : null);
+      if (!avg || effectiveHeading == null) return;
 
       if (!geoNativeTried) {
         geoNativeTried = true;
@@ -849,7 +861,7 @@ export function GemHuntWebXrAr({
         }
       }
 
-      const off = viewerLocalOffsetMeters(avg, target, headingDeg);
+      const off = viewerLocalOffsetMeters(avg, target, effectiveHeading);
       if (off.quality === "weak" && !force) return;
 
       if (anchorsEnabled && frame.createAnchor) {
@@ -884,10 +896,13 @@ export function GemHuntWebXrAr({
     renderer.xr.enabled = true;
     host.appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3048, 1.25));
-    const key = new THREE.DirectionalLight(0xfff0dd, 0.5);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x4a4060, 1.75));
+    const key = new THREE.DirectionalLight(0xfff4e6, 0.92);
     key.position.set(2, 4, 1);
     scene.add(key);
+    const fill = new THREE.DirectionalLight(0xe9d5ff, 0.38);
+    fill.position.set(-1.5, 2, 2);
+    scene.add(fill);
 
     const reticle = new THREE.Mesh(
       new THREE.RingGeometry(0.09, 0.12, 36).rotateX(-Math.PI / 2),
@@ -904,24 +919,12 @@ export function GemHuntWebXrAr({
     const pivot = new THREE.Group();
     anchorGroup.add(pivot);
 
-    const shadowMat = new THREE.MeshBasicMaterial({
-      color: 0x000000,
-      transparent: true,
-      opacity: 0.14,
-      depthWrite: false,
-    });
-    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.22, 32), shadowMat);
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.renderOrder = -1;
-    pivot.add(shadow);
-    let footShadowScale = 1;
-
     const loader = new GLTFLoader();
+    const arWorldGemOnTellMe = isAndroidLike();
 
     const clearPivotModel = () => {
       for (let i = pivot.children.length - 1; i >= 0; i -= 1) {
-        const child = pivot.children[i];
-        if (child !== shadow) pivot.remove(child);
+        pivot.remove(pivot.children[i]!);
       }
       if (mixer) {
         mixer.stopAllAction();
@@ -945,7 +948,7 @@ export function GemHuntWebXrAr({
         const off = viewerLocalOffsetMeters(loc, target, h);
         anchorGroup.position.set(off.x, 0, off.z);
       }
-      anchorGroup.visible = !centerRevealRef.current;
+      anchorGroup.visible = !centerRevealRef.current && !collectViaTellMeRef.current;
       isPlaced = true;
       setPlaced(true);
       setPhase("placed");
@@ -968,17 +971,7 @@ export function GemHuntWebXrAr({
             applyGemMaterialTint(mat, tint);
           });
           pivot.add(model);
-          placeGroundShadow(shadow, model);
-          footShadowScale = shadow.scale.x;
           pivot.position.y = vis.floatHeight;
-
-          const clip = pickIdleClip(gltf.animations);
-          if (clip) {
-            mixer = new THREE.AnimationMixer(model);
-            const action = mixer.clipAction(clip);
-            action.loop = THREE.LoopRepeat;
-            action.play();
-          }
           onLoaded?.();
         },
         undefined,
@@ -1002,7 +995,7 @@ export function GemHuntWebXrAr({
     };
 
     const placeFromReticle = () => {
-      if (!inWebXrHuntBandRef.current || !reticle.visible) return;
+      if (!inWebXrHuntBandRef.current) return;
       anchorGroup.position.setFromMatrixPosition(reticle.matrix);
       anchorGroup.quaternion.setFromRotationMatrix(reticle.matrix);
       finishPlacement("local");
@@ -1010,9 +1003,9 @@ export function GemHuntWebXrAr({
 
     const onSelect = () => {
       if (collectingRef.current) return;
+      /** «גלה לי» — collect only via center DOM gem tap (iOS parity). */
+      if (centerRevealRef.current) return;
       if (isPlaced) {
-        /** «גלה לי» — collect only via explicit DOM tap (not WebXR select / encounter chain). */
-        if (centerRevealRef.current) return;
         if (encounterMode) {
           const ep = encounterPhaseRef.current;
           if (
@@ -1045,6 +1038,7 @@ export function GemHuntWebXrAr({
       setPhase("boot");
       setCenterReveal(false);
       setUserDismissedCenterGem(false);
+      setCollectViaTellMe(false);
       setGeoLockModeRef.current("pending");
       worldAnchor?.delete();
       worldAnchor = null;
@@ -1090,9 +1084,17 @@ export function GemHuntWebXrAr({
         const allowHitTestFallback =
           !GEM_WEBXR_GEO_PLACEMENT_ENABLED || performance.now() - startTime > 10_000;
 
-        if (!isPlaced && GEM_WEBXR_GEO_PLACEMENT_ENABLED && inWebXrCollectZoneRef.current) {
+        const assist = placeAssistRef.current;
+        const tellMeDomActive = centerRevealRef.current && arWorldGemOnTellMe;
+
+        if (
+          !tellMeDomActive &&
+          !isPlaced &&
+          GEM_WEBXR_GEO_PLACEMENT_ENABLED &&
+          inWebXrCollectZoneRef.current
+        ) {
           geoAttemptFrame += 1;
-          if (geoAttemptFrame % 12 === 0 || placeAssistRef.current.forceOnce) {
+          if (geoAttemptFrame % 12 === 0 || assist.forceOnce) {
             void tryLockGeoPlacement(frame, ref, viewerSpace);
           }
         }
@@ -1101,6 +1103,7 @@ export function GemHuntWebXrAr({
           isAndroidLike() && GEM_WEBXR_GEO_PLACEMENT_ENABLED;
 
         if (
+          !tellMeDomActive &&
           !isPlaced &&
           inWebXrCollectZoneRef.current &&
           allowHitTestFallback &&
@@ -1111,7 +1114,6 @@ export function GemHuntWebXrAr({
             reticle.matrix.fromArray(pose.transform.matrix);
             reticle.visible = !hideFloorReticle;
             stableHitFrames += 1;
-            const assist = placeAssistRef.current;
             const threshold = assist.fast ? 8 : AUTO_PLACE_STABLE_FRAMES;
             if (assist.forceOnce) {
               placeFromReticle();
@@ -1130,9 +1132,12 @@ export function GemHuntWebXrAr({
         }
 
         if (!worldAnchor) {
+          const hideWorldForDomGem =
+            centerRevealRef.current ||
+            (collectingRef.current && collectViaTellMeRef.current);
           anchorGroup.visible =
             isPlaced &&
-            !centerRevealRef.current &&
+            !hideWorldForDomGem &&
             (collectingRef.current || !userDismissedCenterGemRef.current);
         }
 
@@ -1143,7 +1148,10 @@ export function GemHuntWebXrAr({
         ) {
           const ep = encounterPhaseRef.current;
           const wiggle =
-            ep === "resolve-wiggle1" || ep === "resolve-wiggle2" || ep === "resolve-breakout";
+            !arWorldGemOnTellMe &&
+            (ep === "resolve-wiggle1" ||
+              ep === "resolve-wiggle2" ||
+              ep === "resolve-breakout");
           const bobAmp = useFloat ? 0.055 : 0.038;
           const bob = Math.sin(t * (useFloat ? 1.6 : 2.4) + dancePhase) * bobAmp;
           pivot.position.y = floatHeight + bob;
@@ -1152,20 +1160,18 @@ export function GemHuntWebXrAr({
             pivot.rotation.x = Math.sin(t * 11 + dancePhase) * 0.12;
             pivot.rotation.y = 0;
           } else {
-            pivot.rotation.z = Math.sin(t * 1.1 + dancePhase) * 0.06;
-            pivot.rotation.x = Math.sin(t * 0.85 + dancePhase * 0.7) * 0.04;
-            pivot.rotation.y = t * 0.22 + dancePhase;
+            pivot.rotation.z = 0;
+            pivot.rotation.x = 0;
+            pivot.rotation.y = 0;
           }
-          const shadowPulse = 1 + (useFloat ? 0.12 : 0.06) * Math.sin(t * 2);
-          shadow.scale.setScalar(footShadowScale * shadowPulse);
-          shadowMat.opacity = useFloat ? 0.2 : 0.26;
         }
 
         if (collectingRef.current) {
           const hop = Math.abs(Math.sin(t * 3.4 + dancePhase));
-          pivot.rotation.y = t * (2.1 + danceIndex * 0.08);
+          pivot.rotation.y = 0;
           pivot.position.y = floatHeight + Math.sin(t * 4.8 + dancePhase) * 0.14 + hop * 0.08;
-          pivot.rotation.x = Math.sin(t * 2.35 + dancePhase) * 0.35;
+          pivot.rotation.x = Math.sin(t * 2.35 + dancePhase) * 0.25;
+          pivot.rotation.z = 0;
         }
 
         mixer?.update(delta);
@@ -1275,9 +1281,15 @@ export function GemHuntWebXrAr({
         sessionActive && "is-session-active",
         campusSession && "is-campus-queue",
         (centerReveal || campusSession) && "is-tell-me-active",
+        naturalDiscoverActive && "is-at-gem-stop",
       )}
       dir="rtl"
     >
+      {naturalDiscoverActive ? (
+        <p className="gem-hunt-overlay__at-stop-badge" role="status">
+          {GEM_AT_STOP_DISCOVER_HE}
+        </p>
+      ) : null}
       <header
         className={cn(
           "gem-hunt-webxr__bar",
@@ -1344,7 +1356,7 @@ export function GemHuntWebXrAr({
         </div>
       ) : null}
 
-      {showCenterCollectGem || showTellMeCenterGem ? (
+      {showDomFakeGem ? (
         <div
           className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage is-gem-interactive"
           aria-hidden={false}
@@ -1467,8 +1479,9 @@ export function GemHuntWebXrAr({
                 sessionActive && "is-hidden",
               )}
             />
-            {showSessionFooter && !hideHuntHintControls ? (
+            {showSessionFooter ? (
               <div className="gem-hunt-overlay__footer-controls">
+                {!hideHuntHintControls ? (
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
                     type="button"
@@ -1499,6 +1512,7 @@ export function GemHuntWebXrAr({
                     />
                   ) : null}
                 </div>
+                ) : null}
               </div>
             ) : null}
             {campusSession && (clusterSkipAvailable || clusterFinishAvailable) ? (

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { distanceMeters } from "@/lib/geo";
+import { GEM_ANCHOR_PLACE_MAX_METERS } from "@/lib/gem-anchor-placement";
+import type { PublicHouse } from "@/lib/types";
 import {
   bearingClockLabelHe,
   bearingDegrees,
@@ -236,6 +238,23 @@ describe("gem hunt geo", () => {
       userWithinGemHuntRange({ lat: house.lat + 0.004, lng: house.lng, accuracy: 8 }, house),
       false,
     );
+  });
+
+  it("never resolves map gem anchors beyond the 40m placement ring", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { gemHuntMapHouses } = await import("@/lib/gem-monsters");
+    const catalog = JSON.parse(readFileSync("public/catalog.json", "utf8")) as {
+      houses?: PublicHouse[];
+    };
+    const mapHouses = gemHuntMapHouses(catalog.houses ?? [], "all");
+    for (const row of mapHouses) {
+      const anchor = gemAnchorForHouse(row);
+      const d = distanceMeters(row, anchor);
+      assert.ok(
+        d <= GEM_ANCHOR_PLACE_MAX_METERS + 0.05,
+        `${row.id} anchor ${d.toFixed(1)}m from pin`,
+      );
+    }
   });
 });
 

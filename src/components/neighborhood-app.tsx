@@ -73,7 +73,6 @@ import {
   nextClusterGemHouse,
   skipClusterGemHouse,
 } from "@/lib/gem-campus-queue";
-import { firstClusterGemHouseInProximity } from "@/lib/map-gem-hunt-target";
 import { gemTellMeHuntRadiusEnforced } from "@/lib/gem-tell-me-gate";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import {
@@ -557,9 +556,8 @@ export function NeighborhoodApp({
     async (clusterHouses: PublicHouse[]) => {
       const houses = clusterHouses.filter(gemHouseHuntAllowed);
       if (houses.length < 2) return;
-      const target =
-        firstClusterGemHouseInProximity(houses, gps, gems.collected) ??
-        firstClusterGemHouseToHunt(houses, gems.collected);
+      /** Cluster camera session always starts at booth 1 in order (not nearest anchor). */
+      const target = firstClusterGemHouseToHunt(houses, gems.collected);
       if (!target) return;
       mapGemClusterSessionRef.current = [];
       setMapGemClusterCatchCount(0);
@@ -589,7 +587,9 @@ export function NeighborhoodApp({
     setMapGemGps(null);
     setMapGemClusterCatchCount(0);
     restoreAfterGemHunt();
-  }, [mapGemWebXrSession, restoreAfterGemHunt]);
+    setWatchEnabled(true);
+    void geo.refresh();
+  }, [geo, mapGemWebXrSession, restoreAfterGemHunt, setWatchEnabled]);
 
   const mapGemClusterQueueUi = useMemo(() => {
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;
@@ -796,9 +796,17 @@ export function NeighborhoodApp({
       view === "map" ||
         routeMode ||
         originPick.originPickActive ||
-        originPick.originPickerOpen,
+        originPick.originPickerOpen ||
+        Boolean(mapGemHouse),
     );
-  }, [setWatchEnabled, view, routeMode, originPick.originPickActive, originPick.originPickerOpen]);
+  }, [
+    setWatchEnabled,
+    view,
+    routeMode,
+    originPick.originPickActive,
+    originPick.originPickerOpen,
+    mapGemHouse,
+  ]);
 
   useEffect(() => {
     if (wasAdmin.current && !admin) {
@@ -1164,13 +1172,17 @@ export function NeighborhoodApp({
     };
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) reset();
+      if (readHomeView() === "map" || Boolean(mapGemHouse)) {
+        setWatchEnabled(true);
+        void geo.refresh();
+      }
     };
     window.addEventListener("pageshow", onPageShow);
     return () => {
       window.removeEventListener("pageshow", onPageShow);
       reset();
     };
-  }, [editFlow.close, resetForNavigation]);
+  }, [editFlow.close, geo.refresh, mapGemHouse, resetForNavigation, setWatchEnabled]);
 
   function handleHouseUpdated(next: PublicHouse) {
     editFlow.setFlow((current) =>

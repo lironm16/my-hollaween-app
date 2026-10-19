@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { GPS_MOVE_METERS, movedAtLeast } from "@/lib/geo";
+import { GPS_STANDING_STILL_METERS, movedAtLeast } from "@/lib/geo";
 import type { UserLocation } from "@/hooks/use-user-location";
 import { GEM_STILL_SECONDS } from "@/lib/gem-hunt";
 
@@ -19,7 +19,7 @@ export function useStandingStill(location: UserLocation | null, enabled: boolean
     }
 
     const anchor = anchorRef.current;
-    if (!anchor || movedAtLeast(anchor, location, GPS_MOVE_METERS)) {
+    if (!anchor || movedAtLeast(anchor, location, GPS_STANDING_STILL_METERS)) {
       anchorRef.current = location;
       stillSinceRef.current = Date.now();
       setStillForMs(0);

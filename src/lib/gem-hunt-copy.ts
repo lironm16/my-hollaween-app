@@ -22,7 +22,8 @@ export const GEM_HOUSE_KICKER_HE = "שדון נסתר · גלו במצלמה";
 
 export const GEM_PLACE_ACTION_HE = "מיקום השדון";
 /** Plain-text fallback for gem placement hint (icons shown in {@link GemAnchorPlaceHint}). */
-export const GEM_PLACE_HINT_HE = "מקמו את השדון איפה שתרצו בקרבת הבית.";
+export const GEM_PLACE_HINT_HE =
+  "מקמו את השדון בחוץ — במקום ציבורי, נגיש לכולם, לא בפנים בבניין.";
 export const GEM_PLACE_MY_LOCATION_HE = "המיקום שלי";
 export const GEM_PLACE_SAVE_HE = "שמירת מיקום";
 export const GEM_PLACE_RESET_HE = "אפס";
@@ -72,6 +73,8 @@ export const GEM_WALK_BEHIND_HE = "השדון מאחוריכם — סובבו א
 export const GEM_WALK_TURN_RIGHT_HE = "סובבו ימינה לכיוון השדון";
 export const GEM_WALK_TURN_LEFT_HE = "סובבו שמאלה לכיוון השדון";
 export const GEM_WALK_APPROACH_HE = "התקרבו לנקודת השדון";
+/** Brief pulse when camera/AR shows the gem at the hunt stop (not tell-me). */
+export const GEM_AT_STOP_DISCOVER_HE = "הגעתם לנקודה!";
 export const GEM_WALK_MAPS_ARIA_HE = "הנחיות הליכה לשדון";
 export const GEM_WALK_MAPS_LINK_HE = "הליכה ב-Google Maps לשדון";
 

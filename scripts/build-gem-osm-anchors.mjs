@@ -19,7 +19,8 @@ const OSRM_NEAREST = [
   "https://router.project-osrm.org/nearest/v1/foot",
 ];
 const UA = "bashchona-halloween/1.0 (gem sidewalk snap)";
-const MAX_PIN_DISTANCE_M = 95;
+/** Match owner gem placement ring (`GEM_ANCHOR_PLACE_MAX_METERS`). */
+const MAX_PIN_DISTANCE_M = 40;
 const REQUEST_GAP_MS = 120;
 
 function haversineM(a, b) {

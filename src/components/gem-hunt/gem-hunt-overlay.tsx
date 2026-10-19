@@ -67,6 +67,7 @@ import {
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import {
+  GEM_AT_STOP_DISCOVER_HE,
   GEM_CLUSTER_FINISH_HE,
   GEM_CLUSTER_SKIP_HE,
   GEM_WALK_MAPS_ARIA_HE,
@@ -601,15 +602,6 @@ export function GemHuntOverlay({
     }
   }, [campusSession, encounterMode, encounterPhase, setEncounterPhase]);
 
-  const tellMeButton = useGemTellMeButton({
-    enforceHuntRadius: tellMeHuntRadiusEnforced,
-    inRange: tellMeInRange,
-    centerReveal,
-    blocked: phase === "collecting",
-    onActivate: activateTellMe,
-    onDeactivate: deactivateTellMe,
-  });
-
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
   const inOnsiteBand = sim || canCollectNow;
@@ -754,12 +746,25 @@ export function GemHuntOverlay({
   ]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
-  const hideHuntHintControls =
+  const naturalDiscoverActive =
     !centerReveal &&
-    !campusSession &&
-    showHuntGem &&
+    canCollectNow &&
     phase === "visible" &&
-    gemVisibleBand;
+    gemVisibleBand &&
+    showHuntGem;
+  const hideHuntHintControls =
+    !centerReveal && !campusSession && naturalDiscoverActive;
+
+  const tellMeButton = useGemTellMeButton({
+    enforceHuntRadius: tellMeHuntRadiusEnforced,
+    inRange: tellMeInRange,
+    centerReveal,
+    naturalDiscoverActive,
+    blocked: phase === "collecting",
+    onActivate: activateTellMe,
+    onDeactivate: deactivateTellMe,
+  });
+
   const gemFoundInView =
     showHuntGem &&
     phase === "visible" &&
@@ -858,9 +863,15 @@ export function GemHuntOverlay({
         encounterMode && "is-encounter-mode",
         campusSession && "is-campus-queue",
         (centerReveal || campusSession) && "is-tell-me-active",
+        naturalDiscoverActive && "is-at-gem-stop",
       )}
       dir="rtl"
     >
+      {naturalDiscoverActive ? (
+        <p className="gem-hunt-overlay__at-stop-badge" role="status">
+          {GEM_AT_STOP_DISCOVER_HE}
+        </p>
+      ) : null}
       <video
         ref={videoRef}
         className={cn(
