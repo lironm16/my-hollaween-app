@@ -81,7 +81,9 @@ function GemAnchorPlaceHint() {
         <ImpDemonFilledIcon className="size-5 shrink-0 text-emerald-400" aria-hidden />
         <span className="font-medium text-violet-50">השדון</span>
       </span>{" "}
-      איפה שתרצו בקרבת{" "}
+      בחוץ, במקום{" "}
+      <span className="font-medium text-violet-50">ציבורי ונגיש לכולם</span>
+      , בקרבת{" "}
       <span className="inline-flex items-center gap-1.5 align-middle">
         <span
           className="inline-block size-2.5 shrink-0 rounded-full bg-orange-500 ring-2 ring-[#fff7ed]"
@@ -89,7 +91,7 @@ function GemAnchorPlaceHint() {
         />
         <span className="font-medium text-violet-50">הבית</span>
       </span>
-      .
+      — לא בפנים בבניין.
     </p>
   );
 }

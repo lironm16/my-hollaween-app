@@ -226,7 +226,7 @@ export function GemHuntWebXrAr({
   const [geoLockMode, setGeoLockMode] = useState<"pending" | "sidewalk" | "native" | "local">(
     "pending",
   );
-  const placeAssistRef = useRef({ forceOnce: false, fast: false, viewerOnly: false });
+  const placeAssistRef = useRef({ forceOnce: false, fast: false });
 
   const rootRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -341,8 +341,13 @@ export function GemHuntWebXrAr({
     lng: house.lng,
   };
 
+  /** «גלה לי» — block WebXR/encounter auto-handoff from collecting without a gem tap. */
+  const userInitiatedCollectRef = useRef(false);
+
   const handleCollect = useCallback(() => {
     if (phase === "collecting") return;
+    if (centerRevealRef.current && !userInitiatedCollectRef.current) return;
+    userInitiatedCollectRef.current = false;
     const inBand =
       inWebXrHuntBand ||
       encounterCollectLatchedRef.current ||
@@ -351,10 +356,6 @@ export function GemHuntWebXrAr({
     const tellMeReady = tellMeCenter;
     if (!inBand && !tellMeReady) return;
     if (!placed && !tellMeCenter) return;
-    if (tellMeCenter && !placed && isAndroidLike()) {
-      placeAssistRef.current.forceOnce = true;
-      placeAssistRef.current.viewerOnly = true;
-    }
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
     onCollectPersistRef.current?.(monsterId);
@@ -569,7 +570,7 @@ export function GemHuntWebXrAr({
   });
 
   const offerEncounterCollect = useCallback(() => {
-    if (centerRevealRef.current && !isAndroidLike()) return;
+    if (centerRevealRef.current) return;
     if (encounterPhase !== "encounter") return;
     if (repeatVisitLatched) {
       handleCollectRef.current();
@@ -639,6 +640,7 @@ export function GemHuntWebXrAr({
       encounterCollectLatchedRef.current = true;
       markEncounterTutorialSeen();
     }
+    userInitiatedCollectRef.current = true;
     handleCollectRef.current();
   }, [encounterMode, encounterPhase, showTellMeCenterGem]);
 
@@ -663,7 +665,6 @@ export function GemHuntWebXrAr({
     }
     placeAssistRef.current.forceOnce = false;
     placeAssistRef.current.fast = false;
-    placeAssistRef.current.viewerOnly = false;
     if (!simulateInRange && !canCollectNow && !inWebXrHuntBand) {
       setCenterReveal(false);
     }
@@ -691,9 +692,6 @@ export function GemHuntWebXrAr({
       placeAssistRef.current.forceOnce = true;
       placeAssistRef.current.fast = true;
     }
-    if (isAndroidLike()) {
-      placeAssistRef.current.viewerOnly = true;
-    }
     setCenterReveal(true);
   }, [onBeforeNavigationAssist, placed]);
 
@@ -702,7 +700,6 @@ export function GemHuntWebXrAr({
     setUserDismissedCenterGem(true);
     placeAssistRef.current.forceOnce = false;
     placeAssistRef.current.fast = false;
-    placeAssistRef.current.viewerOnly = false;
     if (encounterMode && encounterPhase === "encounter") {
       setEncounterPhase("approach");
     }
@@ -770,7 +767,7 @@ export function GemHuntWebXrAr({
       isPlaced = true;
       stableHitFrames = 0;
       reticle.visible = false;
-      if (arWorldGemOnTellMe || !centerRevealRef.current) anchorGroup.visible = true;
+      if (!centerRevealRef.current) anchorGroup.visible = true;
       setPlaced(true);
       setPhase("placed");
       setGeoLockModeRef.current(mode);
@@ -784,7 +781,7 @@ export function GemHuntWebXrAr({
       anchorGroup.matrix.fromArray(pose.transform.matrix);
       anchorGroup.matrix.decompose(anchorGroup.position, anchorGroup.quaternion, anchorGroup.scale);
       anchorGroup.visible =
-        (arWorldGemOnTellMe || !centerRevealRef.current) &&
+        !centerRevealRef.current &&
         (collectingRef.current || !userDismissedCenterGemRef.current);
     };
 
@@ -937,7 +934,7 @@ export function GemHuntWebXrAr({
         const off = viewerLocalOffsetMeters(loc, target, h);
         anchorGroup.position.set(off.x, 0, off.z);
       }
-      anchorGroup.visible = arWorldGemOnTellMe || !centerRevealRef.current;
+      anchorGroup.visible = !centerRevealRef.current;
       isPlaced = true;
       setPlaced(true);
       setPhase("placed");
@@ -983,52 +980,18 @@ export function GemHuntWebXrAr({
       },
     };
 
-    const placeGemInFrontOfViewer = (
-      frame: XRFrame,
-      ref: XRReferenceSpace,
-      viewerSpace: XRReferenceSpace,
-    ) => {
-      const viewerPose = frame.getPose(viewerSpace, ref);
-      if (!viewerPose) return false;
-      const viewerMat = new THREE.Matrix4().fromArray(viewerPose.transform.matrix);
-      const camPos = new THREE.Vector3();
-      const camQuat = new THREE.Quaternion();
-      viewerMat.decompose(camPos, camQuat, new THREE.Vector3());
-      const forward = new THREE.Vector3(0, 0, -1.45).applyQuaternion(camQuat);
-      anchorGroup.position.copy(camPos).add(forward);
-      anchorGroup.quaternion.copy(camQuat);
-      anchorGroup.matrixAutoUpdate = true;
-      if (!isPlaced) finishPlacement("local");
-      else anchorGroup.visible = true;
-      return true;
-    };
-
     const placeFromReticle = () => {
-      const tellMeForce =
-        centerRevealRef.current && arWorldGemOnTellMe && placeAssistRef.current.forceOnce;
-      if (!inWebXrHuntBandRef.current && !tellMeForce) return;
-      if (reticle.visible) {
-        anchorGroup.position.setFromMatrixPosition(reticle.matrix);
-        anchorGroup.quaternion.setFromRotationMatrix(reticle.matrix);
-      } else if (!tellMeForce) {
-        return;
-      }
+      if (!inWebXrHuntBandRef.current) return;
+      anchorGroup.position.setFromMatrixPosition(reticle.matrix);
+      anchorGroup.quaternion.setFromRotationMatrix(reticle.matrix);
       finishPlacement("local");
     };
 
     const onSelect = () => {
       if (collectingRef.current) return;
-      if (centerRevealRef.current && isAndroidLike()) {
-        if (!isPlaced) {
-          placeAssistRef.current.forceOnce = true;
-          placeAssistRef.current.viewerOnly = true;
-        }
-        handleCollectRef.current();
-        return;
-      }
+      /** «גלה לי» — collect only via center DOM gem tap (iOS parity). */
+      if (centerRevealRef.current) return;
       if (isPlaced) {
-        /** iOS WebXR — collect via DOM inspect360 tap only. */
-        if (centerRevealRef.current) return;
         if (encounterMode) {
           const ep = encounterPhaseRef.current;
           if (
@@ -1107,17 +1070,10 @@ export function GemHuntWebXrAr({
           !GEM_WEBXR_GEO_PLACEMENT_ENABLED || performance.now() - startTime > 10_000;
 
         const assist = placeAssistRef.current;
-        const tellMeViewerPlacement =
-          arWorldGemOnTellMe &&
-          centerRevealRef.current &&
-          (assist.viewerOnly || assist.forceOnce);
-
-        if (tellMeViewerPlacement) {
-          placeGemInFrontOfViewer(frame, ref, viewerSpace);
-        }
+        const tellMeDomActive = centerRevealRef.current && arWorldGemOnTellMe;
 
         if (
-          !tellMeViewerPlacement &&
+          !tellMeDomActive &&
           !isPlaced &&
           GEM_WEBXR_GEO_PLACEMENT_ENABLED &&
           inWebXrCollectZoneRef.current
@@ -1132,7 +1088,7 @@ export function GemHuntWebXrAr({
           isAndroidLike() && GEM_WEBXR_GEO_PLACEMENT_ENABLED;
 
         if (
-          !tellMeViewerPlacement &&
+          !tellMeDomActive &&
           !isPlaced &&
           inWebXrCollectZoneRef.current &&
           allowHitTestFallback &&
@@ -1145,11 +1101,7 @@ export function GemHuntWebXrAr({
             stableHitFrames += 1;
             const threshold = assist.fast ? 8 : AUTO_PLACE_STABLE_FRAMES;
             if (assist.forceOnce) {
-              if (centerRevealRef.current && arWorldGemOnTellMe && !reticle.visible) {
-                placeGemInFrontOfViewer(frame, ref, viewerSpace);
-              } else {
-                placeFromReticle();
-              }
+              placeFromReticle();
               assist.forceOnce = false;
               assist.fast = false;
             } else if (stableHitFrames >= threshold) {
@@ -1165,13 +1117,9 @@ export function GemHuntWebXrAr({
         }
 
         if (!worldAnchor) {
-          const tellMeArVisible =
-            arWorldGemOnTellMe &&
-            centerRevealRef.current &&
-            (collectingRef.current || !userDismissedCenterGemRef.current);
           anchorGroup.visible =
-            (isPlaced || tellMeArVisible) &&
-            (arWorldGemOnTellMe || !centerRevealRef.current) &&
+            isPlaced &&
+            !centerRevealRef.current &&
             (collectingRef.current || !userDismissedCenterGemRef.current);
         }
 
@@ -1390,7 +1338,7 @@ export function GemHuntWebXrAr({
         </div>
       ) : null}
 
-      {(showTellMeCenterGem || (!androidWebXrUi && showCenterCollectGem)) ? (
+      {(showTellMeCenterGem || showCenterCollectGem) ? (
         <div
           className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage is-gem-interactive"
           aria-hidden={false}

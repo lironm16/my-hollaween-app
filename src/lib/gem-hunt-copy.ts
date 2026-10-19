@@ -22,7 +22,8 @@ export const GEM_HOUSE_KICKER_HE = "שדון נסתר · גלו במצלמה";
 
 export const GEM_PLACE_ACTION_HE = "מיקום השדון";
 /** Plain-text fallback for gem placement hint (icons shown in {@link GemAnchorPlaceHint}). */
-export const GEM_PLACE_HINT_HE = "מקמו את השדון איפה שתרצו בקרבת הבית.";
+export const GEM_PLACE_HINT_HE =
+  "מקמו את השדון בחוץ — במקום ציבורי, נגיש לכולם, לא בפנים בבניין.";
 export const GEM_PLACE_MY_LOCATION_HE = "המיקום שלי";
 export const GEM_PLACE_SAVE_HE = "שמירת מיקום";
 export const GEM_PLACE_RESET_HE = "אפס";
