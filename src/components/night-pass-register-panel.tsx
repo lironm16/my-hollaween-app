@@ -207,16 +207,13 @@ export function NightPassRegisterPanel({
         return;
       }
       if (json?.houseId) {
-        const storeEditCode = ownerRegister ? (json.editCode?.trim() ?? "") : "";
-        if (ownerRegister && storeEditCode) {
-          saveOwnedHouse({
-            id: json.houseId,
-            name: json.house?.name ?? name.trim(),
-            editCode: storeEditCode,
-            preview: json.house,
-          });
-          notifyCatalogChanged();
-        }
+        saveOwnedHouse({
+          id: json.houseId,
+          name: json.house?.name ?? name.trim(),
+          editCode: ownerRegister ? (json.editCode?.trim() ?? "") : "",
+          preview: json.house,
+        });
+        notifyCatalogChanged();
       }
       if (json?.reregistered) {
         await refreshNightPassState({ force: true });

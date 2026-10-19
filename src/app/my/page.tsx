@@ -48,6 +48,8 @@ import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useNightPass } from "@/hooks/use-night-pass";
+import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
+import type { OwnedHouse } from "@/lib/offline-db";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
@@ -57,6 +59,45 @@ function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab 
 
 function tabUrl(tab: PersonalMarksTab) {
   return tab === "mine" ? "/my" : `/my?tab=${tab}`;
+}
+
+/** Bookmark row when the scoped catalog omits an editor's house but we still know id + name. */
+function mineHouseFromOwned(
+  item: OwnedHouse,
+  catalogHouses: PublicHouse[],
+  houseName?: string,
+): PublicHouse | null {
+  const fromCatalog = catalogHouses.find((house) => house.id === item.id);
+  const preview = item.preview ?? fromCatalog;
+  if (preview) {
+    return fromCatalog ? { ...fromCatalog, ...preview } : preview;
+  }
+  const name = item.name?.trim() || houseName?.trim();
+  if (!name) return null;
+  return {
+    id: item.id,
+    name,
+    theme: "pumpkin",
+    address: "",
+    arrival: "",
+    description: "",
+    lat: 0,
+    lng: 0,
+    treats: [],
+    visit: "come",
+    scareLevel: "mild",
+    openFrom: "",
+    openTo: "",
+    notes: "",
+    accessible: true,
+    soldOut: false,
+    adminFrozen: false,
+    ownerFrozenUntil: null,
+    photoUrl: "",
+    createdAt: "",
+    updatedAt: "",
+    deviceCacheStub: true,
+  };
 }
 
 export default function MyCollectionsPage() {
@@ -116,6 +157,7 @@ function MyCollectionsPageContent() {
   const { resolved: origin } = useDistanceOrigin(geo.location);
   const editFlow = useHouseEditFlow();
   const nightPass = useNightPass();
+  const { openOwnerPasses } = useNightPassDialog();
   const { filters } = useHouseFilters();
 
   const catalogHouses = useMemo(() => {
@@ -124,17 +166,45 @@ function MyCollectionsPageContent() {
     return loadCatalogCacheSync()?.houses ?? [];
   }, [catalog]);
 
+  useEffect(() => {
+    if (!nightPass.registered || !nightPass.houseId) return;
+    const id = nightPass.houseId;
+    if (owned.some((item) => item.id === id)) return;
+    saveOwnedHouse({
+      id,
+      name: nightPass.houseName?.trim() || "הבית",
+      editCode: "",
+      preview: catalogHouses.find((house) => house.id === id),
+    });
+  }, [nightPass.registered, nightPass.houseId, nightPass.houseName, catalogHouses, owned]);
+
   const mineHouses = useMemo(() => {
-    const ids = new Set(owned.map((item) => item.id));
-    return owned
-      .map((item) => {
-        const fromCatalog = catalogHouses.find((house) => house.id === item.id);
-        const preview = item.preview ?? fromCatalog;
-        if (!preview) return null;
-        return fromCatalog ? { ...fromCatalog, ...preview } : preview;
-      })
-      .filter((house): house is PublicHouse => Boolean(house && ids.has(house.id)));
-  }, [catalogHouses, owned]);
+    const byId = new Map<string, PublicHouse>();
+    for (const item of owned) {
+      const house = mineHouseFromOwned(
+        item,
+        catalogHouses,
+        nightPass.houseId === item.id ? nightPass.houseName : undefined,
+      );
+      if (house) byId.set(house.id, house);
+    }
+    if (nightPass.registered && nightPass.houseId && !byId.has(nightPass.houseId)) {
+      const fromOwned = owned.find((item) => item.id === nightPass.houseId);
+      const house = fromOwned
+        ? mineHouseFromOwned(fromOwned, catalogHouses, nightPass.houseName)
+        : mineHouseFromOwned(
+            {
+              id: nightPass.houseId,
+              name: nightPass.houseName?.trim() || "הבית",
+              editCode: "",
+            },
+            catalogHouses,
+            nightPass.houseName,
+          );
+      if (house) byId.set(house.id, house);
+    }
+    return [...byId.values()];
+  }, [catalogHouses, owned, nightPass.registered, nightPass.houseId, nightPass.houseName]);
 
   const skippedHouses = useMemo(() => {
     const ids = new Set(skips.skippedIds);
@@ -251,6 +321,16 @@ function MyCollectionsPageContent() {
       nightPassesEnabled: tab === "mine" && nightPass.enabled,
       registeredNightPassOnHouse: (id) =>
         nightPass.registered && Boolean(nightPass.houseId) && nightPass.houseId === id,
+      onNightPasses:
+        tab === "mine"
+          ? (house) => {
+              const editCode = localHouseEditCodeFor(house.id);
+              if (editCode) openOwnerPasses(house, editCode);
+              else if (nightPass.registered && nightPass.houseId === house.id) {
+                openOwnerPasses(house, "");
+              }
+            }
+          : undefined,
       onPlaceGem:
         tab === "mine" && gemCardActionsEnabled
           ? (house) => openGemPlacer(house, owned.find((item) => item.id === house.id)?.editCode)
@@ -296,6 +376,9 @@ function MyCollectionsPageContent() {
     editFlow.flow?.house.id,
     owned,
     nightPass.enabled,
+    nightPass.registered,
+    nightPass.houseId,
+    openOwnerPasses,
     router,
     filters,
     now,
@@ -379,7 +462,7 @@ function MyCollectionsPageContent() {
           <h1 className="font-display text-2xl text-orange-300">במכשיר שלי</h1>
 
           <PersonalMarksSection
-            ownedCount={owned.length}
+            ownedCount={mineHouses.length}
             likedCount={likes.likedIds.length}
             visitedCount={visits.visitedIds.length}
             skippedCount={skips.skippedIds.length}
