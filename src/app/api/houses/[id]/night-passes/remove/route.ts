@@ -4,10 +4,10 @@ import { canonicalHouseId } from "@/lib/ids";
 import {
   ensureHouseAccess,
   houseAccessView,
+  mayManageHouseDevices,
   removeHouseAccessSession,
 } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
-import { mayManageHouseDevices } from "@/lib/night-pass-service";
 import { getHouse } from "@/lib/store";
 
 export const runtime = "nodejs";
