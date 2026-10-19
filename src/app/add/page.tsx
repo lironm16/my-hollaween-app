@@ -13,6 +13,10 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged, rememberPublishedHouse } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
 import { refreshNightPassState } from "@/lib/night-pass-client";
+import {
+  detectNightPassClientBrowser,
+  detectNightPassClientSurface,
+} from "@/lib/night-pass-client-surface";
 import { publishHouse } from "@/lib/publish-house";
 import { publishHousePhoto } from "@/lib/house-photo";
 import { senderPushEndpoint } from "@/lib/push-client";
@@ -39,6 +43,7 @@ export default function AddPage() {
     editCode: string;
     name: string;
     house: PublicHouse;
+    deviceConnected: boolean;
   } | null>(null);
 
   async function onSubmit(input: HouseInput, extras?: HouseFormExtras) {
@@ -48,11 +53,14 @@ export default function AddPage() {
         senderPushEndpoint(),
         new Promise<undefined>((resolve) => window.setTimeout(() => resolve(undefined), 2000)),
       ]);
-      const { house, editCode } = await publishHouse(input, {
+      const rawBrowser = detectNightPassClientBrowser();
+      const { house, editCode, deviceConnected } = await publishHouse(input, {
         includeEndpoint,
         addedBy: extras?.addedBy ?? undefined,
         ownerPhone: extras?.ownerPhone ?? undefined,
         admin,
+        clientSurface: detectNightPassClientSurface(),
+        ...(rawBrowser !== "other" ? { clientBrowser: rawBrowser } : {}),
       });
       let preview = house;
       if (extras?.photoDataUrl) {
@@ -70,9 +78,14 @@ export default function AddPage() {
       });
       rememberPublishedHouse(preview);
       notifyCatalogChanged();
-      void refreshNightPassState({ force: true });
-      // Success UI only after the server confirmed the house.
-      setDone({ id: preview.id, editCode, name: preview.name, house: preview });
+      await refreshNightPassState({ force: true });
+      setDone({
+        id: preview.id,
+        editCode,
+        name: preview.name,
+        house: preview,
+        deviceConnected: Boolean(deviceConnected),
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
     } finally {
@@ -108,15 +121,22 @@ export default function AddPage() {
             {nightPass.enabled ? (
               <section className="space-y-3 rounded-xl bg-emerald-950/40 p-4 ring-1 ring-emerald-500/25">
                 <h2 className="text-center text-lg font-medium text-emerald-100">
-                  יש לכם 4 מכשירים לאירוע
+                  {done.deviceConnected
+                    ? "המכשיר הזה מחובר לבית"
+                    : "יש לכם 4 מכשירים לאירוע"}
                 </h2>
+                {done.deviceConnected ? (
+                  <p className="text-center text-sm text-emerald-200/90">
+                    אפשר לחבר עוד מכשירים (עד 4) או לשלוח הזמנה למשפחה.
+                  </p>
+                ) : null}
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full border-emerald-500/40 text-emerald-100 hover:bg-emerald-950/60"
                   onClick={() => openOwnerPasses(done.house, done.editCode)}
                 >
-                  חבר מכשירים
+                  {done.deviceConnected ? "מכשירים וקוד כניסה" : "חבר מכשירים"}
                 </Button>
                 <Link
                   href="/help/event-device-owner"

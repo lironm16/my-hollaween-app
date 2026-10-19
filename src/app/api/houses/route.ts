@@ -8,7 +8,11 @@ import { loadDb } from "@/lib/store/core";
 import { toEditorHouse } from "@/lib/ids";
 import { geocodeHttpError } from "@/lib/geocode";
 import { storageHttpError } from "@/lib/storage-errors";
-import { tryConnectOwnerDeviceForHouse } from "@/lib/night-pass-owner-connect";
+import { autoRegisterCreatorDeviceAfterHouseCreate } from "@/lib/night-pass-owner-connect";
+import {
+  parseNightPassClientBrowser,
+  parseNightPassClientSurface,
+} from "@/lib/night-pass-client-surface";
 import { grantOwnerHouse } from "@/lib/owner-session";
 import { readIncludeEndpoint } from "@/lib/push";
 
@@ -53,8 +57,13 @@ export async function POST(request: Request) {
     }
     let deviceConnected = false;
     try {
-      deviceConnected = await tryConnectOwnerDeviceForHouse(house.house.id, {
-        allowWhenDisabled: admin,
+      const body = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+      deviceConnected = await autoRegisterCreatorDeviceAfterHouseCreate({
+        houseId: house.house.id,
+        name: addedBy ?? "",
+        phone: ownerPhone ?? "",
+        clientSurface: parseNightPassClientSurface(body.clientSurface),
+        clientBrowser: parseNightPassClientBrowser(body.clientBrowser),
       });
     } catch {
       /* pass optional */

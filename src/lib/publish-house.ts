@@ -1,11 +1,13 @@
 import { readApiJson } from "@/lib/api-json";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import { normalizeOwnerPhone, ownerPhoneValidationError } from "@/lib/owner-phone";
+import type { NightPassClientBrowser, NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 
 export type PublishResult = {
   house: PublicHouse;
   editCode: string;
+  deviceConnected?: boolean;
   autoPush?: boolean;
   pushTitle?: string;
   pushBody?: string;
@@ -53,6 +55,8 @@ export async function publishHouse(
     addedBy?: string;
     ownerPhone?: string;
     admin?: boolean;
+    clientSurface?: NightPassClientSurface;
+    clientBrowser?: NightPassClientBrowser;
   },
 ): Promise<PublishResult> {
   const body = readyHouseInput(input);
@@ -73,6 +77,8 @@ export async function publishHouse(
         addedBy,
         ownerPhone,
         includeEndpoint: options?.includeEndpoint,
+        ...(options?.clientSurface ? { clientSurface: options.clientSurface } : {}),
+        ...(options?.clientBrowser ? { clientBrowser: options.clientBrowser } : {}),
       }),
     });
   } catch {
@@ -83,11 +89,13 @@ export async function publishHouse(
     house?: PublicHouse;
     editCode?: string;
     push?: { autoSent?: boolean; title?: string; body?: string };
+    deviceConnected?: boolean;
   }>(res);
   if (res.ok && data.house && data.editCode) {
     return {
       house: data.house,
       editCode: data.editCode,
+      deviceConnected: Boolean(data.deviceConnected),
       autoPush: Boolean(data.push?.autoSent),
       pushTitle: data.push?.title,
       pushBody: data.push?.body,

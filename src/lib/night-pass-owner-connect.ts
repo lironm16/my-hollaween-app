@@ -157,7 +157,31 @@ export async function tryConnectOwnerDeviceForEvent(): Promise<OwnerDeviceConnec
   };
 }
 
-/** Unlock / add-house — no silent event registration (confirm popup only). */
+/**
+ * After POST /api/houses — register this device on the new house using the creator
+ * name/phone from the form (night passes on, no existing pass on device).
+ */
+export async function autoRegisterCreatorDeviceAfterHouseCreate(input: {
+  houseId: string;
+  name: string;
+  phone: string;
+  clientSurface?: NightPassClientSurface;
+  clientBrowser?: NightPassClientBrowser;
+}): Promise<boolean> {
+  if (!(await readNightPassSettings()).enabled) return false;
+  if (await currentNightPass()) return false;
+
+  const outcome = await registerOwnerDeviceWithContact({
+    houseId: input.houseId,
+    name: input.name,
+    phone: input.phone,
+    clientSurface: input.clientSurface,
+    clientBrowser: input.clientBrowser,
+  });
+  return outcome.ok;
+}
+
+/** Unlock — true only if this device already has a pass slot on the house. */
 export async function tryConnectOwnerDeviceForHouse(
   houseId: string,
   options?: { allowWhenDisabled?: boolean },
