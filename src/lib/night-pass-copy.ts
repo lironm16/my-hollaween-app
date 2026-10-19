@@ -25,5 +25,10 @@ export const NIGHT_PASS_ALREADY_REGISTERED_BODY =
 
 /** First-time event registration on this device (add house or owner login). */
 export const NIGHT_PASS_EVENT_REGISTERED_TITLE = "נרשמתם לאירוע!";
-export const NIGHT_PASS_EVENT_REGISTERED_BODY =
-  "ביום החשיפה תראו כאן גם כתובות של בתים פרטיים. עד אז — עריכת הבית והמלאי כרגיל.";
+
+export function nightPassEventRegisteredBody(houseName: string) {
+  const label = houseName.trim() || "הבית";
+  return `אתם בעלי הבית של «${label}» ויכולים לערוך אותו מהטלפון הזה.`;
+}
+
+export const NIGHT_PASS_EVENT_REGISTERED_CONTINUE = "המשך למפה";

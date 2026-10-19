@@ -393,6 +393,7 @@ export async function replaceHouseEditCode(
     const house = normalizeHouse({
       ...remote,
       editCode: trimmed,
+      ownerSessionEpoch: (remote.ownerSessionEpoch ?? 0) + 1,
       updatedAt: new Date().toISOString(),
     });
     await writeFirestoreHouse(house);
@@ -402,7 +403,10 @@ export async function replaceHouseEditCode(
 
   const existing = await getHouse(docId);
   if (!existing) return { error: "missing" };
-  const result = await updateByEditCode(docId, existing.editCode, { editCode: trimmed });
+  const result = await updateByEditCode(docId, existing.editCode, {
+    editCode: trimmed,
+    ownerSessionEpoch: (existing.ownerSessionEpoch ?? 0) + 1,
+  });
   if ("error" in result && result.error) return { error: "missing" };
   if (!("house" in result) || !result.house) return { error: "missing" };
   return { house: result.house };

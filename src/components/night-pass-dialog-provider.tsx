@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -21,13 +22,16 @@ import { useNightPass } from "@/hooks/use-night-pass";
 import {
   NIGHT_PASS_ALREADY_REGISTERED_BODY,
   NIGHT_PASS_ALREADY_REGISTERED_TITLE,
-  NIGHT_PASS_EVENT_REGISTERED_BODY,
+  NIGHT_PASS_EVENT_REGISTERED_CONTINUE,
   NIGHT_PASS_EVENT_REGISTERED_TITLE,
+  nightPassEventRegisteredBody,
 } from "@/lib/night-pass-copy";
 import {
   NIGHT_PASS_OWNER_REGISTER_EVENT,
+  notifyNightPassSlotsChanged,
   readNightPassState,
   refreshNightPassState,
+  setNightPassRefreshPaused,
   type NightPassOwnerRegisterDetail,
 } from "@/lib/night-pass-client";
 import type { PublicHouse } from "@/lib/types";
@@ -39,12 +43,19 @@ type NightPassDialogContextValue = {
   /** After add-house — same dialog as ⋮ → קוד עריכה ומכשירים. */
   openOwnerPasses: (house: PublicHouse, editCode: string) => void;
   /** First-time event registration (add house or owner login). */
-  openEventRegistered: () => void;
+  openEventRegistered: (options?: EventRegisteredOptions) => void;
+};
+
+export type EventRegisteredOptions = {
+  houseName?: string;
+  houseId?: string;
+  afterClose?: () => void | Promise<void>;
 };
 
 const NightPassDialogContext = createContext<NightPassDialogContextValue | null>(null);
 
 export function NightPassDialogProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const { admin } = useAdminSession();
   const nightPass = useNightPass();
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -54,6 +65,11 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const [ownerRegisterHouseId, setOwnerRegisterHouseId] = useState("");
   const [alreadyRegisteredOpen, setAlreadyRegisteredOpen] = useState(false);
   const [eventRegisteredOpen, setEventRegisteredOpen] = useState(false);
+  const [eventRegisteredMeta, setEventRegisteredMeta] = useState<{
+    houseName?: string;
+    houseId?: string;
+  }>({});
+  const eventRegisteredAfterCloseRef = useRef<(() => void | Promise<void>) | null>(null);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerHouse, setOwnerHouse] = useState<PublicHouse | null>(null);
   const [ownerEditCode, setOwnerEditCode] = useState("");
@@ -93,7 +109,28 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
     setOwnerOpen(true);
   }, []);
 
-  const openEventRegistered = useCallback(() => {
+  const finishEventRegistered = useCallback(async (navigateToMap: boolean) => {
+    const afterClose = eventRegisteredAfterCloseRef.current;
+    eventRegisteredAfterCloseRef.current = null;
+    const focusId = eventRegisteredMeta.houseId?.trim();
+    setEventRegisteredOpen(false);
+    setEventRegisteredMeta({});
+    setNightPassRefreshPaused(false);
+    await refreshNightPassState({ force: true });
+    notifyNightPassSlotsChanged();
+    await afterClose?.();
+    if (navigateToMap) {
+      router.push(focusId ? `/?focus=${encodeURIComponent(focusId)}` : "/");
+    }
+  }, [eventRegisteredMeta.houseId, router]);
+
+  const openEventRegistered = useCallback((options?: EventRegisteredOptions) => {
+    setNightPassRefreshPaused(true);
+    eventRegisteredAfterCloseRef.current = options?.afterClose ?? null;
+    setEventRegisteredMeta({
+      houseName: options?.houseName?.trim(),
+      houseId: options?.houseId?.trim(),
+    });
     setEventRegisteredOpen(true);
   }, []);
 
@@ -134,22 +171,19 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       </HouseEditModal>
       <HouseEditModal
         open={eventRegisteredOpen}
-        onClose={() => setEventRegisteredOpen(false)}
-        title="הרשמה לאירוע"
+        onClose={() => void finishEventRegistered(false)}
+        title={NIGHT_PASS_EVENT_REGISTERED_TITLE}
       >
         <div className="space-y-4">
-          <div className="rounded-xl bg-emerald-950/70 px-4 py-5 text-center ring-2 ring-emerald-400/40">
-            <p className="text-xl font-semibold text-emerald-100">{NIGHT_PASS_EVENT_REGISTERED_TITLE}</p>
-            <p className="mt-2 text-base leading-relaxed text-emerald-200/95">
-              {NIGHT_PASS_EVENT_REGISTERED_BODY}
-            </p>
-          </div>
+          <p className="text-center text-base leading-relaxed text-emerald-200/95">
+            {nightPassEventRegisteredBody(eventRegisteredMeta.houseName ?? "")}
+          </p>
           <Button
             type="button"
             className="h-11 w-full bg-emerald-500 text-black hover:bg-emerald-400"
-            onClick={() => setEventRegisteredOpen(false)}
+            onClick={() => void finishEventRegistered(true)}
           >
-            המשך
+            {NIGHT_PASS_EVENT_REGISTERED_CONTINUE}
           </Button>
         </div>
       </HouseEditModal>
@@ -176,9 +210,12 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
           ownerHouseId={ownerRegisterHouseId || undefined}
           compact
           onRegistered={() => setRegisterOpen(false)}
-          onEventRegistered={() => {
+          onEventRegistered={(detail) => {
             setRegisterOpen(false);
-            setEventRegisteredOpen(true);
+            openEventRegistered({
+              houseName: detail.houseName,
+              houseId: detail.houseId,
+            });
           }}
           onNavigateAway={() => setRegisterOpen(false)}
           onAlreadyRegistered={() => {

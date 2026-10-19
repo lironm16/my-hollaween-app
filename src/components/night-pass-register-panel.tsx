@@ -39,7 +39,7 @@ type Props = {
   ownerHouseId?: string;
   onRegistered?: () => void;
   /** First-time registration — show event success popup (login / invite / owner). */
-  onEventRegistered?: () => void;
+  onEventRegistered?: (detail: { houseName?: string; houseId?: string }) => void;
   onAlreadyRegistered?: () => void;
   /** Close the register dialog before in-app navigation (help link). */
   onNavigateAway?: () => void;
@@ -202,13 +202,20 @@ export function NightPassRegisterPanel({
         });
         notifyCatalogChanged();
       }
-      await refreshNightPassState({ force: true });
-      notifyNightPassSlotsChanged();
       if (json?.reregistered) {
+        await refreshNightPassState({ force: true });
+        notifyNightPassSlotsChanged();
         toast.success("המכשיר עודכן");
         onRegistered?.();
+      } else if (onEventRegistered) {
+        onEventRegistered({
+          houseName: json?.house?.name ?? name.trim(),
+          houseId: json?.houseId,
+        });
       } else {
-        onEventRegistered?.() ?? onRegistered?.();
+        await refreshNightPassState({ force: true });
+        notifyNightPassSlotsChanged();
+        onRegistered?.();
       }
     } catch {
       setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");

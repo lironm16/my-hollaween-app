@@ -184,6 +184,10 @@ export function normalizeHouse(house: House & { status?: string; rejectionReason
     adminFrozen: Boolean(base.adminFrozen),
     ownerFrozenUntil: base.ownerFrozenUntil ?? null,
     photoUrl: base.photoUrl ?? "",
+    ownerSessionEpoch:
+      typeof base.ownerSessionEpoch === "number" && Number.isFinite(base.ownerSessionEpoch)
+        ? Math.max(0, Math.floor(base.ownerSessionEpoch))
+        : 0,
     openHours: hours.openHours,
     openFrom: hours.openFrom,
     openTo: hours.openTo,

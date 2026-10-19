@@ -8,7 +8,6 @@ import {
   parseNightPassClientSurface,
 } from "@/lib/night-pass-client-surface";
 import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
-import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { toPublicHouse } from "@/lib/ids";
@@ -66,11 +65,6 @@ export async function POST(request: Request) {
     return fail(500, "register", "ההרשמה נכשלה. נסו שוב.");
   }
   await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
-  try {
-    await grantOwnerHouse(house.id);
-  } catch {
-    /* optional */
-  }
   return NextResponse.json(
     {
       ok: true,

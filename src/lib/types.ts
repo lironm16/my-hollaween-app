@@ -100,6 +100,8 @@ export type House = {
   ownerFrozenUntil: string | null;
   photoUrl: string;
   editCode: string;
+  /** Bumped when family/edit code rotates — invalidates hw_owner cookie entries for this house. */
+  ownerSessionEpoch?: number;
   createdAt: string;
   updatedAt: string;
   /** Person name captured when the house was first added — admin-only, never in public catalog. */

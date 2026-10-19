@@ -110,6 +110,11 @@ export async function registerOwnerDeviceWithContact(input: {
   const house = await getHouse(id);
   if (!house?.editCode?.trim()) return { ok: false, error: "invalid" };
 
+  const onFile = contactFromHouse(house);
+  if (!onFile.name || !onFile.phone || name !== onFile.name || phone !== onFile.phone) {
+    return { ok: false, error: "forbidden" };
+  }
+
   if (await currentNightPass()) {
     return { ok: false, error: "already" };
   }

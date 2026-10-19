@@ -7,7 +7,7 @@ import {
   removeHouseAccessSession,
 } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
-import { ownerMayEdit } from "@/lib/owner-session";
+import { ownerMayEdit, primaryOwnerMayManage } from "@/lib/owner-session";
 import { getHouse } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -19,10 +19,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id: rawId } = await context.params;
   const id = canonicalHouseId(rawId);
   const admin = await isAdmin();
-  if (!admin && !(await ownerMayEdit(id))) {
+  const nightPassesOn = (await readNightPassSettings()).enabled;
+  if (!admin && !(nightPassesOn ? await primaryOwnerMayManage(id) : await ownerMayEdit(id))) {
     return NextResponse.json({ error: "צריך לפתוח את הבית לעריכה." }, { status: 403, headers: NO_STORE });
   }
-  if (!admin && !(await readNightPassSettings()).enabled) {
+  if (!admin && !nightPassesOn) {
     return NextResponse.json({ error: "קודי הכניסה עוד לא פעילים." }, { status: 404, headers: NO_STORE });
   }
   const json = (await request.json().catch(() => null)) as { sessionId?: string } | null;

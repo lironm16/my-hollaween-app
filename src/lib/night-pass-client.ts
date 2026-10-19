@@ -131,6 +131,12 @@ export function subscribeNightPassState(onChange: () => void) {
 let inflight: Promise<NightPassState | null> | null = null;
 let lastFetchAt = 0;
 const MIN_REFETCH_MS = 10_000;
+/** While the event-registration modal is open — avoid background refresh that unmounts it. */
+let refreshPausedForEventModal = false;
+
+export function setNightPassRefreshPaused(paused: boolean) {
+  refreshPausedForEventModal = paused;
+}
 /** Intentional «התנתקות» — do not show «pass lost» toast. */
 let suppressNextPassLostEvent = false;
 
@@ -175,33 +181,11 @@ async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
   return anyOk;
 }
 
-async function tryOwnerNightPassConnect(
-  qs: string,
-  state: NightPassState,
-): Promise<NightPassState> {
-  if (!state.enabled || state.registered || state.viewer !== "owner") return state;
-  try {
-    const connect = await fetch("/api/night-passes/connect-owner", {
-      method: "POST",
-      cache: "no-store",
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!connect.ok) return state;
-    const detail = (await connect.json()) as {
-      needsRegistration?: boolean;
-      houseId?: string;
-    };
-    if (detail.needsRegistration) {
-      dispatchOwnerRegisterPrompt(detail.houseId);
-    }
-  } catch {
-    /* optional */
-  }
-  return state;
-}
-
 /** Ask the server who this device is. Network failure keeps the last known state. */
 export function refreshNightPassState(options?: { force?: boolean }): Promise<NightPassState | null> {
+  if (refreshPausedForEventModal && !options?.force) {
+    return Promise.resolve(readNightPassState());
+  }
   if (inflight) return inflight;
   if (!options?.force && Date.now() - lastFetchAt < MIN_REFETCH_MS) {
     return Promise.resolve(readNightPassState());
@@ -219,9 +203,6 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
           const again = await fetchNightPassMe(qs);
           if (again.state) next = again.state;
         }
-      }
-      if (next.viewer === "owner") {
-        next = await tryOwnerNightPassConnect(qs, next);
       }
       const lost = readLostDetail(json.lost);
       const prev = readNightPassState();

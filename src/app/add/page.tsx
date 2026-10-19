@@ -11,7 +11,6 @@ import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-f
 import { Button, buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged, rememberPublishedHouse } from "@/lib/offline-db";
 import { PersistNote } from "@/components/persist-note";
-import { refreshNightPassState } from "@/lib/night-pass-client";
 import {
   detectNightPassClientBrowser,
   detectNightPassClientSurface,
@@ -58,7 +57,13 @@ export default function AddPage() {
     if (!done || !nightPass.enabled || !done.deviceConnected) return;
     if (eventPopupForAddRef.current === done.id) return;
     eventPopupForAddRef.current = done.id;
-    openEventRegistered();
+    openEventRegistered({
+      houseName: done.name,
+      houseId: done.id,
+      afterClose: () => {
+        notifyCatalogChanged();
+      },
+    });
   }, [done, nightPass.enabled, openEventRegistered]);
 
   async function onSubmit(input: HouseInput, extras?: HouseFormExtras) {
@@ -92,8 +97,6 @@ export default function AddPage() {
         preview,
       });
       rememberPublishedHouse(preview);
-      notifyCatalogChanged();
-      await refreshNightPassState({ force: true });
       setDone({
         id: preview.id,
         editCode,

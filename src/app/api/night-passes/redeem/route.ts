@@ -14,7 +14,6 @@ import {
   parseNightPassClientSurface,
 } from "@/lib/night-pass-client-surface";
 import { nightPassRegisterErrorMessage } from "@/lib/night-pass-register-errors";
-import { grantOwnerHouse } from "@/lib/owner-session";
 import { readNightPassCookie, setNightPassCookie } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { clientKey } from "@/lib/rate-limit";
@@ -74,11 +73,6 @@ export async function POST(request: Request) {
     return fail(404, "invalid", "קוד הכניסה לא נמצא. בדקו את הקוד ונסו שוב.");
   }
   await setNightPassCookie(outcome.record.id, outcome.sessionId, outcome.token);
-  try {
-    await grantOwnerHouse(outcome.record.houseId);
-  } catch {
-    /* optional */
-  }
   const registeredHouse = await getHouse(outcome.record.houseId);
   return NextResponse.json(
     {
