@@ -36,7 +36,7 @@ export function EditCodeDialog({
     <HouseEditModal
       open={open}
       onClose={onClose}
-      title={showCode ? "קוד עריכה ומכשירים" : "מכשירים מחוברים"}
+      title="קוד עריכה ומכשירים"
       subtitle={houseHeadline(house)}
     >
       <div className="space-y-4">
@@ -98,7 +98,7 @@ export function EditCodeDialog({
             house={house}
             admin={admin}
             embedded
-            showFamilyCode={false}
+            showFamilyCode={!showCode}
             hideToolbar={showCode}
           />
         ) : null}
