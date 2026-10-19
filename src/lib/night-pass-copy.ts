@@ -22,3 +22,8 @@ export const NIGHT_PASS_REVEAL_HINT = "כתובות בתים פרטיים יוצ
 export const NIGHT_PASS_ALREADY_REGISTERED_TITLE = "כבר נרשמתם!";
 export const NIGHT_PASS_ALREADY_REGISTERED_BODY =
   "המכשיר הזה כבר מחובר לאירוע. אין צורך להירשם שוב מהזמנה.";
+
+/** First-time event registration on this device (add house or owner login). */
+export const NIGHT_PASS_EVENT_REGISTERED_TITLE = "נרשמתם לאירוע!";
+export const NIGHT_PASS_EVENT_REGISTERED_BODY =
+  "ביום החשיפה תראו כאן גם כתובות של בתים פרטיים. עד אז — עריכת הבית והמלאי כרגיל.";

@@ -38,6 +38,8 @@ type Props = {
   ownerRegister?: boolean;
   ownerHouseId?: string;
   onRegistered?: () => void;
+  /** First-time registration — show event success popup (login / invite / owner). */
+  onEventRegistered?: () => void;
   onAlreadyRegistered?: () => void;
   /** Close the register dialog before in-app navigation (help link). */
   onNavigateAway?: () => void;
@@ -51,6 +53,7 @@ export function NightPassRegisterPanel({
   ownerRegister = false,
   ownerHouseId,
   onRegistered,
+  onEventRegistered,
   onAlreadyRegistered,
   onNavigateAway,
   compact,
@@ -201,8 +204,12 @@ export function NightPassRegisterPanel({
       }
       await refreshNightPassState({ force: true });
       notifyNightPassSlotsChanged();
-      toast.success(json?.reregistered ? "המכשיר עודכן" : "המכשיר מחובר");
-      onRegistered?.();
+      if (json?.reregistered) {
+        toast.success("המכשיר עודכן");
+        onRegistered?.();
+      } else {
+        onEventRegistered?.() ?? onRegistered?.();
+      }
     } catch {
       setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");
     } finally {

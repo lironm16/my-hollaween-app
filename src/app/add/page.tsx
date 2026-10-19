@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
@@ -42,7 +42,8 @@ export default function AddPage() {
   const editFlow = useHouseEditFlow();
   const addHouseOpen = useAddHouseOpen();
   const nightPass = useNightPass();
-  const { openOwnerPasses } = useNightPassDialog();
+  const { openOwnerPasses, openEventRegistered } = useNightPassDialog();
+  const eventPopupForAddRef = useRef<string | null>(null);
   const canAdd = addHouseOpen;
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{
@@ -52,6 +53,13 @@ export default function AddPage() {
     house: PublicHouse;
     deviceConnected: boolean;
   } | null>(null);
+
+  useEffect(() => {
+    if (!done || !nightPass.enabled || !done.deviceConnected) return;
+    if (eventPopupForAddRef.current === done.id) return;
+    eventPopupForAddRef.current = done.id;
+    openEventRegistered();
+  }, [done, nightPass.enabled, openEventRegistered]);
 
   async function onSubmit(input: HouseInput, extras?: HouseFormExtras) {
     setBusy(true);
@@ -116,7 +124,9 @@ export default function AddPage() {
               <CheckCircle2 className="house-added-check size-12 text-emerald-400" />
               <h1 className="font-display text-2xl text-orange-300">{ADD_HOUSE_SUCCESS_TITLE}</h1>
               <p className="max-w-sm text-base leading-relaxed text-violet-100">
-                {addHouseSuccessSubtitle(done.name)}
+                {addHouseSuccessSubtitle(done.name, {
+                  registeredForEvent: nightPass.enabled && done.deviceConnected,
+                })}
               </p>
             </div>
 
@@ -146,8 +156,8 @@ export default function AddPage() {
               </Button>
               <Button
                 type="button"
-                variant="ghost"
-                className="w-full text-violet-200 hover:bg-white/5 hover:text-orange-100"
+                variant="outline"
+                className="w-full border-orange-400/50 bg-orange-500/10 text-orange-100 hover:bg-orange-500/20"
                 onClick={() => openOwnerPasses(done.house, done.editCode)}
               >
                 {nightPass.enabled
