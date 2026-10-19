@@ -433,6 +433,32 @@ export async function mayManageHouseDevices(
   return Boolean(await deviceSessionOnHouse(houseId));
 }
 
+/** Owners may remove any device; editors may remove editor devices only. */
+export async function callerMayRemoveHouseAccessSession(
+  houseId: string,
+  targetSessionId: string,
+  options?: { admin?: boolean },
+): Promise<{ ok: true } | { ok: false; error: "forbidden" | "missing" }> {
+  if (options?.admin) return { ok: true };
+  const record = await ensureHouseAccess(houseId);
+  const target = record.sessions.find((s) => s.sessionId === targetSessionId);
+  if (!target) return { ok: false, error: "missing" };
+
+  if (await primaryOwnerMayManage(houseId)) return { ok: true };
+
+  if (accessRecordLacksOwner(record)) {
+    if (await ownerMayEdit(houseId)) return { ok: true };
+    if (await deviceSessionOnHouse(houseId)) return { ok: true };
+    return { ok: false, error: "forbidden" };
+  }
+
+  const caller = await deviceSessionOnHouse(houseId);
+  if (!caller) return { ok: false, error: "forbidden" };
+  if (sessionIsOwner(caller)) return { ok: true };
+  if (sessionIsOwner(target)) return { ok: false, error: "forbidden" };
+  return { ok: true };
+}
+
 export function houseAccessView(
   record: NightPassRecord,
   familyCode: string,

@@ -51,6 +51,7 @@ type PassesResponse = {
   permissions?: {
     canPromoteOwner: boolean;
     canRemoveDevices: boolean;
+    canRemoveEditorDevicesOnly?: boolean;
     canResetCode: boolean;
     canShareInvite: boolean;
   };
@@ -301,7 +302,14 @@ export function NightPassesCard({
   const canShareInvite = admin || Boolean(perms?.canShareInvite);
   const canResetCode = admin || Boolean(perms?.canResetCode);
   const canRemoveDevices = admin || Boolean(perms?.canRemoveDevices);
+  const removeEditorDevicesOnly = Boolean(perms?.canRemoveEditorDevicesOnly) && !admin;
   const canPromoteOwner = admin || Boolean(perms?.canPromoteOwner);
+
+  function mayRemoveDevice(device: AccessView["devices"][number]) {
+    if (!canRemoveDevices) return false;
+    if (admin || !removeEditorDevicesOnly) return true;
+    return device.role === "editor";
+  }
 
   const inviteActions =
     house && canShareInvite ? (
@@ -466,7 +474,7 @@ export function NightPassesCard({
                       ) : null}
                     </p>
                   </div>
-                  {canRemoveDevices ? (
+                  {mayRemoveDevice(device) ? (
                     <div className="flex shrink-0 items-center justify-center sm:items-start">
                       <button
                         type="button"

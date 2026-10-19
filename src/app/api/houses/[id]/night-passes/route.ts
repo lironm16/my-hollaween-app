@@ -56,8 +56,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       : ("owner" as const);
   const registeredOnHouse = Boolean(mySession);
   const registeredOwner = registeredOnHouse && sessionIsOwner(mySession);
+  const editCookieRecovery = noOwners && !registeredOnHouse && (await ownerMayEdit(id));
   const canPromoteOwner =
     admin || registeredOwner || (registeredOnHouse && noOwners) || (canManageDevices && noOwners);
+  const canRemoveDevices = admin || registeredOnHouse || editCookieRecovery;
   return NextResponse.json(
     {
       enabled: settings.enabled,
@@ -66,7 +68,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       myRole,
       permissions: {
         canPromoteOwner,
-        canRemoveDevices: canManageDevices,
+        canRemoveDevices,
+        canRemoveEditorDevicesOnly: admin
+          ? false
+          : registeredOnHouse && !registeredOwner && !noOwners,
         canResetCode: canManageDevices && (registeredOwner || noOwners),
         canShareInvite: true,
       },
