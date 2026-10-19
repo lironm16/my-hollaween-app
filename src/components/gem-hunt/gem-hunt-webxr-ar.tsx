@@ -343,11 +343,20 @@ export function GemHuntWebXrAr({
 
   /** «גלה לי» — block WebXR/encounter auto-handoff from collecting without a gem tap. */
   const userInitiatedCollectRef = useRef(false);
+  /** DOM inspect360 gem — only during tell-me / collect started from tell-me tap. */
+  const [collectViaTellMe, setCollectViaTellMe] = useState(false);
+  const collectViaTellMeRef = useRef(false);
+  useEffect(() => {
+    collectViaTellMeRef.current = collectViaTellMe;
+  }, [collectViaTellMe]);
 
   const handleCollect = useCallback(() => {
     if (phase === "collecting") return;
     if (centerRevealRef.current && !userInitiatedCollectRef.current) return;
     userInitiatedCollectRef.current = false;
+    const viaTellMe = centerRevealRef.current;
+    collectViaTellMeRef.current = viaTellMe;
+    setCollectViaTellMe(viaTellMe);
     const inBand =
       inWebXrHuntBand ||
       encounterCollectLatchedRef.current ||
@@ -463,8 +472,10 @@ export function GemHuntWebXrAr({
   const tellMeCenterSession =
     centerReveal && sessionActive && !userDismissedCenterGem;
   const showTellMeCenterGem = tellMeCenterSession && phase !== "collecting";
-  /** iOS-style collect choreography — WebXR hid the DOM gem during `collecting`. */
-  const showCenterCollectGem = phase === "collecting" && sessionActive;
+  /** DOM collect dance — only after tapping the fake center gem (not world AR collect). */
+  const showCenterCollectGem =
+    phase === "collecting" && sessionActive && collectViaTellMe;
+  const showDomFakeGem = showTellMeCenterGem || showCenterCollectGem;
 
   const showApproachScreenGem =
     sessionActive &&
@@ -767,7 +778,7 @@ export function GemHuntWebXrAr({
       isPlaced = true;
       stableHitFrames = 0;
       reticle.visible = false;
-      if (!centerRevealRef.current) anchorGroup.visible = true;
+      if (!centerRevealRef.current && !collectViaTellMeRef.current) anchorGroup.visible = true;
       setPlaced(true);
       setPhase("placed");
       setGeoLockModeRef.current(mode);
@@ -780,8 +791,11 @@ export function GemHuntWebXrAr({
       anchorGroup.matrixAutoUpdate = false;
       anchorGroup.matrix.fromArray(pose.transform.matrix);
       anchorGroup.matrix.decompose(anchorGroup.position, anchorGroup.quaternion, anchorGroup.scale);
+      const hideWorldForDomGem =
+        centerRevealRef.current ||
+        (collectingRef.current && collectViaTellMeRef.current);
       anchorGroup.visible =
-        !centerRevealRef.current &&
+        !hideWorldForDomGem &&
         (collectingRef.current || !userDismissedCenterGemRef.current);
     };
 
@@ -934,7 +948,7 @@ export function GemHuntWebXrAr({
         const off = viewerLocalOffsetMeters(loc, target, h);
         anchorGroup.position.set(off.x, 0, off.z);
       }
-      anchorGroup.visible = !centerRevealRef.current;
+      anchorGroup.visible = !centerRevealRef.current && !collectViaTellMeRef.current;
       isPlaced = true;
       setPlaced(true);
       setPhase("placed");
@@ -1024,6 +1038,7 @@ export function GemHuntWebXrAr({
       setPhase("boot");
       setCenterReveal(false);
       setUserDismissedCenterGem(false);
+      setCollectViaTellMe(false);
       setGeoLockModeRef.current("pending");
       worldAnchor?.delete();
       worldAnchor = null;
@@ -1117,9 +1132,12 @@ export function GemHuntWebXrAr({
         }
 
         if (!worldAnchor) {
+          const hideWorldForDomGem =
+            centerRevealRef.current ||
+            (collectingRef.current && collectViaTellMeRef.current);
           anchorGroup.visible =
             isPlaced &&
-            !centerRevealRef.current &&
+            !hideWorldForDomGem &&
             (collectingRef.current || !userDismissedCenterGemRef.current);
         }
 
@@ -1338,7 +1356,7 @@ export function GemHuntWebXrAr({
         </div>
       ) : null}
 
-      {(showTellMeCenterGem || showCenterCollectGem) ? (
+      {showDomFakeGem ? (
         <div
           className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage is-gem-interactive"
           aria-hidden={false}
