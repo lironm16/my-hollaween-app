@@ -15,6 +15,11 @@ describe("loadStaticRehearsalStubRows", () => {
     for (const house of rows) {
       assert.equal(house.isStub, true, house.id);
     }
+    const abba71 = rows.find((house) => house.id === "בית-9211");
+    assert.ok(abba71);
+    assert.equal(abba71!.lat, 32.0907247);
+    assert.equal(abba71!.lng, 34.8113903);
+    assert.match(String(abba71!.address ?? ""), /אבא הלל סילבר 71/u);
   });
 });
 

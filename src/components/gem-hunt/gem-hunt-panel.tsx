@@ -40,7 +40,7 @@ import {
 } from "@/lib/gem-hunt-copy";
 
 export type GemHuntOpenPrepare = () => Promise<UserLocation | null | void>;
-import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
+import { gemBagCelebrateAfterCollect, gemBagCollectHref, gemBagPlainHref } from "@/lib/gem-bag-celebrate";
 import { loadGemCollected } from "@/lib/gem-progress";
 import { prepareGemHuntSensors, releaseGemHuntCamera } from "@/lib/gem-hunt-sensors";
 import {
@@ -206,18 +206,8 @@ export function GemHuntPanel({
 
   function openClusterStickerBook() {
     if (!clusterSessionSummary?.length) return;
-    const last = clusterSessionSummary[clusterSessionSummary.length - 1]!;
-    const celebrate =
-      mapHousesForCelebrate.length > 0
-        ? gemBagCelebrateAfterCollect(
-            mapHousesForCelebrate,
-            loadGemCollected(),
-            last.house.id,
-            last.monsterId,
-          )
-        : null;
     setClusterSessionSummary(null);
-    router.push(gemBagCollectHref(last.monsterId, celebrate));
+    router.push(gemBagPlainHref());
   }
 
   function onCollect(collectedVariant: GemMonsterId, options?: GemCollectFinishOptions) {

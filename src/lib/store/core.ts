@@ -747,14 +747,20 @@ async function withStaticRehearsalStubs(db: DbFile): Promise<DbFile> {
     readRehearsalStubOverlays(),
   ]);
   const stubs = rows.map((row) => normalizeHouse(row as House & { status?: string }));
+  const seedStubIds = new Set(stubs.map((stub) => stub.id));
   const real = stripStubHouses(db.houses).map(normalizeHouse);
   const byId = new Map(real.map((house) => [house.id, house]));
   for (const stub of stubs) byId.set(stub.id, stub);
   for (const [id, overlay] of overlays) {
-    if (isStubHouse(overlay)) byId.set(id, normalizeHouse(overlay));
+    if (!isStubHouse(overlay)) continue;
+    const seedStub = stubs.find((stub) => stub.id === id);
+    if (seedStub && stamp(overlay) <= stamp(seedStub)) continue;
+    byId.set(id, normalizeHouse(overlay));
   }
   for (const house of db.houses) {
     if (!isStubHouse(house)) continue;
+    /** `data/seed.json` rehearsal stubs — do not let stale Firestore stub copies override. */
+    if (seedStubIds.has(house.id)) continue;
     const existing = byId.get(house.id);
     if (!existing || stamp(house) > stamp(existing)) byId.set(house.id, normalizeHouse(house));
   }

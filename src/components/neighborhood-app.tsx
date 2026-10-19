@@ -62,7 +62,7 @@ import {
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
 import { useGemProgress } from "@/hooks/use-gem-progress";
-import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
+import { gemBagCelebrateAfterCollect, gemBagCollectHref, gemBagPlainHref } from "@/lib/gem-bag-celebrate";
 import { isGemTypeInCollection, loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
 import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
@@ -646,15 +646,10 @@ export function NeighborhoodApp({
   const openClusterGemStickerBook = useCallback(() => {
     setClusterGemSessionSummary((session) => {
       if (!session?.length) return null;
-      const last = session[session.length - 1]!;
-      const celebrate =
-        gemMapRingHouses.length > 0
-          ? gemBagCelebrateAfterCollect(gemMapRingHouses, loadGemCollected(), last.house.id, last.monsterId)
-          : null;
-      router.push(gemBagCollectHref(last.monsterId, celebrate));
+      router.push(gemBagPlainHref());
       return null;
     });
-  }, [gemMapRingHouses, router]);
+  }, [router]);
 
   useEffect(() => {
     return () => {

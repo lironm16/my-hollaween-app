@@ -45,7 +45,17 @@ export function parseGemBagCelebrate(raw: string | null): GemBagCelebrateKind | 
   return null;
 }
 
-export function gemBagCollectHref(monsterId: string, celebrate: GemBagCelebrateKind | null) {
+/** Sticker album — no collect fly-in (e.g. cluster session summary). */
+export function gemBagPlainHref() {
+  return "/gem-bag";
+}
+
+export function gemBagCollectHref(
+  monsterId: string,
+  celebrate: GemBagCelebrateKind | null,
+  options?: { animate?: boolean },
+) {
+  if (options?.animate === false) return gemBagPlainHref();
   const params = new URLSearchParams({ fly: monsterId });
   if (celebrate) params.set("celebrate", celebrate);
   return `/gem-bag?${params.toString()}`;

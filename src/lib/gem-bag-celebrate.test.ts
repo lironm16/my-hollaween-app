@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { gemBagCelebrateAfterCollect, gemBagCollectHref } from "@/lib/gem-bag-celebrate";
+import { gemBagCelebrateAfterCollect, gemBagCollectHref, gemBagPlainHref } from "@/lib/gem-bag-celebrate";
 import { gemMonsterForHouse, syncGemMonsterAssignment } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
@@ -37,5 +37,10 @@ describe("gem bag celebrate", () => {
 
   it("builds href with celebrate query", () => {
     assert.equal(gemBagCollectHref("dragon", "album"), "/gem-bag?fly=dragon&celebrate=album");
+  });
+
+  it("skips fly animation when requested", () => {
+    assert.equal(gemBagPlainHref(), "/gem-bag");
+    assert.equal(gemBagCollectHref("dragon", "album", { animate: false }), "/gem-bag");
   });
 });
