@@ -791,9 +791,17 @@ export function NeighborhoodApp({
       view === "map" ||
         routeMode ||
         originPick.originPickActive ||
-        originPick.originPickerOpen,
+        originPick.originPickerOpen ||
+        Boolean(mapGemHouse),
     );
-  }, [setWatchEnabled, view, routeMode, originPick.originPickActive, originPick.originPickerOpen]);
+  }, [
+    setWatchEnabled,
+    view,
+    routeMode,
+    originPick.originPickActive,
+    originPick.originPickerOpen,
+    mapGemHouse,
+  ]);
 
   useEffect(() => {
     if (wasAdmin.current && !admin) {
