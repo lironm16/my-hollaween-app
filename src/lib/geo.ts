@@ -13,8 +13,11 @@ export function distanceMeters(
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-/** Phone GPS jitters ~5–25m while standing still. Ignore that. */
-export const GPS_MOVE_METERS = 28;
+/**
+ * Ignore tiny GPS jumps on the map dot (standing-still jitter).
+ * Still accept every watch callback — we only skip updating state when movement is below this.
+ */
+export const GPS_MOVE_METERS = 12;
 /** Rebuild the walking path only after a real block of movement. */
 export const ROUTE_REANCHOR_METERS = 80;
 

@@ -1,6 +1,10 @@
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemAnchorOverride } from "@/lib/gem-anchor-overrides";
-import { parseGemAnchorPlacement } from "@/lib/gem-anchor-placement";
+import {
+  clampGemAnchorPlacement,
+  GEM_ANCHOR_PLACE_MAX_METERS,
+  parseGemAnchorPlacement,
+} from "@/lib/gem-anchor-placement";
 import { getPlacedGemAnchor } from "@/lib/gem-placed-anchors";
 import { getOsmGemAnchor } from "@/lib/gem-osm-anchor-cache";
 import {
@@ -255,38 +259,53 @@ export function automaticGemAnchorForHouse(house: GemAnchorHouse): GemAnchor {
   return gemAnchorForHouse(house, { automatic: true });
 }
 
+/** Keep every hunt anchor inside the owner placement ring (40 m from the house pin). */
+export function clampGemAnchorToPlacementRing(house: GemAnchorHouse, anchor: GemAnchor): GemAnchor {
+  const clamped = clampGemAnchorPlacement(house, anchor);
+  if (clamped.lat === anchor.lat && clamped.lng === anchor.lng) return anchor;
+  return {
+    ...anchor,
+    lat: clamped.lat,
+    lng: clamped.lng,
+    bearingFromHouseDeg: bearingDegrees(house, clamped),
+    offsetM: distanceMeters(house, clamped),
+  };
+}
+
 export function gemAnchorForHouse(
   house: GemAnchorHouse,
   options?: { automatic?: boolean },
 ): GemAnchor {
+  const finish = (anchor: GemAnchor) => clampGemAnchorToPlacementRing(house, anchor);
+
   const override = options?.automatic ? null : getGemAnchorOverride(house.id);
   if (override) {
     const bearingFromHouseDeg = bearingDegrees(house, override);
     const offsetM = distanceMeters(house, override);
-    return {
+    return finish({
       lat: override.lat,
       lng: override.lng,
       bearingFromHouseDeg,
       offsetM,
       calibrated: true,
-    };
+    });
   }
 
   const placed = options?.automatic ? null : placedGemAnchorForHouse(house);
   if (placed) {
-    return {
+    return finish({
       lat: placed.lat,
       lng: placed.lng,
       bearingFromHouseDeg: bearingDegrees(house, placed),
       offsetM: distanceMeters(house, placed),
       calibrated: true,
       placed: true,
-    };
+    });
   }
 
   const cluster = gemClusterSpreadForHouse(house.id);
   if (cluster && cluster.size > 1) {
-    return gemClusterFanAnchor(house, cluster);
+    return finish(gemClusterFanAnchor(house, cluster));
   }
 
   const osm = getOsmGemAnchor(house.id);
@@ -298,7 +317,7 @@ export function gemAnchorForHouse(
     const point = { lat: osm.lat, lng: osm.lng };
     const bearingFromHouseDeg = bearingDegrees(house, point);
     const offsetM = distanceMeters(house, point);
-    return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
+    return finish({ ...point, bearingFromHouseDeg, offsetM, calibrated: false });
   }
 
   const spine = sidewalkGemAnchorForHouse(house);
@@ -306,20 +325,20 @@ export function gemAnchorForHouse(
     const point = { lat: spine.lat, lng: spine.lng };
     const bearingFromHouseDeg = bearingDegrees(house, point);
     const offsetM = spine.distanceM;
-    return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
+    return finish({ ...point, bearingFromHouseDeg, offsetM, calibrated: false });
   }
 
   const hint = walkTowardNearestSpine(house);
   if (hint && hint.distanceM >= GEM_ANCHOR_MIN_METERS) {
     const point = { lat: hint.lat, lng: hint.lng };
     const bearingFromHouseDeg = bearingDegrees(house, point);
-    return { ...point, bearingFromHouseDeg, offsetM: hint.distanceM, calibrated: false };
+    return finish({ ...point, bearingFromHouseDeg, offsetM: hint.distanceM, calibrated: false });
   }
 
   const h = hashHouseSeed(house.id, "gem-anchor-v2");
   const fallbackSidewalk = nearestSidewalkPoint(house, null);
   let bearingFromHouseDeg: number;
-  if (fallbackSidewalk && fallbackSidewalk.distanceM <= 55) {
+  if (fallbackSidewalk && fallbackSidewalk.distanceM <= GEM_ANCHOR_PLACE_MAX_METERS) {
     const toward = bearingDegrees(house, fallbackSidewalk.point);
     const spread = 38;
     bearingFromHouseDeg = toward + ((h % (spread * 2)) - spread);
@@ -329,7 +348,7 @@ export function gemAnchorForHouse(
   const span = GEM_ANCHOR_MAX_METERS - GEM_ANCHOR_MIN_METERS;
   const offsetM = GEM_ANCHOR_MIN_METERS + ((h >>> 8) % 1000) / (1000 / span);
   const point = destinationPoint(house, bearingFromHouseDeg, offsetM);
-  return { ...point, bearingFromHouseDeg, offsetM, calibrated: false };
+  return finish({ ...point, bearingFromHouseDeg, offsetM, calibrated: false });
 }
 
 export type GemScreenPlacement = {
