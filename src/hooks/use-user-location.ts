@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GPS_MOVE_METERS, movedAtLeast } from "@/lib/geo";
 
 export type UserLocation = {
   lat: number;
@@ -11,9 +10,10 @@ export type UserLocation = {
 
 export type LocationStatus = "idle" | "pending" | "ready" | "denied" | "unavailable" | "error";
 
+/** Fresh fixes for a tight map location dot. */
 const watchOpts: PositionOptions = {
   enableHighAccuracy: true,
-  maximumAge: 15_000,
+  maximumAge: 0,
   timeout: 12_000,
 };
 
@@ -90,14 +90,19 @@ export function useUserLocation(options?: { watch?: boolean }) {
     }
   }, []);
 
-  const apply = useCallback((pos: GeolocationPosition, force = false) => {
+  const apply = useCallback((pos: GeolocationPosition) => {
     const next: UserLocation = {
       lat: pos.coords.latitude,
       lng: pos.coords.longitude,
       accuracy: pos.coords.accuracy,
     };
     const prev = last.current;
-    if (!force && prev && !movedAtLeast(prev, next, GPS_MOVE_METERS)) {
+    if (
+      prev &&
+      prev.lat === next.lat &&
+      prev.lng === next.lng &&
+      prev.accuracy === next.accuracy
+    ) {
       return;
     }
     last.current = next;
@@ -126,11 +131,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
     }
     if (watchId.current !== null) return;
     setStatus((s) => (s === "ready" ? s : "pending"));
-    watchId.current = navigator.geolocation.watchPosition(
-      (pos) => apply(pos, false),
-      fail,
-      watchOpts,
-    );
+    watchId.current = navigator.geolocation.watchPosition((pos) => apply(pos), fail, watchOpts);
   }, [apply, fail, watchEnabled]);
 
   const refresh = useCallback((): Promise<UserLocation | null> => {
@@ -150,7 +151,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
         if (permission === "granted") startWatch();
 
         const finish = (pos: GeolocationPosition) => {
-          apply(pos, true);
+          apply(pos);
           resolve({
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,

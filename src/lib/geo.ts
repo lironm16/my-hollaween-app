@@ -13,11 +13,10 @@ export function distanceMeters(
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-/**
- * Ignore tiny GPS jumps on the map dot (standing-still jitter).
- * Still accept every watch callback — we only skip updating state when movement is below this.
- */
-export const GPS_MOVE_METERS = 12;
+/** Movement before “standing still” timers reset (gem hints), not map dot updates. */
+export const GPS_STANDING_STILL_METERS = 12;
+/** @deprecated Use GPS_STANDING_STILL_METERS — map location always follows watch fixes. */
+export const GPS_MOVE_METERS = GPS_STANDING_STILL_METERS;
 /** Rebuild the walking path only after a real block of movement. */
 export const ROUTE_REANCHOR_METERS = 80;
 
