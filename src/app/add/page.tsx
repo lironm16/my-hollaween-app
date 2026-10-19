@@ -7,7 +7,6 @@ import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { HouseForm } from "@/components/house-form";
-import { CodesCopy } from "@/components/codes-copy";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { saveOwnedHouse, notifyCatalogChanged, rememberPublishedHouse } from "@/lib/offline-db";
@@ -29,16 +28,10 @@ import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 import {
   ADD_HOUSE_CLOSED_HE,
-  ADD_HOUSE_SUCCESS_DEVICE_OK,
-  ADD_HOUSE_SUCCESS_DEVICE_PENDING,
-  ADD_HOUSE_SUCCESS_DEVICES_BTN,
-  ADD_HOUSE_SUCCESS_DEVICES_BTN_CONNECT,
+  ADD_HOUSE_SUCCESS_CODE_AND_DEVICES,
   ADD_HOUSE_SUCCESS_EDIT,
-  ADD_HOUSE_SUCCESS_EDIT_ONLY,
-  ADD_HOUSE_SUCCESS_HELP_DEVICES,
-  ADD_HOUSE_SUCCESS_HELP_EDIT,
-  ADD_HOUSE_SUCCESS_HELP_LOST_CODE,
   ADD_HOUSE_SUCCESS_MAP,
+  ADD_HOUSE_SUCCESS_SHARE_CODE,
   ADD_HOUSE_SUCCESS_TITLE,
   addHouseSuccessSubtitle,
 } from "@/lib/add-house-copy";
@@ -118,36 +111,14 @@ export default function AddPage() {
           className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
         />
         {done ? (
-          <div className="house-added-success space-y-5 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-400/30">
+          <div className="house-added-success space-y-6 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-400/30">
             <div className="flex flex-col items-center gap-2 text-center">
               <CheckCircle2 className="house-added-check size-12 text-emerald-400" />
               <h1 className="font-display text-2xl text-orange-300">{ADD_HOUSE_SUCCESS_TITLE}</h1>
-              <p className="text-base text-violet-100">{addHouseSuccessSubtitle(done.name)}</p>
-            </div>
-
-            <section className="space-y-3 rounded-xl bg-black/35 p-4 ring-1 ring-orange-500/20">
-              <p className="text-center text-sm leading-relaxed text-violet-200">
-                {nightPass.enabled
-                  ? done.deviceConnected
-                    ? ADD_HOUSE_SUCCESS_DEVICE_OK
-                    : ADD_HOUSE_SUCCESS_DEVICE_PENDING
-                  : ADD_HOUSE_SUCCESS_EDIT_ONLY}
+              <p className="max-w-sm text-base leading-relaxed text-violet-100">
+                {addHouseSuccessSubtitle(done.name)}
               </p>
-              <CodesCopy editCode={done.editCode} hideLabel />
-              {nightPass.enabled ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mx-auto w-full max-w-xs text-violet-200 hover:bg-white/5"
-                  onClick={() => openOwnerPasses(done.house, done.editCode)}
-                >
-                  {done.deviceConnected
-                    ? ADD_HOUSE_SUCCESS_DEVICES_BTN
-                    : ADD_HOUSE_SUCCESS_DEVICES_BTN_CONNECT}
-                </Button>
-              ) : null}
-            </section>
+            </div>
 
             <div className="flex flex-col gap-2">
               <Link
@@ -173,37 +144,17 @@ export default function AddPage() {
               >
                 {ADD_HOUSE_SUCCESS_EDIT}
               </Button>
-            </div>
-
-            <p className="text-center text-sm text-violet-400">
-              <Link
-                href="/help/share-edit-code"
-                className="underline underline-offset-2 hover:text-orange-200"
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-violet-200 hover:bg-white/5 hover:text-orange-100"
+                onClick={() => openOwnerPasses(done.house, done.editCode)}
               >
-                {ADD_HOUSE_SUCCESS_HELP_EDIT}
-              </Link>
-              {nightPass.enabled ? (
-                <>
-                  <span aria-hidden="true"> · </span>
-                  <Link
-                    href="/help/event-device-owner"
-                    className="underline underline-offset-2 hover:text-orange-200"
-                  >
-                    {ADD_HOUSE_SUCCESS_HELP_DEVICES}
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <span aria-hidden="true"> · </span>
-                  <Link
-                    href="/help/edit-code"
-                    className="underline underline-offset-2 hover:text-orange-200"
-                  >
-                    {ADD_HOUSE_SUCCESS_HELP_LOST_CODE}
-                  </Link>
-                </>
-              )}
-            </p>
+                {nightPass.enabled
+                  ? ADD_HOUSE_SUCCESS_CODE_AND_DEVICES
+                  : ADD_HOUSE_SUCCESS_SHARE_CODE}
+              </Button>
+            </div>
           </div>
         ) : !canAdd ? (
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
