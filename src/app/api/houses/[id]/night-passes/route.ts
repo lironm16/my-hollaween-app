@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { normalizeHouseAccessRole, sessionIsOwner } from "@/lib/house-access-role";
 import { canonicalHouseId } from "@/lib/ids";
-import { ensureHouseAccess, houseAccessView } from "@/lib/night-pass-service";
+import {
+  accessRecordLacksOwner,
+  ensureHouseAccess,
+  houseAccessView,
+  mayManageHouseDevices,
+} from "@/lib/night-pass-service";
 import { currentNightPass, deviceSessionOnHouse, readNightPassCookie } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { ownerMayEdit } from "@/lib/owner-session";
@@ -29,10 +34,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   }
   const house = await getHouse(id);
   if (!house) return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404, headers: NO_STORE });
-  const [record, devicePass] = await Promise.all([
+  const [record, devicePass, canManageDevices] = await Promise.all([
     ensureHouseAccess(house.id),
     currentNightPass(),
+    mayManageHouseDevices(house.id, { admin }),
   ]);
+  const noOwners = accessRecordLacksOwner(record);
   const cookie = await readNightPassCookie();
   const sameHouse =
     devicePass && devicePass.houseId === house.id && cookie?.passId === devicePass.id;
@@ -47,8 +54,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     : mySession
       ? normalizeHouseAccessRole(mySession.role)
       : ("owner" as const);
-  const isOwner = admin || (mySession ? sessionIsOwner(mySession) : !mySession);
   const registeredOnHouse = Boolean(mySession);
+  const registeredOwner = registeredOnHouse && sessionIsOwner(mySession);
+  const canPromoteOwner =
+    admin || registeredOwner || (registeredOnHouse && noOwners) || (canManageDevices && noOwners);
   return NextResponse.json(
     {
       enabled: settings.enabled,
@@ -56,9 +65,9 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       thisDeviceRegistered: access.devices.some((d) => d.isThisDevice),
       myRole,
       permissions: {
-        canPromoteOwner: isOwner && registeredOnHouse,
-        canRemoveDevices: isOwner && registeredOnHouse,
-        canResetCode: isOwner && registeredOnHouse,
+        canPromoteOwner,
+        canRemoveDevices: canManageDevices,
+        canResetCode: canManageDevices && (registeredOwner || noOwners),
         canShareInvite: true,
       },
     },

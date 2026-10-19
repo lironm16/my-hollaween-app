@@ -7,7 +7,7 @@ import {
   removeHouseAccessSession,
 } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
-import { primaryOwnerMayManage } from "@/lib/owner-session";
+import { mayManageHouseDevices } from "@/lib/night-pass-service";
 import { getHouse } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -22,9 +22,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!admin && !(await readNightPassSettings()).enabled) {
     return NextResponse.json({ error: "קודי הכניסה עוד לא פעילים." }, { status: 404, headers: NO_STORE });
   }
-  if (!admin && !(await primaryOwnerMayManage(id))) {
+  if (!(await mayManageHouseDevices(id, { admin }))) {
     return NextResponse.json(
-      { error: "רק בעל/ת בית יכול/ה להסיר מכשירים." },
+      { error: "רק בעל בית יכול להסיר מכשירים." },
       { status: 403, headers: NO_STORE },
     );
   }

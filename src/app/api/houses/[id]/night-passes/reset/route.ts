@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { canonicalHouseId } from "@/lib/ids";
-import { houseAccessView, resetHouseAccess } from "@/lib/night-pass-service";
+import { houseAccessView, mayManageHouseDevices, resetHouseAccess } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
-import { primaryOwnerMayManage } from "@/lib/owner-session";
 import { getHouse, replaceHouseEditCode } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -16,9 +15,9 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   const { id: rawId } = await context.params;
   const id = canonicalHouseId(rawId);
   const admin = await isAdmin();
-  if (!admin && !(await primaryOwnerMayManage(id))) {
+  if (!(await mayManageHouseDevices(id, { admin }))) {
     return NextResponse.json(
-      { error: "רק בעל/ת הבית (הנייד שבטופס) יכול/ה לאפס קוד." },
+      { error: "רק בעל בית יכול לאפס קוד." },
       { status: 403, headers: NO_STORE },
     );
   }

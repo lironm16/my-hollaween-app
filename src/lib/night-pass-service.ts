@@ -26,6 +26,8 @@ import {
   type NightPassEvent,
   type NightPassRecord,
 } from "@/lib/night-pass-store";
+import { ownerMayEdit, primaryOwnerMayManage } from "@/lib/owner-session";
+import { deviceSessionOnHouse } from "@/lib/night-pass-session";
 import { getHouse, getHouseByAccessCode } from "@/lib/store/houses";
 
 const HISTORY_MAX = 20;
@@ -248,7 +250,7 @@ export async function updateHouseAccessSessionRole(input: {
     const owners = countOwnerSessions(sessions);
 
     if (nextRole === "owner") {
-      if (!sessionIsOwner(caller)) {
+      if (!sessionIsOwner(caller) && owners > 0) {
         result = { ok: false, error: "forbidden" };
         return null;
       }
@@ -413,6 +415,23 @@ export type HouseAccessView = {
   devices: HouseAccessDeviceView[];
   resetCount: number;
 };
+
+export function accessRecordLacksOwner(record: Pick<NightPassRecord, "sessions">) {
+  return countOwnerSessions(record.sessions) === 0;
+}
+
+/** Owner session, or recovery when the house has no owner device (edit cookie or any registered device). */
+export async function mayManageHouseDevices(
+  houseId: string,
+  options?: { admin?: boolean },
+): Promise<boolean> {
+  if (options?.admin) return true;
+  if (await primaryOwnerMayManage(houseId)) return true;
+  const record = await ensureHouseAccess(houseId);
+  if (!accessRecordLacksOwner(record)) return false;
+  if (await ownerMayEdit(houseId)) return true;
+  return Boolean(await deviceSessionOnHouse(houseId));
+}
 
 export function houseAccessView(
   record: NightPassRecord,
