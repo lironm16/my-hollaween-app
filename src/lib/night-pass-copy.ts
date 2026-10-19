@@ -26,8 +26,29 @@ export const NIGHT_PASS_ALREADY_REGISTERED_BODY =
 /** First-time event registration on this device (add house or owner login). */
 export const NIGHT_PASS_EVENT_REGISTERED_TITLE = "נרשמתם לאירוע!";
 
-export function nightPassEventRegisteredBody(houseName: string) {
+export const HOUSE_ACCESS_ROLE_OWNER_LABEL = "בעל בית";
+export const HOUSE_ACCESS_ROLE_EDITOR_LABEL = "עורך";
+export const HOUSE_ACCESS_ROLE_FIELD_LABEL = "תפקיד";
+
+export type HouseAccessRegistrationKind = "owner" | "editor";
+
+export function houseAccessRoleLabel(role: "owner" | "editor") {
+  return role === "owner" ? HOUSE_ACCESS_ROLE_OWNER_LABEL : HOUSE_ACCESS_ROLE_EDITOR_LABEL;
+}
+
+/** Link text when an owner may change another device's role. */
+export function houseAccessRoleChangePrompt(role: "owner" | "editor") {
+  return role === "owner" ? "הפוך לעורך" : "הפוך לבעל בית";
+}
+
+export function nightPassEventRegisteredBody(
+  houseName: string,
+  kind: HouseAccessRegistrationKind = "owner",
+) {
   const label = houseName.trim() || "הבית";
+  if (kind === "editor") {
+    return `נרשמתם כעורך של ${label}. כתובות פרטיות יוצגו ביום החשיפה במכשיר הזה.`;
+  }
   return `אתם בעלי הבית של ${label} ויכולים לערוך אותו מהטלפון הזה.`;
 }
 

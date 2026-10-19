@@ -25,6 +25,7 @@ import {
   NIGHT_PASS_EVENT_REGISTERED_CONTINUE,
   NIGHT_PASS_EVENT_REGISTERED_TITLE,
   nightPassEventRegisteredBody,
+  type HouseAccessRegistrationKind,
 } from "@/lib/night-pass-copy";
 import {
   NIGHT_PASS_OWNER_REGISTER_EVENT,
@@ -49,6 +50,7 @@ type NightPassDialogContextValue = {
 export type EventRegisteredOptions = {
   houseName?: string;
   houseId?: string;
+  registrationKind?: HouseAccessRegistrationKind;
   afterClose?: () => void | Promise<void>;
 };
 
@@ -68,6 +70,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
   const [eventRegisteredMeta, setEventRegisteredMeta] = useState<{
     houseName?: string;
     houseId?: string;
+    registrationKind?: HouseAccessRegistrationKind;
   }>({});
   const eventRegisteredAfterCloseRef = useRef<(() => void | Promise<void>) | null>(null);
   const [ownerOpen, setOwnerOpen] = useState(false);
@@ -130,6 +133,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
     setEventRegisteredMeta({
       houseName: options?.houseName?.trim(),
       houseId: options?.houseId?.trim(),
+      registrationKind: options?.registrationKind ?? "owner",
     });
     setEventRegisteredOpen(true);
   }, []);
@@ -176,7 +180,10 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       >
         <div className="space-y-4">
           <p className="text-center text-base leading-relaxed text-emerald-200/95">
-            {nightPassEventRegisteredBody(eventRegisteredMeta.houseName ?? "")}
+            {nightPassEventRegisteredBody(
+              eventRegisteredMeta.houseName ?? "",
+              eventRegisteredMeta.registrationKind ?? "owner",
+            )}
           </p>
           <Button
             type="button"
@@ -215,6 +222,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
             openEventRegistered({
               houseName: detail.houseName,
               houseId: detail.houseId,
+              registrationKind: detail.registrationKind,
             });
           }}
           onNavigateAway={() => setRegisterOpen(false)}

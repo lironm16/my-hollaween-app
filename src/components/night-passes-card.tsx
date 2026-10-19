@@ -19,6 +19,11 @@ import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { shareHouseAccessInvite } from "@/lib/nav-links";
+import {
+  HOUSE_ACCESS_ROLE_FIELD_LABEL,
+  houseAccessRoleChangePrompt,
+  houseAccessRoleLabel,
+} from "@/lib/night-pass-copy";
 import type { PublicHouse } from "@/lib/types";
 
 type AccessView = {
@@ -230,7 +235,7 @@ export function NightPassesCard({
         toast.error(json?.error ?? "עדכון התפקיד נכשל.");
         return;
       }
-      toast.success(role === "owner" ? "מוגדר כבעל בית" : "מוגדר כעורך");
+      toast.success(`התפקיד עודכן ל${houseAccessRoleLabel(role)}`);
       notifyNightPassSlotsChanged();
       await refreshNightPassState({ force: true });
       await load();
@@ -432,49 +437,47 @@ export function NightPassesCard({
                       ) : null}
                     </p>
                     <p className="text-center text-sm text-violet-400">
-                      {device.role === "owner" ? "בעל בית" : "עורך"}
-                      {" · "}
                       {formatHouseAddedAt(device.registeredAt)}
                     </p>
+                    <p className="mt-1 text-center text-sm text-violet-300">
+                      <span className="text-violet-500">{HOUSE_ACCESS_ROLE_FIELD_LABEL}: </span>
+                      <span className="font-medium text-violet-100">
+                        {houseAccessRoleLabel(device.role)}
+                      </span>
+                      {canPromoteOwner ? (
+                        <>
+                          {" · "}
+                          <button
+                            type="button"
+                            disabled={busyRoleId === device.sessionId}
+                            className="font-normal text-orange-300 underline underline-offset-2 hover:text-orange-200 disabled:opacity-50"
+                            onClick={() =>
+                              void setDeviceRole(
+                                device.sessionId,
+                                device.role === "owner" ? "editor" : "owner",
+                              )
+                            }
+                          >
+                            {busyRoleId === device.sessionId
+                              ? "שומר…"
+                              : houseAccessRoleChangePrompt(device.role)}
+                          </button>
+                        </>
+                      ) : null}
+                    </p>
                   </div>
-                  <div className="flex shrink-0 flex-col items-stretch gap-1.5">
-                    {canPromoteOwner && device.role === "editor" ? (
-                      <Button
+                  {canRemoveDevices ? (
+                    <div className="flex shrink-0 items-center justify-center sm:items-start">
+                      <button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={busyRoleId === device.sessionId}
-                        className="border-orange-500/35 text-sm text-orange-100 hover:bg-orange-500/10"
-                        onClick={() => void setDeviceRole(device.sessionId, "owner")}
-                      >
-                        {busyRoleId === device.sessionId ? "…" : "בעל בית"}
-                      </Button>
-                    ) : null}
-                    {canPromoteOwner && device.role === "owner" ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={busyRoleId === device.sessionId}
-                        className="text-sm text-violet-300 hover:bg-white/5"
-                        onClick={() => void setDeviceRole(device.sessionId, "editor")}
-                      >
-                        {busyRoleId === device.sessionId ? "…" : "עורך בלבד"}
-                      </Button>
-                    ) : null}
-                    {canRemoveDevices ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
                         disabled={busyRemoveId === device.sessionId}
-                        className="border-red-500/30 text-sm text-red-200 hover:bg-red-950/40"
+                        className="text-sm text-red-300/90 underline underline-offset-2 hover:text-red-200 disabled:opacity-50"
                         onClick={() => void removeDevice(device.sessionId, device.isThisDevice)}
                       >
-                        {busyRemoveId === device.sessionId ? "…" : "הסרה"}
-                      </Button>
-                    ) : null}
-                  </div>
+                        {busyRemoveId === device.sessionId ? "מסיר…" : "הסר מהרשימה"}
+                      </button>
+                    </div>
+                  ) : null}
                 </li>
               ))
             )}

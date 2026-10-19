@@ -39,7 +39,11 @@ type Props = {
   ownerHouseId?: string;
   onRegistered?: () => void;
   /** First-time registration — show event success popup (login / invite / owner). */
-  onEventRegistered?: (detail: { houseName?: string; houseId?: string }) => void;
+  onEventRegistered?: (detail: {
+    houseName?: string;
+    houseId?: string;
+    registrationKind?: "owner" | "editor";
+  }) => void;
   onAlreadyRegistered?: () => void;
   /** Close the register dialog before in-app navigation (help link). */
   onNavigateAway?: () => void;
@@ -211,6 +215,7 @@ export function NightPassRegisterPanel({
         onEventRegistered({
           houseName: json?.house?.name ?? name.trim(),
           houseId: json?.houseId,
+          registrationKind: ownerRegister ? "owner" : "editor",
         });
       } else {
         await refreshNightPassState({ force: true });
