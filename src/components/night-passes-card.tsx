@@ -230,7 +230,7 @@ export function NightPassesCard({
         toast.error(json?.error ?? "עדכון התפקיד נכשל.");
         return;
       }
-      toast.success(role === "owner" ? "מוגדר/ת כבעל/ת בית" : "מוגדר/ת כעורך/ת");
+      toast.success(role === "owner" ? "מוגדר כבעל בית" : "מוגדר כעורך");
       notifyNightPassSlotsChanged();
       await refreshNightPassState({ force: true });
       await load();
@@ -432,7 +432,7 @@ export function NightPassesCard({
                       ) : null}
                     </p>
                     <p className="text-center text-sm text-violet-400">
-                      {device.role === "owner" ? "בעל/ת בית" : "עורך/ת"}
+                      {device.role === "owner" ? "בעל בית" : "עורך"}
                       {" · "}
                       {formatHouseAddedAt(device.registeredAt)}
                     </p>
@@ -447,7 +447,7 @@ export function NightPassesCard({
                         className="border-orange-500/35 text-sm text-orange-100 hover:bg-orange-500/10"
                         onClick={() => void setDeviceRole(device.sessionId, "owner")}
                       >
-                        {busyRoleId === device.sessionId ? "…" : "בעל/ת בית"}
+                        {busyRoleId === device.sessionId ? "…" : "בעל בית"}
                       </Button>
                     ) : null}
                     {canPromoteOwner && device.role === "owner" ? (
@@ -459,7 +459,7 @@ export function NightPassesCard({
                         className="text-sm text-violet-300 hover:bg-white/5"
                         onClick={() => void setDeviceRole(device.sessionId, "editor")}
                       >
-                        {busyRoleId === device.sessionId ? "…" : "עורך/ת בלבד"}
+                        {busyRoleId === device.sessionId ? "…" : "עורך בלבד"}
                       </Button>
                     ) : null}
                     {canRemoveDevices ? (

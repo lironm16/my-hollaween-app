@@ -28,7 +28,7 @@ export const NIGHT_PASS_EVENT_REGISTERED_TITLE = "נרשמתם לאירוע!";
 
 export function nightPassEventRegisteredBody(houseName: string) {
   const label = houseName.trim() || "הבית";
-  return `אתם בעלי הבית של «${label}» ויכולים לערוך אותו מהטלפון הזה.`;
+  return `אתם בעלי הבית של ${label} ויכולים לערוך אותו מהטלפון הזה.`;
 }
 
 export const NIGHT_PASS_EVENT_REGISTERED_CONTINUE = "המשך למפה";

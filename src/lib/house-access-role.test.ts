@@ -19,8 +19,9 @@ function session(role?: "owner" | "editor"): HouseAccessSession {
 }
 
 describe("house-access-role", () => {
-  it("defaults unknown role to editor", () => {
-    assert.equal(normalizeHouseAccessRole(undefined), "editor");
+  it("defaults missing role to owner (pre-roles sessions)", () => {
+    assert.equal(normalizeHouseAccessRole(undefined), "owner");
+    assert.equal(normalizeHouseAccessRole("editor"), "editor");
     assert.equal(normalizeHouseAccessRole("owner"), "owner");
   });
 
@@ -31,5 +32,6 @@ describe("house-access-role", () => {
   it("sessionIsOwner", () => {
     assert.equal(sessionIsOwner(session("owner")), true);
     assert.equal(sessionIsOwner(session("editor")), false);
+    assert.equal(sessionIsOwner(session()), true);
   });
 });

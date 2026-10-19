@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { copyText } from "@/lib/copy-text";
 import { editCodeSpecForDisplay, formatEditCodeDisplay } from "@/lib/house-access-code";
 import { houseHeadline } from "@/lib/labels";
+import { nightPassEventRegisteredBody } from "@/lib/night-pass-copy";
 import type { PublicHouse } from "@/lib/types";
 
 export function EditCodeDialog({
@@ -38,9 +39,16 @@ export function EditCodeDialog({
     >
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">
-          {showDevices
-            ? "קוד הכניסה לעריכה ולחיבור מכשירים. אחרי הזנה פעם אחת נשמר במכשיר — אפשר גם לשלוח קישור הזמנה."
-            : "שתפו את הקוד עם מי שצריך לערוך את הבית. אחרי הזנה פעם אחת הקוד נשמר במכשיר שלהם."}
+          {showDevices ? (
+            <>
+              {nightPassEventRegisteredBody(house.name)}
+              <span className="mt-2 block text-sm text-violet-300">
+                קוד הכניסה לעריכה ולחיבור מכשירים — אפשר גם לשלוח קישור הזמנה.
+              </span>
+            </>
+          ) : (
+            "שתפו את הקוד עם מי שצריך לערוך את הבית. אחרי הזנה פעם אחת הקוד נשמר במכשיר שלהם."
+          )}
         </p>
         <div className="space-y-2">
           <label htmlFor="edit-code-field" className="text-base text-violet-300">

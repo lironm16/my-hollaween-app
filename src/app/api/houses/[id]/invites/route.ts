@@ -4,6 +4,7 @@ import { createHouseAccessInviteToken, houseAccessInviteUrl } from "@/lib/house-
 import { canonicalHouseId } from "@/lib/ids";
 import { deviceSessionOnHouse } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
+import { ownerMayEdit } from "@/lib/owner-session";
 import { getHouse } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -15,11 +16,13 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   const { id: rawId } = await context.params;
   const id = canonicalHouseId(rawId);
   const admin = await isAdmin();
-  if (!admin && (await readNightPassSettings()).enabled && !(await deviceSessionOnHouse(id))) {
-    return NextResponse.json(
-      { error: "צריך מכשיר רשום לבית הזה כדי לשלוח הזמנה." },
-      { status: 403, headers: NO_STORE },
-    );
+  if (
+    !admin &&
+    (await readNightPassSettings()).enabled &&
+    !(await deviceSessionOnHouse(id)) &&
+    !(await ownerMayEdit(id))
+  ) {
+    return NextResponse.json({ error: "צריך לפתוח את הבית לעריכה." }, { status: 403, headers: NO_STORE });
   }
   const house = await getHouse(id);
   if (!house) {
