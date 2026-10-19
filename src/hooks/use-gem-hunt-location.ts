@@ -12,8 +12,8 @@ export type GemHuntLocation = {
 /** Tight GPS while hunting — small steps update bearing for walk-around 3D. */
 const HUNT_WATCH: PositionOptions = {
   enableHighAccuracy: true,
-  maximumAge: 0,
-  timeout: 12_000,
+  maximumAge: 3_000,
+  timeout: 20_000,
 };
 
 const HUNT_POLL: PositionOptions = {

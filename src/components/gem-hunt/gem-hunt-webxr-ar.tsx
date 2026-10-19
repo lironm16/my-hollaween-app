@@ -256,7 +256,8 @@ export function GemHuntWebXrAr({
     ? { lat: house.lat, lng: house.lng, accuracy: 5 }
     : userLocation;
   const liveLoc = useGemHuntLiveLocation({
-    huntGpsEnabled: true,
+    /** Android: one geolocation watch (map hook) — a second watch often dies after WebXR. */
+    huntGpsEnabled: !isAndroidLike(),
     simulate: simulateInRange,
     simulateLoc: { lat: house.lat, lng: house.lng, accuracy: 5 },
     seedLoc: userLocation,

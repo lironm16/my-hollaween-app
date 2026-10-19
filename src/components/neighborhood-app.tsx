@@ -584,7 +584,9 @@ export function NeighborhoodApp({
     setMapGemGps(null);
     setMapGemClusterCatchCount(0);
     restoreAfterGemHunt();
-  }, [mapGemWebXrSession, restoreAfterGemHunt]);
+    setWatchEnabled(true);
+    void geo.refresh();
+  }, [geo, mapGemWebXrSession, restoreAfterGemHunt, setWatchEnabled]);
 
   const mapGemClusterQueueUi = useMemo(() => {
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;

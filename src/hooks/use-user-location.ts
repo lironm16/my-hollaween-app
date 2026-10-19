@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 
 export type UserLocation = {
   lat: number;
@@ -10,12 +11,13 @@ export type UserLocation = {
 
 export type LocationStatus = "idle" | "pending" | "ready" | "denied" | "unavailable" | "error";
 
-/** Fresh fixes for a tight map location dot. */
-const watchOpts: PositionOptions = {
-  enableHighAccuracy: true,
-  maximumAge: 0,
-  timeout: 12_000,
-};
+/** Live watch — tight but Android-safe (`maximumAge: 0` stalls watches after WebXR). */
+function mapWatchPositionOptions(): PositionOptions {
+  if (isAndroidLike()) {
+    return { enableHighAccuracy: true, maximumAge: 3_000, timeout: 20_000 };
+  }
+  return { enableHighAccuracy: true, maximumAge: 2_000, timeout: 12_000 };
+}
 
 const freshOpts: PositionOptions = {
   enableHighAccuracy: true,
@@ -23,10 +25,18 @@ const freshOpts: PositionOptions = {
   timeout: 15_000,
 };
 
-/** Prefer cached fix (same as watch) — reliable in Chrome when the main map already has GPS. */
-export const GEOLOCATION_CACHED_OPTS: PositionOptions = watchOpts;
+/** One-shot reads — allow a recent OS fix (e.g. Google Maps just updated GPS). */
+export const GEOLOCATION_CACHED_OPTS: PositionOptions = {
+  enableHighAccuracy: true,
+  maximumAge: 15_000,
+  timeout: 12_000,
+};
 /** Force a new high-accuracy read when cache is empty. */
 export const GEOLOCATION_FRESH_OPTS: PositionOptions = freshOpts;
+
+/** Android: restart watch if no fix (WebXR / dual-watch can kill callbacks). */
+const MAP_GPS_STALE_MS = 12_000;
+const MAP_GPS_HEALTH_INTERVAL_MS = 6_000;
 
 export function readUserLocation(options: PositionOptions = GEOLOCATION_CACHED_OPTS): Promise<UserLocation | null> {
   return new Promise((resolve) => {
@@ -82,6 +92,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
   const [status, setStatus] = useState<LocationStatus>("idle");
   const watchId = useRef<number | null>(null);
   const last = useRef<UserLocation | null>(null);
+  const lastFixAtRef = useRef(0);
 
   const stopWatch = useCallback(() => {
     if (watchId.current !== null) {
@@ -106,9 +117,12 @@ export function useUserLocation(options?: { watch?: boolean }) {
       return;
     }
     last.current = next;
+    lastFixAtRef.current = Date.now();
     setLocation(next);
     setStatus("ready");
   }, []);
+
+  const restartWatchRef = useRef<() => void>(() => {});
 
   const fail = useCallback((err?: GeolocationPositionError) => {
     if (err?.code === 1) {
@@ -118,9 +132,12 @@ export function useUserLocation(options?: { watch?: boolean }) {
     // Timeout / position unavailable — keep last fix so UI stays usable (common in installed PWA).
     if (last.current) {
       setStatus("ready");
-      return;
+    } else {
+      setStatus("error");
     }
-    setStatus("error");
+    if (err?.code === 2 || err?.code === 3) {
+      window.setTimeout(() => restartWatchRef.current(), 800);
+    }
   }, []);
 
   const startWatch = useCallback(() => {
@@ -131,8 +148,26 @@ export function useUserLocation(options?: { watch?: boolean }) {
     }
     if (watchId.current !== null) return;
     setStatus((s) => (s === "ready" ? s : "pending"));
-    watchId.current = navigator.geolocation.watchPosition((pos) => apply(pos), fail, watchOpts);
+    const opts = mapWatchPositionOptions();
+    watchId.current = navigator.geolocation.watchPosition((pos) => apply(pos), fail, opts);
+    navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, opts);
   }, [apply, fail, watchEnabled]);
+
+  const restartWatch = useCallback(() => {
+    stopWatch();
+    startWatch();
+  }, [startWatch, stopWatch]);
+
+  restartWatchRef.current = restartWatch;
+
+  const pokeFreshFix = useCallback(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => apply(pos),
+      () => {},
+      freshOpts,
+    );
+  }, [apply]);
 
   const refresh = useCallback((): Promise<UserLocation | null> => {
     if (!navigator.geolocation) {
@@ -178,12 +213,39 @@ export function useUserLocation(options?: { watch?: boolean }) {
         navigator.geolocation.getCurrentPosition(
           finish,
           (err) => onFail(err, false),
-          watchOpts,
+          GEOLOCATION_CACHED_OPTS,
         );
         if (permission !== "granted") startWatch();
       })();
     });
   }, [apply, fail, startWatch]);
+
+  useEffect(() => {
+    if (!watchEnabled) return;
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      restartWatch();
+      pokeFreshFix();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [watchEnabled, restartWatch, pokeFreshFix]);
+
+  useEffect(() => {
+    if (!watchEnabled || !isAndroidLike()) return;
+    const id = window.setInterval(() => {
+      const stale =
+        lastFixAtRef.current === 0 || Date.now() - lastFixAtRef.current > MAP_GPS_STALE_MS;
+      if (!stale) return;
+      restartWatch();
+      pokeFreshFix();
+    }, MAP_GPS_HEALTH_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [watchEnabled, restartWatch, pokeFreshFix]);
 
   useEffect(() => {
     if (!watchEnabled) {
