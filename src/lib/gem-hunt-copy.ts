@@ -72,6 +72,8 @@ export const GEM_WALK_BEHIND_HE = "השדון מאחוריכם — סובבו א
 export const GEM_WALK_TURN_RIGHT_HE = "סובבו ימינה לכיוון השדון";
 export const GEM_WALK_TURN_LEFT_HE = "סובבו שמאלה לכיוון השדון";
 export const GEM_WALK_APPROACH_HE = "התקרבו לנקודת השדון";
+/** Brief pulse when camera/AR shows the gem at the hunt stop (not tell-me). */
+export const GEM_AT_STOP_DISCOVER_HE = "הגעתם לנקודה!";
 export const GEM_WALK_MAPS_ARIA_HE = "הנחיות הליכה לשדון";
 export const GEM_WALK_MAPS_LINK_HE = "הליכה ב-Google Maps לשדון";
 

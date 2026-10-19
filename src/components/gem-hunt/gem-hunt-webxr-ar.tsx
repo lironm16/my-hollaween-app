@@ -77,6 +77,7 @@ import {
   GEM_CLUSTER_FINISH_HE,
   GEM_CLUSTER_SKIP_HE,
   gemFoundOnScreenBannerHe,
+  GEM_AT_STOP_DISCOVER_HE,
   GEM_WALK_MAPS_ARIA_HE,
   GEM_WALK_MAPS_LINK_HE,
 } from "@/lib/gem-hunt-copy";
@@ -712,6 +713,8 @@ export function GemHuntWebXrAr({
     sessionActive &&
     inOnsiteBand &&
     (showArGem || showApproachScreenGem || gemVisibleInCam);
+  const hideHuntHintControls =
+    !centerReveal && !campusSession && naturalDiscoverActive;
 
   const tellMeButton = useGemTellMeButton({
     enforceHuntRadius: tellMeHuntRadiusEnforced,
@@ -1240,9 +1243,15 @@ export function GemHuntWebXrAr({
         sessionActive && "is-session-active",
         campusSession && "is-campus-queue",
         (centerReveal || campusSession) && "is-tell-me-active",
+        naturalDiscoverActive && "is-at-gem-stop",
       )}
       dir="rtl"
     >
+      {naturalDiscoverActive ? (
+        <p className="gem-hunt-overlay__at-stop-badge" role="status">
+          {GEM_AT_STOP_DISCOVER_HE}
+        </p>
+      ) : null}
       <header
         className={cn(
           "gem-hunt-webxr__bar",
@@ -1434,6 +1443,7 @@ export function GemHuntWebXrAr({
             />
             {showSessionFooter ? (
               <div className="gem-hunt-overlay__footer-controls">
+                {!hideHuntHintControls ? (
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button
                     type="button"
@@ -1464,6 +1474,7 @@ export function GemHuntWebXrAr({
                     />
                   ) : null}
                 </div>
+                ) : null}
               </div>
             ) : null}
             {campusSession && (clusterSkipAvailable || clusterFinishAvailable) ? (
