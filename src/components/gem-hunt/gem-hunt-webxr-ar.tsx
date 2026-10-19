@@ -693,15 +693,6 @@ export function GemHuntWebXrAr({
     }
   }, [encounterMode, encounterPhase, setEncounterPhase]);
 
-  const tellMeButton = useGemTellMeButton({
-    enforceHuntRadius: tellMeHuntRadiusEnforced,
-    inRange: tellMeInRange,
-    centerReveal,
-    blocked: phase === "collecting" || !sessionActive,
-    onActivate: activateTellMe,
-    onDeactivate: deactivateTellMe,
-  });
-
   const showWebXrGeoHint =
     !androidWebXrUi &&
     sessionActive &&
@@ -716,14 +707,22 @@ export function GemHuntWebXrAr({
     gemLabelHe(monsterId),
     isNewGemTypeLatched,
   );
-  const hideHuntHintControls =
-    !androidWebXrUi &&
+  const naturalDiscoverActive =
     !centerReveal &&
-    !campusSession &&
     sessionActive &&
-    phase === "placed" &&
     inOnsiteBand &&
-    (showArGem || showTellMeCenterGem);
+    (showArGem || showApproachScreenGem || gemVisibleInCam);
+
+  const tellMeButton = useGemTellMeButton({
+    enforceHuntRadius: tellMeHuntRadiusEnforced,
+    inRange: tellMeInRange,
+    centerReveal,
+    naturalDiscoverActive,
+    blocked: phase === "collecting" || !sessionActive,
+    onActivate: activateTellMe,
+    onDeactivate: deactivateTellMe,
+  });
+
   const showFoundOnScreenBanner = phase === "collecting";
 
   useEffect(() => {
@@ -1433,7 +1432,7 @@ export function GemHuntWebXrAr({
                 sessionActive && "is-hidden",
               )}
             />
-            {showSessionFooter && !hideHuntHintControls ? (
+            {showSessionFooter ? (
               <div className="gem-hunt-overlay__footer-controls">
                 <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                   <button

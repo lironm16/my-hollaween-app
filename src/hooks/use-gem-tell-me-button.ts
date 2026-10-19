@@ -3,10 +3,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GEM_TELL_ME_OUT_OF_RANGE_MESSAGE } from "@/lib/gem-tell-me-gate";
 
+export function gemTellMeReadyHighlight(args: {
+  inRange: boolean;
+  centerReveal: boolean;
+  naturalDiscoverActive: boolean;
+}): boolean {
+  return args.inRange && !args.centerReveal && !args.naturalDiscoverActive;
+}
+
 export function useGemTellMeButton({
   enforceHuntRadius,
   inRange,
   centerReveal,
+  /** In collect band with world/camera gem showing — skip green «ready» nudge. */
+  naturalDiscoverActive = false,
   blocked,
   onActivate,
   onDeactivate,
@@ -14,6 +24,7 @@ export function useGemTellMeButton({
   enforceHuntRadius: boolean;
   inRange: boolean;
   centerReveal: boolean;
+  naturalDiscoverActive?: boolean;
   /** e.g. collecting or session not active */
   blocked?: boolean;
   onActivate: () => void;
@@ -27,7 +38,11 @@ export function useGemTellMeButton({
     return () => window.clearTimeout(t);
   }, [showRangeError]);
 
-  const readyHighlight = inRange && !centerReveal;
+  const readyHighlight = gemTellMeReadyHighlight({
+    inRange,
+    centerReveal,
+    naturalDiscoverActive,
+  });
   const lastToggleRef = useRef(0);
 
   const onTellMeClick = useCallback(() => {

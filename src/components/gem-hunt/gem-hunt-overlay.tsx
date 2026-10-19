@@ -601,15 +601,6 @@ export function GemHuntOverlay({
     }
   }, [campusSession, encounterMode, encounterPhase, setEncounterPhase]);
 
-  const tellMeButton = useGemTellMeButton({
-    enforceHuntRadius: tellMeHuntRadiusEnforced,
-    inRange: tellMeInRange,
-    centerReveal,
-    blocked: phase === "collecting",
-    onActivate: activateTellMe,
-    onDeactivate: deactivateTellMe,
-  });
-
   const gemVisible = phase === "visible" || phase === "collecting";
   const showHuntUi = phase !== "albumReveal";
   const inOnsiteBand = sim || canCollectNow;
@@ -754,12 +745,23 @@ export function GemHuntOverlay({
   ]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
-  const hideHuntHintControls =
+  const naturalDiscoverActive =
     !centerReveal &&
-    !campusSession &&
-    showHuntGem &&
+    canCollectNow &&
     phase === "visible" &&
-    gemVisibleBand;
+    gemVisibleBand &&
+    showHuntGem;
+
+  const tellMeButton = useGemTellMeButton({
+    enforceHuntRadius: tellMeHuntRadiusEnforced,
+    inRange: tellMeInRange,
+    centerReveal,
+    naturalDiscoverActive,
+    blocked: phase === "collecting",
+    onActivate: activateTellMe,
+    onDeactivate: deactivateTellMe,
+  });
+
   const gemFoundInView =
     showHuntGem &&
     phase === "visible" &&
@@ -1066,7 +1068,6 @@ export function GemHuntOverlay({
               ) : null}
             </div>
             <div className="gem-hunt-overlay__footer-controls">
-                {!hideHuntHintControls ? (
                   <div className="gem-hunt-overlay__hint-actions gem-hunt-overlay__hint-actions--row">
                     <button
                       type="button"
@@ -1097,7 +1098,6 @@ export function GemHuntOverlay({
                       />
                     ) : null}
                   </div>
-                ) : null}
             </div>
             {campusSession && (clusterSkipAvailable || clusterFinishAvailable) ? (
               <div className="gem-hunt-overlay__cluster-actions pointer-events-auto">
