@@ -17,6 +17,8 @@ The full Israel layer is **not committed** (large + updated on data.gov.il).
 
 4. Run the app and open **`/events/create`**.
 
+On that page hosts can add boundaries by **city**, **neighborhood** (GovMap), or **street** (OSM corridor drawn on the map).
+
 Attribution: use according to the [data.gov.il dataset license](https://data.gov.il/dataset/govmap-22-bd519a1c).
 
 ## Optional

@@ -98,6 +98,20 @@ export function catalogFingerprint(catalog: GovNeighborhoodCatalog): string {
   return createHash("sha256").update(JSON.stringify(catalog.entries.map((e) => e.id))).digest("hex").slice(0, 12);
 }
 
+export function uniqueCitiesFromCatalog(catalog: GovNeighborhoodCatalog, q?: string, limit = 80): string[] {
+  const set = new Set<string>();
+  for (const e of catalog.entries) {
+    if (e.city?.trim()) set.add(e.city.trim());
+  }
+  let cities = [...set].sort((a, b) => a.localeCompare(b, "he"));
+  const needle = q?.trim();
+  if (needle) {
+    const n = needle.toLowerCase();
+    cities = cities.filter((c) => c.includes(needle) || c.toLowerCase().includes(n));
+  }
+  return cities.slice(0, limit);
+}
+
 export function searchCatalog(
   catalog: GovNeighborhoodCatalog,
   opts: { city?: string; q?: string; limit?: number },

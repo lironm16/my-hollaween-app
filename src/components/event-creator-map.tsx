@@ -7,9 +7,13 @@ import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
 import { useMapTiles } from "@/hooks/use-map-tiles";
 import { polygonLatLngRings } from "@/lib/gov-neighborhoods/parse";
-import type { GovNeighborhoodFeature } from "@/lib/gov-neighborhoods/types";
+import type { EventBoundaryKind } from "@/lib/event-boundary";
 
-const HOOD_PALETTE = ["#34d399", "#fb923c", "#a78bfa", "#f472b6", "#fde68a", "#38bdf8", "#f87171"];
+const KIND_COLORS: Record<EventBoundaryKind, string> = {
+  city: "#38bdf8",
+  neighborhood: "#34d399",
+  street: "#fb923c",
+};
 
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
   const map = useMap();
@@ -20,20 +24,43 @@ function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
   return null;
 }
 
+function ringsFromGeometry(geometry: GeoJSON.Geometry): [number, number][][] {
+  if (geometry.type === "Polygon") {
+    const ring = geometry.coordinates[0];
+    if (!ring?.length) return [];
+    return [ring.map(([lng, lat]) => [lat, lng] as [number, number])];
+  }
+  if (geometry.type === "MultiPolygon") {
+    return geometry.coordinates.map((poly) =>
+      (poly[0] ?? []).map(([lng, lat]) => [lat, lng] as [number, number]),
+    );
+  }
+  return [];
+}
+
+export type EventBoundaryMapFeature = GeoJSON.Feature<
+  GeoJSON.Polygon | GeoJSON.MultiPolygon,
+  { id?: string; label?: string; kind?: EventBoundaryKind; source?: string }
+>;
+
 type Props = {
-  features: GovNeighborhoodFeature[];
+  features: EventBoundaryMapFeature[];
   selectedIds: string[];
-  idByFeatureIndex: string[];
 };
 
-export function EventCreatorMap({ features, selectedIds, idByFeatureIndex }: Props) {
+export function EventCreatorMap({ features, selectedIds }: Props) {
   const { tiles } = useMapTiles();
+  const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
 
   const bounds = useMemo(() => {
     if (features.length === 0) return null;
     const b = L.latLngBounds([]);
     for (const f of features) {
-      for (const ring of polygonLatLngRings(f)) {
+      const rings =
+        f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon"
+          ? ringsFromGeometry(f.geometry)
+          : polygonLatLngRings(f as Parameters<typeof polygonLatLngRings>[0]);
+      for (const ring of rings) {
         for (const [lat, lng] of ring) b.extend([lat, lng]);
       }
     }
@@ -56,30 +83,29 @@ export function EventCreatorMap({ features, selectedIds, idByFeatureIndex }: Pro
         />
         <FitBounds bounds={bounds} />
         {features.map((feature, idx) => {
-          const id = idByFeatureIndex[idx] ?? String(idx);
-          const selected = selectedIds.includes(id);
-          const color = HOOD_PALETTE[idx % HOOD_PALETTE.length];
-          const rings = polygonLatLngRings(feature);
-          const name =
-            (feature.properties?.shem_shchu as string | undefined) ??
-            (feature.properties?.["שם_שכונה"] as string | undefined) ??
-            id;
+          const id = feature.properties?.id ?? String(idx);
+          const isOn = selected.has(id);
+          const kind = feature.properties?.kind ?? "neighborhood";
+          const color = KIND_COLORS[kind];
+          const label = feature.properties?.label ?? id;
+          const rings = ringsFromGeometry(feature.geometry);
           return rings.map((positions, ringIdx) => (
             <Polygon
               key={`${id}-${ringIdx}`}
               positions={positions}
               pathOptions={{
-                color: selected ? color : "#94a3b8",
-                weight: selected ? 2.5 : 1.5,
-                opacity: selected ? 0.9 : 0.45,
+                color: isOn ? color : "#94a3b8",
+                weight: kind === "street" ? 2 : isOn ? 2.5 : 1.5,
+                opacity: isOn ? 0.9 : 0.45,
                 fillColor: color,
-                fillOpacity: selected ? 0.18 : 0.04,
-                dashArray: selected ? undefined : "4 6",
+                fillOpacity: kind === "city" ? 0.06 : kind === "street" ? 0.14 : 0.12,
+                dashArray: isOn ? (kind === "city" ? "8 4" : undefined) : "4 6",
               }}
             >
               <Tooltip sticky direction="top">
-                {name}
-                {selected ? " · נבחר" : ""}
+                {label}
+                {kind === "city" ? " · ישוב" : kind === "street" ? " · רחוב" : " · שכונה"}
+                {isOn ? " · נבחר" : ""}
               </Tooltip>
             </Polygon>
           ));
