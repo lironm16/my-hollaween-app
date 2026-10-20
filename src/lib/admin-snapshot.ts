@@ -160,7 +160,9 @@ export function buildAdminSnapshot(input: {
   return {
     houses: listed.filter((house) => !isPoiHouse(house)).length,
     pois: listed.filter((house) => isPoiHouse(house)).length,
-    neighborhoods: buildNeighborhoodDistribution(listed),
+    neighborhoods: buildNeighborhoodDistribution(
+      listed.filter((house) => !isPoiHouse(house)),
+    ),
     openNow: listed.filter((house) => isOpenNow(house, now)).length,
     openingSoon: listed.filter((house) => isOpeningSoon(house, now)).length,
     closingSoon: listed.filter((house) => isClosingSoon(house, now)).length,

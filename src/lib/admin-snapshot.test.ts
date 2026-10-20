@@ -112,4 +112,22 @@ describe("buildSnapshotStats", () => {
     assert.equal(stats.neighborhoods["שיכון ותיקים"], 1);
     assert.equal(stats.neighborhoods.other, 1);
   });
+
+  it("excludes POI businesses from neighborhood counts", () => {
+    const stats = buildSnapshotStats({
+      houses: [
+        house("a", { address: "חרוזים 8", neighborhood: "חרוזים" }),
+        house("poi-1", {
+          kind: "poi",
+          poiCategory: "coffee",
+          address: "חרוזים 12",
+          neighborhood: "חרוזים",
+        }),
+      ],
+      now: openEvening,
+    });
+
+    assert.equal(stats.pois, 1);
+    assert.equal(stats.neighborhoods.חרוזים, 1);
+  });
 });
