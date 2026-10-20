@@ -235,6 +235,7 @@ export function EventCreatorScreen() {
     (hit: BoundarySearchHit) => {
       if (selectedIds.includes(hit.id)) return;
       persist({ ...draft, zones: addEventBoundaryZone(draft.zones, hitToZone(hit)) });
+      setMapFocusId(hit.id);
       resetSearch();
       toast.success(`נוסף: ${hit.label}`);
     },

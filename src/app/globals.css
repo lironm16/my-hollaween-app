@@ -249,6 +249,37 @@
   display: none !important;
 }
 
+/** Event creator — hood name pops on first map tap (focused polygon only). */
+.leaflet-tooltip.event-creator-zone-label {
+  margin-top: -6px;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  border-radius: 0.65rem;
+  background: rgba(20, 10, 28, 0.96);
+  color: #fed7aa;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.25;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+  animation: event-creator-zone-label-pop 0.38s cubic-bezier(0.22, 1.25, 0.48, 1) both;
+  pointer-events: none;
+}
+
+.leaflet-tooltip.event-creator-zone-label::before {
+  border-top-color: rgba(20, 10, 28, 0.96);
+}
+
+@keyframes event-creator-zone-label-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .house-map-popup {
   min-width: 200px;
   max-width: 260px;
