@@ -103,10 +103,6 @@ function MyCollectionsPageContent() {
   }, [urlTab]);
 
   useEffect(() => {
-    void repairOwnedPreviewsMissingAddress();
-  }, [catalog?.updatedAt]);
-
-  useEffect(() => {
     if (showCollected || tab !== "collected") return;
     setTab("mine");
     window.history.replaceState(window.history.state, "", tabUrl("mine"));
@@ -122,6 +118,11 @@ function MyCollectionsPageContent() {
   const visits = useVisitedHouses();
   const gems = useGemProgress();
   const { catalog, refresh } = useCatalog();
+
+  useEffect(() => {
+    void repairOwnedPreviewsMissingAddress();
+  }, [catalog?.updatedAt]);
+
   const activeHouseSet = activeHouseSetForSession(admin, houseSet, catalog, {
     previewDeployment: isPreviewDeploymentClient(),
   });
