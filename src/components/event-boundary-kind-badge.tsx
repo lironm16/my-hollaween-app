@@ -16,14 +16,17 @@ const BOUNDARY_KIND_PILL: Record<EventBoundaryKind, string> = {
 export function EventBoundaryKindBadge({
   kind,
   className,
+  size = "sm",
 }: {
   kind: EventBoundaryKind;
   className?: string;
+  size?: "sm" | "lg";
 }) {
   return (
     <span
       className={cn(
-        "shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium",
+        "shrink-0 rounded-md font-medium",
+        size === "lg" ? "px-2.5 py-1 text-sm" : "px-2 py-0.5 text-[11px]",
         BOUNDARY_KIND_PILL[kind],
         className,
       )}

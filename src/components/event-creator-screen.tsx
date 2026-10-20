@@ -1,17 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, List, Map as MapIcon, Search, X } from "lucide-react";
+import { ChevronRight, List, Map as MapIcon, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { EventBoundaryKindBadge, BOUNDARY_KIND_LABEL } from "@/components/event-boundary-kind-badge";
+import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
 import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
 import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
 import type { BoundarySearchHit } from "@/lib/event-boundary";
-import {
-  addEventBoundaryZone,
-  removeEventBoundaryZone,
-  zonesDisplacedByAdd,
-} from "@/lib/event-boundary-selection";
+import { addEventBoundaryZone, removeEventBoundaryZone } from "@/lib/event-boundary-selection";
 import {
   emptyCustomEventDraft,
   loadCustomEventDraft,
@@ -19,14 +15,6 @@ import {
   type CustomEventDraft,
 } from "@/lib/custom-event-draft";
 import type { EventBoundaryZone } from "@/lib/event-boundary";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 type CreatorView = "map" | "list";
@@ -40,12 +28,6 @@ function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
     label: hit.label,
     city: hit.city,
   };
-}
-
-function zoneSummary(z: EventBoundaryZone): string {
-  const kind = BOUNDARY_KIND_LABEL[z.kind];
-  if (z.kind === "city") return `${kind}: ${z.label}`;
-  return `${kind}: ${z.label}${z.city ? ` (${z.city})` : ""}`;
 }
 
 function ViewToggle({
@@ -81,7 +63,7 @@ function ViewToggle({
         <List className="size-4" aria-hidden />
         רשימה
         {zoneCount > 0 ? (
-          <span className="rounded-full bg-white/20 px-1.5 text-[10px]">{zoneCount}</span>
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{zoneCount}</span>
         ) : null}
       </button>
     </div>
@@ -99,6 +81,7 @@ function BoundarySearchField({
   selectedIds,
   onPick,
   listMode = false,
+  large = false,
 }: {
   query: string;
   onQueryChange: (q: string) => void;
@@ -110,6 +93,7 @@ function BoundarySearchField({
   selectedIds: string[];
   onPick: (hit: BoundarySearchHit) => void;
   listMode?: boolean;
+  large?: boolean;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -127,13 +111,19 @@ function BoundarySearchField({
     <div ref={wrapRef} className="relative z-10">
       <label className="relative block">
         <Search
-          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/40"
+          className={cn(
+            "pointer-events-none absolute top-1/2 -translate-y-1/2 text-white/40",
+            large ? "right-3.5 size-5" : "right-3 size-4",
+          )}
           aria-hidden
         />
         <input
           type="search"
           autoComplete="off"
-          className="relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 py-3 pl-3 pr-9 text-base backdrop-blur-md placeholder:text-white/35"
+          className={cn(
+            "relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 backdrop-blur-md placeholder:text-white/35",
+            large ? "py-3.5 pl-3 pr-10 text-lg" : "py-3 pl-3 pr-9 text-base",
+          )}
           placeholder="שכונה, רחוב או עיר…"
           value={query}
           onFocus={() => onSuggestOpen(true)}
@@ -154,11 +144,13 @@ function BoundarySearchField({
           )}
         >
           {loadingList ? (
-            <p className="px-3 py-3 text-sm text-white/50">מחפש…</p>
+            <p className={cn("px-3 py-3 text-white/50", large ? "text-base" : "text-sm")}>מחפש…</p>
           ) : listError ? (
-            <p className="px-3 py-3 text-sm text-red-300">{listError}</p>
+            <p className={cn("px-3 py-3 text-red-300", large ? "text-base" : "text-sm")}>{listError}</p>
           ) : hits.length === 0 ? (
-            <p className="px-3 py-3 text-sm text-white/45">אין תוצאות — הוסיפו שם עיר לצמצום</p>
+            <p className={cn("px-3 py-3 text-white/45", large ? "text-base" : "text-sm")}>
+              אין תוצאות — הוסיפו שם עיר לצמצום
+            </p>
           ) : (
             <ul className="py-1">
               {hits.map((hit) => {
@@ -170,15 +162,20 @@ function BoundarySearchField({
                       disabled={taken}
                       onClick={() => onPick(hit)}
                       className={cn(
-                        "flex w-full items-center gap-2 px-3 py-2.5 text-right transition",
+                        "flex w-full items-center gap-2 px-3 text-right transition",
+                        large ? "py-3" : "py-2.5",
                         taken ? "opacity-40" : "hover:bg-white/5",
                       )}
                     >
-                      <EventBoundaryKindBadge kind={hit.kind} />
+                      <EventBoundaryKindBadge kind={hit.kind} size={large ? "lg" : "sm"} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-white/90">{hit.label}</p>
+                        <p className={cn("truncate text-white/90", large ? "text-lg" : "text-sm")}>
+                          {hit.label}
+                        </p>
                         {hit.subtitle && hit.kind !== "city" ? (
-                          <p className="truncate text-xs text-white/45">{hit.subtitle}</p>
+                          <p className={cn("truncate text-white/45", large ? "text-base" : "text-xs")}>
+                            {hit.subtitle}
+                          </p>
                         ) : null}
                       </div>
                     </button>
@@ -205,35 +202,6 @@ function clearSearchState(setters: {
   setters.setSuggestOpen(false);
 }
 
-function SelectionToolbar({
-  zoneCount,
-  onClearAll,
-}: {
-  zoneCount: number;
-  onClearAll: () => void;
-}) {
-  return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
-      <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-xs text-white/80">
-        {zoneCount} {zoneCount === 1 ? "אזור" : "אזורים"} באירוע
-      </span>
-      <button
-        type="button"
-        disabled={zoneCount === 0}
-        onClick={onClearAll}
-        className={cn(
-          "rounded-lg border px-3 py-1.5 text-xs font-medium transition",
-          zoneCount > 0
-            ? "border-red-400/45 bg-red-950/40 text-red-100 hover:bg-red-950/65"
-            : "cursor-not-allowed border-white/10 text-white/30",
-        )}
-      >
-        נקה הכל
-      </button>
-    </div>
-  );
-}
-
 export function EventCreatorScreen() {
   const [view, setView] = useState<CreatorView>("map");
   const [draft, setDraft] = useState<CustomEventDraft>(() => loadCustomEventDraft() ?? emptyCustomEventDraft());
@@ -245,10 +213,7 @@ export function EventCreatorScreen() {
   const [listError, setListError] = useState<string | null>(null);
   const [mapFeatures, setMapFeatures] = useState<EventBoundaryMapFeature[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
-  const [replaceConfirm, setReplaceConfirm] = useState<{
-    incoming: EventBoundaryZone;
-    displaced: EventBoundaryZone[];
-  } | null>(null);
+  const [mapFocusId, setMapFocusId] = useState<string | null>(null);
 
   const persist = useCallback((next: CustomEventDraft) => {
     setDraft(next);
@@ -257,50 +222,41 @@ export function EventCreatorScreen() {
 
   const selectedIds = useMemo(() => draft.zones.map((z) => z.id), [draft.zones]);
 
+  const mapFocusZone = useMemo(
+    () => draft.zones.find((z) => z.id === mapFocusId) ?? null,
+    [draft.zones, mapFocusId],
+  );
+
   const resetSearch = useCallback(() => {
     clearSearchState({ setQuery, setDebouncedQ, setHits, setSuggestOpen });
   }, []);
 
-  const commitAdd = useCallback(
-    (zone: EventBoundaryZone) => {
-      persist({ ...draft, zones: addEventBoundaryZone(draft.zones, zone) });
-      resetSearch();
-      toast.success(`נוסף: ${zone.label}`);
-    },
-    [draft, persist, resetSearch],
-  );
-
-  const requestAdd = useCallback(
+  const pickHit = useCallback(
     (hit: BoundarySearchHit) => {
       if (selectedIds.includes(hit.id)) return;
-      const zone = hitToZone(hit);
-      const displaced = zonesDisplacedByAdd(draft.zones, zone);
-      if (displaced.length > 0 && (zone.kind === "city" || zone.kind === "neighborhood")) {
-        setReplaceConfirm({ incoming: zone, displaced });
-        return;
-      }
-      commitAdd(zone);
+      persist({ ...draft, zones: addEventBoundaryZone(draft.zones, hitToZone(hit)) });
+      resetSearch();
+      toast.success(`נוסף: ${hit.label}`);
     },
-    [commitAdd, draft.zones, selectedIds],
+    [draft, persist, resetSearch, selectedIds],
   );
-
-  const confirmReplace = useCallback(() => {
-    if (!replaceConfirm) return;
-    commitAdd(replaceConfirm.incoming);
-    setReplaceConfirm(null);
-  }, [commitAdd, replaceConfirm]);
 
   const removeZone = useCallback(
     (id: string) => {
       persist({ ...draft, zones: removeEventBoundaryZone(draft.zones, id) });
+      setMapFocusId((cur) => (cur === id ? null : cur));
     },
     [draft, persist],
   );
 
   const clearAllZones = useCallback(() => {
     persist({ ...draft, zones: [] });
-    toast.message("כל האזורים הוסרו");
+    setMapFocusId(null);
   }, [draft, persist]);
+
+  const onMapAreaClick = useCallback((id: string) => {
+    setMapFocusId((cur) => (cur === id ? null : id));
+  }, []);
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebouncedQ(query.trim()), SEARCH_DEBOUNCE_MS);
@@ -346,6 +302,7 @@ export function EventCreatorScreen() {
   useEffect(() => {
     if (draft.zones.length === 0) {
       setMapFeatures([]);
+      setMapFocusId(null);
       return;
     }
     let cancelled = false;
@@ -372,32 +329,29 @@ export function EventCreatorScreen() {
   }, [draft.zones]);
 
   const canContinue = draft.zones.length > 0;
-
-  const searchBlock = (
-    <BoundarySearchField
-      query={query}
-      onQueryChange={setQuery}
-      suggestOpen={suggestOpen}
-      onSuggestOpen={setSuggestOpen}
-      hits={hits}
-      loadingList={loadingList}
-      listError={listError}
-      selectedIds={selectedIds}
-      onPick={requestAdd}
-      listMode={view === "list"}
-    />
-  );
+  const footerPad = "calc(3.75rem + env(safe-area-inset-bottom, 0px))";
 
   return (
     <div className="fixed inset-0 z-[250] flex flex-col bg-[#0c0610]">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
-        <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ paddingBottom: footerPad }}>
+        <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md">
           <p className="font-display text-lg text-orange-200">
             {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
           </p>
-          <SelectionToolbar zoneCount={draft.zones.length} onClearAll={clearAllZones} />
           <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
-          {searchBlock}
+          <BoundarySearchField
+            query={query}
+            onQueryChange={setQuery}
+            suggestOpen={suggestOpen}
+            onSuggestOpen={setSuggestOpen}
+            hits={hits}
+            loadingList={loadingList}
+            listError={listError}
+            selectedIds={selectedIds}
+            onPick={pickHit}
+            listMode={view === "list"}
+            large={view === "list"}
+          />
         </header>
 
         {view === "map" ? (
@@ -406,46 +360,69 @@ export function EventCreatorScreen() {
               className="absolute inset-0"
               features={mapFeatures}
               selectedIds={selectedIds}
-              onRemove={removeZone}
+              focusedId={mapFocusId}
+              onAreaClick={onMapAreaClick}
             />
             {loadingMap ? (
               <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs text-white/70">
                 מעדכן מפה…
               </div>
             ) : null}
-            {draft.zones.length > 0 ? (
-              <p className="pointer-events-none absolute bottom-3 right-3 max-w-[11rem] rounded-lg bg-black/55 px-2 py-1 text-[10px] leading-snug text-white/55">
-                לחצו על − במרכז האזור להסרה
-              </p>
+            {mapFocusZone ? (
+              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center gap-2 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
+                <EventBoundaryKindBadge kind={mapFocusZone.kind} size="lg" />
+                <div className="min-w-0 flex-1 text-right">
+                  <p className="truncate text-base font-medium text-white">{mapFocusZone.label}</p>
+                  {mapFocusZone.city && mapFocusZone.kind !== "city" ? (
+                    <p className="truncate text-sm text-white/50">{mapFocusZone.city}</p>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeZone(mapFocusZone.id)}
+                  className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-950/70 text-red-100 hover:bg-red-900/80"
+                  aria-label={`הסר ${mapFocusZone.label}`}
+                >
+                  <Trash2 className="size-5" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMapFocusId(null)}
+                  className="flex size-10 shrink-0 items-center justify-center rounded-xl text-white/50 hover:bg-white/10"
+                  aria-label="סגור"
+                >
+                  <X className="size-5" aria-hidden />
+                </button>
+              </div>
             ) : null}
           </div>
         ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-3">
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2">
             {draft.zones.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/15 py-16 text-center text-sm text-white/45">
+              <div className="rounded-xl border border-dashed border-white/15 py-16 text-center text-lg text-white/45">
                 חפשו למעלה והוסיפו אזור — או עברו למפה
               </div>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {draft.zones.map((z) => (
                   <li
                     key={z.id}
-                    className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5"
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3.5"
                   >
-                    <EventBoundaryKindBadge kind={z.kind} />
+                    <EventBoundaryKindBadge kind={z.kind} size="lg" />
                     <div className="min-w-0 flex-1 text-right">
-                      <p className="truncate text-sm text-white/90">{z.label}</p>
+                      <p className="truncate text-lg text-white/90">{z.label}</p>
                       {z.city && z.kind !== "city" ? (
-                        <p className="truncate text-xs text-white/45">{z.city}</p>
+                        <p className="truncate text-base text-white/45">{z.city}</p>
                       ) : null}
                     </div>
                     <button
                       type="button"
                       onClick={() => removeZone(z.id)}
-                      className="flex size-9 shrink-0 items-center justify-center rounded-lg text-white/55 hover:bg-white/10 hover:text-white"
+                      className="flex size-11 shrink-0 items-center justify-center rounded-xl text-white/55 hover:bg-white/10 hover:text-white"
                       aria-label={`הסר ${z.label}`}
                     >
-                      <X className="size-4" aria-hidden />
+                      <Trash2 className="size-5" aria-hidden />
                     </button>
                   </li>
                 ))}
@@ -455,12 +432,25 @@ export function EventCreatorScreen() {
         )}
       </div>
 
-      <footer className="fixed inset-x-0 bottom-0 z-[500] border-t border-white/10 bg-[#140a1c]/98 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-lg">
+      <footer className="fixed inset-x-0 bottom-0 z-[500] flex gap-2 border-t border-white/10 bg-[#140a1c]/98 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-lg">
+        <button
+          type="button"
+          disabled={draft.zones.length === 0}
+          onClick={clearAllZones}
+          className={cn(
+            "flex flex-1 items-center justify-center rounded-xl border py-3 text-sm font-semibold transition",
+            draft.zones.length > 0
+              ? "border-red-400/40 bg-red-950/35 text-red-100 hover:bg-red-950/55"
+              : "cursor-not-allowed border-white/10 text-white/30",
+          )}
+        >
+          נקה הכל
+        </button>
         <button
           type="button"
           disabled={!canContinue}
           className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition",
+            "flex flex-[1.35] items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition",
             canContinue
               ? "bg-orange-600 text-white hover:bg-orange-500"
               : "cursor-not-allowed bg-white/10 text-white/35",
@@ -474,49 +464,6 @@ export function EventCreatorScreen() {
           <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
         </button>
       </footer>
-
-      <Dialog open={replaceConfirm !== null} onOpenChange={(open) => !open && setReplaceConfirm(null)}>
-        <DialogContent className="border-white/15 bg-[#1a1024] text-white sm:max-w-md" showCloseButton>
-          <DialogHeader>
-            <DialogTitle className="text-orange-200">להחליף אזורים קטנים יותר?</DialogTitle>
-            <DialogDescription className="text-white/70">
-              {replaceConfirm ? (
-                <>
-                  הוספת{" "}
-                  <strong className="font-medium text-white">{zoneSummary(replaceConfirm.incoming)}</strong>{" "}
-                  תסיר את האזורים הבאים (חפיפה):
-                </>
-              ) : null}
-            </DialogDescription>
-          </DialogHeader>
-          {replaceConfirm ? (
-            <ul className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/30 p-2 text-sm text-white/85">
-              {replaceConfirm.displaced.map((z) => (
-                <li key={z.id} className="flex items-center gap-2 px-1 py-1">
-                  <EventBoundaryKindBadge kind={z.kind} />
-                  <span className="truncate">{z.label}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <DialogFooter className="border-white/10 bg-transparent sm:justify-stretch">
-            <button
-              type="button"
-              className="flex-1 rounded-lg border border-white/20 px-4 py-2 text-sm"
-              onClick={() => setReplaceConfirm(null)}
-            >
-              ביטול
-            </button>
-            <button
-              type="button"
-              className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white"
-              onClick={confirmReplace}
-            >
-              כן, הוסף
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
