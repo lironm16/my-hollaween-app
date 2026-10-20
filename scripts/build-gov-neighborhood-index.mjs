@@ -28,9 +28,9 @@ function readGeoJson(path) {
   return JSON.parse(text);
 }
 
-const NAME_KEYS = ["שם_שכונה", "shem_shchu", "SHEM_SHCHU", "name", "NAME"];
-const CITY_KEYS = ["ישוב", "yishuv", "YISHUV", "city", "CITY"];
-const ID_KEYS = ["UniqueId", "uniqueId", "OBJECTID", "FID", "fid", "ms_shchuna"];
+const NAME_KEYS = ["fname", "שם_שכונה", "shem_shchu", "SHEM_SHCHU", "name", "NAME"];
+const CITY_KEYS = ["setl_name", "SETL_NAME", "ישוב", "yishuv", "YISHUV", "city", "CITY"];
+const ID_KEYS = ["nbr_id", "nbr_code", "UniqueId", "uniqueId", "OBJECTID", "FID", "fid", "ms_shchuna"];
 
 function pick(props, keys) {
   for (const key of keys) {

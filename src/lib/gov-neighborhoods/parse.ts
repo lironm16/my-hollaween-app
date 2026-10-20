@@ -1,6 +1,7 @@
 import type { GovNeighborhoodCatalogEntry, GovNeighborhoodFeature } from "@/lib/gov-neighborhoods/types";
 
 const NAME_KEYS = [
+  "fname",
   "שם_שכונה",
   "shem_shchu",
   "SHEM_SHCHU",
@@ -10,9 +11,18 @@ const NAME_KEYS = [
   "NAME",
 ] as const;
 
-const CITY_KEYS = ["ישוב", "yishuv", "YISHUV", "city", "CITY", "settlement", "SETL_NAME"] as const;
+const CITY_KEYS = [
+  "setl_name",
+  "SETL_NAME",
+  "ישוב",
+  "yishuv",
+  "YISHUV",
+  "city",
+  "CITY",
+  "settlement",
+] as const;
 
-const ID_KEYS = ["UniqueId", "uniqueId", "OBJECTID", "FID", "fid", "ms_shchuna"] as const;
+const ID_KEYS = ["nbr_id", "nbr_code", "UniqueId", "uniqueId", "OBJECTID", "FID", "fid", "ms_shchuna"] as const;
 
 function pickString(props: Record<string, unknown>, keys: readonly string[]): string {
   for (const key of keys) {

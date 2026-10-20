@@ -8,10 +8,10 @@ import {
 } from "@/lib/gov-neighborhoods/parse";
 
 describe("gov-neighborhoods parse", () => {
-  it("builds catalog entry from shem_shchu + ישוב", () => {
+  it("builds catalog entry from GovMap fname + setl_name", () => {
     const feature = {
       type: "Feature" as const,
-      properties: { shem_shchu: "הגפן", ישוב: "רמת גן", UniqueId: "511-99" },
+      properties: { fname: "הגפן", setl_name: "רמת גן", nbr_id: "511-99" },
       geometry: {
         type: "Polygon" as const,
         coordinates: [
