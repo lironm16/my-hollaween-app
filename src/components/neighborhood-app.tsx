@@ -14,6 +14,7 @@ import { flushSync } from "react-dom";
 import { AppHeader } from "@/components/app-header";
 import { useHomeUrlParams } from "@/hooks/use-home-url-params";
 import { CatalogMetaChip } from "@/components/catalog-meta-chip";
+import { GpsDebugChip } from "@/components/gps-debug-chip";
 import { FiltersSheet } from "@/components/filter-menu";
 import { HouseFiltersContent } from "@/components/house-filters-content";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
@@ -91,6 +92,7 @@ import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { housesWithLocationPolicy } from "@/lib/address-reveal";
+import { kickAndroidGeoPoll } from "@/lib/android-geo-poll";
 import { adminDeviceOwnerPowers, adminShowsPrivateHouseFields } from "@/lib/admin-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -807,6 +809,7 @@ export function NeighborhoodApp({
         Boolean(mapGemHouse));
     setWatchEnabled(watchMap);
     if (watchMap && view === "map") {
+      if (isAndroidLike()) kickAndroidGeoPoll();
       void geo.refresh();
     }
   }, [
@@ -1705,6 +1708,7 @@ export function NeighborhoodApp({
                     </div>
                   </div>
                 ) : null}
+                {view === "map" && adminForHouseSet ? <GpsDebugChip location={gps} /> : null}
                 <CatalogMetaChip
                   hidden={view !== "map" || (Boolean(selection.selected) && !originPick.originPickActive)}
                   houseSetLabel={

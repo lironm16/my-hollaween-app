@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 import { distanceMeters } from "@/lib/geo";
 import { shouldStartGeoWatchOnBoot, trustPermissionsQueryDenied } from "@/lib/geo-watch-boot";
-import { subscribeAndroidGeoPoll } from "@/lib/android-geo-poll";
+import { kickAndroidGeoPoll, subscribeAndroidGeoPoll } from "@/lib/android-geo-poll";
 import { androidMapUsesGeoPolling } from "@/lib/map-geo-platform";
 import { readGpsSessionSeed, writeGpsSessionSeed } from "@/lib/gps-session-seed";
 
@@ -12,6 +12,8 @@ export type UserLocation = {
   lat: number;
   lng: number;
   accuracy: number;
+  /** GeolocationPosition.timestamp when available (Android debug / staleness). */
+  measuredAt?: number;
 };
 
 export type LocationStatus = "idle" | "pending" | "ready" | "denied" | "unavailable" | "error";
@@ -28,12 +30,6 @@ const freshOpts: PositionOptions = {
   timeout: 15_000,
 };
 
-const androidLiveOpts: PositionOptions = {
-  enableHighAccuracy: true,
-  maximumAge: 0,
-  timeout: 28_000,
-};
-
 const androidRelaxedOpts: PositionOptions = {
   enableHighAccuracy: false,
   maximumAge: 15_000,
@@ -48,8 +44,6 @@ export const GEOLOCATION_CACHED_OPTS: PositionOptions = {
 };
 /** Force a new high-accuracy read when cache is empty. */
 export const GEOLOCATION_FRESH_OPTS: PositionOptions = freshOpts;
-
-const ANDROID_GPS_POLL_MS = 1_500;
 
 export function readUserLocation(options: PositionOptions = GEOLOCATION_CACHED_OPTS): Promise<UserLocation | null> {
   return new Promise((resolve) => {
@@ -189,7 +183,14 @@ export function useUserLocation(options?: { watch?: boolean }) {
     }
     if (androidUnsubRef.current) return;
     setStatus((s) => (s === "ready" ? s : "pending"));
-    androidUnsubRef.current = subscribeAndroidGeoPoll((loc) => applyFix(loc));
+    androidUnsubRef.current = subscribeAndroidGeoPoll((loc) =>
+      applyFix({
+        lat: loc.lat,
+        lng: loc.lng,
+        accuracy: loc.accuracy,
+        measuredAt: loc.measuredAt,
+      }),
+    );
   }, [applyFix, watchEnabled]);
 
   const startWatch = useCallback(() => {
@@ -241,6 +242,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
           return;
         }
         setStatus((s) => (s === "ready" ? s : "pending"));
+        if (isAndroidLike()) kickAndroidGeoPoll();
         if (shouldStartGeoWatchOnBoot(permission)) startWatch();
 
         const finish = (pos: GeolocationPosition) => {
@@ -298,8 +300,8 @@ export function useUserLocation(options?: { watch?: boolean }) {
     }
     if (!watchEnabled) return;
     if (androidMapUsesGeoPolling()) {
+      kickAndroidGeoPoll();
       startAndroidPoll();
-      pokeFreshFix();
       return;
     }
     restartWatch();

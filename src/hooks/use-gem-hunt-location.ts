@@ -68,7 +68,13 @@ export function useGemHuntLocation(enabled: boolean) {
     if (!navigator.geolocation) return;
 
     if (isAndroidLike()) {
-      androidUnsubRef.current = subscribeAndroidGeoPoll((loc) => applyFix(loc));
+      androidUnsubRef.current = subscribeAndroidGeoPoll((loc) =>
+        applyFix({
+          lat: loc.lat,
+          lng: loc.lng,
+          accuracy: loc.accuracy,
+        }),
+      );
       return () => {
         androidUnsubRef.current?.();
         androidUnsubRef.current = null;
