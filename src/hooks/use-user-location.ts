@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
+import { shouldStartGeoWatchOnBoot } from "@/lib/geo-watch-boot";
 import { readGpsSessionSeed, writeGpsSessionSeed } from "@/lib/gps-session-seed";
 
 export type UserLocation = {
@@ -187,7 +188,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
           return;
         }
         setStatus((s) => (s === "ready" ? s : "pending"));
-        if (permission === "granted") startWatch();
+        if (shouldStartGeoWatchOnBoot(permission)) startWatch();
 
         const finish = (pos: GeolocationPosition) => {
           apply(pos);
@@ -219,7 +220,6 @@ export function useUserLocation(options?: { watch?: boolean }) {
           (err) => onFail(err, false),
           GEOLOCATION_CACHED_OPTS,
         );
-        if (permission !== "granted") startWatch();
       })();
     });
   }, [apply, fail, startWatch]);
@@ -280,8 +280,8 @@ export function useUserLocation(options?: { watch?: boolean }) {
 
     const onPermission = () => {
       if (cancelled || !permission) return;
-      if (permission.state === "granted") startWatch();
-      else if (permission.state === "denied") setStatus("denied");
+      if (permission.state === "denied") setStatus("denied");
+      else startWatch();
     };
 
     async function boot() {
@@ -289,10 +289,13 @@ export function useUserLocation(options?: { watch?: boolean }) {
         setStatus("unavailable");
         return;
       }
+      startWatch();
       const state = await queryGeoPermission();
       if (cancelled) return;
-      if (state === "granted") startWatch();
-      else if (state === "denied") setStatus("denied");
+      if (state === "denied") {
+        stopWatch();
+        setStatus("denied");
+      }
       try {
         permission = (await navigator.permissions?.query({ name: "geolocation" })) ?? null;
         permission?.addEventListener("change", onPermission);

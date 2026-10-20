@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { Fragment, memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
   Circle,
   MapContainer,
@@ -430,6 +430,62 @@ const youAreHereIcon = L.divIcon({
   iconAnchor: [11, 11],
   popupAnchor: [0, -12],
 });
+
+/** Leaflet marker position — explicit setLatLng for Android WebView / react-leaflet updates. */
+function LiveUserLocationMarker({ location }: { location: UserLocation }) {
+  const markerRef = useRef<L.Marker | null>(null);
+  const { lat, lng, accuracy } = location;
+  useEffect(() => {
+    markerRef.current?.setLatLng([lat, lng]);
+  }, [lat, lng]);
+  return (
+    <>
+      {accuracy > 8 && accuracy < 120 ? (
+        <LiveUserLocationAccuracyCircle lat={lat} lng={lng} radius={accuracy} />
+      ) : null}
+      <Marker ref={markerRef} position={[lat, lng]} icon={youAreHereIcon} zIndexOffset={800}>
+        <Popup autoPan={false} keepInView={false} closeButton={false} className="you-are-here-popup">
+          <div dir="rtl" className="you-are-here-popup-body">
+            <strong>אתם כאן</strong>
+            {!inNeighborhood(lat, lng) ? <div>מחוץ לגבול המפה של השכונה</div> : null}
+          </div>
+        </Popup>
+      </Marker>
+    </>
+  );
+}
+
+function LiveUserLocationAccuracyCircle({
+  lat,
+  lng,
+  radius,
+}: {
+  lat: number;
+  lng: number;
+  radius: number;
+}) {
+  const circleRef = useRef<L.Circle | null>(null);
+  useEffect(() => {
+    const layer = circleRef.current;
+    if (!layer) return;
+    layer.setLatLng([lat, lng]);
+    layer.setRadius(radius);
+  }, [lat, lng, radius]);
+  return (
+    <Circle
+      ref={circleRef}
+      center={[lat, lng]}
+      radius={radius}
+      pathOptions={{
+        color: "#7dd3fc",
+        fillColor: "#38bdf8",
+        fillOpacity: 0.18,
+        weight: 1,
+      }}
+      interactive={false}
+    />
+  );
+}
 
 /** Keep Leaflet sized to the visible viewport — never pans/zooms the map. */
 function SizeSync() {
@@ -1209,37 +1265,7 @@ export function HouseMap({
               />
             );
           })}
-        {!pickMode && userLocation ? (
-          <>
-            {userLocation.accuracy > 8 && userLocation.accuracy < 120 ? (
-              <Circle
-                center={[userLocation.lat, userLocation.lng]}
-                radius={userLocation.accuracy}
-                pathOptions={{
-                  color: "#7dd3fc",
-                  fillColor: "#38bdf8",
-                  fillOpacity: 0.18,
-                  weight: 1,
-                }}
-                interactive={false}
-              />
-            ) : null}
-            <Marker
-              position={[userLocation.lat, userLocation.lng]}
-              icon={youAreHereIcon}
-              zIndexOffset={800}
-            >
-              <Popup autoPan={false} keepInView={false} closeButton={false} className="you-are-here-popup">
-                <div dir="rtl" className="you-are-here-popup-body">
-                  <strong>אתם כאן</strong>
-                  {!inNeighborhood(userLocation.lat, userLocation.lng) ? (
-                    <div>מחוץ לגבול המפה של השכונה</div>
-                  ) : null}
-                </div>
-              </Popup>
-            </Marker>
-          </>
-        ) : null}
+        {!pickMode && userLocation ? <LiveUserLocationMarker location={userLocation} /> : null}
       </MapContainer>
       {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
       <div className="map-fab-stack">

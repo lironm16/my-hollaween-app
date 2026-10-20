@@ -799,13 +799,16 @@ export function NeighborhoodApp({
   });
 
   useEffect(() => {
-    setWatchEnabled(
+    const watchMap =
       view === "map" ||
-        routeMode ||
-        originPick.originPickActive ||
-        originPick.originPickerOpen ||
-        Boolean(mapGemHouse),
-    );
+      routeMode ||
+      originPick.originPickActive ||
+      originPick.originPickerOpen ||
+      Boolean(mapGemHouse);
+    setWatchEnabled(watchMap);
+    if (watchMap && view === "map" && isAndroidLike()) {
+      void geo.refresh();
+    }
   }, [
     setWatchEnabled,
     view,
@@ -813,6 +816,7 @@ export function NeighborhoodApp({
     originPick.originPickActive,
     originPick.originPickerOpen,
     mapGemHouse,
+    geo.refresh,
   ]);
 
   useEffect(() => {
