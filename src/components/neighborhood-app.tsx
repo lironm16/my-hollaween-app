@@ -507,7 +507,6 @@ export function NeighborhoodApp({
       } else if (openedFrom === "map" && clusterMembers) {
         setView("map");
       }
-      setWatchEnabled(true);
       setMapGemWebXrSession(null);
       setMapGemGps(gps);
       setMapGemClusterMembers(clusterMembers);
@@ -544,7 +543,7 @@ export function NeighborhoodApp({
         }
       })();
     },
-    [geo, gps, selection, setWatchEnabled],
+    [geo, gps, selection],
   );
 
   const gemHouseHuntAllowed = useCallback(

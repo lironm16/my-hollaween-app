@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 import { distanceMeters } from "@/lib/geo";
 import { shouldStartGeoWatchOnBoot, trustPermissionsQueryDenied } from "@/lib/geo-watch-boot";
+import { subscribeAndroidGeoPoll } from "@/lib/android-geo-poll";
 import { androidMapUsesGeoPolling } from "@/lib/map-geo-platform";
 import { readGpsSessionSeed, writeGpsSessionSeed } from "@/lib/gps-session-seed";
 
@@ -111,30 +112,23 @@ export function useUserLocation(options?: { watch?: boolean }) {
     readGpsSessionSeed() ? "ready" : "idle",
   );
   const watchId = useRef<number | null>(null);
-  const androidPollId = useRef<number | null>(null);
+  const androidUnsubRef = useRef<(() => void) | null>(null);
   const last = useRef<UserLocation | null>(readGpsSessionSeed());
   const lastFixAtRef = useRef(readGpsSessionSeed() ? Date.now() : 0);
-  const androidPollUsesRelaxed = useRef(false);
 
   const stopWatch = useCallback(() => {
     if (watchId.current !== null) {
       navigator.geolocation.clearWatch(watchId.current);
       watchId.current = null;
     }
-    if (androidPollId.current !== null) {
-      window.clearInterval(androidPollId.current);
-      androidPollId.current = null;
+    if (androidUnsubRef.current) {
+      androidUnsubRef.current();
+      androidUnsubRef.current = null;
     }
   }, []);
 
-  const apply = useCallback((pos: GeolocationPosition) => {
-    const next: UserLocation = {
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      accuracy: pos.coords.accuracy,
-    };
+  const applyFix = useCallback((next: UserLocation) => {
     lastFixAtRef.current = Date.now();
-    androidPollUsesRelaxed.current = false;
     const prev = last.current;
     if (!fixChanged(prev, next)) return;
     last.current = next;
@@ -142,6 +136,17 @@ export function useUserLocation(options?: { watch?: boolean }) {
     setLocation(next);
     setStatus("ready");
   }, []);
+
+  const apply = useCallback(
+    (pos: GeolocationPosition) => {
+      applyFix({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      });
+    },
+    [applyFix],
+  );
 
   const restartWatchRef = useRef<() => void>(() => {});
 
@@ -176,34 +181,16 @@ export function useUserLocation(options?: { watch?: boolean }) {
     [pokeRelaxedFix, stopWatch],
   );
 
-  const androidPollTick = useCallback(() => {
-    if (!navigator.geolocation) return;
-    const opts = androidPollUsesRelaxed.current ? androidRelaxedOpts : androidLiveOpts;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => apply(pos),
-      (err) => {
-        if (err.code === 1) {
-          fail(err);
-          return;
-        }
-        androidPollUsesRelaxed.current = true;
-        pokeRelaxedFix();
-      },
-      opts,
-    );
-  }, [apply, fail, pokeRelaxedFix]);
-
   const startAndroidPoll = useCallback(() => {
     if (!watchEnabled || !androidMapUsesGeoPolling()) return;
     if (!navigator.geolocation) {
       setStatus("unavailable");
       return;
     }
-    if (androidPollId.current !== null) return;
+    if (androidUnsubRef.current) return;
     setStatus((s) => (s === "ready" ? s : "pending"));
-    androidPollTick();
-    androidPollId.current = window.setInterval(androidPollTick, ANDROID_GPS_POLL_MS);
-  }, [androidPollTick, watchEnabled]);
+    androidUnsubRef.current = subscribeAndroidGeoPoll((loc) => applyFix(loc));
+  }, [applyFix, watchEnabled]);
 
   const startWatch = useCallback(() => {
     if (!watchEnabled) return;
@@ -311,12 +298,13 @@ export function useUserLocation(options?: { watch?: boolean }) {
     }
     if (!watchEnabled) return;
     if (androidMapUsesGeoPolling()) {
-      androidPollTick();
+      startAndroidPoll();
+      pokeFreshFix();
       return;
     }
     restartWatch();
     pokeFreshFix();
-  }, [androidPollTick, pokeFreshFix, restartWatch, watchEnabled]);
+  }, [pokeFreshFix, restartWatch, startAndroidPoll, watchEnabled]);
 
   useEffect(() => {
     if (!watchEnabled) return;

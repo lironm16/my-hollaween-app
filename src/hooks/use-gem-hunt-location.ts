@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { subscribeAndroidGeoPoll } from "@/lib/android-geo-poll";
+import { distanceMeters } from "@/lib/geo";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 
 export type GemHuntLocation = {
@@ -9,38 +11,28 @@ export type GemHuntLocation = {
   accuracy: number;
 };
 
+const MOVE_MIN_M = 0.25;
+
 /** Tight GPS while hunting — small steps update bearing for walk-around 3D. */
 const HUNT_WATCH: PositionOptions = {
   enableHighAccuracy: true,
-  maximumAge: 3_000,
+  maximumAge: 0,
   timeout: 20_000,
-};
-
-const HUNT_POLL: PositionOptions = {
-  enableHighAccuracy: true,
-  maximumAge: 2_000,
-  timeout: 10_000,
 };
 
 /** High-frequency location for gem hunt walk-around (does not replace map GPS hook). */
 export function useGemHuntLocation(enabled: boolean) {
   const [location, setLocation] = useState<GemHuntLocation | null>(null);
   const watchRef = useRef<number | null>(null);
-  const pollRef = useRef<number | null>(null);
+  const androidUnsubRef = useRef<(() => void) | null>(null);
   const lastRef = useRef<GemHuntLocation | null>(null);
 
-  const apply = useCallback((pos: GeolocationPosition) => {
-    const next: GemHuntLocation = {
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      accuracy: pos.coords.accuracy,
-    };
+  const applyFix = useCallback((next: GemHuntLocation) => {
     const prev = lastRef.current;
     if (
       prev &&
-      prev.lat === next.lat &&
-      prev.lng === next.lng &&
-      prev.accuracy === next.accuracy
+      prev.accuracy === next.accuracy &&
+      distanceMeters(prev, next) < MOVE_MIN_M
     ) {
       return;
     }
@@ -48,43 +40,51 @@ export function useGemHuntLocation(enabled: boolean) {
     setLocation(next);
   }, []);
 
+  const apply = useCallback(
+    (pos: GeolocationPosition) => {
+      applyFix({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      });
+    },
+    [applyFix],
+  );
+
   useEffect(() => {
     if (!enabled) {
       if (watchRef.current != null) {
         navigator.geolocation.clearWatch(watchRef.current);
         watchRef.current = null;
       }
-      if (pollRef.current != null) {
-        window.clearInterval(pollRef.current);
-        pollRef.current = null;
+      if (androidUnsubRef.current) {
+        androidUnsubRef.current();
+        androidUnsubRef.current = null;
       }
       lastRef.current = null;
+      setLocation(null);
       return;
     }
     if (!navigator.geolocation) return;
 
     if (isAndroidLike()) {
-      const tick = () => {
-        navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, HUNT_POLL);
+      androidUnsubRef.current = subscribeAndroidGeoPoll((loc) => applyFix(loc));
+      return () => {
+        androidUnsubRef.current?.();
+        androidUnsubRef.current = null;
       };
-      tick();
-      pollRef.current = window.setInterval(tick, 1_500);
-    } else {
-      navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
-      watchRef.current = navigator.geolocation.watchPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
     }
+
+    navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
+    watchRef.current = navigator.geolocation.watchPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
 
     return () => {
       if (watchRef.current != null) {
         navigator.geolocation.clearWatch(watchRef.current);
         watchRef.current = null;
       }
-      if (pollRef.current != null) {
-        window.clearInterval(pollRef.current);
-        pollRef.current = null;
-      }
     };
-  }, [enabled, apply]);
+  }, [enabled, apply, applyFix]);
 
   return location;
 }
