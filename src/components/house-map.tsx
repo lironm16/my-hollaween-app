@@ -1219,7 +1219,7 @@ export function HouseMap({
             />
           </>
         ) : null}
-        {!pickMode && showEventZoneOutlines ? <MapEventZoneLayer /> : null}
+        {showEventZoneOutlines || pickMode ? <MapEventZoneLayer /> : null}
         {!pickMode && gemAnchorEdit ? <MapGemAnchorEditLayer {...gemAnchorEdit} /> : null}
         {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHouses.length > 0 ? (
           <MapGemAnchorLayer

@@ -18,12 +18,12 @@ describe("neighborhoodCalculatedLegacy", () => {
     );
   });
 
-  it("returns null for south off-zone strip", () => {
+  it("returns null outside Gov event polygons", () => {
     assert.equal(
       neighborhoodCalculatedLegacy({
-        address: "הדר 11",
-        lat: 32.08793,
-        lng: 34.8123,
+        address: "ביאליק 37",
+        lat: 32.0849863,
+        lng: 34.8122928,
       }),
       null,
     );

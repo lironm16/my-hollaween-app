@@ -22,6 +22,7 @@ import { displayAddressFromHit } from "@/lib/address-fields";
 import {
   config,
   houseNeighborhoodChoiceToStored,
+  NEIGHBORHOODS,
   NEIGHBORHOOD_FILTER_OPTIONS,
   neighborhoodFromAddress,
   neighborhoodLabelForPin,
@@ -34,6 +35,10 @@ import {
   isSchoolCampusAddress,
   schoolCampusNeighborhoodForAddress,
 } from "@/lib/school-campus";
+import {
+  ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE,
+  eventNeighborhoodForNewHousePin,
+} from "@/lib/add-house-event-zone";
 import {
   SENSITIVITY_OPTIONS,
   type DecorLevel,
@@ -304,10 +309,22 @@ export function HouseForm({
     setForm((f) => ({ ...f, address: value }));
   }
 
+  function resolveNeighborhoodForPin(address: string, lat: number, lng: number) {
+    const campusHood = schoolCampusNeighborhoodForAddress(address);
+    if (campusHood) return campusHood;
+    if (isNewHouse) return eventNeighborhoodForNewHousePin(lat, lng);
+    if (hoodTouched) return null;
+    return guessedHood(address, lat, lng);
+  }
+
   function onAddressSelect(hit: AddressHit) {
     const address = displayAddressFromHit(hit);
-    const campusHood = schoolCampusNeighborhoodForAddress(address);
-    const hood = campusHood ?? (hoodTouched ? null : guessedHood(address, hit.lat, hit.lng));
+    const hood = resolveNeighborhoodForPin(address, hit.lat, hit.lng);
+    if (isNewHouse && !schoolCampusNeighborhoodForAddress(address) && !hood) {
+      toast.error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
+      setAddressOk(false);
+      return;
+    }
     setForm((f) => ({
       ...f,
       address,
@@ -330,7 +347,12 @@ export function HouseForm({
       return;
     }
     const address = displayAddressFromHit(hit);
-    const hood = hoodTouched ? null : guessedHood(address, hit.lat, hit.lng);
+    const hood = resolveNeighborhoodForPin(address, hit.lat, hit.lng);
+    if (isNewHouse && !schoolCampusNeighborhoodForAddress(address) && !hood) {
+      toast.error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
+      setAddressOk(false);
+      return;
+    }
     setForm((f) => ({
       ...f,
       lat: hit.lat,
@@ -368,7 +390,16 @@ export function HouseForm({
           toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
           return;
         }
-        if (form.neighborhood === undefined) {
+        let neighborhood = form.neighborhood;
+        if (isNewHouse && !isSchoolCampusAddress(form.address)) {
+          const geoHood = eventNeighborhoodForNewHousePin(form.lat, form.lng);
+          if (!geoHood) {
+            toast.error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
+            return;
+          }
+          neighborhood = geoHood;
+        }
+        if (neighborhood === undefined) {
           toast.error("בחרו שכונה מהרשימה (או «אחר»).");
           return;
         }
@@ -428,6 +459,7 @@ export function HouseForm({
         const hours = syncHoursFields(windows);
         const payload: HouseInput = {
           ...form,
+          neighborhood,
           theme,
           treats,
           treatStock,
@@ -582,13 +614,22 @@ export function HouseForm({
         ) : null}
       </FormSection>
       <FormSection title="איפה">
-        <Field label="שכונה" hint={lockedSchoolHood ? "לפי בית הספר" : undefined}>
+        <Field
+          label="שכונה"
+          hint={
+            lockedSchoolHood
+              ? "לפי בית הספר"
+              : isNewHouse
+                ? "נקבע לפי מיקום הכתובת בארבע השכונות"
+                : undefined
+          }
+        >
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
-            {NEIGHBORHOOD_FILTER_OPTIONS.map((choice) => (
+            {(isNewHouse ? [...NEIGHBORHOODS] : NEIGHBORHOOD_FILTER_OPTIONS).map((choice) => (
               <ChoiceChip
                 key={choice}
                 selected={hoodChoice === choice}
-                disabled={Boolean(blocked || lockedSchoolHood)}
+                disabled={Boolean(blocked || lockedSchoolHood || (isNewHouse && addressOk))}
                 onClick={() => setHoodChoice(choice)}
               >
                 {choice}

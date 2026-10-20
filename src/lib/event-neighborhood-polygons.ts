@@ -1,23 +1,23 @@
 import type { NeighborhoodId } from "@/lib/config";
+import { NEIGHBORHOODS } from "@/lib/config";
+import govRingsDoc from "@/lib/event-neighborhood-gov-rings.json";
 
 /** GeoJSON order: [longitude, latitude]. Rings must be closed (first = last). */
 export type EventZoneRing = [number, number][];
 
-/**
- * Event hood outlines (HallowHood-defined, not OSM).
- * Keep in sync with `public/event-zones/*.geojson`.
- */
-export const EVENT_NEIGHBORHOOD_POLYGON_RINGS: Partial<Record<NeighborhoodId, EventZoneRing>> = {
-  הגפן: [
-    [34.8098, 32.08835],
-    [34.81255, 32.08835],
-    [34.8138, 32.08872],
-    [34.8138, 32.0908],
-    [34.8114, 32.0908],
-    [34.8098, 32.09035],
-    [34.8098, 32.08835],
-  ],
+type GovRingsDoc = {
+  version: number;
+  hoods: Record<
+    string,
+    {
+      source: string;
+      govName: string;
+      rings: EventZoneRing[];
+    }
+  >;
 };
+
+const govRings = govRingsDoc as unknown as GovRingsDoc;
 
 /** Ray-casting point-in-polygon (lng/lat). */
 export function pointInEventZoneRing(lng: number, lat: number, ring: EventZoneRing): boolean {
@@ -33,27 +33,43 @@ export function pointInEventZoneRing(lng: number, lat: number, ring: EventZoneRi
   return inside;
 }
 
+export function eventNeighborhoodPolygonRings(id: NeighborhoodId): EventZoneRing[] {
+  const entry = govRings.hoods[id];
+  return entry?.rings?.length ? entry.rings : [];
+}
+
+/** @deprecated use eventNeighborhoodPolygonRings — first outer ring if present */
 export function eventNeighborhoodPolygonRing(id: NeighborhoodId): EventZoneRing | null {
-  const ring = EVENT_NEIGHBORHOOD_POLYGON_RINGS[id];
-  return ring?.length ? ring : null;
+  const rings = eventNeighborhoodPolygonRings(id);
+  return rings[0]?.length ? rings[0] : null;
 }
 
 export function pointInEventNeighborhoodPolygon(id: NeighborhoodId, lat: number, lng: number): boolean {
-  const ring = eventNeighborhoodPolygonRing(id);
-  if (!ring) return false;
-  return pointInEventZoneRing(lng, lat, ring);
+  const rings = eventNeighborhoodPolygonRings(id);
+  if (rings.length === 0) return false;
+  return rings.some((ring) => pointInEventZoneRing(lng, lat, ring));
 }
 
 export function eventNeighborhoodPolygonIds(): NeighborhoodId[] {
-  return Object.keys(EVENT_NEIGHBORHOOD_POLYGON_RINGS) as NeighborhoodId[];
+  return NEIGHBORHOODS.filter((id) => eventNeighborhoodPolygonRings(id).length > 0);
 }
 
 export function eventNeighborhoodGeoJsonFeature(id: NeighborhoodId) {
-  const ring = eventNeighborhoodPolygonRing(id);
-  if (!ring) return null;
+  const rings = eventNeighborhoodPolygonRings(id);
+  if (!rings.length) return null;
+  if (rings.length === 1) {
+    return {
+      type: "Feature" as const,
+      properties: { id, name: id, source: "govmap-shchunot" },
+      geometry: { type: "Polygon" as const, coordinates: [rings[0]] },
+    };
+  }
   return {
     type: "Feature" as const,
-    properties: { id, name: id, source: "hallowhood-event" },
-    geometry: { type: "Polygon" as const, coordinates: [ring] },
+    properties: { id, name: id, source: "govmap-shchunot" },
+    geometry: {
+      type: "MultiPolygon" as const,
+      coordinates: rings.map((ring) => [ring]),
+    },
   };
 }

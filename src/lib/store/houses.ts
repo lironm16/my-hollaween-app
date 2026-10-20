@@ -13,6 +13,7 @@ import { normalizePoiCategory } from "@/lib/house-kind";
 import { normalizeAddressFields } from "@/lib/address-fields";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { assertRealAddress } from "@/lib/geocode";
+import { ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE, eventNeighborhoodForNewHousePin } from "@/lib/add-house-event-zone";
 import { pinCoordsForOwnerSubmit } from "@/lib/owner-map-pin";
 import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
 import {
@@ -139,7 +140,18 @@ export async function submitHouse(
   options?: { includeEndpoint?: string; addedBy?: string; admin?: boolean },
 ) {
   const pin = await pinCoordsForOwnerSubmit(input, Boolean(options?.admin));
-  const submitInput = { ...input, lat: pin.lat, lng: pin.lng };
+  let submitInput = { ...input, lat: pin.lat, lng: pin.lng };
+  if (
+    !options?.admin &&
+    submitInput.kind !== "poi" &&
+    !isSchoolCampusAddress(submitInput.address)
+  ) {
+    const geoHood = eventNeighborhoodForNewHousePin(submitInput.lat, submitInput.lng);
+    if (!geoHood) {
+      throw new Error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
+    }
+    submitInput = { ...submitInput, neighborhood: geoHood };
+  }
   await assertRealAddress(submitInput);
   const kind = options?.admin && input.kind === "poi" ? "poi" : "house";
   const poiCategory = normalizePoiCategory(kind, input.poiCategory);
