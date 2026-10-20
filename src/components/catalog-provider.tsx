@@ -29,6 +29,7 @@ import {
   clearCatalogCacheMeta,
   saveCatalogCache,
   flushPendingHouseWrites,
+  refreshStaleOwnedPreviews,
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
 import { CLOCK_EVENT, readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
@@ -432,6 +433,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       pendingCatalogRef.current = next;
       return prev;
     }
+    refreshStaleOwnedPreviews(next.houses);
     return next;
   }, []);
 

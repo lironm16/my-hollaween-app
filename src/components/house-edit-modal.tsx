@@ -35,8 +35,8 @@ export function HouseEditModal({
         className={cn(
           "house-edit-modal grid w-[min(100%-2rem,26rem)] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden border-orange-500/30 bg-[#1d1028] p-0 text-orange-50 ring-orange-500/25",
           topSafe
-            ? "top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] -translate-y-0"
-            : "top-1/2 max-h-[min(90dvh,720px)] -translate-y-1/2",
+            ? "top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(var(--app-h,100dvh)-env(safe-area-inset-top)-0.5rem)] -translate-y-0"
+            : "top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(var(--app-h,100dvh)-env(safe-area-inset-top)-0.5rem)] -translate-y-0",
           className,
         )}
       >
@@ -49,8 +49,7 @@ export function HouseEditModal({
         />
         <div
           className={cn(
-            "house-edit-modal-body min-h-0 overflow-y-auto overscroll-contain px-4 py-4",
-            topSafe && "pb-[max(1rem,env(safe-area-inset-bottom))]",
+            "house-edit-modal-body min-h-0 overflow-y-auto overscroll-contain px-4 py-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+var(--vv-bottom-inset,0px)))]",
           )}
         >
           {children}

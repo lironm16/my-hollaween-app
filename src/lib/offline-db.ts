@@ -4,6 +4,7 @@ import { loadHiddenHouseIds, syncCatalog } from "@/lib/catalog-sync";
 import { clearCatalogRemoved, isCatalogRemoved } from "@/lib/catalog-removed";
 import { tombstoneHouse } from "@/lib/deleted-houses";
 import { stripHouseForDeviceCache } from "@/lib/device-catalog-cache";
+import { houseUpdatedMs } from "@/lib/house-updated-at";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
 import type { CandyTone, HouseInput, ScareLevel, SensitivityId } from "@/lib/types";
@@ -255,6 +256,19 @@ export function loadOwnedHouses(): OwnedHouse[] {
     return raw ? (JSON.parse(raw) as OwnedHouse[]) : [];
   } catch {
     return [];
+  }
+}
+
+/** When the live catalog row is newer, drop stale preview fields (e.g. old address on «במכשיר שלי»). */
+export function refreshStaleOwnedPreviews(catalogHouses: readonly PublicHouse[]) {
+  if (typeof window === "undefined") return;
+  const byId = new Map(catalogHouses.map((house) => [house.id, house]));
+  for (const item of loadOwnedHouses()) {
+    const fromCatalog = byId.get(item.id);
+    const preview = item.preview;
+    if (!fromCatalog || !preview) continue;
+    if (houseUpdatedMs(fromCatalog.updatedAt) <= houseUpdatedMs(preview.updatedAt)) continue;
+    saveOwnedHouse({ ...item, preview: fromCatalog });
   }
 }
 

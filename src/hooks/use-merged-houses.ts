@@ -38,7 +38,12 @@ function shouldApplyOwnedBookmark(
   if (incomingHasAddress && !currentHasAddress) return true;
   const incStamp = Date.parse(bookmark.updatedAt || "");
   const curStamp = Date.parse(current.updatedAt || "");
-  if (Number.isFinite(incStamp) && Number.isFinite(curStamp)) return incStamp >= curStamp;
+  if (Number.isFinite(incStamp) && Number.isFinite(curStamp)) {
+    if (incStamp > curStamp) return true;
+    if (incStamp < curStamp) return false;
+    /** Same revision — catalog row is authoritative; stale device preview must not mask it. */
+    return false;
+  }
   return incomingHasAddress;
 }
 

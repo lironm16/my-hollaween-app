@@ -61,6 +61,35 @@ export function syncAppViewportVars() {
   root.style.setProperty("--vv-bottom-inset", `${Math.round(visualViewportBottomInset())}px`);
 }
 
+const EDIT_SCROLL_PARENT_SELECTOR =
+  ".house-edit-overlay-body, .house-edit-modal-body, main.overflow-y-auto, main.flex-1";
+
+/** Keep focused inputs above the iOS software keyboard inside scrollable edit surfaces. */
+export function scrollEditableIntoView(el: HTMLElement | null, paddingPx = 24) {
+  if (!el) return;
+  const run = () => {
+    syncAppViewportVars();
+    const vv = window.visualViewport;
+    const visibleTop = (vv?.offsetTop ?? 0) + paddingPx;
+    const visibleBottom =
+      (vv?.offsetTop ?? 0) + (vv?.height ?? window.innerHeight) - paddingPx;
+    const rect = el.getBoundingClientRect();
+    if (rect.top >= visibleTop && rect.bottom <= visibleBottom) return;
+
+    const scrollParent = el.closest(EDIT_SCROLL_PARENT_SELECTOR);
+    if (scrollParent instanceof HTMLElement) {
+      if (rect.bottom > visibleBottom) {
+        scrollParent.scrollTop += rect.bottom - visibleBottom;
+      } else if (rect.top < visibleTop) {
+        scrollParent.scrollTop -= visibleTop - rect.top;
+      }
+      return;
+    }
+    el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  };
+  requestAnimationFrame(() => requestAnimationFrame(run));
+}
+
 export function subscribeAppViewport(onChange?: () => void) {
   const sync = () => {
     syncAppViewportVars();

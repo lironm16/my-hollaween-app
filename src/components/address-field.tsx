@@ -7,6 +7,7 @@ import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
 import { cn } from "@/lib/utils";
 import { useVisualKeyboardOpen } from "@/hooks/use-visual-keyboard-open";
+import { scrollEditableIntoView, subscribeAppViewport } from "@/lib/viewport";
 
 type Props = {
   value: string;
@@ -103,6 +104,16 @@ export function AddressField({
     onFocusChange?.(focused);
   }, [focused, onFocusChange]);
 
+  useEffect(() => {
+    if (!focused) return;
+    scrollEditableIntoView(inputRef.current);
+    return subscribeAppViewport(() => {
+      if (document.activeElement === inputRef.current) {
+        scrollEditableIntoView(inputRef.current);
+      }
+    });
+  }, [focused]);
+
   return (
     <div
       ref={wrapRef}
@@ -132,9 +143,7 @@ export function AddressField({
         onFocus={() => {
           setFocused(true);
           setOpen(true);
-          window.requestAnimationFrame(() => {
-            inputRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-          });
+          scrollEditableIntoView(inputRef.current);
         }}
         onBlur={() => {
           setFocused(false);

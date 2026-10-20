@@ -4476,6 +4476,8 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 
 .house-edit-modal-body {
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: max(1rem, calc(env(safe-area-inset-bottom, 0px) + var(--vv-bottom-inset, 0px)));
 }
 
 .house-quick-select {

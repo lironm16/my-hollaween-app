@@ -50,7 +50,7 @@ import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import type { OwnedHouse } from "@/lib/offline-db";
-import { publicHouseFromOwnedBookmark } from "@/lib/owned-bookmark-house";
+import { houseFromOwnedBookmark } from "@/lib/owned-bookmark-house";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
@@ -69,13 +69,7 @@ function mineHouseFromOwned(
   houseName?: string,
 ): PublicHouse | null {
   const fromCatalog = catalogHouses.find((house) => house.id === item.id);
-  const preview = item.preview ?? fromCatalog;
-  if (preview) {
-    return fromCatalog ? { ...fromCatalog, ...preview } : preview;
-  }
-  const name = item.name?.trim() || houseName?.trim();
-  if (!name) return null;
-  return publicHouseFromOwnedBookmark({ id: item.id, name });
+  return houseFromOwnedBookmark(item, fromCatalog, houseName);
 }
 
 export default function MyCollectionsPage() {
