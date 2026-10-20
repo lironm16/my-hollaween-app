@@ -109,7 +109,37 @@ export async function streetBoundaryPolygon(
   return { type: "Polygon", coordinates: [ring] };
 }
 
-export async function searchStreets(city: string, q: string, limit = 20): Promise<{ label: string; street: string }[]> {
+type StreetHit = { street: string; city: string; label: string };
+
+function streetFromNominatimHit(
+  h: NominatimGeoHit & {
+    address?: {
+      road?: string;
+      pedestrian?: string;
+      residential?: string;
+      city?: string;
+      town?: string;
+      village?: string;
+      municipality?: string;
+      suburb?: string;
+    };
+  },
+  fallbackCity: string,
+): StreetHit | null {
+  const road = h.address?.road ?? h.address?.pedestrian ?? h.address?.residential;
+  if (!road) return null;
+  const city =
+    h.address?.city ??
+    h.address?.town ??
+    h.address?.village ??
+    h.address?.municipality ??
+    h.address?.suburb ??
+    fallbackCity;
+  if (!city) return null;
+  return { street: road, city, label: `${road}, ${city}` };
+}
+
+export async function searchStreets(city: string, q: string, limit = 20): Promise<StreetHit[]> {
   const query = q.trim();
   if (!query) return [];
   const hits = await nominatimSearch({
@@ -121,16 +151,41 @@ export async function searchStreets(city: string, q: string, limit = 20): Promis
     bounded: "1",
     addressdetails: "1",
   });
-  const out: { label: string; street: string }[] = [];
+  const out: StreetHit[] = [];
   const seen = new Set<string>();
   for (const h of hits) {
-    const road =
-      (h as { address?: { road?: string; pedestrian?: string; residential?: string } }).address?.road ??
-      (h as { address?: { pedestrian?: string; residential?: string } }).address?.pedestrian ??
-      (h as { address?: { residential?: string } }).address?.residential;
-    if (!road || seen.has(road)) continue;
-    seen.add(road);
-    out.push({ street: road, label: `${road}, ${city}` });
+    const row = streetFromNominatimHit(h, city);
+    if (!row) continue;
+    const key = `${row.city}|${row.street}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(row);
   }
   return out;
+}
+
+/** Free-text street search (multiple settlements); slower — one Nominatim call. */
+export async function searchStreetsNationwide(q: string, limit = 12): Promise<StreetHit[]> {
+  const query = q.trim();
+  if (!query) return [];
+  const hits = await nominatimSearch({
+    q: `${query}, Israel`,
+    format: "json",
+    countrycodes: "il",
+    limit: String(Math.min(limit + 6, 20)),
+    viewbox: viewbox(),
+    bounded: "0",
+    addressdetails: "1",
+  });
+  const out: StreetHit[] = [];
+  const seen = new Set<string>();
+  for (const h of hits) {
+    const row = streetFromNominatimHit(h, "");
+    if (!row || !row.city) continue;
+    const key = `${row.city}|${row.street}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(row);
+  }
+  return out.slice(0, limit);
 }
