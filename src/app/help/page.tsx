@@ -20,6 +20,10 @@ const QUESTIONS: HelpLink[] = [
     href: "/help/add-house",
   },
   {
+    question: "יצירת אירוע — בחירת שכונות (טיוטה)",
+    href: "/events/create",
+  },
+  {
     question: "איך מתקינים את האפליקציה?",
     href: "/help/install",
   },

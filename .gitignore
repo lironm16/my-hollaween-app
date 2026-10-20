@@ -53,6 +53,9 @@ yarn-error.log*
 /public/house-photos/*.jpeg
 /public/house-photos/*.webp
 
+# GovMap full layer — download locally (see public/data/README.md)
+/public/data/gov-neighborhoods.geojson.gz
+
 # vercel
 .vercel
 
