@@ -50,7 +50,7 @@ import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import type { OwnedHouse } from "@/lib/offline-db";
-import { houseFromOwnedBookmark } from "@/lib/owned-bookmark-house";
+import { houseFromOwnedBookmark, repairOwnedPreviewsMissingAddress } from "@/lib/owned-bookmark-house";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
@@ -101,6 +101,10 @@ function MyCollectionsPageContent() {
   useEffect(() => {
     setTab(urlTab);
   }, [urlTab]);
+
+  useEffect(() => {
+    void repairOwnedPreviewsMissingAddress();
+  }, [catalog?.updatedAt]);
 
   useEffect(() => {
     if (showCollected || tab !== "collected") return;
