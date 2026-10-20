@@ -92,6 +92,7 @@ import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { housesWithLocationPolicy } from "@/lib/address-reveal";
 import { adminDeviceOwnerPowers, adminShowsPrivateHouseFields } from "@/lib/admin-preview-as-user";
+import { adminShowsPrivateHouseFields } from "@/lib/admin-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
@@ -187,12 +188,15 @@ export function NeighborhoodApp({
   routeShareParam: routeShareParamFromServer = null,
   gemHuntFromUrl: gemHuntFromServer = false,
   visitFromUrl: visitFromServer = false,
+  initialAdmin = false,
 }: {
   initialCatalog?: Catalog | null;
   focusId?: string | null;
   routeShareParam?: string | null;
   gemHuntFromUrl?: boolean;
   visitFromUrl?: boolean;
+  /** Server admin cookie — avoids a flash of visitor gem rings before /api/admin/session. */
+  initialAdmin?: boolean;
 }) {
   const { focusId, routeShareParam, gemHuntFromUrl, visitFromUrl } = useHomeUrlParams({
     focusId: focusIdFromServer,
@@ -203,7 +207,7 @@ export function NeighborhoodApp({
   const { catalog, loading, ready: catalogReady, offline, unreachable, error, source, refresh } =
     useCatalog(initialCatalog);
   const catalogUpdatedAt = catalog?.updatedAt;
-  const { admin, ready: adminSessionReady } = useAdminSession();
+  const { admin, ready: adminSessionReady } = useAdminSession(initialAdmin);
   const now = useAppNow();
   const addressReveal = useAddressReveal();
   const distanceLabel = useCallback(
@@ -467,8 +471,8 @@ export function NeighborhoodApp({
     () => gemMapRingHouses.filter((house) => matchedIds.has(house.id)),
     [gemMapRingHouses, matchedIds],
   );
-  /** Admin-only hide map — all gem-capable houses (ignores address-reveal / gemHuntPublic). */
-  const adminGemHideMapEligible = gemAdminTools;
+  /** Admin-only hide map — cookie admin, not «תצוגת משתמש» (independent of gemHuntPublic). */
+  const adminGemHideMapEligible = adminShowsPrivateHouseFields(adminForHouseSet, gemPreviewAsUser);
   const adminGemAnchorHouses = useMemo(
     () =>
       adminGemHideMapEligible ? gemCapableMapHouses(mapHouses, activeHouseSet) : [],
@@ -1662,12 +1666,9 @@ export function NeighborhoodApp({
                     routeMode && !originPick.originPickActive ? routeSessionDisplayOrders : null
                   }
                   showGemLegend={showGemMapLegend || adminGemHideMapVisible}
-                  gemAnchorHouses={
-                    adminGemHideMapVisible
-                      ? adminGemAnchorHouses
-                      : gemUi
-                        ? gemMapRingHousesVisible
-                        : []
+                  gemAnchorHouses={adminGemHideMapVisible ? adminGemAnchorHouses : []}
+                  gemPinRingHouses={
+                    adminGemHideMapVisible ? [] : gemUi ? gemMapRingHousesVisible : []
                   }
                   showGemAnchors={adminGemHideMapVisible}
                   gemAnchorVisual="admin"
@@ -1677,8 +1678,8 @@ export function NeighborhoodApp({
                       ? (house) => selection.selectOnMap(house)
                       : undefined
                   }
-                  showGemPinRings={gemUi && mapDiamondsVisible && !adminGemHideMapEligible}
-                  gemNearHouseIds={mapGemNearHouseIdsSet}
+                  showGemPinRings={gemUi && mapDiamondsVisible && !adminGemHideMapVisible}
+                  gemNearHouseIds={adminGemHideMapVisible ? undefined : mapGemNearHouseIdsSet}
                   isGemCollected={gems.collected}
                 />
               {view === "map" && originPick.originPickActive ? (

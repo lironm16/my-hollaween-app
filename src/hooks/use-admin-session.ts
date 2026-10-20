@@ -10,9 +10,9 @@ export function notifyAdminChanged() {
   window.dispatchEvent(new Event(ADMIN_CHANGED_EVENT));
 }
 
-export function useAdminSession() {
-  const [ready, setReady] = useState(false);
-  const [admin, setAdmin] = useState(false);
+export function useAdminSession(initialAdmin?: boolean) {
+  const [ready, setReady] = useState(initialAdmin !== undefined);
+  const [admin, setAdmin] = useState(Boolean(initialAdmin));
 
   const refresh = useCallback(async () => {
     try {

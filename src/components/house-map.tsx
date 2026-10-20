@@ -852,6 +852,8 @@ type Props = {
   /** Map legend «יהלומים» section — when gem hunt UI is on (independent of anchor toggle). */
   showGemLegend?: boolean;
   gemAnchorHouses?: PublicHouse[];
+  /** Houses that get yellow gem pin rings — defaults to {@link gemAnchorHouses} when omitted. */
+  gemPinRingHouses?: PublicHouse[];
   gemAnchorVisual?: GemMapAnchorVisual;
   isGemCollected?: (houseId: string) => boolean;
   /** Yellow/diamond rings on pins when toolbar gem map toggle is on. */
@@ -906,6 +908,7 @@ export function HouseMap({
   gemAnchorRespectFilters = true,
   showGemLegend = false,
   gemAnchorHouses = [],
+  gemPinRingHouses,
   gemAnchorVisual = "admin",
   isGemCollected,
   showGemPinRings = false,
@@ -915,7 +918,8 @@ export function HouseMap({
 }: Props) {
   const { catalog } = useCatalog();
   const addressRevealSchedule = catalog?.eventSettings?.addressReveal;
-  const gemHouseIds = useMemo(() => gemMapHouseIdSet(gemAnchorHouses), [gemAnchorHouses]);
+  const pinRingHouses = gemPinRingHouses ?? gemAnchorHouses;
+  const gemHouseIds = useMemo(() => gemMapHouseIdSet(pinRingHouses), [pinRingHouses]);
   const gemPinRingCtx = useMemo(
     (): MapGemPinRingContext => ({
       showGemRings: showGemPinRings,

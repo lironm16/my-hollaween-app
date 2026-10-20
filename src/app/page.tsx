@@ -1,4 +1,5 @@
 import { NeighborhoodApp } from "@/components/neighborhood-app";
+import { isAdmin } from "@/lib/admin";
 import { ROUTE_SHARE_QUERY } from "@/lib/route-share";
 
 export default async function HomePage({
@@ -11,9 +12,11 @@ export default async function HomePage({
   const routeShare = params[ROUTE_SHARE_QUERY] ?? params.routeShare ?? null;
   const gemHuntFromUrl = params.gemHunt === "1";
   const visitFromUrl = params.visit === "1" || params.visit === "true";
+  const initialAdmin = await isAdmin();
   return (
     <NeighborhoodApp
       initialCatalog={null}
+      initialAdmin={initialAdmin}
       focusId={focus}
       routeShareParam={routeShare}
       gemHuntFromUrl={gemHuntFromUrl}
