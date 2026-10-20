@@ -77,6 +77,7 @@ import { clearSessionHouseDetails } from "@/lib/house-detail-session-cache";
 import { subscribeAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
 import { recordLiveCatalogRemovals } from "@/lib/server-removed-houses";
 import { verifyOwnedHousesOnServer } from "@/lib/owned-house-check";
+import { repairOwnedPreviewsMissingAddress } from "@/lib/owned-bookmark-house";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
 
@@ -434,6 +435,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       return prev;
     }
     refreshStaleOwnedPreviews(next.houses);
+    void repairOwnedPreviewsMissingAddress();
     return next;
   }, []);
 

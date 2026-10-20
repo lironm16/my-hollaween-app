@@ -1,6 +1,14 @@
-import { houseIsAtLeastAsNew } from "@/lib/house-updated-at";
+import { fetchPublicHouse } from "@/lib/fetch-public-house";
+import { rememberSessionHouseDetail } from "@/lib/house-detail-session-cache";
+import { mergeOwnedLocationFields } from "@/lib/owned-location-merge";
 import type { PublicHouse } from "@/lib/types";
-import type { OwnedHouse } from "@/lib/offline-db";
+import { loadOwnedHouses, saveOwnedHouse, type OwnedHouse } from "@/lib/offline-db";
+
+function hasStreetAddress(house: Pick<PublicHouse, "address"> | null | undefined): boolean {
+  return Boolean(house?.address?.trim());
+}
+
+export { mergeOwnedLocationFields } from "@/lib/owned-location-merge";
 
 /** Minimal catalog row from a device bookmark when preview was not cached. */
 export function publicHouseFromOwnedBookmark(item: Pick<OwnedHouse, "id" | "name">): PublicHouse | null {
@@ -41,13 +49,23 @@ export function houseFromOwnedBookmark(
 ): PublicHouse | null {
   const preview = item.preview;
   if (fromCatalog && preview) {
-    return houseIsAtLeastAsNew(preview, fromCatalog)
-      ? { ...fromCatalog, ...preview }
-      : fromCatalog;
+    return mergeOwnedLocationFields(preview, fromCatalog);
   }
   if (preview) return preview;
   if (fromCatalog) return fromCatalog;
   const name = item.name?.trim() || houseName?.trim();
   if (!name) return null;
   return publicHouseFromOwnedBookmark({ id: item.id, name });
+}
+
+/** Heal previews wiped by redacted catalog sync — owner cookie returns full row from GET /api/houses/[id]. */
+export async function repairOwnedPreviewsMissingAddress() {
+  if (typeof window === "undefined") return;
+  for (const item of loadOwnedHouses()) {
+    if (hasStreetAddress(item.preview)) continue;
+    const result = await fetchPublicHouse(item.id);
+    if (!result.ok || !hasStreetAddress(result.house)) continue;
+    saveOwnedHouse({ ...item, preview: result.house });
+    rememberSessionHouseDetail(result.house);
+  }
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { houseFromOwnedBookmark } from "@/lib/owned-bookmark-house";
+import { mergeOwnedLocationFields } from "@/lib/owned-location-merge";
 import type { PublicHouse } from "@/lib/types";
 import type { OwnedHouse } from "@/lib/offline-db";
 
@@ -19,6 +20,18 @@ describe("houseFromOwnedBookmark", () => {
     const catalog = row("h1", "רחוב חדש 8", "2026-10-31T12:00:00.000Z");
     const merged = houseFromOwnedBookmark(item, catalog);
     assert.equal(merged?.address, "רחוב חדש 8");
+  });
+
+  it("keeps preview street when catalog is newer but redacted", () => {
+    const item: OwnedHouse = {
+      id: "h1",
+      name: "בית",
+      editCode: "abc",
+      preview: row("h1", "רחוב שמור 3", "2026-10-31T10:00:00.000Z"),
+    };
+    const catalog = row("h1", "", "2026-10-31T14:00:00.000Z");
+    const merged = houseFromOwnedBookmark(item, catalog);
+    assert.equal(merged?.address, "רחוב שמור 3");
   });
 
   it("merges preview when it is newer than catalog", () => {

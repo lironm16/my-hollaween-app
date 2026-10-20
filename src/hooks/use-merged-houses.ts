@@ -40,9 +40,12 @@ function shouldApplyOwnedBookmark(
   const curStamp = Date.parse(current.updatedAt || "");
   if (Number.isFinite(incStamp) && Number.isFinite(curStamp)) {
     if (incStamp > curStamp) return true;
-    if (incStamp < curStamp) return false;
-    /** Same revision — catalog row is authoritative; stale device preview must not mask it. */
-    return false;
+    if (incStamp < curStamp) {
+      /** Catalog row is newer but may be redacted before address reveal — keep saved street. */
+      return incomingHasAddress && !currentHasAddress;
+    }
+    /** Same revision — catalog row is authoritative unless it lost the street line. */
+    return incomingHasAddress && !currentHasAddress;
   }
   return incomingHasAddress;
 }

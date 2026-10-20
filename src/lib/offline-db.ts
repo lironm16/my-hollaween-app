@@ -4,6 +4,7 @@ import { loadHiddenHouseIds, syncCatalog } from "@/lib/catalog-sync";
 import { clearCatalogRemoved, isCatalogRemoved } from "@/lib/catalog-removed";
 import { tombstoneHouse } from "@/lib/deleted-houses";
 import { stripHouseForDeviceCache } from "@/lib/device-catalog-cache";
+import { mergeOwnedLocationFields } from "@/lib/owned-location-merge";
 import { houseUpdatedMs } from "@/lib/house-updated-at";
 import { syncDecorFields } from "@/lib/house-state";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
@@ -47,7 +48,7 @@ function overlayLocalHouses(catalog: Catalog): Catalog {
     if (deleted.has(house.id)) return;
     const current = byId.get(house.id);
     if (!current || stamp(house.updatedAt) >= stamp(current.updatedAt)) {
-      byId.set(house.id, current ? { ...current, ...house } : house);
+      byId.set(house.id, current ? mergeOwnedLocationFields(current, house) : house);
     }
   };
   for (const owned of loadOwnedHouses()) {
@@ -268,7 +269,7 @@ export function refreshStaleOwnedPreviews(catalogHouses: readonly PublicHouse[])
     const preview = item.preview;
     if (!fromCatalog || !preview) continue;
     if (houseUpdatedMs(fromCatalog.updatedAt) <= houseUpdatedMs(preview.updatedAt)) continue;
-    saveOwnedHouse({ ...item, preview: fromCatalog });
+    saveOwnedHouse({ ...item, preview: mergeOwnedLocationFields(preview, fromCatalog) });
   }
 }
 
