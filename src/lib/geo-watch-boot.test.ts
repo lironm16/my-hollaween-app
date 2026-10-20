@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { shouldStartGeoWatchOnBoot } from "@/lib/geo-watch-boot";
+import { shouldStartGeoWatchOnBoot, trustPermissionsQueryDenied } from "@/lib/geo-watch-boot";
 
 describe("shouldStartGeoWatchOnBoot", () => {
   it("starts watch for granted, prompt, and unknown", () => {
@@ -11,5 +11,11 @@ describe("shouldStartGeoWatchOnBoot", () => {
 
   it("does not start when denied", () => {
     assert.equal(shouldStartGeoWatchOnBoot("denied"), false);
+  });
+});
+
+describe("trustPermissionsQueryDenied", () => {
+  it("is exported for platform-specific geo boot", () => {
+    assert.equal(typeof trustPermissionsQueryDenied(), "boolean");
   });
 });

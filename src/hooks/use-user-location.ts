@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
-import { shouldStartGeoWatchOnBoot } from "@/lib/geo-watch-boot";
+import { shouldStartGeoWatchOnBoot, trustPermissionsQueryDenied } from "@/lib/geo-watch-boot";
 import { readGpsSessionSeed, writeGpsSessionSeed } from "@/lib/gps-session-seed";
 
 export type UserLocation = {
@@ -16,7 +16,7 @@ export type LocationStatus = "idle" | "pending" | "ready" | "denied" | "unavaila
 /** Live watch — tight but Android-safe (`maximumAge: 0` stalls watches after WebXR). */
 function mapWatchPositionOptions(): PositionOptions {
   if (isAndroidLike()) {
-    return { enableHighAccuracy: true, maximumAge: 3_000, timeout: 20_000 };
+    return { enableHighAccuracy: true, maximumAge: 5_000, timeout: 25_000 };
   }
   return { enableHighAccuracy: true, maximumAge: 2_000, timeout: 12_000 };
 }
@@ -25,6 +25,12 @@ const freshOpts: PositionOptions = {
   enableHighAccuracy: true,
   maximumAge: 0,
   timeout: 15_000,
+};
+
+const androidRelaxedOpts: PositionOptions = {
+  enableHighAccuracy: false,
+  maximumAge: 60_000,
+  timeout: 20_000,
 };
 
 /** One-shot reads — allow a recent OS fix (e.g. Google Maps just updated GPS). */
@@ -37,8 +43,9 @@ export const GEOLOCATION_CACHED_OPTS: PositionOptions = {
 export const GEOLOCATION_FRESH_OPTS: PositionOptions = freshOpts;
 
 /** Android: restart watch if no fix (WebXR / dual-watch can kill callbacks). */
-const MAP_GPS_STALE_MS = 12_000;
-const MAP_GPS_HEALTH_INTERVAL_MS = 6_000;
+const MAP_GPS_STALE_MS = 8_000;
+const MAP_GPS_HEALTH_INTERVAL_MS = 4_000;
+const ANDROID_GPS_POLL_MS = 3_500;
 
 export function readUserLocation(options: PositionOptions = GEOLOCATION_CACHED_OPTS): Promise<UserLocation | null> {
   return new Promise((resolve) => {
@@ -96,7 +103,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
   );
   const watchId = useRef<number | null>(null);
   const last = useRef<UserLocation | null>(readGpsSessionSeed());
-  const lastFixAtRef = useRef(0);
+  const lastFixAtRef = useRef(readGpsSessionSeed() ? Date.now() : 0);
 
   const stopWatch = useCallback(() => {
     if (watchId.current !== null) {
@@ -111,6 +118,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
       lng: pos.coords.longitude,
       accuracy: pos.coords.accuracy,
     };
+    lastFixAtRef.current = Date.now();
     const prev = last.current;
     if (
       prev &&
@@ -121,7 +129,6 @@ export function useUserLocation(options?: { watch?: boolean }) {
       return;
     }
     last.current = next;
-    lastFixAtRef.current = Date.now();
     writeGpsSessionSeed(next);
     setLocation(next);
     setStatus("ready");
@@ -129,21 +136,34 @@ export function useUserLocation(options?: { watch?: boolean }) {
 
   const restartWatchRef = useRef<() => void>(() => {});
 
-  const fail = useCallback((err?: GeolocationPositionError) => {
-    if (err?.code === 1) {
-      setStatus("denied");
-      return;
-    }
-    // Timeout / position unavailable — keep last fix so UI stays usable (common in installed PWA).
-    if (last.current) {
-      setStatus("ready");
-    } else {
-      setStatus("error");
-    }
-    if (err?.code === 2 || err?.code === 3) {
-      window.setTimeout(() => restartWatchRef.current(), 800);
-    }
-  }, []);
+  const pokeRelaxedFix = useCallback(() => {
+    if (!navigator.geolocation || !isAndroidLike()) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => apply(pos),
+      () => {},
+      androidRelaxedOpts,
+    );
+  }, [apply]);
+
+  const fail = useCallback(
+    (err?: GeolocationPositionError) => {
+      if (err?.code === 1) {
+        stopWatch();
+        setStatus("denied");
+        return;
+      }
+      if (last.current) {
+        setStatus("ready");
+      } else {
+        setStatus("error");
+      }
+      if (err?.code === 2 || err?.code === 3) {
+        if (isAndroidLike()) pokeRelaxedFix();
+        window.setTimeout(() => restartWatchRef.current(), 800);
+      }
+    },
+    [pokeRelaxedFix, stopWatch],
+  );
 
   const startWatch = useCallback(() => {
     if (!watchEnabled) return;
@@ -169,10 +189,12 @@ export function useUserLocation(options?: { watch?: boolean }) {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => apply(pos),
-      () => {},
+      () => {
+        if (isAndroidLike()) pokeRelaxedFix();
+      },
       freshOpts,
     );
-  }, [apply]);
+  }, [apply, pokeRelaxedFix]);
 
   const refresh = useCallback((): Promise<UserLocation | null> => {
     if (!navigator.geolocation) {
@@ -182,7 +204,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
     return new Promise((resolve) => {
       void (async () => {
         const permission = await queryGeoPermission();
-        if (permission === "denied") {
+        if (permission === "denied" && trustPermissionsQueryDenied()) {
           setStatus("denied");
           resolve(null);
           return;
@@ -204,6 +226,17 @@ export function useUserLocation(options?: { watch?: boolean }) {
             navigator.geolocation.getCurrentPosition(
               finish,
               (retryErr) => {
+                if (isAndroidLike() && retryErr.code !== 1) {
+                  navigator.geolocation.getCurrentPosition(
+                    finish,
+                    (finalErr) => {
+                      fail(finalErr);
+                      resolve(last.current);
+                    },
+                    androidRelaxedOpts,
+                  );
+                  return;
+                }
                 fail(retryErr);
                 resolve(last.current);
               },
@@ -228,6 +261,13 @@ export function useUserLocation(options?: { watch?: boolean }) {
     if (!watchEnabled) return;
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
+      const seed = readGpsSessionSeed();
+      if (seed) {
+        last.current = seed;
+        lastFixAtRef.current = Date.now();
+        setLocation(seed);
+        setStatus("ready");
+      }
       restartWatch();
       pokeFreshFix();
     };
@@ -269,6 +309,20 @@ export function useUserLocation(options?: { watch?: boolean }) {
     return () => window.clearInterval(id);
   }, [watchEnabled, restartWatch, pokeFreshFix]);
 
+  /** Android WebView: watchPosition callbacks sometimes stop; poll as backup. */
+  useEffect(() => {
+    if (!watchEnabled || !isAndroidLike()) return;
+    const id = window.setInterval(() => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => apply(pos),
+        () => pokeRelaxedFix(),
+        mapWatchPositionOptions(),
+      );
+    }, ANDROID_GPS_POLL_MS);
+    return () => window.clearInterval(id);
+  }, [watchEnabled, apply, pokeRelaxedFix]);
+
   useEffect(() => {
     if (!watchEnabled) {
       stopWatch();
@@ -280,8 +334,13 @@ export function useUserLocation(options?: { watch?: boolean }) {
 
     const onPermission = () => {
       if (cancelled || !permission) return;
-      if (permission.state === "denied") setStatus("denied");
-      else startWatch();
+      if (permission.state === "denied" && trustPermissionsQueryDenied()) {
+        stopWatch();
+        setStatus("denied");
+        return;
+      }
+      startWatch();
+      pokeFreshFix();
     };
 
     async function boot() {
@@ -290,12 +349,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
         return;
       }
       startWatch();
-      const state = await queryGeoPermission();
-      if (cancelled) return;
-      if (state === "denied") {
-        stopWatch();
-        setStatus("denied");
-      }
+      pokeFreshFix();
       try {
         permission = (await navigator.permissions?.query({ name: "geolocation" })) ?? null;
         permission?.addEventListener("change", onPermission);
@@ -310,7 +364,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
       permission?.removeEventListener("change", onPermission);
       stopWatch();
     };
-  }, [watchEnabled, startWatch, stopWatch]);
+  }, [watchEnabled, startWatch, stopWatch, pokeFreshFix]);
 
   return { location, status, refresh, setWatchEnabled };
 }

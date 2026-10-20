@@ -12,7 +12,7 @@ import type { DistanceOriginChoice, ResolvedOrigin } from "@/lib/distance-origin
 type GeoState = {
   status: string;
   location: { lat: number; lng: number } | null;
-  refresh: () => void;
+  refresh: () => Promise<{ lat: number; lng: number; accuracy: number } | null>;
 };
 
 export function useOriginPick({
@@ -128,7 +128,16 @@ export function useOriginPick({
 
   const goToMyLocation = useCallback(() => {
     setAskedLocation(true);
-    geo.refresh();
+    void geo.refresh().then((fix) => {
+      const point = fix ?? gps;
+      if (!point) return;
+      if (originPickActive) {
+        setOriginDraft({ lat: point.lat, lng: point.lng });
+        setOriginDraftLabel("המיקום שלכם");
+        return;
+      }
+      panMapTo(point);
+    });
     if (originPickActive) {
       if (gps) {
         setOriginDraft({ lat: gps.lat, lng: gps.lng });
