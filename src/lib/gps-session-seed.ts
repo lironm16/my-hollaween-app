@@ -14,7 +14,7 @@ function parseSeedRow(raw: string | null, maxAgeMs: number): UserLocation | null
     const row = JSON.parse(raw) as SeedRow;
     if (!row || typeof row.lat !== "number" || typeof row.lng !== "number") return null;
     if (Date.now() - row.savedAt > maxAgeMs) return null;
-    return { lat: row.lat, lng: row.lng, accuracy: row.accuracy ?? 99 };
+    return { lat: row.lat, lng: row.lng, accuracy: row.accuracy ?? 99, measuredAt: row.measuredAt };
   } catch {
     return null;
   }
@@ -42,6 +42,17 @@ export function writeGpsSessionSeed(location: UserLocation) {
   }
   try {
     localStorage.setItem(LOCAL_KEY, raw);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Drop cached dot before a hard GPS refresh (Android stuck on old seed). */
+export function clearGpsSessionSeed() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(LOCAL_KEY);
   } catch {
     /* ignore */
   }

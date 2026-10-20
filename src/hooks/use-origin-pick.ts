@@ -130,7 +130,7 @@ export function useOriginPick({
 
   const goToMyLocation = useCallback(() => {
     setAskedLocation(true);
-    if (isAndroidLike()) kickAndroidGeoPoll();
+    if (isAndroidLike()) kickAndroidGeoPoll(true);
     void geo.refresh().then((fix) => {
       const point = fix ?? gps;
       if (!point) return;

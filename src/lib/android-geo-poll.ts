@@ -1,42 +1,35 @@
 import type { UserLocation } from "@/hooks/use-user-location";
-import { distanceMeters } from "@/lib/geo";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 
-const WATCH_OPTS: PositionOptions = {
+const POLL_MS = 1_000;
+
+const LIVE: PositionOptions = {
   enableHighAccuracy: true,
   maximumAge: 0,
-  timeout: 60_000,
+  timeout: 55_000,
 };
 
-const BURST_OPTS: PositionOptions = {
-  enableHighAccuracy: true,
-  maximumAge: 0,
-  timeout: 45_000,
-};
-
-const RELAXED_BURST: PositionOptions = {
+const RELAXED: PositionOptions = {
   enableHighAccuracy: false,
   maximumAge: 0,
-  timeout: 30_000,
+  timeout: 35_000,
 };
 
-/** Fixes older than this are treated as stale cache (matches “stuck until reopen”). */
-const MAX_FIX_AGE_MS = 12_000;
-/** Same coords with no fresh timestamp for this long → soft reopen (like close/open app). */
-const STUCK_SAME_COORDS_MS = 14_000;
-const STUCK_CHECK_MS = 4_000;
+const MAX_FIX_AGE_MS = 10_000;
+const STUCK_SAME_COORDS_MS = 8_000;
+const STUCK_CHECK_MS = 3_000;
 
 export type AndroidGeoFix = UserLocation & { measuredAt: number };
 
 type Listener = (location: AndroidGeoFix) => void;
 
-let watchId: number | null = null;
+let pollTimer: number | null = null;
 let stuckTimer: number | null = null;
 let subscriberCount = 0;
 let lastEmitted: AndroidGeoFix | null = null;
 let lastCoordsKey = "";
 let lastCoordsChangeAt = 0;
-let lastWatchRestartAt = 0;
+let pollPass = 0;
 const listeners = new Set<Listener>();
 
 function coordsKey(loc: Pick<UserLocation, "lat" | "lng">) {
@@ -54,7 +47,6 @@ function notify(next: AndroidGeoFix) {
 
 function ingest(pos: GeolocationPosition) {
   const measuredAt = pos.timestamp > 0 ? pos.timestamp : Date.now();
-  const age = fixAgeMs(measuredAt);
   const next: AndroidGeoFix = {
     lat: pos.coords.latitude,
     lng: pos.coords.longitude,
@@ -66,99 +58,120 @@ function ingest(pos: GeolocationPosition) {
     lastCoordsKey = key;
     lastCoordsChangeAt = Date.now();
   }
+  const age = fixAgeMs(measuredAt);
   if (age > MAX_FIX_AGE_MS) {
-    void burstFreshRead();
     return;
   }
   if (
     lastEmitted &&
     coordsKey(lastEmitted) === key &&
     lastEmitted.accuracy === next.accuracy &&
-    measuredAt <= lastEmitted.measuredAt + 400
+    measuredAt <= lastEmitted.measuredAt + 250
   ) {
     return;
   }
   notify(next);
 }
 
-function clearWatch() {
-  if (watchId != null && navigator.geolocation) {
-    navigator.geolocation.clearWatch(watchId);
-    watchId = null;
+function readOnce(opts: PositionOptions, onDone?: () => void) {
+  if (!navigator.geolocation) {
+    onDone?.();
+    return;
   }
-}
-
-function startWatch() {
-  if (!navigator.geolocation || watchId != null) return;
-  watchId = navigator.geolocation.watchPosition(
-    (pos) => ingest(pos),
-    () => void burstFreshRead(),
-    WATCH_OPTS,
-  );
-}
-
-function burstFreshRead() {
-  if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
-    (pos) => ingest(pos),
-    () => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => ingest(pos),
-        () => {},
-        RELAXED_BURST,
-      );
+    (pos) => {
+      ingest(pos);
+      onDone?.();
     },
-    BURST_OPTS,
+    () => {
+      onDone?.();
+    },
+    opts,
   );
 }
 
-/** Like closing and reopening the app — clears a stuck Android geo session. */
-export function kickAndroidGeoPoll() {
-  if (!isAndroidLike() || !navigator.geolocation) return;
-  const now = Date.now();
-  if (now - lastWatchRestartAt < 2_000) return;
-  lastWatchRestartAt = now;
-  clearWatch();
-  burstFreshRead();
-  startWatch();
+function pollTick() {
+  if (!navigator.geolocation) return;
+  pollPass += 1;
+  const useRelaxed = pollPass % 4 === 0;
+  readOnce(useRelaxed ? RELAXED : LIVE, () => {
+    if (useRelaxed) return;
+    readOnce(RELAXED);
+  });
 }
 
-function stuckCheck() {
-  if (subscriberCount === 0) return;
-  const sameCoordsStale =
-    lastCoordsKey &&
-    Date.now() - lastCoordsChangeAt > STUCK_SAME_COORDS_MS;
-  const fixOld = lastEmitted && fixAgeMs(lastEmitted.measuredAt) > MAX_FIX_AGE_MS;
-  if (sameCoordsStale || fixOld) kickAndroidGeoPoll();
+function resetSessionState() {
+  lastEmitted = null;
+  lastCoordsKey = "";
+  lastCoordsChangeAt = 0;
+  pollPass = 0;
 }
 
-function ensureRunning() {
-  startWatch();
-  burstFreshRead();
-  if (stuckTimer == null) {
-    stuckTimer = window.setInterval(stuckCheck, STUCK_CHECK_MS);
+function stopTimers() {
+  if (pollTimer != null) {
+    window.clearInterval(pollTimer);
+    pollTimer = null;
   }
-}
-
-function stopRunning() {
-  clearWatch();
   if (stuckTimer != null) {
     window.clearInterval(stuckTimer);
     stuckTimer = null;
   }
 }
 
-/** One shared Android GPS session — map + gem hunt must not each watchPosition. */
+function ensureRunning() {
+  if (pollTimer != null) return;
+  pollTick();
+  pollTimer = window.setInterval(pollTick, POLL_MS);
+  if (stuckTimer == null) {
+    stuckTimer = window.setInterval(stuckCheck, STUCK_CHECK_MS);
+  }
+}
+
+function stopRunning() {
+  stopTimers();
+}
+
+function stuckCheck() {
+  if (subscriberCount === 0) return;
+  const coordsStuck =
+    lastCoordsKey && Date.now() - lastCoordsChangeAt > STUCK_SAME_COORDS_MS;
+  const fixOld = lastEmitted != null && fixAgeMs(lastEmitted.measuredAt) > MAX_FIX_AGE_MS;
+  if (coordsStuck || fixOld) kickAndroidGeoPoll(true);
+}
+
+/** Hard reset mimics force-close + reopen (clears cached session state). */
+export function kickAndroidGeoPoll(hard = false) {
+  if (!isAndroidLike() || !navigator.geolocation) return;
+  if (hard) {
+    stopRunning();
+    resetSessionState();
+    ensureRunning();
+    readOnce(LIVE);
+    window.setTimeout(() => readOnce(LIVE), 400);
+    window.setTimeout(() => readOnce(RELAXED), 900);
+    return;
+  }
+  pollTick();
+}
+
+/** One shared Android GPS poll — map + gem hunt must not each watchPosition. */
 export function subscribeAndroidGeoPoll(listener: Listener): () => void {
   if (!isAndroidLike()) return () => {};
   listeners.add(listener);
   subscriberCount += 1;
-  if (lastEmitted) listener(lastEmitted);
+  if (lastEmitted && fixAgeMs(lastEmitted.measuredAt) <= MAX_FIX_AGE_MS) {
+    listener(lastEmitted);
+  } else {
+    kickAndroidGeoPoll(true);
+  }
   ensureRunning();
   return () => {
     listeners.delete(listener);
     subscriberCount = Math.max(0, subscriberCount - 1);
-    if (subscriberCount === 0) stopRunning();
+    if (subscriberCount === 0) {
+      stopRunning();
+      resetSessionState();
+    }
   };
 }
 
@@ -171,7 +184,7 @@ export function readAndroidGeoDebug(): {
   lng: number | null;
 } {
   return {
-    active: watchId != null,
+    active: pollTimer != null,
     subscribers: subscriberCount,
     fixAgeMs: lastEmitted ? fixAgeMs(lastEmitted.measuredAt) : null,
     coordsStaleMs: lastCoordsKey ? Date.now() - lastCoordsChangeAt : null,

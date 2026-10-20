@@ -6,7 +6,11 @@ import { distanceMeters } from "@/lib/geo";
 import { shouldStartGeoWatchOnBoot, trustPermissionsQueryDenied } from "@/lib/geo-watch-boot";
 import { kickAndroidGeoPoll, subscribeAndroidGeoPoll } from "@/lib/android-geo-poll";
 import { androidMapUsesGeoPolling } from "@/lib/map-geo-platform";
-import { readGpsSessionSeed, writeGpsSessionSeed } from "@/lib/gps-session-seed";
+import {
+  clearGpsSessionSeed,
+  readGpsSessionSeed,
+  writeGpsSessionSeed,
+} from "@/lib/gps-session-seed";
 
 export type UserLocation = {
   lat: number;
@@ -242,7 +246,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
           return;
         }
         setStatus((s) => (s === "ready" ? s : "pending"));
-        if (isAndroidLike()) kickAndroidGeoPoll();
+        if (isAndroidLike()) kickAndroidGeoPoll(true);
         if (shouldStartGeoWatchOnBoot(permission)) startWatch();
 
         const finish = (pos: GeolocationPosition) => {
@@ -300,7 +304,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
     }
     if (!watchEnabled) return;
     if (androidMapUsesGeoPolling()) {
-      kickAndroidGeoPoll();
+      kickAndroidGeoPoll(true);
       startAndroidPoll();
       return;
     }
@@ -371,5 +375,15 @@ export function useUserLocation(options?: { watch?: boolean }) {
     };
   }, [watchEnabled, startWatch, stopWatch, pokeFreshFix]);
 
-  return { location, status, refresh, setWatchEnabled };
+  const hardAndroidRefresh = useCallback(async () => {
+    if (!isAndroidLike()) return refresh();
+    clearGpsSessionSeed();
+    last.current = null;
+    lastFixAtRef.current = 0;
+    setLocation(null);
+    kickAndroidGeoPoll(true);
+    return refresh();
+  }, [refresh]);
+
+  return { location, status, refresh, hardAndroidRefresh, setWatchEnabled };
 }

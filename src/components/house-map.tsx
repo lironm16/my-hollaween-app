@@ -19,6 +19,7 @@ import {
   MapGemAnchorEditLayer,
   type GemAnchorEditState,
 } from "@/components/map-gem-anchor-edit-layer";
+import { AndroidGpsRefreshFab } from "@/components/android-gps-refresh-fab";
 import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
 import "leaflet/dist/leaflet.css";
@@ -474,7 +475,7 @@ function MapUserLocationOverlay({ location }: { location: UserLocation }) {
       circleRef.current?.remove();
       circleRef.current = null;
     }
-  }, [location, map]);
+  }, [location.lat, location.lng, location.accuracy, location.measuredAt, map]);
 
   return null;
 }
@@ -859,6 +860,8 @@ type Props = {
   fitTick?: number;
   locating?: boolean;
   onLocate?: () => void;
+  /** Android — hard GPS reset (stuck blue dot). */
+  onAndroidGpsRefresh?: () => Promise<unknown>;
   routeLine?: LatLng[] | null;
   routeLineSegments?: {
     points: [LatLng, LatLng];
@@ -930,6 +933,7 @@ export function HouseMap({
   userLocation = null,
   locating = false,
   onLocate,
+  onAndroidGpsRefresh,
   routeLine = null,
   routeLineSegments = null,
   routeStops = null,
@@ -1261,6 +1265,9 @@ export function HouseMap({
       </MapContainer>
       {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
       <div className="map-fab-stack">
+          {!pickMode && onAndroidGpsRefresh && !embed ? (
+            <AndroidGpsRefreshFab onRefresh={onAndroidGpsRefresh} className="mb-1" />
+          ) : null}
           {!pickMode && onLocate && (!embed || showLocateButton) ? (
             <button
               type="button"
