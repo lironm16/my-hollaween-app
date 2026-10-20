@@ -36,7 +36,7 @@ export function HouseEditModal({
           "house-edit-modal grid w-[min(100%-2rem,26rem)] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden border-orange-500/30 bg-[#1d1028] p-0 text-orange-50 ring-orange-500/25",
           topSafe
             ? "top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(var(--app-h,100dvh)-env(safe-area-inset-top)-0.5rem)] -translate-y-0"
-            : "top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(var(--app-h,100dvh)-env(safe-area-inset-top)-0.5rem)] -translate-y-0",
+            : "top-1/2 max-h-[min(calc(var(--app-h,100dvh)-2rem),720px)] -translate-y-1/2",
           className,
         )}
       >
