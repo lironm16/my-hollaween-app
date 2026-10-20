@@ -7840,7 +7840,25 @@ body:has([data-slot="dialog-content"].house-edit-modal) [data-slot="dialog-overl
 .gem-hunt-webxr__bar--close-only .gem-hunt-webxr__close-btn {
   pointer-events: auto;
   position: relative;
-  z-index: 61;
+  z-index: 80;
+}
+/** Larger tap target — green at-stop frame sits under the header corner. */
+.gem-hunt-webxr__close-btn.gem-hunt-overlay__close {
+  width: 3.35rem;
+  height: 3.35rem;
+  min-width: 3.35rem;
+  min-height: 3.35rem;
+}
+.gem-hunt-webxr__close-btn.gem-hunt-overlay__close::after {
+  content: "";
+  position: absolute;
+  inset: -0.75rem;
+}
+.gem-hunt-webxr.is-at-gem-stop .gem-hunt-webxr__bar--close-only {
+  padding-top: max(0.85rem, env(safe-area-inset-top, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  padding-left: max(0.85rem, env(safe-area-inset-left, 0px));
+  z-index: 80;
 }
 .gem-hunt-webxr__bar-text {
   min-width: 0;
