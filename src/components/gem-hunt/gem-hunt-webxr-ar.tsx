@@ -364,6 +364,9 @@ export function GemHuntWebXrAr({
     const tellMeReady = tellMeCenter;
     if (!inBand && !tellMeReady) return;
     if (!placed && !tellMeCenter) return;
+    if (distanceM != null && !simulateInRange && foundDistanceMRef.current == null) {
+      foundDistanceMRef.current = distanceM;
+    }
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
     onCollectPersistRef.current?.(monsterId);
@@ -397,6 +400,7 @@ export function GemHuntWebXrAr({
   }, [
     campusSession,
     canCollectNow,
+    distanceM,
     encounterMode,
     inWebXrHuntBand,
     monsterId,
@@ -477,8 +481,8 @@ export function GemHuntWebXrAr({
   const showDomFakeGem = showTellMeCenterGem || showCenterCollectGem;
 
   /** iOS hides compass-pinned gem once world AR is placed; Android keeps 2D gem when WebGL model may be invisible (e.g. Pixel 2). */
-  const suppressApproachGemForWorldAr =
-    placed && inWebXrHuntBand && showArGem && !androidImmersiveAr;
+  /** Hide compass-pinned 2D gem once world AR is placed (Android fallback stays in showAndroidOnsiteCenterGem). */
+  const suppressApproachGemForWorldAr = placed && inWebXrHuntBand && showArGem;
 
   const showApproachScreenGem =
     sessionActive &&
@@ -512,6 +516,7 @@ export function GemHuntWebXrAr({
 
   const inGemStayVisibleBand =
     simulateInRange ||
+    phase === "collecting" ||
     gemHuntGemStayVisible(distanceM, foundDistanceMRef.current, inWebXrHuntBand);
   const inOnsiteBand = simulateInRange || canCollectNow || inWebXrHuntBand;
   const gemVisibleBand = inGemStayVisibleBand;

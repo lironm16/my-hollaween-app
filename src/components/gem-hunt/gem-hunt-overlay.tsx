@@ -179,6 +179,8 @@ export function GemHuntOverlay({
   const huntClosingRef = useRef(false);
   /** True once user starts collect or enters encounter in band — avoids GPS flicker blocking finish. */
   const encounterCollectLatchedRef = useRef(false);
+  /** Latched at collect tap — keep center vs pinned layout through the dance if GPS drifts. */
+  const collectGemCenterRef = useRef(true);
   const foundDistanceMRef = useRef<number | null>(null);
   const [phase, setPhase] = useState<HuntPhase>("scanning");
   const [, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
@@ -273,6 +275,7 @@ export function GemHuntOverlay({
   const canCollectNow = collectEnabled || sim || inDistanceBand;
   const inGemStayVisibleBand =
     sim ||
+    phase === "collecting" ||
     gemHuntGemStayVisible(distanceM, foundDistanceMRef.current, inDistanceBand);
   /** Scan/pan/facing reveal when in range (or admin simulate). */
   const allowAutoReveal = canCollectNow;
@@ -301,6 +304,7 @@ export function GemHuntOverlay({
     facingSinceRef.current = null;
     revealedRef.current = false;
     foundDistanceMRef.current = null;
+    collectGemCenterRef.current = true;
     setPhase("scanning");
     setHint("scan");
     setShowHelp(false);
@@ -453,6 +457,11 @@ export function GemHuntOverlay({
     const viaEncounter = encounterMode && inCollectBand;
     const viaCampus = campusSession && (inCollectBand || centerReveal);
     if (!viaTellMe && !viaTellMeEncounter && !viaPinned && !viaEncounter && !viaCampus) return;
+    collectGemCenterRef.current =
+      centerReveal || campusSession || viaTellMe || viaTellMeEncounter || !viaPinned;
+    if (distanceM != null && !sim && foundDistanceMRef.current == null) {
+      foundDistanceMRef.current = distanceM;
+    }
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
     onCollectPersistRef.current?.(monsterId);
@@ -494,12 +503,14 @@ export function GemHuntOverlay({
     campusSession,
     centerReveal,
     canCollectNow,
+    distanceM,
     encounterMode,
     monsterId,
     phase,
     pinDisplay,
     pinPlacement,
     repeatVisitLatched,
+    sim,
     tellMeInRange,
   ]);
 
@@ -649,19 +660,23 @@ export function GemHuntOverlay({
       encounterPhase === "reward");
   const gemAtCenter =
     !userDismissedCenterGem &&
-    ((centerReveal && gemVisible) ||
-      (gemVisibleBand &&
-        (encounterForcesCenter ||
-          (encounterMode &&
-            (encounterPhase === "approach" || encounterPhase === "encounter")) ||
-          (!encounterMode && gemVisible) ||
-          (campusSession && (canCollectNow || sim)))));
+    (phase === "collecting"
+      ? collectGemCenterRef.current
+      : (centerReveal && gemVisible) ||
+        (gemVisibleBand &&
+          (encounterForcesCenter ||
+            (encounterMode &&
+              (encounterPhase === "approach" || encounterPhase === "encounter")) ||
+            (!encounterMode && gemVisible) ||
+            (campusSession && (canCollectNow || sim)))));
   const worldPinPlacement = worldPinPlacementEarly;
   const showWorldGemSprite =
-    !gemAtCenter &&
-    worldPinPlacement != null &&
-    (gemWorldPinVisible(worldPinPlacement, huntBandM) ||
-      (!isAndroidLike() && gemWorldPinApproachVisible(worldPinPlacement)));
+    phase === "collecting"
+      ? !collectGemCenterRef.current
+      : !gemAtCenter &&
+        worldPinPlacement != null &&
+        (gemWorldPinVisible(worldPinPlacement, huntBandM) ||
+          (!isAndroidLike() && gemWorldPinApproachVisible(worldPinPlacement)));
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =
