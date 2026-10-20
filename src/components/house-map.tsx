@@ -1178,7 +1178,7 @@ export function HouseMap({
                 : !matchedIds?.has(cluster.houses[0]!.id));
             return (
               <ClusterMarker
-                key={`${cluster.key}|gem-rings:${showGemPinRings ? 1 : 0}`}
+                key={`${cluster.key}|gem-rings:${showGemPinRings ? 1 : 0}|near:${gemNearHouseIds?.size ?? 0}`}
                 cluster={cluster}
                 selectedId={selectedId}
                 clusterOverview={clusterOverview}
