@@ -21,13 +21,9 @@ import { isPoiHouse } from "@/lib/house-kind";
 import { displayAddressFromHit } from "@/lib/address-fields";
 import {
   config,
-  houseNeighborhoodChoiceToStored,
-  NEIGHBORHOODS,
-  NEIGHBORHOOD_FILTER_OPTIONS,
   neighborhoodFromAddress,
+  neighborhoodInferredFromPin,
   neighborhoodLabelForPin,
-  storedToHouseNeighborhoodChoice,
-  type HouseNeighborhoodChoice,
 } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
 import { streetPinHint } from "@/lib/address-text";
@@ -172,7 +168,6 @@ export function HouseForm({
   const [addedBy, setAddedBy] = useState(() => initial?.addedBy?.trim() ?? "");
   const [ownerPhone, setOwnerPhone] = useState(() => initial?.ownerPhone?.trim() ?? "");
   const [ownerPhoneTouched, setOwnerPhoneTouched] = useState(false);
-  const [hoodTouched, setHoodTouched] = useState(false);
   const existingPhoto = initial?.photoUrl ?? "";
   const isNewHouse = !initial?.id;
   const ownerPhoneRequired = isNewHouse || !initial?.ownerPhone?.trim();
@@ -273,15 +268,10 @@ export function HouseForm({
     setForm((f) => (f.neighborhood === lockedSchoolHood ? f : { ...f, neighborhood: lockedSchoolHood }));
   }, [lockedSchoolHood]);
 
-  const hoodChoice = storedToHouseNeighborhoodChoice(
-    lockedSchoolHood ?? form.neighborhood,
-  );
-
-  function setHoodChoice(choice: HouseNeighborhoodChoice) {
-    if (lockedSchoolHood) return;
-    setHoodTouched(true);
-    setForm((f) => ({ ...f, neighborhood: houseNeighborhoodChoiceToStored(choice) }));
-  }
+  const confirmedHoodLabel = useMemo(() => {
+    if (!addressOk) return null;
+    return lockedSchoolHood ?? form.neighborhood ?? neighborhoodLabelForPin(form.lat, form.lng);
+  }, [addressOk, lockedSchoolHood, form.neighborhood, form.lat, form.lng]);
 
   function guessedHood(address: string, lat: number, lng: number) {
     return (
@@ -313,7 +303,6 @@ export function HouseForm({
     const campusHood = schoolCampusNeighborhoodForAddress(address);
     if (campusHood) return campusHood;
     if (isNewHouse) return eventNeighborhoodForNewHousePin(lat, lng);
-    if (hoodTouched) return null;
     return guessedHood(address, lat, lng);
   }
 
@@ -400,7 +389,14 @@ export function HouseForm({
           neighborhood = geoHood;
         }
         if (neighborhood === undefined) {
-          toast.error("בחרו שכונה מהרשימה (או «אחר»).");
+          neighborhood =
+            schoolCampusNeighborhoodForAddress(form.address) ??
+            eventNeighborhoodForNewHousePin(form.lat, form.lng) ??
+            neighborhoodInferredFromPin(form.lat, form.lng) ??
+            undefined;
+        }
+        if (isNewHouse && neighborhood === undefined) {
+          toast.error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
           return;
         }
         const submitter = addedBy.trim();
@@ -615,29 +611,6 @@ export function HouseForm({
       </FormSection>
       <FormSection title="איפה">
         <Field
-          label="שכונה"
-          hint={
-            lockedSchoolHood
-              ? "לפי בית הספר"
-              : isNewHouse
-                ? "נקבע לפי מיקום הכתובת בארבע השכונות"
-                : undefined
-          }
-        >
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="שכונה">
-            {(isNewHouse ? [...NEIGHBORHOODS] : NEIGHBORHOOD_FILTER_OPTIONS).map((choice) => (
-              <ChoiceChip
-                key={choice}
-                selected={hoodChoice === choice}
-                disabled={Boolean(blocked || lockedSchoolHood || (isNewHouse && addressOk))}
-                onClick={() => setHoodChoice(choice)}
-              >
-                {choice}
-              </ChoiceChip>
-            ))}
-          </div>
-        </Field>
-        <Field
           label="כתובת"
           hint={HIDDEN_UNTIL_EVENT}
           charCount={{ length: form.address.length, max: HOUSE_FIELD_LIMITS.address.max }}
@@ -647,6 +620,7 @@ export function HouseForm({
             onChange={onAddressTyped}
             onSelect={onAddressSelect}
             confirmed={addressOk}
+            hoodLabel={confirmedHoodLabel}
             disabled={blocked}
             maxLength={HOUSE_FIELD_LIMITS.address.max}
             onFocusChange={setAddressFieldActive}

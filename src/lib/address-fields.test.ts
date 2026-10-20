@@ -105,6 +105,22 @@ describe("address fields", () => {
     };
     assert.equal(addressAutocompleteLabel(hit, "ביאליק 37"), "ביאליק 37, רמת גן");
     assert.equal(prepareAddressHit(hit, "ביאליק 37")?.label, "ביאליק 37, רמת גן");
+    assert.equal(prepareAddressHit(hit, "ביאליק 37")?.subtitle, undefined);
+  });
+
+  it("adds neighborhood subtitle for hits inside event zones", () => {
+    const hit: AddressHit = {
+      id: "p-haruzim",
+      label: "חרוזים 8, רמת גן",
+      lat: 32.0825,
+      lng: 34.8145,
+      road: "חרוזים",
+      houseNumber: "8",
+      city: "רמת גן",
+      precise: true,
+    };
+    const prepared = prepareAddressHit(hit, "חרוזים 8");
+    assert.ok(prepared?.subtitle?.includes("חרוזים"));
   });
 
   it("builds Jabotinsky 105 from footprint when geocoders miss", () => {

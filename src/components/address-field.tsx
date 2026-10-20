@@ -20,6 +20,8 @@ type Props = {
   maxLength?: number;
   onFocusChange?: (focused: boolean) => void;
   placeholder?: string;
+  /** Shown on the verified line under the input (e.g. event neighborhood). */
+  hoodLabel?: string | null;
 };
 
 export function AddressField({
@@ -33,6 +35,7 @@ export function AddressField({
   maxLength,
   onFocusChange,
   placeholder = "רחוב ומספר, או שם מוסד — למשל חרוזים 8",
+  hoodLabel = null,
 }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -218,7 +221,9 @@ export function AddressField({
       {fieldError ? (
         <p className="mt-1 text-base text-red-300">{fieldError}</p>
       ) : !listOpen && confirmed ? (
-        <p className="mt-1 text-base text-emerald-300">כתובת מאומתת על המפה</p>
+        <p className="mt-1 text-base text-emerald-300">
+          {hoodLabel ? `כתובת מאומתת · ${hoodLabel}` : "כתובת מאומתת על המפה"}
+        </p>
       ) : !listOpen && value.trim().length >= 3 ? (
         <p className="mt-1 text-base text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>
       ) : !listOpen && emptyHint ? (

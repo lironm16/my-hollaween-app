@@ -9,6 +9,7 @@ import {
 import { parseStreetAndNumber } from "@/lib/address-text";
 import { osmFootprintForAddress } from "@/lib/house-footprint-align";
 import { clusterAddressKey } from "@/lib/house-clusters";
+import { hoodSubtitleForAddressHit } from "@/lib/address-hood-label";
 import { searchNamedAddressPlaces } from "@/lib/named-address-places";
 import type { AddressHit } from "@/lib/types";
 
@@ -103,7 +104,12 @@ export function prepareAddressHit(hit: AddressHit, query = ""): AddressHit | nul
   const parsed = parseStreetAndNumber(query.trim());
   const withNumber =
     parsed.num && !snapped.houseNumber ? { ...snapped, houseNumber: parsed.num } : snapped;
-  return { ...withNumber, label: addressAutocompleteLabel(withNumber, query) };
+  const hoodLine = hoodSubtitleForAddressHit(withNumber);
+  return {
+    ...withNumber,
+    label: addressAutocompleteLabel(withNumber, query),
+    ...(hoodLine ? { subtitle: hoodLine } : {}),
+  };
 }
 
 function addressHitDedupeKey(hit: AddressHit) {
