@@ -17,8 +17,9 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_CITY = "רמת גן";
 
+/** UI labels — `city` = whole municipality (עיר/יישוב), not Gov field name "ישוב". */
 const KIND_LABELS: Record<EventBoundaryKind, string> = {
-  city: "ישוב",
+  city: "עיר (city)",
   neighborhood: "שכונה",
   street: "רחוב",
 };
@@ -127,8 +128,8 @@ export function EventCreatorScreen() {
             </Link>
             <h1 className="font-display text-2xl text-orange-300">יצירת אירוע (טיוטה)</h1>
             <p className="text-sm text-white/70 leading-relaxed">
-              בחר גבולות לפי <strong className="font-normal text-white/90">ישוב</strong>,{" "}
-              <strong className="font-normal text-white/90">שכונה</strong> (GovMap) או{" "}
+              בחר גבולות לפי <strong className="font-normal text-white/90">עיר</strong> (גבול עיר/יישוב
+              שלם), <strong className="font-normal text-white/90">שכונה</strong> (GovMap) או{" "}
               <strong className="font-normal text-white/90">רחוב</strong> (OSM) — נשרטט את המסגרת על
               המפה.
             </p>
@@ -138,7 +139,7 @@ export function EventCreatorScreen() {
             <div className="rounded-lg border border-amber-500/40 bg-amber-950/40 p-3 text-sm text-amber-100/95 leading-relaxed">
               <p className="font-medium text-amber-200">חסר קובץ שכבת השכונות</p>
               <p className="mt-1">
-                ישוב/רחוב עדיין עובדים דרך OSM. לשכונות GovMap:{" "}
+                עיר ורחוב עדיין עובדים דרך OSM. לשכונות GovMap:{" "}
                 <code className="text-xs">public/data/geojson</code> (or .gz) +{" "}
                 <code className="text-xs">npm run gov-neighborhoods:index</code>.
               </p>
@@ -178,7 +179,7 @@ export function EventCreatorScreen() {
           <div className="grid grid-cols-2 gap-2">
             {kind !== "city" ? (
               <label className="block space-y-1">
-                <span className="text-sm text-white/80">ישוב (הקשר)</span>
+                <span className="text-sm text-white/80">עיר (הקשר לחיפוש)</span>
                 <input
                   type="text"
                   className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm"
@@ -188,7 +189,7 @@ export function EventCreatorScreen() {
               </label>
             ) : (
               <div className="col-span-2 text-xs text-white/50 leading-relaxed">
-                חיפוש ישובים מתוך קatalog GovMap (כל הערים שמופיעות בשכבת השכונות).
+                חיפוש עיר או יישוב — רשימה מתוך GovMap (כל הערים שמופיעות בשכבת השכונות).
               </div>
             )}
             <label className={cn("block space-y-1", kind === "city" && "col-span-2")}>
@@ -258,7 +259,7 @@ export function EventCreatorScreen() {
               selectedIds={draft.zones.map((z) => z.id)}
             />
             <p className="text-xs text-white/45 leading-relaxed">
-              שכונות: GovMap · ישוב/רחוב: OpenStreetMap (Nominatim) · רחוב = מסדרון ~70 מ׳ סביב
+              שכונות: GovMap · עיר/רחוב: OpenStreetMap (Nominatim) · רחוב = מסדרון ~70 מ׳ סביב
               ציר הרחוב.
             </p>
           </div>

@@ -104,7 +104,7 @@ export function EventCreatorMap({ features, selectedIds }: Props) {
             >
               <Tooltip sticky direction="top">
                 {label}
-                {kind === "city" ? " · ישוב" : kind === "street" ? " · רחוב" : " · שכונה"}
+                {kind === "city" ? " · עיר" : kind === "street" ? " · רחוב" : " · שכונה"}
                 {isOn ? " · נבחר" : ""}
               </Tooltip>
             </Polygon>
