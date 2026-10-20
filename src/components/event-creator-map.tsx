@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo } from "react";
-import { MapContainer, Polygon, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, Polygon, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
@@ -108,7 +108,6 @@ export function EventCreatorMap({
           if (!selected.has(id)) return null;
           const kind = feature.properties?.kind ?? "neighborhood";
           const color = KIND_COLORS[kind];
-          const label = feature.properties?.label ?? id;
           const isFocused = focusedId === id;
           const rings = ringsFromGeometry(feature.geometry);
           return (
@@ -132,11 +131,7 @@ export function EventCreatorMap({
                         }
                       : undefined
                   }
-                >
-                  <Tooltip sticky direction="top">
-                    {label} · לחץ לפרטים
-                  </Tooltip>
-                </Polygon>
+                />
               ))}
             </Fragment>
           );

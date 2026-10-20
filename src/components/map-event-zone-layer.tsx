@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { Polygon, Tooltip } from "react-leaflet";
+import { Polygon } from "react-leaflet";
 import {
   eventNeighborhoodGeoJsonFeature,
   eventNeighborhoodPolygonIds,
@@ -46,11 +46,7 @@ export function MapEventZoneLayer() {
                   fillOpacity: 0.08,
                   dashArray: "6 4",
                 }}
-              >
-                <Tooltip sticky direction="top">
-                  {id} · גבול אירוע
-                </Tooltip>
-              </Polygon>
+              />
             ))}
           </Fragment>
         );

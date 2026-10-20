@@ -369,14 +369,7 @@ export function EventCreatorScreen() {
               </div>
             ) : null}
             {mapFocusZone ? (
-              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center gap-2 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
-                <EventBoundaryKindBadge kind={mapFocusZone.kind} size="lg" />
-                <div className="min-w-0 flex-1 text-right">
-                  <p className="truncate text-base font-medium text-white">{mapFocusZone.label}</p>
-                  {mapFocusZone.city && mapFocusZone.kind !== "city" ? (
-                    <p className="truncate text-sm text-white/50">{mapFocusZone.city}</p>
-                  ) : null}
-                </div>
+              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center justify-end gap-2 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => removeZone(mapFocusZone.id)}
