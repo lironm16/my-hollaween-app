@@ -50,7 +50,7 @@ export async function unifiedBoundarySearch(
       id: zoneKeyCity(c),
       label: c,
       city: c,
-      subtitle: "יישוב שלם",
+      subtitle: "עיר שלמה",
     });
   }
 

@@ -44,7 +44,10 @@ type Props = {
   selectedIds: string[];
   /** Features shown muted but tappable (search results not yet selected). */
   previewIds?: string[];
-  onFeatureClick?: (featureId: string) => void;
+  /** Tap a search-result polygon to add it. */
+  onPreviewClick?: (featureId: string) => void;
+  /** Tap an already-added polygon (e.g. hint to use list to remove). */
+  onSelectedClick?: (featureId: string) => void;
   className?: string;
 };
 
@@ -52,7 +55,8 @@ export function EventCreatorMap({
   features,
   selectedIds,
   previewIds = [],
-  onFeatureClick,
+  onPreviewClick,
+  onSelectedClick,
   className,
 }: Props) {
   const { tiles } = useMapTiles();
@@ -108,7 +112,6 @@ export function EventCreatorMap({
           const color = KIND_COLORS[kind];
           const label = feature.properties?.label ?? id;
           const rings = ringsFromGeometry(feature.geometry);
-          const clickable = isOn || isPreview;
           return rings.map((positions, ringIdx) => (
             <Polygon
               key={`${id}-${ringIdx}`}
@@ -116,30 +119,30 @@ export function EventCreatorMap({
               pathOptions={{
                 color: isOn ? color : isPreview ? "#a78bfa" : "#64748b",
                 weight: isOn ? 3 : isPreview ? 2 : 1,
-                opacity: isOn ? 1 : isPreview ? 0.75 : 0.35,
+                opacity: isOn ? 1 : isPreview ? 0.85 : 0.35,
                 fillColor: isOn ? color : isPreview ? "#c4b5fd" : "#64748b",
                 fillOpacity: isOn
                   ? kind === "city"
-                    ? 0.12
-                    : kind === "street"
-                      ? 0.22
-                      : 0.28
-                  : isPreview
                     ? 0.14
+                    : kind === "street"
+                      ? 0.24
+                      : 0.3
+                  : isPreview
+                    ? 0.2
                     : 0.04,
                 dashArray: kind === "city" && isOn ? "8 4" : undefined,
               }}
               eventHandlers={
-                clickable && onFeatureClick
-                  ? {
-                      click: () => onFeatureClick(id),
-                    }
-                  : undefined
+                isPreview && onPreviewClick
+                  ? { click: () => onPreviewClick(id) }
+                  : isOn && onSelectedClick
+                    ? { click: () => onSelectedClick(id) }
+                    : undefined
               }
             >
               <Tooltip sticky direction="top">
                 {label}
-                {isOn ? " · נבחר" : isPreview ? " · לחץ לבחירה" : ""}
+                {isOn ? " · נוסף" : isPreview ? " · לחץ להוספה" : ""}
               </Tooltip>
             </Polygon>
           ));

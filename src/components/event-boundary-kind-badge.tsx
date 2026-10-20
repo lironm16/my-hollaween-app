@@ -1,9 +1,8 @@
 import type { EventBoundaryKind } from "@/lib/event-boundary";
 import { cn } from "@/lib/utils";
 
-/** Settlement-level boundary (city / moshav / kibbutz — we only have a name, not CBS type). */
 export const BOUNDARY_KIND_LABEL: Record<EventBoundaryKind, string> = {
-  city: "יישוב",
+  city: "עיר",
   neighborhood: "שכונה",
   street: "רחוב",
 };
