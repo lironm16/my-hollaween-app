@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { PublicHouse } from "@/lib/types";
-import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
+import { mapGemNearHouseIds, mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
 
 function stub(id: string, lat: number, lng: number): PublicHouse {
   return { id, name: id, lat, lng } as PublicHouse;
@@ -37,5 +37,16 @@ describe("mapGemNearSignalActive", () => {
       ),
       true,
     );
+  });
+
+  it("mapGemNearHouseIds lists houses in hunt range", () => {
+    const house = stub("a", 32.0919, 34.8112);
+    const ids = mapGemNearHouseIds(
+      { lat: 32.09191, lng: 34.81121 },
+      [house],
+      new Set(["a"]),
+      () => false,
+    );
+    assert.equal(ids.has("a"), true);
   });
 });

@@ -11,6 +11,8 @@ export type MapGemPinRingVariant = "sparkle" | "diamond";
 
 export type MapGemPinRingContext = {
   showGemRings: boolean;
+  /** Uncollected gems within hunt range — yellow sparkle even when {@link showGemRings} is off. */
+  nearGemHouseIds?: ReadonlySet<string>;
   gemHouseIds: ReadonlySet<string>;
   isCollected: (houseId: string) => boolean;
   addressReveal?: AddressRevealSchedule;
@@ -60,9 +62,11 @@ export function resolveMapGemPinRingVariant(
   hasUncollectedGem: boolean,
   _hoursKind: "closing" | "opening" | null,
   showGemRings: boolean,
+  isNearGem = false,
 ): MapGemPinRingVariant | null {
-  if (!showGemRings || !hasUncollectedGem) return null;
-  return "sparkle";
+  if (!hasUncollectedGem) return null;
+  if (showGemRings || isNearGem) return "sparkle";
+  return null;
 }
 
 export type MapPinRingDecor = {
@@ -84,7 +88,8 @@ export function mapPinRingDecorForHouse(
 ): MapPinRingDecor {
   const hoursKind = pinHoursRingKind(house, now, ctx.addressReveal);
   const uncollected = houseHasUncollectedMapGem(house.id, ctx);
-  const gemVariant = resolveMapGemPinRingVariant(uncollected, hoursKind, ctx.showGemRings);
+  const isNear = Boolean(ctx.nearGemHouseIds?.has(house.id));
+  const gemVariant = resolveMapGemPinRingVariant(uncollected, hoursKind, ctx.showGemRings, isNear);
 
   if (gemVariant) {
     return {
@@ -107,7 +112,11 @@ export function mapPinRingDecorForCluster(
 ): MapPinRingDecor {
   const hoursKind = clusterHoursRingKind(houses, now, ctx.addressReveal);
   const uncollected = clusterHasUncollectedMapGem(houses, ctx);
-  const gemVariant = resolveMapGemPinRingVariant(uncollected, hoursKind, ctx.showGemRings);
+  const isNear = houses.some(
+    (house) =>
+      houseHasUncollectedMapGem(house.id, ctx) && Boolean(ctx.nearGemHouseIds?.has(house.id)),
+  );
+  const gemVariant = resolveMapGemPinRingVariant(uncollected, hoursKind, ctx.showGemRings, isNear);
 
   if (gemVariant) {
     return {
@@ -131,11 +140,13 @@ export function clusterGemRingCacheKey(
   houses: PublicHouse[],
   ctx: MapGemPinRingContext,
 ): string {
-  if (!ctx.showGemRings) return "off";
+  if (!ctx.showGemRings && !ctx.nearGemHouseIds?.size) return "off";
   return houses
     .map((house) => {
       if (!ctx.gemHouseIds.has(house.id)) return "0";
-      return ctx.isCollected(house.id) ? "c" : "o";
+      const collected = ctx.isCollected(house.id) ? "c" : "o";
+      const near = ctx.nearGemHouseIds?.has(house.id) ? "n" : "-";
+      return collected + near;
     })
     .join("");
 }

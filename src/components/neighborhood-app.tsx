@@ -65,7 +65,7 @@ import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref, gemBagPlainHref } from "@/lib/gem-bag-celebrate";
 import { isGemTypeInCollection, loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
 import { canCollectGem, userWithinGemHuntRange, GEM_CHEER_MS } from "@/lib/gem-hunt";
-import { mapGemNearSignalActive } from "@/lib/map-gem-near-signal";
+import { mapGemNearHouseIds } from "@/lib/map-gem-near-signal";
 import {
   firstClusterGemHouseToHunt,
   gemClusterQueueHeadline,
@@ -467,11 +467,11 @@ export function NeighborhoodApp({
     () => gemMapRingHouses.filter((house) => matchedIds.has(house.id)),
     [gemMapRingHouses, matchedIds],
   );
-  const mapGemNearSignal = useMemo(
+  const mapGemNearHouseIdsSet = useMemo(
     () =>
       gemUi
-        ? mapGemNearSignalActive(gps, gemMapRingHousesVisible, matchedIds, gems.collected)
-        : false,
+        ? mapGemNearHouseIds(gps, gemMapRingHousesVisible, matchedIds, gems.collected)
+        : new Set<string>(),
     [gemUi, gps, gemMapRingHousesVisible, matchedIds, gems.collected],
   );
   const matchedIdsKey = useMemo(
@@ -1331,6 +1331,9 @@ export function NeighborhoodApp({
       onToggleVisited,
       onToggleGem: gemUi ? handleToggleGemMenu : undefined,
       gemQuickActionEligible: gemUi ? gemHouseHuntAllowed : undefined,
+      gemNearHunt: gemUi
+        ? (houseId: string) => mapGemNearHouseIdsSet.has(houseId)
+        : undefined,
       onSkip: handleSkipHouse,
       onRestore: handleRestoreHouse,
       onShowOnMap:
@@ -1423,6 +1426,7 @@ export function NeighborhoodApp({
     onToggleLike,
     onToggleVisited,
     gemHouseHuntAllowed,
+    mapGemNearHouseIdsSet,
     handleToggleGemMenu,
     openGemHuntForCluster,
     handleClusterResetAllGems,
@@ -1510,7 +1514,7 @@ export function NeighborhoodApp({
             }
             gemMapToggleEnabled={gemUi}
             gemMapVisible={mapDiamondsVisible}
-            gemNearSignal={mapGemNearSignal}
+            gemNearSignal={false}
             onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
           />
         </div>
@@ -1652,6 +1656,7 @@ export function NeighborhoodApp({
                   showGemLegend={showGemMapLegend}
                   gemAnchorHouses={gemUi ? gemMapRingHousesVisible : []}
                   showGemPinRings={gemUi && mapDiamondsVisible}
+                  gemNearHouseIds={mapGemNearHouseIdsSet}
                   isGemCollected={gems.collected}
                 />
               {view === "map" && originPick.originPickActive ? (

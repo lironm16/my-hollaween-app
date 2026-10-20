@@ -854,6 +854,8 @@ type Props = {
   isGemCollected?: (houseId: string) => boolean;
   /** Yellow/diamond rings on pins when toolbar gem map toggle is on. */
   showGemPinRings?: boolean;
+  /** Hunt-range gems — sparkle ring on pins even when {@link showGemPinRings} is off. */
+  gemNearHouseIds?: ReadonlySet<string>;
   /** Owner/admin gem placement — draggable demon around the selected house. */
   gemAnchorEdit?: GemAnchorEditState | null;
   /** Tour mode — cluster ring uses orange for open slices instead of white. */
@@ -904,6 +906,7 @@ export function HouseMap({
   gemAnchorVisual = "admin",
   isGemCollected,
   showGemPinRings = false,
+  gemNearHouseIds,
   gemAnchorEdit = null,
   routeModeActive = false,
 }: Props) {
@@ -913,11 +916,12 @@ export function HouseMap({
   const gemPinRingCtx = useMemo(
     (): MapGemPinRingContext => ({
       showGemRings: showGemPinRings,
+      nearGemHouseIds: gemNearHouseIds,
       gemHouseIds,
       isCollected: isGemCollected ?? (() => true),
       addressReveal: addressRevealSchedule,
     }),
-    [showGemPinRings, gemHouseIds, isGemCollected, addressRevealSchedule],
+    [showGemPinRings, gemNearHouseIds, gemHouseIds, isGemCollected, addressRevealSchedule],
   );
   const clusters = useMemo(
     () => (pickMode ? [] : clusterHousesByAddress(houses)),

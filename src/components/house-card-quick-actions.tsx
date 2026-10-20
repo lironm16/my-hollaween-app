@@ -33,6 +33,7 @@ export function HouseCardQuickActions({
   liked,
   visited,
   gemCollected,
+  gemNearHunt = false,
   onToggleLike,
   onToggleVisited,
   onToggleGem,
@@ -49,6 +50,7 @@ export function HouseCardQuickActions({
   liked?: boolean;
   visited?: boolean;
   gemCollected?: boolean;
+  gemNearHunt?: boolean;
   onToggleLike?: () => void;
   onToggleVisited?: () => void;
   onToggleGem?: () => void;
@@ -135,7 +137,10 @@ export function HouseCardQuickActions({
       {onToggleGem ? (
         <button
           type="button"
-          className={quickBtnClass(Boolean(gemCollected), "gem")}
+          className={cn(
+            quickBtnClass(Boolean(gemCollected), "gem"),
+            gemNearHunt && !gemCollected && "is-gem-near-hunt",
+          )}
           aria-label={gemAriaLabel ?? (gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE)}
           aria-pressed={gemCollected}
           onPointerDown={stopCardPointerBubble}
@@ -147,7 +152,11 @@ export function HouseCardQuickActions({
           {gemCollected ? (
             <ImpMenuActiveGlyph className={QUICK_ACTIVE_ICON_CLASS} />
           ) : (
-            <ImpDemonCameraIcon variant="quick" className={QUICK_ICON_CLASS} />
+            <ImpDemonCameraIcon
+              variant="quick"
+              className={QUICK_ICON_CLASS}
+              signalActive={gemNearHunt}
+            />
           )}
         </button>
       ) : null}

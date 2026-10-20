@@ -28,6 +28,11 @@ describe("map gem pin rings", () => {
     assert.equal(resolveMapGemPinRingVariant(false, null, true), null);
   });
 
+  it("shows sparkle when near even if pin rings toggle is off", () => {
+    assert.equal(resolveMapGemPinRingVariant(true, null, false, true), "sparkle");
+    assert.equal(resolveMapGemPinRingVariant(true, null, false, false), null);
+  });
+
   it("uses one sparkle ring even when hours ring would show", () => {
     assert.equal(resolveMapGemPinRingVariant(true, "closing", true), "sparkle");
     assert.equal(resolveMapGemPinRingVariant(true, "opening", true), "sparkle");

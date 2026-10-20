@@ -2893,8 +2893,16 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   }
 }
 
+.house-card-quick-action-btn.is-gem-near-hunt {
+  box-shadow:
+    0 0 0 2px rgba(253, 224, 71, 0.55),
+    0 0 14px rgba(251, 191, 36, 0.75);
+  animation: toolbar-gem-near-pulse 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-toolbar__btn.is-gem-near,
+  .house-card-quick-action-btn.is-gem-near-hunt,
   .imp-demon-camera-icon.is-signal-active img,
   .map-demon-cam-fab.is-near,
   .map-demon-cam-fab.is-near .imp-demon-camera-icon__fill {

@@ -26,6 +26,7 @@ export function HouseCard({
   visited,
   onToggleVisited,
   gemCollected,
+  gemNearHunt = false,
   onSkip,
   onRestoreRoute,
   skipped = false,
@@ -63,6 +64,7 @@ export function HouseCard({
   visited?: boolean;
   onToggleVisited?: () => void;
   gemCollected?: boolean;
+  gemNearHunt?: boolean;
   onSkip?: () => void;
   onRestoreRoute?: () => void;
   skipped?: boolean;
@@ -109,6 +111,7 @@ export function HouseCard({
     visited,
     onToggleVisited,
     gemCollected,
+    gemNearHunt,
     onSkip,
     onRestoreRoute,
     skipped,

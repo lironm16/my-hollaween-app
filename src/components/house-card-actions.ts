@@ -33,6 +33,8 @@ export type HouseCardActionContext = {
   onClusterResetAllGems?: (houses: PublicHouse[]) => void;
   /** When set, per-house gate for the card-top gem button (map/list still use full ctx.onToggleGem). */
   gemQuickActionEligible?: (house: PublicHouse) => boolean;
+  /** Hunt-range glow on the card gem button (same range as map pin sparkle). */
+  gemNearHunt?: (houseId: string) => boolean;
   canEdit?: (id: string) => boolean;
   editCodeFor?: (id: string) => string | undefined;
   onEdit?: (house: PublicHouse) => void;
@@ -91,6 +93,7 @@ export function houseCardPropsFor(
       !(ctx.gemQuickActionEligible?.(house) ?? true)
         ? undefined
         : () => ctx.onToggleGem!(house),
+    gemNearHunt: Boolean(ctx.gemNearHunt?.(id) && !ctx.gemCollected?.(id)),
     onSkip:
       viewOnlyRemoved || !ctx.onSkip || isSkipped ? undefined : () => ctx.onSkip!(id),
     onRestoreRoute:
@@ -128,6 +131,7 @@ export function houseQuickActionPropsFromCard(
     liked: card.liked,
     visited: card.visited,
     gemCollected: card.gemCollected,
+    gemNearHunt: card.gemNearHunt,
     onToggleLike: card.onToggleLike,
     onToggleVisited: card.onToggleVisited,
     onToggleGem: card.onToggleGem,
