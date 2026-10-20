@@ -847,6 +847,8 @@ type Props = {
   onGemAnchorSelect?: (house: PublicHouse) => void;
   /** @deprecated Separate gem markers — use {@link showGemPinRings} on house pins. */
   showGemAnchors?: boolean;
+  /** When false, gem anchor markers stay bright even if house filters hide other pins. */
+  gemAnchorRespectFilters?: boolean;
   /** Map legend «יהלומים» section — when gem hunt UI is on (independent of anchor toggle). */
   showGemLegend?: boolean;
   gemAnchorHouses?: PublicHouse[];
@@ -901,6 +903,7 @@ export function HouseMap({
   embedCenterOnSelect = true,
   onGemAnchorSelect,
   showGemAnchors = false,
+  gemAnchorRespectFilters = true,
   showGemLegend = false,
   gemAnchorHouses = [],
   gemAnchorVisual = "admin",
@@ -1162,7 +1165,7 @@ export function HouseMap({
             houses={gemAnchorHouses}
             isCollected={isGemCollected ?? (() => false)}
             matchedIds={matchedIds}
-            filterDimActive={dimActive}
+            filterDimActive={gemAnchorRespectFilters ? dimActive : false}
             visual={gemAnchorVisual}
             userLocation={userLocation}
             onSelectHouse={onGemAnchorSelect}

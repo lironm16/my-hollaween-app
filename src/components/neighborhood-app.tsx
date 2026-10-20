@@ -467,6 +467,14 @@ export function NeighborhoodApp({
     () => gemMapRingHouses.filter((house) => matchedIds.has(house.id)),
     [gemMapRingHouses, matchedIds],
   );
+  /** Admin-only hide map — all gem-capable houses (ignores address-reveal / gemHuntPublic). */
+  const adminGemHideMapEligible = gemAdminTools;
+  const adminGemAnchorHouses = useMemo(
+    () =>
+      adminGemHideMapEligible ? gemCapableMapHouses(mapHouses, activeHouseSet) : [],
+    [adminGemHideMapEligible, mapHouses, activeHouseSet],
+  );
+  const adminGemHideMapVisible = adminGemHideMapEligible && mapDiamondsVisible;
   const mapGemNearHouseIdsSet = useMemo(
     () =>
       gemUi
@@ -1512,7 +1520,7 @@ export function NeighborhoodApp({
             onOpenRouteUpdates={
               routeMode && routeAlerts.changes.length > 0 ? routeAlerts.openSheet : undefined
             }
-            gemMapToggleEnabled={gemUi}
+            gemMapToggleEnabled={gemUi || adminGemHideMapEligible}
             gemMapVisible={mapDiamondsVisible}
             gemNearSignal={false}
             onToggleGemMap={() => setMapDiamondsVisible((on) => !on)}
@@ -1653,9 +1661,23 @@ export function NeighborhoodApp({
                   routeSessionDisplayOrders={
                     routeMode && !originPick.originPickActive ? routeSessionDisplayOrders : null
                   }
-                  showGemLegend={showGemMapLegend}
-                  gemAnchorHouses={gemUi ? gemMapRingHousesVisible : []}
-                  showGemPinRings={gemUi && mapDiamondsVisible}
+                  showGemLegend={showGemMapLegend || adminGemHideMapVisible}
+                  gemAnchorHouses={
+                    adminGemHideMapVisible
+                      ? adminGemAnchorHouses
+                      : gemUi
+                        ? gemMapRingHousesVisible
+                        : []
+                  }
+                  showGemAnchors={adminGemHideMapVisible}
+                  gemAnchorVisual="admin"
+                  gemAnchorRespectFilters={!adminGemHideMapVisible}
+                  onGemAnchorSelect={
+                    adminGemHideMapVisible
+                      ? (house) => selection.selectOnMap(house)
+                      : undefined
+                  }
+                  showGemPinRings={gemUi && mapDiamondsVisible && !adminGemHideMapEligible}
                   gemNearHouseIds={mapGemNearHouseIdsSet}
                   isGemCollected={gems.collected}
                 />
