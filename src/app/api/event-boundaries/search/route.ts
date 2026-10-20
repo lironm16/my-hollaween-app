@@ -56,7 +56,8 @@ export async function GET(request: Request) {
       {
         ok: false,
         error: "missing_data",
-        message: "Gov neighborhood catalog missing — add gov-neighborhoods.geojson.gz and run npm run gov-neighborhoods:index",
+        message:
+          "Gov neighborhood catalog missing — add public/data/geojson (or .gz) and run npm run gov-neighborhoods:index",
       },
       { status: 503 },
     );

@@ -55,6 +55,8 @@ yarn-error.log*
 
 # GovMap full layer — download locally (see public/data/README.md)
 /public/data/gov-neighborhoods.geojson.gz
+/public/data/geojson
+/public/data/geojson.gz
 
 # vercel
 .vercel

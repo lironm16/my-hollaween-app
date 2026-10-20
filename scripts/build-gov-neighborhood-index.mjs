@@ -4,8 +4,29 @@ import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
 
 const root = process.cwd();
-const gzPath = join(root, "public/data/gov-neighborhoods.geojson.gz");
-const outPath = join(root, "public/data/gov-neighborhood-catalog.json");
+const dataDir = join(root, "public/data");
+const CANDIDATES = [
+  "gov-neighborhoods.geojson.gz",
+  "geojson.gz",
+  "geojson",
+  "gov-neighborhoods.geojson",
+];
+const outPath = join(dataDir, "gov-neighborhood-catalog.json");
+
+function resolveDataPath() {
+  for (const name of CANDIDATES) {
+    const p = join(dataDir, name);
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
+
+function readGeoJson(path) {
+  const raw = readFileSync(path);
+  const isGz = raw.length >= 2 && raw[0] === 0x1f && raw[1] === 0x8b;
+  const text = isGz ? gunzipSync(raw).toString("utf8") : raw.toString("utf8");
+  return JSON.parse(text);
+}
 
 const NAME_KEYS = ["שם_שכונה", "shem_shchu", "SHEM_SHCHU", "name", "NAME"];
 const CITY_KEYS = ["ישוב", "yishuv", "YISHUV", "city", "CITY"];
@@ -53,13 +74,16 @@ function geometryBbox(geometry) {
   return null;
 }
 
-if (!existsSync(gzPath)) {
-  console.error(`Missing ${gzPath}`);
+const dataPath = resolveDataPath();
+if (!dataPath) {
+  console.error(`Missing GovMap layer in ${dataDir}/`);
+  console.error(`Expected one of: ${CANDIDATES.join(", ")}`);
   console.error("Download from public/data/README.md and retry.");
   process.exit(1);
 }
 
-const fc = JSON.parse(gunzipSync(readFileSync(gzPath)).toString("utf8"));
+console.log(`Reading ${dataPath}`);
+const fc = readGeoJson(dataPath);
 if (fc.type !== "FeatureCollection") {
   console.error("Expected FeatureCollection");
   process.exit(1);

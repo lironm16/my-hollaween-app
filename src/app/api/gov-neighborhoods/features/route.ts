@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       {
         ok: false,
         error: "missing_data",
-        message: "public/data/gov-neighborhoods.geojson.gz is required for map polygons.",
+        message: "public/data/geojson (or .gz) is required for neighborhood map polygons.",
       },
       { status: 503 },
     );

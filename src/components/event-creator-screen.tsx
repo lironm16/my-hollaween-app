@@ -139,7 +139,7 @@ export function EventCreatorScreen() {
               <p className="font-medium text-amber-200">חסר קובץ שכבת השכונות</p>
               <p className="mt-1">
                 ישוב/רחוב עדיין עובדים דרך OSM. לשכונות GovMap:{" "}
-                <code className="text-xs">public/data/gov-neighborhoods.geojson.gz</code> +{" "}
+                <code className="text-xs">public/data/geojson</code> (or .gz) +{" "}
                 <code className="text-xs">npm run gov-neighborhoods:index</code>.
               </p>
             </div>

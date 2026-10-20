@@ -5,9 +5,10 @@ The full Israel layer is **not committed** (large + updated on data.gov.il).
 ## Local setup
 
 1. Download the gzipped GeoJSON from [odata.org.il](https://www.odata.org.il/dataset/7709ebeb-c7fc-4c4d-97cb-51837333805e/resource/ead77ea1-45b6-4636-ab50-06d523c22b3a/download/.geojson.gz) (same file as on data.gov.il).
-2. Save it as:
+2. Save it under `public/data/` — any of these names work:
 
-   `public/data/gov-neighborhoods.geojson.gz`
+   - **`geojson`** or **`geojson.gz`** (if your download is named `geojson`)
+   - `gov-neighborhoods.geojson.gz`
 
 3. Build the search catalog (names + bboxes, no heavy geometry):
 

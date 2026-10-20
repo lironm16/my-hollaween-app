@@ -23,7 +23,7 @@ export async function GET(request: Request) {
           ok: false,
           error: "missing_data",
           message:
-            "Place gov-neighborhoods.geojson.gz in public/data/ and run npm run gov-neighborhoods:index (see public/data/README.md).",
+            "Place geojson or geojson.gz in public/data/ and run npm run gov-neighborhoods:index (see public/data/README.md).",
         },
         { status: 503 },
       );

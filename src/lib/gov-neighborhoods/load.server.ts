@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
+import {
+  readGovNeighborhoodGeoJsonFile,
+  resolveGovNeighborhoodDataPath,
+} from "@/lib/gov-neighborhoods/resolve-data-file.server";
 import {
   catalogEntryFromFeature,
   govNeighborhoodCity,
@@ -14,7 +17,6 @@ import type {
   GovNeighborhoodFeature,
 } from "@/lib/gov-neighborhoods/types";
 
-const GZ_PATH = join(process.cwd(), "public/data/gov-neighborhoods.geojson.gz");
 const CATALOG_PATH = join(process.cwd(), "public/data/gov-neighborhood-catalog.json");
 
 type Collection = GeoJSON.FeatureCollection<GovNeighborhoodFeature["geometry"]>;
@@ -23,21 +25,18 @@ let cachedCollection: Collection | null = null;
 let cachedCatalog: GovNeighborhoodCatalog | null = null;
 let cachedById: Map<string, GovNeighborhoodFeature> | null = null;
 
-export function govNeighborhoodDataPath(): string {
-  return GZ_PATH;
+export function govNeighborhoodDataPath(): string | null {
+  return resolveGovNeighborhoodDataPath();
 }
 
 export function govNeighborhoodDataAvailable(): boolean {
-  return existsSync(GZ_PATH);
+  return resolveGovNeighborhoodDataPath() !== null;
 }
 
 function readGzGeoJson(): Collection {
   if (cachedCollection) return cachedCollection;
-  if (!existsSync(GZ_PATH)) {
-    throw new Error("missing_gov_neighborhoods_gz");
-  }
-  const raw = gunzipSync(readFileSync(GZ_PATH));
-  const parsed = JSON.parse(raw.toString("utf8")) as Collection;
+  const { json: parsedRaw } = readGovNeighborhoodGeoJsonFile();
+  const parsed = parsedRaw as Collection;
   if (parsed.type !== "FeatureCollection" || !Array.isArray(parsed.features)) {
     throw new Error("invalid_gov_neighborhoods_geojson");
   }
