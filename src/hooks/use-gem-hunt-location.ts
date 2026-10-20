@@ -63,14 +63,15 @@ export function useGemHuntLocation(enabled: boolean) {
     }
     if (!navigator.geolocation) return;
 
-    navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
-    watchRef.current = navigator.geolocation.watchPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
-
-    /** WebXR / installed PWA: watch callbacks can stall — poll keeps distance hints moving. */
     if (isAndroidLike()) {
-      pollRef.current = window.setInterval(() => {
+      const tick = () => {
         navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, HUNT_POLL);
-      }, 1800);
+      };
+      tick();
+      pollRef.current = window.setInterval(tick, 1_500);
+    } else {
+      navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
+      watchRef.current = navigator.geolocation.watchPosition((pos) => apply(pos), () => {}, HUNT_WATCH);
     }
 
     return () => {

@@ -598,9 +598,8 @@ export function NeighborhoodApp({
     setMapGemGps(null);
     setMapGemClusterCatchCount(0);
     restoreAfterGemHunt();
-    setWatchEnabled(true);
     void geo.refresh();
-  }, [geo, mapGemWebXrSession, restoreAfterGemHunt, setWatchEnabled]);
+  }, [geo, mapGemWebXrSession, restoreAfterGemHunt]);
 
   const mapGemClusterQueueUi = useMemo(() => {
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;
@@ -798,14 +797,17 @@ export function NeighborhoodApp({
   });
 
   useEffect(() => {
+    /** Android: gem hunt runs its own GPS loop — a second consumer freezes the map dot. */
+    const gemHuntOwnsAndroidGps = isAndroidLike() && Boolean(mapGemHouse);
     const watchMap =
-      view === "map" ||
-      routeMode ||
-      originPick.originPickActive ||
-      originPick.originPickerOpen ||
-      Boolean(mapGemHouse);
+      !gemHuntOwnsAndroidGps &&
+      (view === "map" ||
+        routeMode ||
+        originPick.originPickActive ||
+        originPick.originPickerOpen ||
+        Boolean(mapGemHouse));
     setWatchEnabled(watchMap);
-    if (watchMap && view === "map" && isAndroidLike()) {
+    if (watchMap && view === "map") {
       void geo.refresh();
     }
   }, [

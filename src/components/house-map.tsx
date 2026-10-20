@@ -431,60 +431,52 @@ const youAreHereIcon = L.divIcon({
   popupAnchor: [0, -12],
 });
 
-/** Leaflet marker position — explicit setLatLng for Android WebView / react-leaflet updates. */
-function LiveUserLocationMarker({ location }: { location: UserLocation }) {
+/** Imperative Leaflet layers — react-leaflet Marker often misses Android GPS updates. */
+function MapUserLocationOverlay({ location }: { location: UserLocation }) {
+  const map = useMap();
   const markerRef = useRef<L.Marker | null>(null);
-  const { lat, lng, accuracy } = location;
-  useEffect(() => {
-    markerRef.current?.setLatLng([lat, lng]);
-  }, [lat, lng]);
-  return (
-    <>
-      {accuracy > 8 && accuracy < 120 ? (
-        <LiveUserLocationAccuracyCircle lat={lat} lng={lng} radius={accuracy} />
-      ) : null}
-      <Marker ref={markerRef} position={[lat, lng]} icon={youAreHereIcon} zIndexOffset={800}>
-        <Popup autoPan={false} keepInView={false} closeButton={false} className="you-are-here-popup">
-          <div dir="rtl" className="you-are-here-popup-body">
-            <strong>אתם כאן</strong>
-            {!inNeighborhood(lat, lng) ? <div>מחוץ לגבול המפה של השכונה</div> : null}
-          </div>
-        </Popup>
-      </Marker>
-    </>
-  );
-}
-
-function LiveUserLocationAccuracyCircle({
-  lat,
-  lng,
-  radius,
-}: {
-  lat: number;
-  lng: number;
-  radius: number;
-}) {
   const circleRef = useRef<L.Circle | null>(null);
+
   useEffect(() => {
-    const layer = circleRef.current;
-    if (!layer) return;
-    layer.setLatLng([lat, lng]);
-    layer.setRadius(radius);
-  }, [lat, lng, radius]);
-  return (
-    <Circle
-      ref={circleRef}
-      center={[lat, lng]}
-      radius={radius}
-      pathOptions={{
-        color: "#7dd3fc",
-        fillColor: "#38bdf8",
-        fillOpacity: 0.18,
-        weight: 1,
-      }}
-      interactive={false}
-    />
-  );
+    const marker = L.marker([location.lat, location.lng], {
+      icon: youAreHereIcon,
+      zIndexOffset: 800,
+    });
+    marker.addTo(map);
+    markerRef.current = marker;
+    return () => {
+      marker.remove();
+      markerRef.current = null;
+      circleRef.current?.remove();
+      circleRef.current = null;
+    };
+  }, [map]);
+
+  useEffect(() => {
+    const { lat, lng, accuracy } = location;
+    markerRef.current?.setLatLng([lat, lng]);
+    const showRing = accuracy > 8 && accuracy < 120;
+    if (showRing) {
+      if (!circleRef.current) {
+        circleRef.current = L.circle([lat, lng], {
+          radius: accuracy,
+          color: "#7dd3fc",
+          fillColor: "#38bdf8",
+          fillOpacity: 0.18,
+          weight: 1,
+          interactive: false,
+        }).addTo(map);
+      } else {
+        circleRef.current.setLatLng([lat, lng]);
+        circleRef.current.setRadius(accuracy);
+      }
+    } else {
+      circleRef.current?.remove();
+      circleRef.current = null;
+    }
+  }, [location, map]);
+
+  return null;
 }
 
 /** Keep Leaflet sized to the visible viewport — never pans/zooms the map. */
@@ -1265,7 +1257,7 @@ export function HouseMap({
               />
             );
           })}
-        {!pickMode && userLocation ? <LiveUserLocationMarker location={userLocation} /> : null}
+        {!pickMode && userLocation ? <MapUserLocationOverlay location={userLocation} /> : null}
       </MapContainer>
       {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
       <div className="map-fab-stack">

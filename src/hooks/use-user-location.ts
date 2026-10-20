@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
+import { distanceMeters } from "@/lib/geo";
 import { shouldStartGeoWatchOnBoot, trustPermissionsQueryDenied } from "@/lib/geo-watch-boot";
+import { androidMapUsesGeoPolling } from "@/lib/map-geo-platform";
 import { readGpsSessionSeed, writeGpsSessionSeed } from "@/lib/gps-session-seed";
 
 export type UserLocation = {
@@ -13,11 +15,9 @@ export type UserLocation = {
 
 export type LocationStatus = "idle" | "pending" | "ready" | "denied" | "unavailable" | "error";
 
-/** Live watch — tight but Android-safe (`maximumAge: 0` stalls watches after WebXR). */
+const MAP_MOVE_MIN_METERS = 0.25;
+
 function mapWatchPositionOptions(): PositionOptions {
-  if (isAndroidLike()) {
-    return { enableHighAccuracy: true, maximumAge: 5_000, timeout: 25_000 };
-  }
   return { enableHighAccuracy: true, maximumAge: 2_000, timeout: 12_000 };
 }
 
@@ -27,10 +27,16 @@ const freshOpts: PositionOptions = {
   timeout: 15_000,
 };
 
+const androidLiveOpts: PositionOptions = {
+  enableHighAccuracy: true,
+  maximumAge: 0,
+  timeout: 28_000,
+};
+
 const androidRelaxedOpts: PositionOptions = {
   enableHighAccuracy: false,
-  maximumAge: 60_000,
-  timeout: 20_000,
+  maximumAge: 15_000,
+  timeout: 22_000,
 };
 
 /** One-shot reads — allow a recent OS fix (e.g. Google Maps just updated GPS). */
@@ -42,10 +48,7 @@ export const GEOLOCATION_CACHED_OPTS: PositionOptions = {
 /** Force a new high-accuracy read when cache is empty. */
 export const GEOLOCATION_FRESH_OPTS: PositionOptions = freshOpts;
 
-/** Android: restart watch if no fix (WebXR / dual-watch can kill callbacks). */
-const MAP_GPS_STALE_MS = 8_000;
-const MAP_GPS_HEALTH_INTERVAL_MS = 4_000;
-const ANDROID_GPS_POLL_MS = 3_500;
+const ANDROID_GPS_POLL_MS = 1_500;
 
 export function readUserLocation(options: PositionOptions = GEOLOCATION_CACHED_OPTS): Promise<UserLocation | null> {
   return new Promise((resolve) => {
@@ -93,6 +96,12 @@ async function queryGeoPermission(): Promise<"granted" | "denied" | "prompt" | "
   return "unknown";
 }
 
+function fixChanged(prev: UserLocation | null, next: UserLocation): boolean {
+  if (!prev) return true;
+  if (prev.accuracy !== next.accuracy) return true;
+  return distanceMeters(prev, next) >= MAP_MOVE_MIN_METERS;
+}
+
 export function useUserLocation(options?: { watch?: boolean }) {
   const [watchOverride, setWatchOverride] = useState<boolean | null>(null);
   const setWatchEnabled = useCallback((enabled: boolean) => setWatchOverride(enabled), []);
@@ -102,13 +111,19 @@ export function useUserLocation(options?: { watch?: boolean }) {
     readGpsSessionSeed() ? "ready" : "idle",
   );
   const watchId = useRef<number | null>(null);
+  const androidPollId = useRef<number | null>(null);
   const last = useRef<UserLocation | null>(readGpsSessionSeed());
   const lastFixAtRef = useRef(readGpsSessionSeed() ? Date.now() : 0);
+  const androidPollUsesRelaxed = useRef(false);
 
   const stopWatch = useCallback(() => {
     if (watchId.current !== null) {
       navigator.geolocation.clearWatch(watchId.current);
       watchId.current = null;
+    }
+    if (androidPollId.current !== null) {
+      window.clearInterval(androidPollId.current);
+      androidPollId.current = null;
     }
   }, []);
 
@@ -119,15 +134,9 @@ export function useUserLocation(options?: { watch?: boolean }) {
       accuracy: pos.coords.accuracy,
     };
     lastFixAtRef.current = Date.now();
+    androidPollUsesRelaxed.current = false;
     const prev = last.current;
-    if (
-      prev &&
-      prev.lat === next.lat &&
-      prev.lng === next.lng &&
-      prev.accuracy === next.accuracy
-    ) {
-      return;
-    }
+    if (!fixChanged(prev, next)) return;
     last.current = next;
     writeGpsSessionSeed(next);
     setLocation(next);
@@ -159,11 +168,42 @@ export function useUserLocation(options?: { watch?: boolean }) {
       }
       if (err?.code === 2 || err?.code === 3) {
         if (isAndroidLike()) pokeRelaxedFix();
-        window.setTimeout(() => restartWatchRef.current(), 800);
+        if (!androidMapUsesGeoPolling()) {
+          window.setTimeout(() => restartWatchRef.current(), 800);
+        }
       }
     },
     [pokeRelaxedFix, stopWatch],
   );
+
+  const androidPollTick = useCallback(() => {
+    if (!navigator.geolocation) return;
+    const opts = androidPollUsesRelaxed.current ? androidRelaxedOpts : androidLiveOpts;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => apply(pos),
+      (err) => {
+        if (err.code === 1) {
+          fail(err);
+          return;
+        }
+        androidPollUsesRelaxed.current = true;
+        pokeRelaxedFix();
+      },
+      opts,
+    );
+  }, [apply, fail, pokeRelaxedFix]);
+
+  const startAndroidPoll = useCallback(() => {
+    if (!watchEnabled || !androidMapUsesGeoPolling()) return;
+    if (!navigator.geolocation) {
+      setStatus("unavailable");
+      return;
+    }
+    if (androidPollId.current !== null) return;
+    setStatus((s) => (s === "ready" ? s : "pending"));
+    androidPollTick();
+    androidPollId.current = window.setInterval(androidPollTick, ANDROID_GPS_POLL_MS);
+  }, [androidPollTick, watchEnabled]);
 
   const startWatch = useCallback(() => {
     if (!watchEnabled) return;
@@ -171,12 +211,16 @@ export function useUserLocation(options?: { watch?: boolean }) {
       setStatus("unavailable");
       return;
     }
+    if (androidMapUsesGeoPolling()) {
+      startAndroidPoll();
+      return;
+    }
     if (watchId.current !== null) return;
     setStatus((s) => (s === "ready" ? s : "pending"));
     const opts = mapWatchPositionOptions();
     watchId.current = navigator.geolocation.watchPosition((pos) => apply(pos), fail, opts);
     navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, opts);
-  }, [apply, fail, watchEnabled]);
+  }, [apply, fail, startAndroidPoll, watchEnabled]);
 
   const restartWatch = useCallback(() => {
     stopWatch();
@@ -257,19 +301,28 @@ export function useUserLocation(options?: { watch?: boolean }) {
     });
   }, [apply, fail, startWatch]);
 
+  const resumeTracking = useCallback(() => {
+    const seed = readGpsSessionSeed();
+    if (seed) {
+      last.current = seed;
+      lastFixAtRef.current = Date.now();
+      setLocation(seed);
+      setStatus("ready");
+    }
+    if (!watchEnabled) return;
+    if (androidMapUsesGeoPolling()) {
+      androidPollTick();
+      return;
+    }
+    restartWatch();
+    pokeFreshFix();
+  }, [androidPollTick, pokeFreshFix, restartWatch, watchEnabled]);
+
   useEffect(() => {
     if (!watchEnabled) return;
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
-      const seed = readGpsSessionSeed();
-      if (seed) {
-        last.current = seed;
-        lastFixAtRef.current = Date.now();
-        setLocation(seed);
-        setStatus("ready");
-      }
-      restartWatch();
-      pokeFreshFix();
+      resumeTracking();
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
@@ -277,51 +330,13 @@ export function useUserLocation(options?: { watch?: boolean }) {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [watchEnabled, restartWatch, pokeFreshFix]);
+  }, [watchEnabled, resumeTracking]);
 
   useEffect(() => {
-    const onPageShow = () => {
-      const seed = readGpsSessionSeed();
-      if (seed) {
-        last.current = seed;
-        lastFixAtRef.current = Date.now();
-        setLocation(seed);
-        setStatus("ready");
-      }
-      if (watchEnabled) {
-        restartWatch();
-        pokeFreshFix();
-      }
-    };
+    const onPageShow = () => resumeTracking();
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);
-  }, [watchEnabled, restartWatch, pokeFreshFix]);
-
-  useEffect(() => {
-    if (!watchEnabled || !isAndroidLike()) return;
-    const id = window.setInterval(() => {
-      const stale =
-        lastFixAtRef.current === 0 || Date.now() - lastFixAtRef.current > MAP_GPS_STALE_MS;
-      if (!stale) return;
-      restartWatch();
-      pokeFreshFix();
-    }, MAP_GPS_HEALTH_INTERVAL_MS);
-    return () => window.clearInterval(id);
-  }, [watchEnabled, restartWatch, pokeFreshFix]);
-
-  /** Android WebView: watchPosition callbacks sometimes stop; poll as backup. */
-  useEffect(() => {
-    if (!watchEnabled || !isAndroidLike()) return;
-    const id = window.setInterval(() => {
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(
-        (pos) => apply(pos),
-        () => pokeRelaxedFix(),
-        mapWatchPositionOptions(),
-      );
-    }, ANDROID_GPS_POLL_MS);
-    return () => window.clearInterval(id);
-  }, [watchEnabled, apply, pokeRelaxedFix]);
+  }, [resumeTracking]);
 
   useEffect(() => {
     if (!watchEnabled) {
