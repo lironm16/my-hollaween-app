@@ -481,7 +481,7 @@ export function GemHuntWebXrAr({
   const showDomFakeGem = showTellMeCenterGem || showCenterCollectGem;
 
   /** iOS hides compass-pinned gem once world AR is placed; Android keeps 2D gem when WebGL model may be invisible (e.g. Pixel 2). */
-  /** Hide compass-pinned 2D gem once world AR is placed (Android fallback stays in showAndroidOnsiteCenterGem). */
+  /** Hide compass-pinned overlay gem once world AR is placed — collect via the world model only. */
   const suppressApproachGemForWorldAr = placed && inWebXrHuntBand && showArGem;
 
   const showApproachScreenGem =
@@ -495,23 +495,6 @@ export function GemHuntWebXrAr({
     gemVisibleInCam &&
     !suppressApproachGemForWorldAr;
 
-  /** Weak Android GPUs — world lock succeeds but 3D demon does not read; center 2D gem when onsite with no pin overlay. */
-  const showAndroidOnsiteCenterGem =
-    androidImmersiveAr &&
-    sessionActive &&
-    encounterMode &&
-    !simulateInRange &&
-    !showTellMeCenterGem &&
-    !userDismissedCenterGem &&
-    phase !== "collecting" &&
-    encounterPhase === "encounter" &&
-    inWebXrHuntBand &&
-    placed &&
-    showArGem &&
-    !centerReveal &&
-    !showApproachScreenGem &&
-    !gemVisibleInCam;
-
   showApproachScreenGemRef.current = showApproachScreenGem;
 
   const inGemStayVisibleBand =
@@ -523,7 +506,6 @@ export function GemHuntWebXrAr({
   const showHuntGemOnScreen =
     showTellMeCenterGem ||
     showApproachScreenGem ||
-    showAndroidOnsiteCenterGem ||
     (sessionActive && placed && showArGem && gemVisibleBand && !androidImmersiveAr);
   const gemFoundInView =
     sessionActive &&
@@ -760,10 +742,7 @@ export function GemHuntWebXrAr({
     !centerReveal &&
     sessionActive &&
     inOnsiteBand &&
-    (showArGem ||
-      showApproachScreenGem ||
-      showAndroidOnsiteCenterGem ||
-      gemVisibleInCam);
+    (showArGem || showApproachScreenGem || gemVisibleInCam);
   const hideHuntHintControls =
     !centerReveal && !campusSession && naturalDiscoverActive;
 
@@ -1334,7 +1313,11 @@ export function GemHuntWebXrAr({
             ) : null}
           </div>
         ) : null}
-        <OverlayCloseButton label="סגירה" onClick={handleClose} className="gem-hunt-webxr__close-btn pointer-events-auto" />
+        <OverlayCloseButton
+          label="סגירה"
+          onClick={handleClose}
+          className="gem-hunt-overlay__close gem-hunt-webxr__close-btn pointer-events-auto"
+        />
       </header>
 
       {phase === "collecting" ? (
@@ -1378,32 +1361,6 @@ export function GemHuntWebXrAr({
                   setEncounterPhase("encounter");
                   return;
                 }
-                if (encounterPhase === "encounter") offerEncounterCollect();
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {showAndroidOnsiteCenterGem ? (
-        <div
-          className="gem-hunt-overlay__stage gem-hunt-webxr__android-onsite-stage is-gem-interactive"
-          aria-hidden={false}
-        >
-          <div
-            className={cn(
-              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
-              "is-ring-center is-center-collect is-collect-layer is-android-ar-fallback",
-              canCollectNow && encounterPhase === "encounter" && "is-tap-collect-ready",
-            )}
-          >
-            <GemSprite
-              house={house}
-              mode="3d"
-              size="lg"
-              tapCollect={canCollectNow && encounterPhase === "encounter"}
-              spinWhileCollect={false}
-              onInspectTap={() => {
                 if (encounterPhase === "encounter") offerEncounterCollect();
               }}
             />
