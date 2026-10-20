@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, List, Map as MapIcon, Search, X } from "lucide-react";
 import { toast } from "sonner";
-import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
+import { EventBoundaryKindBadge, BOUNDARY_KIND_LABEL } from "@/components/event-boundary-kind-badge";
 import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
 import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
 import type { BoundarySearchHit } from "@/lib/event-boundary";
 import {
   addEventBoundaryZone,
   removeEventBoundaryZone,
+  zonesDisplacedByAdd,
 } from "@/lib/event-boundary-selection";
 import {
   emptyCustomEventDraft,
@@ -18,12 +19,19 @@ import {
   type CustomEventDraft,
 } from "@/lib/custom-event-draft";
 import type { EventBoundaryZone } from "@/lib/event-boundary";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 type CreatorView = "map" | "list";
 
 const SEARCH_DEBOUNCE_MS = 280;
-const MAP_ZONE_CAP = 80;
 
 function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
   return {
@@ -34,7 +42,17 @@ function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
   };
 }
 
-function ViewToggle({ view, onViewChange, zoneCount }: {
+function zoneSummary(z: EventBoundaryZone): string {
+  const kind = BOUNDARY_KIND_LABEL[z.kind];
+  if (z.kind === "city") return `${kind}: ${z.label}`;
+  return `${kind}: ${z.label}${z.city ? ` (${z.city})` : ""}`;
+}
+
+function ViewToggle({
+  view,
+  onViewChange,
+  zoneCount,
+}: {
   view: CreatorView;
   onViewChange: (v: CreatorView) => void;
   zoneCount: number;
@@ -187,6 +205,35 @@ function clearSearchState(setters: {
   setters.setSuggestOpen(false);
 }
 
+function SelectionToolbar({
+  zoneCount,
+  onClearAll,
+}: {
+  zoneCount: number;
+  onClearAll: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-xs text-white/80">
+        {zoneCount} {zoneCount === 1 ? "אזור" : "אזורים"} באירוע
+      </span>
+      <button
+        type="button"
+        disabled={zoneCount === 0}
+        onClick={onClearAll}
+        className={cn(
+          "rounded-lg border px-3 py-1.5 text-xs font-medium transition",
+          zoneCount > 0
+            ? "border-red-400/45 bg-red-950/40 text-red-100 hover:bg-red-950/65"
+            : "cursor-not-allowed border-white/10 text-white/30",
+        )}
+      >
+        נקה הכל
+      </button>
+    </div>
+  );
+}
+
 export function EventCreatorScreen() {
   const [view, setView] = useState<CreatorView>("map");
   const [draft, setDraft] = useState<CustomEventDraft>(() => loadCustomEventDraft() ?? emptyCustomEventDraft());
@@ -198,6 +245,10 @@ export function EventCreatorScreen() {
   const [listError, setListError] = useState<string | null>(null);
   const [mapFeatures, setMapFeatures] = useState<EventBoundaryMapFeature[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
+  const [replaceConfirm, setReplaceConfirm] = useState<{
+    incoming: EventBoundaryZone;
+    displaced: EventBoundaryZone[];
+  } | null>(null);
 
   const persist = useCallback((next: CustomEventDraft) => {
     setDraft(next);
@@ -205,70 +256,39 @@ export function EventCreatorScreen() {
   }, []);
 
   const selectedIds = useMemo(() => draft.zones.map((z) => z.id), [draft.zones]);
-  const searchActive = query.trim().length > 0 || debouncedQ.trim().length > 0;
-
-  const zonesById = useMemo(() => {
-    const index = new globalThis.Map<string, EventBoundaryZone>();
-    for (const z of draft.zones) index.set(z.id, z);
-    for (const h of hits) index.set(h.id, hitToZone(h));
-    return index;
-  }, [draft.zones, hits]);
-
-  const zonesForMap = useMemo(() => {
-    const selected = draft.zones;
-    if (!searchActive) return selected;
-
-    const taken = new Set(selected.map((z) => z.id));
-    const room = Math.max(0, MAP_ZONE_CAP - selected.length);
-    const previews = hits.filter((h) => !taken.has(h.id)).slice(0, room).map(hitToZone);
-    return [...selected, ...previews];
-  }, [draft.zones, hits, searchActive]);
-
-  const previewIds = useMemo(
-    () => zonesForMap.filter((z) => !selectedIds.includes(z.id)).map((z) => z.id),
-    [zonesForMap, selectedIds],
-  );
 
   const resetSearch = useCallback(() => {
     clearSearchState({ setQuery, setDebouncedQ, setHits, setSuggestOpen });
   }, []);
 
-  const pickHit = useCallback(
-    (hit: BoundarySearchHit) => {
-      if (selectedIds.includes(hit.id)) return;
-      persist({ ...draft, zones: addEventBoundaryZone(draft.zones, hitToZone(hit)) });
-      resetSearch();
-      toast.success(`נוסף: ${hit.label}`);
-    },
-    [draft, persist, selectedIds, resetSearch],
-  );
-
-  const addFromMap = useCallback(
-    (id: string) => {
-      if (selectedIds.includes(id)) return;
-      const zone = zonesById.get(id);
-      if (!zone) return;
+  const commitAdd = useCallback(
+    (zone: EventBoundaryZone) => {
       persist({ ...draft, zones: addEventBoundaryZone(draft.zones, zone) });
       resetSearch();
       toast.success(`נוסף: ${zone.label}`);
     },
-    [draft, persist, selectedIds, zonesById, resetSearch],
+    [draft, persist, resetSearch],
   );
 
-  const onSelectedMapTap = useCallback(
-    (id: string) => {
-      const zone = draft.zones.find((z) => z.id === id);
-      if (!zone) return;
-      toast.message(`${zone.label} כבר באירוע`, {
-        description: "להסרה — עברו לרשימה",
-        action: {
-          label: "רשימה",
-          onClick: () => setView("list"),
-        },
-      });
+  const requestAdd = useCallback(
+    (hit: BoundarySearchHit) => {
+      if (selectedIds.includes(hit.id)) return;
+      const zone = hitToZone(hit);
+      const displaced = zonesDisplacedByAdd(draft.zones, zone);
+      if (displaced.length > 0 && (zone.kind === "city" || zone.kind === "neighborhood")) {
+        setReplaceConfirm({ incoming: zone, displaced });
+        return;
+      }
+      commitAdd(zone);
     },
-    [draft.zones],
+    [commitAdd, draft.zones, selectedIds],
   );
+
+  const confirmReplace = useCallback(() => {
+    if (!replaceConfirm) return;
+    commitAdd(replaceConfirm.incoming);
+    setReplaceConfirm(null);
+  }, [commitAdd, replaceConfirm]);
 
   const removeZone = useCallback(
     (id: string) => {
@@ -279,6 +299,7 @@ export function EventCreatorScreen() {
 
   const clearAllZones = useCallback(() => {
     persist({ ...draft, zones: [] });
+    toast.message("כל האזורים הוסרו");
   }, [draft, persist]);
 
   useEffect(() => {
@@ -323,7 +344,7 @@ export function EventCreatorScreen() {
   }, [debouncedQ]);
 
   useEffect(() => {
-    if (zonesForMap.length === 0) {
+    if (draft.zones.length === 0) {
       setMapFeatures([]);
       return;
     }
@@ -332,7 +353,7 @@ export function EventCreatorScreen() {
     fetch("/api/event-boundaries/geometry", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ zones: zonesForMap }),
+      body: JSON.stringify({ zones: draft.zones }),
     })
       .then(async (res) => {
         const body = (await res.json()) as {
@@ -348,7 +369,7 @@ export function EventCreatorScreen() {
     return () => {
       cancelled = true;
     };
-  }, [zonesForMap]);
+  }, [draft.zones]);
 
   const canContinue = draft.zones.length > 0;
 
@@ -362,7 +383,7 @@ export function EventCreatorScreen() {
       loadingList={loadingList}
       listError={listError}
       selectedIds={selectedIds}
-      onPick={pickHit}
+      onPick={requestAdd}
       listMode={view === "list"}
     />
   );
@@ -371,31 +392,12 @@ export function EventCreatorScreen() {
     <div className="fixed inset-0 z-[250] flex flex-col bg-[#0c0610]">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
         <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-display text-lg text-orange-200">
-              {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
-            </p>
-            {view === "list" && draft.zones.length > 0 ? (
-              <button
-                type="button"
-                onClick={clearAllZones}
-                className="shrink-0 text-xs text-white/45 underline-offset-2 hover:text-white/70 hover:underline"
-              >
-                נקה הכל
-              </button>
-            ) : draft.zones.length > 0 ? (
-              <span className="rounded-full bg-black/55 px-3 py-1 text-xs text-white/75">
-                {draft.zones.length} באירוע
-              </span>
-            ) : null}
-          </div>
+          <p className="font-display text-lg text-orange-200">
+            {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
+          </p>
+          <SelectionToolbar zoneCount={draft.zones.length} onClearAll={clearAllZones} />
           <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
           {searchBlock}
-          {view === "map" && searchActive ? (
-            <p className="text-center text-[11px] text-white/40">
-              סגול = תוצאות חיפוש · ירוק = באירוע · לחיצה על סגול מוסיפה
-            </p>
-          ) : null}
         </header>
 
         {view === "map" ? (
@@ -404,14 +406,17 @@ export function EventCreatorScreen() {
               className="absolute inset-0"
               features={mapFeatures}
               selectedIds={selectedIds}
-              previewIds={previewIds}
-              onPreviewClick={addFromMap}
-              onSelectedClick={onSelectedMapTap}
+              onRemove={removeZone}
             />
             {loadingMap ? (
               <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs text-white/70">
                 מעדכן מפה…
               </div>
+            ) : null}
+            {draft.zones.length > 0 ? (
+              <p className="pointer-events-none absolute bottom-3 right-3 max-w-[11rem] rounded-lg bg-black/55 px-2 py-1 text-[10px] leading-snug text-white/55">
+                לחצו על − במרכז האזור להסרה
+              </p>
             ) : null}
           </div>
         ) : (
@@ -469,6 +474,49 @@ export function EventCreatorScreen() {
           <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
         </button>
       </footer>
+
+      <Dialog open={replaceConfirm !== null} onOpenChange={(open) => !open && setReplaceConfirm(null)}>
+        <DialogContent className="border-white/15 bg-[#1a1024] text-white sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle className="text-orange-200">להחליף אזורים קטנים יותר?</DialogTitle>
+            <DialogDescription className="text-white/70">
+              {replaceConfirm ? (
+                <>
+                  הוספת{" "}
+                  <strong className="font-medium text-white">{zoneSummary(replaceConfirm.incoming)}</strong>{" "}
+                  תסיר את האזורים הבאים (חפיפה):
+                </>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          {replaceConfirm ? (
+            <ul className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/30 p-2 text-sm text-white/85">
+              {replaceConfirm.displaced.map((z) => (
+                <li key={z.id} className="flex items-center gap-2 px-1 py-1">
+                  <EventBoundaryKindBadge kind={z.kind} />
+                  <span className="truncate">{z.label}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <DialogFooter className="border-white/10 bg-transparent sm:justify-stretch">
+            <button
+              type="button"
+              className="flex-1 rounded-lg border border-white/20 px-4 py-2 text-sm"
+              onClick={() => setReplaceConfirm(null)}
+            >
+              ביטול
+            </button>
+            <button
+              type="button"
+              className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white"
+              onClick={confirmReplace}
+            >
+              כן, הוסף
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

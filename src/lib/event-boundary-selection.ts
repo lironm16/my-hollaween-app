@@ -28,6 +28,18 @@ export function addEventBoundaryZone(
   if (zone.kind === "city") {
     const settlement = zone.label.trim();
     next = next.filter((z) => z.id === zone.id || z.kind === "city" || !zoneWithinSettlement(z, settlement));
+  } else if (zone.kind === "neighborhood") {
+    const settlement = zone.city?.trim();
+    if (settlement) {
+      next = next.filter(
+        (z) =>
+          z.id === zone.id ||
+          !(
+            (z.kind === "street" && z.city && settlementNamesMatch(z.city, settlement)) ||
+            (z.kind === "city" && settlementNamesMatch(z.label, settlement))
+          ),
+      );
+    }
   } else {
     const settlement = zone.city?.trim();
     if (settlement) {
@@ -38,6 +50,17 @@ export function addEventBoundaryZone(
   }
 
   return next;
+}
+
+/** Zones removed from the selection if `incoming` is added (for confirm UI). */
+export function zonesDisplacedByAdd(
+  current: EventBoundaryZone[],
+  incoming: EventBoundaryZone,
+): EventBoundaryZone[] {
+  if (current.some((z) => z.id === incoming.id)) return [];
+  const after = addEventBoundaryZone(current, incoming);
+  const afterIds = new Set(after.map((z) => z.id));
+  return current.filter((z) => !afterIds.has(z.id));
 }
 
 export function removeEventBoundaryZone(current: EventBoundaryZone[], id: string): EventBoundaryZone[] {

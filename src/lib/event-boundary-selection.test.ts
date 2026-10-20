@@ -23,6 +23,24 @@ describe("event-boundary-selection", () => {
     assert.equal(next[0]?.kind, "city");
   });
 
+  it("drops same-city streets when adding a neighborhood", () => {
+    const street = {
+      kind: "street" as const,
+      id: zoneKeyStreet("רמת גן", "חרוזים"),
+      label: "חרוזים",
+      city: "רמת גן",
+    };
+    const hood = {
+      kind: "neighborhood" as const,
+      id: zoneKeyNeighborhood("ramat-gan|charuzim"),
+      label: "חרוזים",
+      city: "רמת גן",
+    };
+    const next = addEventBoundaryZone([street], hood);
+    assert.equal(next.length, 1);
+    assert.equal(next[0]?.kind, "neighborhood");
+  });
+
   it("drops settlement when adding a finer zone inside it", () => {
     const city = {
       kind: "city" as const,
