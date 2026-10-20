@@ -1646,7 +1646,6 @@ export function NeighborhoodApp({
                   userLocation={gps}
                   locating={geo.status === "pending" && askedLocation}
                   onLocate={originPick.goToMyLocation}
-                  onAndroidGpsRefresh={geo.hardAndroidRefresh}
                   routeModeActive={routeMode && !originPick.originPickActive}
                   routeLine={routeMode && !originPick.originPickActive ? routeLine : null}
                   routeLineSegments={
