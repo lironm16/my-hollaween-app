@@ -1690,6 +1690,7 @@ export function NeighborhoodApp({
                     adminGemHideMapVisible ? [] : gemUi ? gemMapRingHousesVisible : []
                   }
                   showGemAnchors={adminGemHideMapVisible}
+                  showEventZoneOutlines={adminGemHideMapVisible}
                   gemAnchorVisual="admin"
                   gemAnchorRespectFilters={!adminGemHideMapVisible}
                   onGemAnchorSelect={

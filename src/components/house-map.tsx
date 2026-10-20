@@ -15,6 +15,7 @@ import {
 import L from "leaflet";
 import { LocateFixed } from "lucide-react";
 import { MapGemAnchorLayer, type GemMapAnchorVisual } from "@/components/map-gem-anchor-layer";
+import { MapEventZoneLayer } from "@/components/map-event-zone-layer";
 import {
   MapGemAnchorEditLayer,
   type GemAnchorEditState,
@@ -915,6 +916,8 @@ type Props = {
   gemAnchorEdit?: GemAnchorEditState | null;
   /** Tour mode — cluster ring uses orange for open slices instead of white. */
   routeModeActive?: boolean;
+  /** Admin QA — dashed HallowHood event hood outlines (GeoJSON-backed). */
+  showEventZoneOutlines?: boolean;
 };
 
 export function HouseMap({
@@ -967,6 +970,7 @@ export function HouseMap({
   gemNearHouseIds,
   gemAnchorEdit = null,
   routeModeActive = false,
+  showEventZoneOutlines = false,
 }: Props) {
   const { catalog } = useCatalog();
   const addressRevealSchedule = catalog?.eventSettings?.addressReveal;
@@ -1215,6 +1219,7 @@ export function HouseMap({
             />
           </>
         ) : null}
+        {!pickMode && showEventZoneOutlines ? <MapEventZoneLayer /> : null}
         {!pickMode && gemAnchorEdit ? <MapGemAnchorEditLayer {...gemAnchorEdit} /> : null}
         {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHouses.length > 0 ? (
           <MapGemAnchorLayer

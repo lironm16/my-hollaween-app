@@ -6,6 +6,10 @@ const latPad = 0.0075;
 const lngPad = 0.014;
 
 import { OSM_TILE_ATTRIBUTION, OSM_TILE_TEMPLATE } from "@/lib/carto-tiles";
+import {
+  eventNeighborhoodPolygonRing,
+  pointInEventNeighborhoodPolygon,
+} from "@/lib/event-neighborhood-polygons";
 
 const tiles = {
   // Safe default until /api/map-config returns CARTO (key ok) or keeps OSM fallback.
@@ -168,6 +172,13 @@ function inNeighborhoodZone(lat: number, lng: number, zone: (typeof NEIGHBORHOOD
   return lat >= zone.south && lat <= zone.north && lng >= zone.west && lng <= zone.east;
 }
 
+function inEventNeighborhoodArea(name: NeighborhoodId, lat: number, lng: number): boolean {
+  if (eventNeighborhoodPolygonRing(name)) {
+    return pointInEventNeighborhoodPolygon(name, lat, lng);
+  }
+  return inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES[name]);
+}
+
 function nearestNeighborhood(lat: number, lng: number) {
   let best: NeighborhoodId = NEIGHBORHOODS[0];
   let bestDist = Number.POSITIVE_INFINITY;
@@ -200,9 +211,7 @@ export function neighborhoodFromCoords(lat: number, lng: number): NeighborhoodId
 /** One of the four event neighborhoods, or null when the pin is outside their area. */
 export function neighborhoodAtEventLocation(lat: number, lng: number): NeighborhoodId | null {
   if (!inNeighborhood(lat, lng)) return null;
-  const matches = NEIGHBORHOODS.filter((name) =>
-    inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES[name]),
-  );
+  const matches = NEIGHBORHOODS.filter((name) => inEventNeighborhoodArea(name, lat, lng));
   if (matches.length === 0) return null;
   if (matches.length === 1) return matches[0];
   let best = matches[0];
@@ -254,7 +263,7 @@ export function neighborhoodInferredFromPin(lat: number, lng: number): Neighborh
   if (zoned) return zoned;
   if (isOutsideEventNeighborhoods(lat, lng)) return null;
   for (const name of neighborhoodsByDistance(lat, lng)) {
-    if (name === "הגפן" && !inNeighborhoodZone(lat, lng, NEIGHBORHOOD_ZONES["הגפן"])) {
+    if (name === "הגפן" && !inEventNeighborhoodArea("הגפן", lat, lng)) {
       continue;
     }
     return name;

@@ -1,0 +1,24 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "הגפן",
+    "name": "הגפן",
+    "source": "hallowhood-event",
+    "version": 1,
+    "note": "Event-night perimeter for HallowHood (not OpenStreetMap). Edit coordinates here or in src/lib/event-neighborhood-polygons.ts — keep both in sync."
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [34.8098, 32.08835],
+        [34.81255, 32.08835],
+        [34.8138, 32.08872],
+        [34.8138, 32.0908],
+        [34.8114, 32.0908],
+        [34.8098, 32.09035],
+        [34.8098, 32.08835]
+      ]
+    ]
+  }
+}
