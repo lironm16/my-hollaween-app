@@ -2,11 +2,15 @@
 
 import dynamic from "next/dynamic";
 import type { ComponentProps } from "react";
+import { cn } from "@/lib/utils";
 
-function MapShell() {
+function MapShell({ className }: { className?: string }) {
   return (
     <div
-      className="flex h-[min(52vh,420px)] w-full items-center justify-center rounded-xl border border-white/10 bg-[#1a1024] text-sm text-white/50"
+      className={cn(
+        "flex h-full w-full items-center justify-center bg-[#1a1024] text-sm text-white/50",
+        className,
+      )}
       aria-hidden
     >
       טוען מפה…
@@ -16,7 +20,7 @@ function MapShell() {
 
 const EventCreatorMapLazy = dynamic(
   () => import("@/components/event-creator-map").then((m) => m.EventCreatorMap),
-  { ssr: false, loading: MapShell },
+  { ssr: false, loading: () => <MapShell /> },
 );
 
 export function EventCreatorMapDynamic(props: ComponentProps<typeof EventCreatorMapLazy>) {

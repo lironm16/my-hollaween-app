@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  const zones = body.zones?.slice(0, 30) ?? [];
+  const zones = body.zones?.slice(0, 100) ?? [];
   if (zones.length === 0) {
     return NextResponse.json({ ok: true, type: "FeatureCollection", features: [] });
   }
