@@ -26,7 +26,7 @@ import {
   neighborhoodLabelForPin,
 } from "@/lib/config";
 import type { AddressHit } from "@/lib/types";
-import { streetPinHint } from "@/lib/address-text";
+import { parseStreetAndNumber, streetPinHint } from "@/lib/address-text";
 import {
   isSchoolCampusAddress,
   schoolCampusNeighborhoodForAddress,
@@ -270,8 +270,11 @@ export function HouseForm({
 
   const confirmedHoodLabel = useMemo(() => {
     if (!addressOk) return null;
+    const hasNumber =
+      Boolean(parseStreetAndNumber(form.address.trim()).num) || isSchoolCampusAddress(form.address);
+    if (!hasNumber) return null;
     return lockedSchoolHood ?? form.neighborhood ?? neighborhoodLabelForPin(form.lat, form.lng);
-  }, [addressOk, lockedSchoolHood, form.neighborhood, form.lat, form.lng]);
+  }, [addressOk, form.address, lockedSchoolHood, form.neighborhood, form.lat, form.lng]);
 
   function guessedHood(address: string, lat: number, lng: number) {
     return (

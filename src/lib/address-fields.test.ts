@@ -108,6 +108,20 @@ describe("address fields", () => {
     assert.equal(prepareAddressHit(hit, "ביאליק 37")?.subtitle, undefined);
   });
 
+  it("skips street geocode suggestions until a house number is typed", () => {
+    const suburbOnly: AddressHit = {
+      id: "suburb-haruzim",
+      label: "חרוזים, רמת גן",
+      lat: 32.0825,
+      lng: 34.8145,
+      road: "חרוזים",
+      city: "רמת גן",
+      precise: false,
+    };
+    assert.equal(prepareAddressHit(suburbOnly, "חרוזים"), null);
+    assert.ok(prepareAddressHit(suburbOnly, "חרוזים 8"));
+  });
+
   it("adds neighborhood subtitle for hits inside event zones", () => {
     const hit: AddressHit = {
       id: "p-haruzim",

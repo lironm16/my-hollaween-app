@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
 import { inputStyles } from "@/components/ui/input";
 import type { AddressHit } from "@/lib/types";
-import { streetPinHint } from "@/lib/address-text";
+import { parseStreetAndNumber, streetPinHint } from "@/lib/address-text";
 import { cn } from "@/lib/utils";
 import { useVisualKeyboardOpen } from "@/hooks/use-visual-keyboard-open";
 import { scrollEditableIntoView, subscribeAppViewport } from "@/lib/viewport";
@@ -189,7 +189,9 @@ export function AddressField({
             <li className="px-3 py-2 text-red-200">{error}</li>
           ) : hits.length === 0 ? (
             <li className="px-3 py-2 text-violet-300">
-              אין כתובת כזו בשכונה. נסו רחוב ומספר בית, למשל «חרוזים 8».
+              {parseStreetAndNumber(value.trim()).num
+                ? "אין כתובת כזו בשכונה. נסו רחוב ומספר בית, למשל «חרוזים 8»."
+                : "הוסיפו מספר בית — למשל «חרוזים 8» או «אבא הלל 71»."}
             </li>
           ) : (
             hits.map((hit, i) => {

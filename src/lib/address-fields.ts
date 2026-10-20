@@ -6,7 +6,7 @@ import {
   normalizeNeighborhoodId,
   type NeighborhoodId,
 } from "@/lib/config";
-import { parseStreetAndNumber } from "@/lib/address-text";
+import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
 import { osmFootprintForAddress } from "@/lib/house-footprint-align";
 import { clusterAddressKey } from "@/lib/house-clusters";
 import { hoodSubtitleForAddressHit } from "@/lib/address-hood-label";
@@ -80,6 +80,7 @@ export function addressAutocompleteLabel(hit: AddressHit, query = ""): string {
   const road = queryRoad || hit.road.trim();
   const num = hit.houseNumber?.trim() || parsed.num;
   const street = road && num ? `${road} ${num}` : streetFromAddressHit(hit);
+  if (!street.trim()) return "";
   if (/רמת\s*גן/u.test(street)) return street;
   if (inNeighborhood(hit.lat, hit.lng)) return `${street}, רמת גן`;
   return `${street}, רמת גן`;
@@ -97,6 +98,10 @@ function snapHitToFootprint(hit: AddressHit): AddressHit {
   };
 }
 
+function isCuratedAddressHit(hit: AddressHit) {
+  return hit.id.startsWith("named-place-");
+}
+
 /** Snap to OSM footprints and build a display label (may be outside the four neighborhoods). */
 export function prepareAddressHit(hit: AddressHit, query = ""): AddressHit | null {
   if (!hit.road.trim() && !parseStreetAndNumber(query).road) return null;
@@ -104,11 +109,19 @@ export function prepareAddressHit(hit: AddressHit, query = ""): AddressHit | nul
   const parsed = parseStreetAndNumber(query.trim());
   const withNumber =
     parsed.num && !snapped.houseNumber ? { ...snapped, houseNumber: parsed.num } : snapped;
-  const hoodLine = hoodSubtitleForAddressHit(withNumber);
+  const curated = isCuratedAddressHit(withNumber);
+  if (!curated && !houseNumberFromHit(withNumber, query)) return null;
+  const label = addressAutocompleteLabel(withNumber, query);
+  if (!label.trim()) return null;
+  const hoodLine = hoodSubtitleForAddressHit(withNumber, query);
   return {
     ...withNumber,
-    label: addressAutocompleteLabel(withNumber, query),
-    ...(hoodLine ? { subtitle: hoodLine } : {}),
+    label,
+    ...(hoodLine
+      ? { subtitle: hoodLine }
+      : curated && withNumber.subtitle
+        ? { subtitle: withNumber.subtitle }
+        : {}),
   };
 }
 
@@ -142,11 +155,18 @@ export function footprintAddressHit(query: string): AddressHit | null {
 }
 
 export async function searchPreparedAddresses(query: string): Promise<AddressHit[]> {
-  const named = searchNamedAddressPlaces(query).map((hit) => prepareAddressHit(hit, query)).filter(Boolean) as AddressHit[];
+  const trimmed = query.trim();
+  const parsed = parseStreetAndNumber(trimmed);
+  const named = searchNamedAddressPlaces(trimmed)
+    .map((hit) => prepareAddressHit(hit, trimmed))
+    .filter(Boolean) as AddressHit[];
+  if (!parsed.num) {
+    return named;
+  }
   const { searchAddress } = await import("@/lib/geocode");
-  let hits = prepareAddressHits(await searchAddress(query), query);
+  let hits = prepareAddressHits(await searchAddress(trimmed), trimmed);
   if (hits.length === 0) {
-    const synthetic = footprintAddressHit(query);
+    const synthetic = footprintAddressHit(trimmed);
     if (synthetic) hits = [synthetic];
   }
   const merged = [...named];
