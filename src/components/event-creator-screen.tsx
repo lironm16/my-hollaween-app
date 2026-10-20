@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppHeader } from "@/components/app-header";
-import { EventCreatorMap, type EventBoundaryMapFeature } from "@/components/event-creator-map";
+import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
+import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
 import type { BoundarySearchHit } from "@/lib/event-boundary";
 import {
   clearCustomEventDraft,
@@ -254,7 +255,7 @@ export function EventCreatorScreen() {
             <p className="text-sm text-white/75">
               {loadingMap ? "משרטט גבולות…" : "תצוגה מקדימה על המפה"}
             </p>
-            <EventCreatorMap
+            <EventCreatorMapDynamic
               features={mapFeatures}
               selectedIds={draft.zones.map((z) => z.id)}
             />

@@ -38,10 +38,7 @@ function ringsFromGeometry(geometry: GeoJSON.Geometry): [number, number][][] {
   return [];
 }
 
-export type EventBoundaryMapFeature = GeoJSON.Feature<
-  GeoJSON.Polygon | GeoJSON.MultiPolygon,
-  { id?: string; label?: string; kind?: EventBoundaryKind; source?: string }
->;
+import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
 
 type Props = {
   features: EventBoundaryMapFeature[];
