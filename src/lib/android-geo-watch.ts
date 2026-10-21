@@ -2,21 +2,19 @@ import type { UserLocation } from "@/hooks/use-user-location";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 
 /**
- * One long-lived high-accuracy watch shared by the map and gem hunt on Android.
+ * Shared Android location feed for map + gem hunt.
  *
- * Chrome Android restarts its fused location provider whenever the set of pending
- * requests changes accuracy, or when the last request ends, and every restart first
- * replays the OS "last known" fix. Polling getCurrentPosition, mixing
- * enableHighAccuracy true/false, or tearing the watch down on a timer keeps the
- * provider cold and the dot frozen on that replayed fix. Keep exactly one
- * high-accuracy watch alive and only restart it on errors, silence, or resume.
+ * Some Android configs (often Wi‑Fi / hotspot, no SIM) never deliver watchPosition
+ * callbacks (cb stays 0) but getCurrentPosition does work. Use one high-accuracy
+ * poll at a time — never overlap requests or mix accuracy modes (that froze the dot).
  */
-const WATCH_OPTS: PositionOptions = { enableHighAccuracy: true, maximumAge: 0 };
+const POLL_GAP_MS = 2_000;
+const POLL_OPTS: PositionOptions = {
+  enableHighAccuracy: true,
+  maximumAge: 0,
+  timeout: 25_000,
+};
 
-const SILENCE_RESTART_MS = 30_000;
-const ERROR_RESTART_MS = 2_000;
-const MIN_RESTART_GAP_MS = 5_000;
-/** Map ↔ gem hunt hand-off unsubscribes then resubscribes; don't bounce the provider. */
 const IDLE_STOP_GRACE_MS = 5_000;
 const FRESH_REPLAY_MS = 5_000;
 
@@ -27,19 +25,17 @@ type Subscriber = {
   onDenied?: () => void;
 };
 
-let watchId: number | null = null;
-let watchdogTimer: ReturnType<typeof setInterval> | null = null;
-let restartTimer: ReturnType<typeof setTimeout> | null = null;
+let pollTimer: ReturnType<typeof setTimeout> | null = null;
+let pollInFlight = false;
+let running = false;
 let idleStopTimer: ReturnType<typeof setTimeout> | null = null;
 let lastEmitted: AndroidGeoFix | null = null;
 let lastReceivedAt = 0;
-let lastCallbackAt = 0;
-let lastRestartAt = 0;
 let lastCoordsKey = "";
 let lastCoordsChangeAt = 0;
 let visibilityHooked = false;
 let callbackCount = 0;
-let restartCount = 0;
+let pollErrors = 0;
 let lastErrorCode: number | null = null;
 let lastTimestampSkewMs: number | null = null;
 const subscribers = new Set<Subscriber>();
@@ -54,12 +50,9 @@ function coordsKey(loc: Pick<UserLocation, "lat" | "lng">) {
   return `${loc.lat.toFixed(6)},${loc.lng.toFixed(6)}`;
 }
 
-function onPosition(pos: GeolocationPosition) {
+function ingest(pos: GeolocationPosition) {
   const now = Date.now();
-  lastCallbackAt = now;
   callbackCount += 1;
-  // Android GPS fixes can carry a timestamp skewed from Date.now() (GPS vs system clock),
-  // so filtering on pos.timestamp silently drops every real GPS fix. Use arrival time.
   lastTimestampSkewMs = pos.timestamp > 0 ? pos.timestamp - now : null;
   const measuredAt = now;
   const next: AndroidGeoFix = {
@@ -83,52 +76,63 @@ function onPosition(pos: GeolocationPosition) {
   for (const waiter of [...waiters]) waiter(next);
 }
 
-function onError(err: GeolocationPositionError) {
-  lastCallbackAt = Date.now();
+function onPollError(err: GeolocationPositionError) {
+  pollErrors += 1;
   lastErrorCode = err.code;
   if (err.code === 1) {
-    stopWatch();
+    stopPolling();
     for (const sub of subscribers) sub.onDenied?.();
+  }
+}
+
+function schedulePoll(delayMs = POLL_GAP_MS) {
+  if (!running || subscribers.size === 0 || pollTimer != null) return;
+  pollTimer = setTimeout(() => {
+    pollTimer = null;
+    pollOnce();
+  }, delayMs);
+}
+
+function pollOnce() {
+  if (!running || subscribers.size === 0) return;
+  if (pollInFlight) {
+    schedulePoll(POLL_GAP_MS);
     return;
   }
-  scheduleRestart(ERROR_RESTART_MS);
-}
-
-function startWatch() {
   const g = geo();
-  if (!g || watchId != null) return;
-  lastCallbackAt = Date.now();
-  watchId = g.watchPosition(onPosition, onError, WATCH_OPTS);
-  if (watchdogTimer == null) {
-    watchdogTimer = setInterval(() => {
-      if (watchId != null && Date.now() - lastCallbackAt > SILENCE_RESTART_MS) {
-        restartAndroidGeoWatch();
-      }
-    }, SILENCE_RESTART_MS / 3);
-  }
+  if (!g) return;
+  pollInFlight = true;
+  g.getCurrentPosition(
+    (pos) => {
+      pollInFlight = false;
+      ingest(pos);
+      schedulePoll(POLL_GAP_MS);
+    },
+    (err) => {
+      pollInFlight = false;
+      onPollError(err);
+      if (subscribers.size > 0 && err.code !== 1) schedulePoll(POLL_GAP_MS);
+    },
+    POLL_OPTS,
+  );
 }
 
-function stopWatch() {
-  const g = geo();
-  if (watchId != null) g?.clearWatch(watchId);
-  watchId = null;
-  if (watchdogTimer != null) clearInterval(watchdogTimer);
-  watchdogTimer = null;
-  if (restartTimer != null) clearTimeout(restartTimer);
-  restartTimer = null;
+function startPolling() {
+  if (running) return;
+  running = true;
+  pollOnce();
 }
 
-function scheduleRestart(delayMs: number) {
-  if (restartTimer != null) return;
-  restartTimer = setTimeout(() => {
-    restartTimer = null;
-    restartAndroidGeoWatch();
-  }, delayMs);
+function stopPolling() {
+  running = false;
+  pollInFlight = false;
+  if (pollTimer != null) clearTimeout(pollTimer);
+  pollTimer = null;
 }
 
 function onVisibility() {
   if (typeof document === "undefined" || document.visibilityState !== "visible") return;
-  if (subscribers.size > 0) restartAndroidGeoWatch();
+  if (subscribers.size > 0 && running) pollOnce();
 }
 
 function hookVisibility() {
@@ -137,18 +141,11 @@ function hookVisibility() {
   document.addEventListener("visibilitychange", onVisibility);
 }
 
-/** Rate-limited clearWatch + watchPosition (Chrome may drop watches while backgrounded). */
+/** Immediate poll (e.g. map open / resume). Does not reset session state. */
 export function restartAndroidGeoWatch() {
   if (!isAndroidLike() || !geo() || subscribers.size === 0) return;
-  const sinceLast = Date.now() - lastRestartAt;
-  if (sinceLast < MIN_RESTART_GAP_MS) {
-    scheduleRestart(MIN_RESTART_GAP_MS - sinceLast);
-    return;
-  }
-  lastRestartAt = Date.now();
-  restartCount += 1;
-  stopWatch();
-  startWatch();
+  if (!running) startPolling();
+  else pollOnce();
 }
 
 export function subscribeAndroidGeo(
@@ -164,18 +161,17 @@ export function subscribeAndroidGeo(
   }
   hookVisibility();
   if (lastEmitted) onFix(lastEmitted);
-  startWatch();
+  startPolling();
   return () => {
     if (!subscribers.delete(sub) || subscribers.size > 0) return;
     if (idleStopTimer != null) clearTimeout(idleStopTimer);
     idleStopTimer = setTimeout(() => {
       idleStopTimer = null;
-      if (subscribers.size === 0) stopWatch();
+      if (subscribers.size === 0) stopPolling();
     }, IDLE_STOP_GRACE_MS);
   };
 }
 
-/** Next fix from the shared watch (or a just-received one); never opens a second request. */
 export function readAndroidGeoFix(timeoutMs: number): Promise<AndroidGeoFix | "denied" | null> {
   return new Promise((resolve) => {
     if (!isAndroidLike() || !geo()) {
@@ -183,10 +179,7 @@ export function readAndroidGeoFix(timeoutMs: number): Promise<AndroidGeoFix | "d
       return;
     }
     if (lastEmitted && Date.now() - lastReceivedAt <= FRESH_REPLAY_MS) {
-      const fresh = lastEmitted;
-      const unsub = subscribeAndroidGeo(() => {});
-      setTimeout(unsub, 0);
-      resolve(fresh);
+      resolve(lastEmitted);
       return;
     }
     let done = false;
@@ -223,7 +216,7 @@ export function readAndroidGeoDebug(): {
   timestampSkewMs: number | null;
 } {
   return {
-    active: watchId != null,
+    active: running,
     subscribers: subscribers.size,
     fixAgeMs: lastEmitted ? Date.now() - lastEmitted.measuredAt : null,
     coordsStaleMs: lastCoordsKey ? Date.now() - lastCoordsChangeAt : null,
@@ -231,7 +224,7 @@ export function readAndroidGeoDebug(): {
     lng: lastEmitted?.lng ?? null,
     accuracy: lastEmitted?.accuracy ?? null,
     callbacks: callbackCount,
-    restarts: restartCount,
+    restarts: pollErrors,
     lastErrorCode,
     timestampSkewMs: lastTimestampSkewMs,
   };
@@ -239,19 +232,17 @@ export function readAndroidGeoDebug(): {
 
 /** Test-only: drop module state between cases. */
 export function resetAndroidGeoWatchForTests() {
-  stopWatch();
+  stopPolling();
   if (idleStopTimer != null) clearTimeout(idleStopTimer);
   idleStopTimer = null;
   subscribers.clear();
   waiters.clear();
   lastEmitted = null;
   lastReceivedAt = 0;
-  lastCallbackAt = 0;
-  lastRestartAt = 0;
   lastCoordsKey = "";
   lastCoordsChangeAt = 0;
   callbackCount = 0;
-  restartCount = 0;
+  pollErrors = 0;
   lastErrorCode = null;
   lastTimestampSkewMs = null;
 }
