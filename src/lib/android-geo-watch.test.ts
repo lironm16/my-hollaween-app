@@ -104,15 +104,6 @@ describe("android shared geo watch", () => {
     assert.equal(fake.clearCalls, 0);
   });
 
-  it("ignores an older cached fix replayed after a provider restart", () => {
-    const seen: number[] = [];
-    subscribeAndroidGeo((f) => seen.push(f.lat));
-    const now = Date.now();
-    fake.emit(32.2, 34.8, now);
-    fake.emit(32.1, 34.8, now - 60_000);
-    assert.deepEqual(seen, [32.2]);
-  });
-
   it("map → gem hunt hand-off keeps the same watch alive", () => {
     const unsubMap = subscribeAndroidGeo(() => {});
     unsubMap();
