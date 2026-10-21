@@ -16,24 +16,29 @@ export function GpsDebugChip({ location }: { location: UserLocation | null }) {
   if (!isAndroidLike()) return null;
   void tick;
   const dbg = readAndroidGeoDebug();
-  const fixAge =
-    location?.measuredAt != null
-      ? Math.round((Date.now() - location.measuredAt) / 1000)
-      : dbg.fixAgeMs != null
-        ? Math.round(dbg.fixAgeMs / 1000)
-        : null;
-  const coordsStale =
-    dbg.coordsStaleMs != null ? Math.round(dbg.coordsStaleMs / 1000) : null;
+  const sec = (ms: number | null) => (ms == null ? "—" : Math.round(ms / 1000));
   return (
     <div
       className="pointer-events-none absolute start-2 top-14 z-[600] max-w-[min(100%,16rem)] rounded-lg bg-black/75 px-2 py-1 text-[11px] leading-snug text-sky-100 ring-1 ring-sky-500/40"
       dir="ltr"
     >
-      <div>GPS dbg · subs {dbg.subscribers}</div>
-      <div>fix age {fixAge ?? "—"}s · same coords {coordsStale ?? "—"}s</div>
+      <div>
+        GPS dbg · subs {dbg.subscribers} · watch {dbg.active ? "on" : "off"}
+      </div>
+      <div>
+        cb {dbg.callbacks} · last cb {sec(dbg.fixAgeMs)}s · same {sec(dbg.coordsStaleMs)}s
+      </div>
+      <div>
+        restarts {dbg.restarts} · err {dbg.lastErrorCode ?? "—"} · ts skew {sec(dbg.timestampSkewMs)}s
+      </div>
+      {dbg.lat != null && dbg.lng != null ? (
+        <div>
+          raw {dbg.lat.toFixed(5)}, {dbg.lng.toFixed(5)} ±{Math.round(dbg.accuracy ?? 0)}m
+        </div>
+      ) : null}
       {location ? (
         <div>
-          {location.lat.toFixed(5)}, {location.lng.toFixed(5)} ±{Math.round(location.accuracy)}m
+          dot {location.lat.toFixed(5)}, {location.lng.toFixed(5)} ±{Math.round(location.accuracy)}m
         </div>
       ) : null}
     </div>

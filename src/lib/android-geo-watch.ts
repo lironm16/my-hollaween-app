@@ -38,6 +38,10 @@ let lastRestartAt = 0;
 let lastCoordsKey = "";
 let lastCoordsChangeAt = 0;
 let visibilityHooked = false;
+let callbackCount = 0;
+let restartCount = 0;
+let lastErrorCode: number | null = null;
+let lastTimestampSkewMs: number | null = null;
 const subscribers = new Set<Subscriber>();
 const waiters = new Set<(location: AndroidGeoFix) => void>();
 
@@ -53,9 +57,11 @@ function coordsKey(loc: Pick<UserLocation, "lat" | "lng">) {
 function onPosition(pos: GeolocationPosition) {
   const now = Date.now();
   lastCallbackAt = now;
-  const measuredAt = pos.timestamp > 0 ? pos.timestamp : now;
-  // Provider restarts replay an older cached fix; never step the dot backwards in time.
-  if (lastEmitted && measuredAt < lastEmitted.measuredAt) return;
+  callbackCount += 1;
+  // Android GPS fixes can carry a timestamp skewed from Date.now() (GPS vs system clock),
+  // so filtering on pos.timestamp silently drops every real GPS fix. Use arrival time.
+  lastTimestampSkewMs = pos.timestamp > 0 ? pos.timestamp - now : null;
+  const measuredAt = now;
   const next: AndroidGeoFix = {
     lat: pos.coords.latitude,
     lng: pos.coords.longitude,
@@ -79,6 +85,7 @@ function onPosition(pos: GeolocationPosition) {
 
 function onError(err: GeolocationPositionError) {
   lastCallbackAt = Date.now();
+  lastErrorCode = err.code;
   if (err.code === 1) {
     stopWatch();
     for (const sub of subscribers) sub.onDenied?.();
@@ -139,6 +146,7 @@ export function restartAndroidGeoWatch() {
     return;
   }
   lastRestartAt = Date.now();
+  restartCount += 1;
   stopWatch();
   startWatch();
 }
@@ -208,6 +216,11 @@ export function readAndroidGeoDebug(): {
   coordsStaleMs: number | null;
   lat: number | null;
   lng: number | null;
+  accuracy: number | null;
+  callbacks: number;
+  restarts: number;
+  lastErrorCode: number | null;
+  timestampSkewMs: number | null;
 } {
   return {
     active: watchId != null,
@@ -216,6 +229,11 @@ export function readAndroidGeoDebug(): {
     coordsStaleMs: lastCoordsKey ? Date.now() - lastCoordsChangeAt : null,
     lat: lastEmitted?.lat ?? null,
     lng: lastEmitted?.lng ?? null,
+    accuracy: lastEmitted?.accuracy ?? null,
+    callbacks: callbackCount,
+    restarts: restartCount,
+    lastErrorCode,
+    timestampSkewMs: lastTimestampSkewMs,
   };
 }
 
@@ -232,4 +250,8 @@ export function resetAndroidGeoWatchForTests() {
   lastRestartAt = 0;
   lastCoordsKey = "";
   lastCoordsChangeAt = 0;
+  callbackCount = 0;
+  restartCount = 0;
+  lastErrorCode = null;
+  lastTimestampSkewMs = null;
 }
