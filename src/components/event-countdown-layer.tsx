@@ -6,6 +6,10 @@ import { EventCountdownBar } from "@/components/event-countdown-bar";
 import { EventCountdownFinale } from "@/components/event-countdown-finale";
 import { useEventCountdown } from "@/hooks/use-event-countdown";
 import { eventCountdownIsZero } from "@/lib/event-countdown";
+import {
+  markEventCountdownIntroSeen,
+  readEventCountdownIntroSeen,
+} from "@/lib/event-countdown-intro";
 
 const EventCountdownScreen = dynamic(
   () => import("@/components/event-countdown-screen").then((m) => m.EventCountdownScreen),
@@ -20,7 +24,14 @@ export function EventCountdownLayer({ onComplete }: { onComplete: () => void }) 
   const eventCountdown = useEventCountdown({ screenOpen: screenOpen && !finale });
 
   const openScreen = useCallback(() => setScreenOpen(true), []);
-  const closeScreen = useCallback(() => setScreenOpen(false), []);
+  const closeScreen = useCallback(() => {
+    markEventCountdownIntroSeen();
+    setScreenOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!readEventCountdownIntroSeen()) setScreenOpen(true);
+  }, []);
 
   const beginFinale = useCallback(() => {
     setFinale(true);
