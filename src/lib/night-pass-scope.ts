@@ -34,7 +34,7 @@ export const PUBLIC_NIGHT_PASS_SCOPE: NightPassScopeContext = {
 
 export type ScopedHouses<T> = {
   houses: T[];
-  /** Homes the viewer cannot see at all (public visitors only). */
+  /** Homes the viewer cannot see at all (owners without a pass on other homes). */
   hiddenHouseCount: number;
   /** Rehearsal stubs among {@link hiddenHouseCount}. */
   hiddenStubHouseCount: number;
@@ -55,20 +55,24 @@ export function hiddenHouseCountForSet(
 /**
  * Night-pass visibility for one viewer. Input rows must be unredacted.
  * - business / school: everything, always
- * - homes (even in a business's building): never sent to public visitors; pass holders + admin
- *   see them all (address/arrival/notes after reveal), owners see their own
+ * - homes: on the map for everyone once entrance codes are on (pins + catalog like pass holders);
+ *   full address/arrival/notes only for pass holders after reveal, owners for their row, admin
  */
 export function scopeHousesForViewer<T extends ScopeRow>(
   rows: readonly T[],
   ctx: NightPassScopeContext,
 ): ScopedHouses<T> {
-  const seesAllHomes = ctx.viewer === "pass" || ctx.viewer === "admin";
+  const seesAllHomes =
+    ctx.viewer === "pass" || ctx.viewer === "admin" || ctx.viewer === "public";
   const houses: T[] = [];
   let hiddenHouseCount = 0;
   let hiddenStubHouseCount = 0;
   for (const row of rows) {
     const owned = ctx.ownedIds.has(row.id);
-    const detailsOpen = owned || ctx.viewer === "admin" || (seesAllHomes && ctx.revealed);
+    const detailsOpen =
+      owned ||
+      ctx.viewer === "admin" ||
+      (ctx.viewer === "pass" && ctx.revealed);
     if (isPublicTierHouse(row)) {
       houses.push({ ...row, locationPublic: true });
       continue;

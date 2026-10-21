@@ -70,17 +70,29 @@ describe("night pass scope", () => {
     assert.equal(isPublicTierHouse(home), false);
   });
 
-  it("public visitors get businesses only — homes in a business's building are not sent", () => {
+  it("public visitors see every home on the map — addresses like pass holders before reveal", () => {
     const scoped = scopeHousesForViewer(all, PUBLIC_NIGHT_PASS_SCOPE);
-    assert.deepEqual(
-      scoped.houses.map((house) => house.id),
-      ["נק-1"],
-    );
-    assert.equal(scoped.hiddenHouseCount, 3);
-    const biz = scoped.houses[0]!;
+    assert.equal(scoped.houses.length, 4);
+    assert.equal(scoped.hiddenHouseCount, 0);
+    const biz = scoped.houses.find((house) => house.id === "נק-1")!;
     assert.equal(biz.address, "סוקולוב 10");
     assert.equal(biz.arrival, "כניסה מהחצר");
     assert.equal(biz.locationPublic, true);
+    const homeBefore = scoped.houses.find((house) => house.id === "בית-1")!;
+    assert.equal(homeBefore.address, "");
+    assert.equal(homeBefore.arrival, "");
+    assert.equal(homeBefore.lat, home.lat);
+    const mate = scoped.houses.find((house) => house.id === "בית-3")!;
+    assert.equal(mate.address, "");
+    assert.equal(mate.arrival, "");
+    assert.notEqual(mate.locationPublic, true);
+  });
+
+  it("public visitors stay redacted after reveal — only pass holders get street addresses", () => {
+    const scoped = scopeHousesForViewer(all, ctx({ viewer: "public", revealed: true }));
+    const homeAfter = scoped.houses.find((house) => house.id === "בית-1")!;
+    assert.equal(homeAfter.address, "");
+    assert.equal(homeAfter.arrival, "");
   });
 
   it("pass holders see every home, addresses only after reveal", () => {
@@ -132,14 +144,17 @@ describe("night pass scope", () => {
     assert.equal(scoped.hiddenHouseCount, 2);
   });
 
-  it("splits the hidden-home teaser by the viewer's house set", () => {
+  it("splits the hidden-home teaser by the viewer's house set (owner without pass)", () => {
     const stubHome = row({ id: "סטאב-1", address: "הגפן 4", isStub: true });
-    const scoped = scopeHousesForViewer([...all, stubHome], PUBLIC_NIGHT_PASS_SCOPE);
-    assert.equal(scoped.hiddenHouseCount, 4);
+    const scoped = scopeHousesForViewer(
+      [...all, stubHome],
+      ctx({ viewer: "owner", revealed: false, ownedIds: new Set(["בית-1"]) }),
+    );
+    assert.equal(scoped.hiddenHouseCount, 3);
     assert.equal(scoped.hiddenStubHouseCount, 1);
-    assert.equal(hiddenHouseCountForSet(scoped, "real"), 3);
+    assert.equal(hiddenHouseCountForSet(scoped, "real"), 2);
     assert.equal(hiddenHouseCountForSet(scoped, "stubs"), 1);
-    assert.equal(hiddenHouseCountForSet(scoped, "all"), 4);
+    assert.equal(hiddenHouseCountForSet(scoped, "all"), 3);
     assert.equal(hiddenHouseCountForSet({ hiddenHouseCount: 5 }, "real"), 5);
   });
 
