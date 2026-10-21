@@ -23,7 +23,7 @@ export function GpsDebugChip({ location }: { location: UserLocation | null }) {
       dir="ltr"
     >
       <div>
-        GPS dbg · subs {dbg.subscribers} · watch {dbg.active ? "on" : "off"}
+        GPS dbg · subs {dbg.subscribers} · poll {dbg.active ? "on" : "off"}
       </div>
       <div>
         cb {dbg.callbacks} · last cb {sec(dbg.fixAgeMs)}s · same {sec(dbg.coordsStaleMs)}s
