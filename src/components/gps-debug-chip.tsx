@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { readAndroidGeoDebug } from "@/lib/android-geo-poll";
+import { readAndroidGeoDebug } from "@/lib/android-geo-watch";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 import type { UserLocation } from "@/hooks/use-user-location";
 

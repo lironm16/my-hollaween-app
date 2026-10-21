@@ -1,16 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 import { distanceMeters } from "@/lib/geo";
 import { shouldStartGeoWatchOnBoot, trustPermissionsQueryDenied } from "@/lib/geo-watch-boot";
-import { kickAndroidGeoPoll, subscribeAndroidGeoPoll } from "@/lib/android-geo-poll";
-import { androidMapUsesGeoPolling } from "@/lib/map-geo-platform";
-import {
-  clearGpsSessionSeed,
-  readGpsSessionSeed,
-  writeGpsSessionSeed,
-} from "@/lib/gps-session-seed";
+import { readAndroidGeoFix, subscribeAndroidGeo } from "@/lib/android-geo-watch";
+import { usesSharedAndroidGeoWatch } from "@/lib/map-geo-platform";
+import { readGpsSessionSeed, writeGpsSessionSeed } from "@/lib/gps-session-seed";
 
 export type UserLocation = {
   lat: number;
@@ -34,11 +29,7 @@ const freshOpts: PositionOptions = {
   timeout: 15_000,
 };
 
-const androidRelaxedOpts: PositionOptions = {
-  enableHighAccuracy: false,
-  maximumAge: 15_000,
-  timeout: 22_000,
-};
+const ANDROID_REFRESH_WAIT_MS = 15_000;
 
 /** One-shot reads — allow a recent OS fix (e.g. Google Maps just updated GPS). */
 export const GEOLOCATION_CACHED_OPTS: PositionOptions = {
@@ -148,15 +139,6 @@ export function useUserLocation(options?: { watch?: boolean }) {
 
   const restartWatchRef = useRef<() => void>(() => {});
 
-  const pokeRelaxedFix = useCallback(() => {
-    if (!navigator.geolocation || !isAndroidLike()) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => apply(pos),
-      () => {},
-      androidRelaxedOpts,
-    );
-  }, [apply]);
-
   const fail = useCallback(
     (err?: GeolocationPositionError) => {
       if (err?.code === 1) {
@@ -170,30 +152,33 @@ export function useUserLocation(options?: { watch?: boolean }) {
         setStatus("error");
       }
       if (err?.code === 2 || err?.code === 3) {
-        if (isAndroidLike()) pokeRelaxedFix();
-        if (!androidMapUsesGeoPolling()) {
-          window.setTimeout(() => restartWatchRef.current(), 800);
-        }
+        window.setTimeout(() => restartWatchRef.current(), 800);
       }
     },
-    [pokeRelaxedFix, stopWatch],
+    [stopWatch],
   );
 
-  const startAndroidPoll = useCallback(() => {
-    if (!watchEnabled || !androidMapUsesGeoPolling()) return;
+  const startAndroidWatch = useCallback(() => {
+    if (!watchEnabled || !usesSharedAndroidGeoWatch()) return;
     if (!navigator.geolocation) {
       setStatus("unavailable");
       return;
     }
     if (androidUnsubRef.current) return;
     setStatus((s) => (s === "ready" ? s : "pending"));
-    androidUnsubRef.current = subscribeAndroidGeoPoll((loc) =>
-      applyFix({
-        lat: loc.lat,
-        lng: loc.lng,
-        accuracy: loc.accuracy,
-        measuredAt: loc.measuredAt,
-      }),
+    androidUnsubRef.current = subscribeAndroidGeo(
+      (loc) =>
+        applyFix({
+          lat: loc.lat,
+          lng: loc.lng,
+          accuracy: loc.accuracy,
+          measuredAt: loc.measuredAt,
+        }),
+      () => {
+        androidUnsubRef.current?.();
+        androidUnsubRef.current = null;
+        setStatus("denied");
+      },
     );
   }, [applyFix, watchEnabled]);
 
@@ -203,8 +188,8 @@ export function useUserLocation(options?: { watch?: boolean }) {
       setStatus("unavailable");
       return;
     }
-    if (androidMapUsesGeoPolling()) {
-      startAndroidPoll();
+    if (usesSharedAndroidGeoWatch()) {
+      startAndroidWatch();
       return;
     }
     if (watchId.current !== null) return;
@@ -212,7 +197,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
     const opts = mapWatchPositionOptions();
     watchId.current = navigator.geolocation.watchPosition((pos) => apply(pos), fail, opts);
     navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, opts);
-  }, [apply, fail, startAndroidPoll, watchEnabled]);
+  }, [apply, fail, startAndroidWatch, watchEnabled]);
 
   const restartWatch = useCallback(() => {
     stopWatch();
@@ -222,15 +207,9 @@ export function useUserLocation(options?: { watch?: boolean }) {
   restartWatchRef.current = restartWatch;
 
   const pokeFreshFix = useCallback(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => apply(pos),
-      () => {
-        if (isAndroidLike()) pokeRelaxedFix();
-      },
-      freshOpts,
-    );
-  }, [apply, pokeRelaxedFix]);
+    if (!navigator.geolocation || usesSharedAndroidGeoWatch()) return;
+    navigator.geolocation.getCurrentPosition((pos) => apply(pos), () => {}, freshOpts);
+  }, [apply]);
 
   const refresh = useCallback((): Promise<UserLocation | null> => {
     if (!navigator.geolocation) {
@@ -246,8 +225,24 @@ export function useUserLocation(options?: { watch?: boolean }) {
           return;
         }
         setStatus((s) => (s === "ready" ? s : "pending"));
-        if (isAndroidLike()) kickAndroidGeoPoll(true);
         if (shouldStartGeoWatchOnBoot(permission)) startWatch();
+
+        if (usesSharedAndroidGeoWatch()) {
+          const fix = await readAndroidGeoFix(ANDROID_REFRESH_WAIT_MS);
+          if (fix === "denied") {
+            setStatus("denied");
+            resolve(null);
+            return;
+          }
+          if (fix) {
+            applyFix(fix);
+            resolve(fix);
+            return;
+          }
+          setStatus(last.current ? "ready" : "error");
+          resolve(last.current);
+          return;
+        }
 
         const finish = (pos: GeolocationPosition) => {
           apply(pos);
@@ -263,17 +258,6 @@ export function useUserLocation(options?: { watch?: boolean }) {
             navigator.geolocation.getCurrentPosition(
               finish,
               (retryErr) => {
-                if (isAndroidLike() && retryErr.code !== 1) {
-                  navigator.geolocation.getCurrentPosition(
-                    finish,
-                    (finalErr) => {
-                      fail(finalErr);
-                      resolve(last.current);
-                    },
-                    androidRelaxedOpts,
-                  );
-                  return;
-                }
                 fail(retryErr);
                 resolve(last.current);
               },
@@ -292,7 +276,7 @@ export function useUserLocation(options?: { watch?: boolean }) {
         );
       })();
     });
-  }, [apply, fail, startWatch]);
+  }, [apply, applyFix, fail, startWatch]);
 
   const resumeTracking = useCallback(() => {
     const seed = readGpsSessionSeed();
@@ -303,14 +287,13 @@ export function useUserLocation(options?: { watch?: boolean }) {
       setStatus("ready");
     }
     if (!watchEnabled) return;
-    if (androidMapUsesGeoPolling()) {
-      kickAndroidGeoPoll(true);
-      startAndroidPoll();
+    if (usesSharedAndroidGeoWatch()) {
+      startAndroidWatch();
       return;
     }
     restartWatch();
     pokeFreshFix();
-  }, [pokeFreshFix, restartWatch, startAndroidPoll, watchEnabled]);
+  }, [pokeFreshFix, restartWatch, startAndroidWatch, watchEnabled]);
 
   useEffect(() => {
     if (!watchEnabled) return;
@@ -375,15 +358,5 @@ export function useUserLocation(options?: { watch?: boolean }) {
     };
   }, [watchEnabled, startWatch, stopWatch, pokeFreshFix]);
 
-  const hardAndroidRefresh = useCallback(async () => {
-    if (!isAndroidLike()) return refresh();
-    clearGpsSessionSeed();
-    last.current = null;
-    lastFixAtRef.current = 0;
-    setLocation(null);
-    kickAndroidGeoPoll(true);
-    return refresh();
-  }, [refresh]);
-
-  return { location, status, refresh, hardAndroidRefresh, setWatchEnabled };
+  return { location, status, refresh, setWatchEnabled };
 }

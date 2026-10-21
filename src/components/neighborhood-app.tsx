@@ -92,7 +92,6 @@ import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Button } from "@/components/ui/button";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { housesWithLocationPolicy } from "@/lib/address-reveal";
-import { kickAndroidGeoPoll, readAndroidGeoDebug } from "@/lib/android-geo-poll";
 import { adminDeviceOwnerPowers, adminShowsPrivateHouseFields } from "@/lib/admin-preview-as-user";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -798,29 +797,14 @@ export function NeighborhoodApp({
   });
 
   useEffect(() => {
-    if (view !== "map" || !isAndroidLike()) return;
-    const id = window.setInterval(() => {
-      const dbg = readAndroidGeoDebug();
-      const coordsStuck = (dbg.coordsStaleMs ?? 0) > 10_000;
-      const fixOld = (dbg.fixAgeMs ?? 0) > 12_000;
-      if (coordsStuck || fixOld) void geo.hardAndroidRefresh();
-    }, 6_000);
-    return () => window.clearInterval(id);
-  }, [view, geo.hardAndroidRefresh]);
-
-  useEffect(() => {
-    /** Android: gem hunt runs its own GPS loop — a second consumer freezes the map dot. */
-    const gemHuntOwnsAndroidGps = isAndroidLike() && Boolean(mapGemHouse);
     const watchMap =
-      !gemHuntOwnsAndroidGps &&
-      (view === "map" ||
-        routeMode ||
-        originPick.originPickActive ||
-        originPick.originPickerOpen ||
-        Boolean(mapGemHouse));
+      view === "map" ||
+      routeMode ||
+      originPick.originPickActive ||
+      originPick.originPickerOpen ||
+      Boolean(mapGemHouse);
     setWatchEnabled(watchMap);
     if (watchMap && view === "map") {
-      if (isAndroidLike()) kickAndroidGeoPoll(true);
       void geo.refresh();
     }
   }, [

@@ -4,8 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { reversePin } from "@/components/address-field";
 import { config, inNeighborhood } from "@/lib/config";
-import { kickAndroidGeoPoll } from "@/lib/android-geo-poll";
-import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 import { geoLocationFailureToastHe } from "@/lib/geo-location-access";
 import { isStandaloneDisplay } from "@/lib/push-client";
 import { writeHomeView, type HomeView } from "@/lib/home-view";
@@ -130,7 +128,6 @@ export function useOriginPick({
 
   const goToMyLocation = useCallback(() => {
     setAskedLocation(true);
-    if (isAndroidLike()) kickAndroidGeoPoll(true);
     void geo.refresh().then((fix) => {
       const point = fix ?? gps;
       if (!point) return;
