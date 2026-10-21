@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { subscribeAndroidGeoPoll } from "@/lib/android-geo-poll";
+import { subscribeAndroidGeo } from "@/lib/android-geo-watch";
 import { distanceMeters } from "@/lib/geo";
 import { isAndroidLike } from "@/lib/gem-hunt-ar-platform";
 
@@ -68,7 +68,7 @@ export function useGemHuntLocation(enabled: boolean) {
     if (!navigator.geolocation) return;
 
     if (isAndroidLike()) {
-      androidUnsubRef.current = subscribeAndroidGeoPoll((loc) =>
+      androidUnsubRef.current = subscribeAndroidGeo((loc) =>
         applyFix({
           lat: loc.lat,
           lng: loc.lng,
