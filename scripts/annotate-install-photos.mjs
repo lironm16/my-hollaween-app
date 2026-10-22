@@ -25,15 +25,46 @@ async function rawRgb(src) {
   return { data, w: info.width, h: info.height, c: info.channels };
 }
 
-/** «פרטים נוספים» link row — above the blue **הבנתי** button. */
+/** «פרטים נוספים» — tight row on the right, above **הבנתי**. */
 async function detectPlayProtectDetailsLink(src) {
-  const meta = await sharp(src).metadata();
-  const w = meta.width;
-  const h = meta.height;
-  const padX = w * 0.14;
-  const y = h * 0.592;
-  const rh = h * 0.042;
-  return { padX, y, rw: w - padX * 2, rh };
+  const { data, w, h, c } = await rawRgb(src);
+  const yStart = Math.floor(h * 0.52);
+  const yEnd = Math.floor(h * 0.64);
+  const xMin = Math.floor(w * 0.28);
+  const xMax = Math.floor(w * 0.92);
+
+  let bestY = yStart;
+  let bestCount = 0;
+  for (let y = yStart; y < yEnd; y++) {
+    let count = 0;
+    for (let x = xMin; x < xMax; x++) {
+      const i = (y * w + x) * c;
+      const lum = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      if (lum < 90) count++;
+    }
+    if (count > bestCount) {
+      bestCount = count;
+      bestY = y;
+    }
+  }
+
+  let minX = w;
+  let maxX = 0;
+  for (let x = xMin; x < xMax; x++) {
+    const i = (bestY * w + x) * c;
+    const lum = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    if (lum < 90) {
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+    }
+  }
+
+  const pad = Math.max(4, Math.round(w * 0.008));
+  const rh = Math.max(Math.round(h * 0.032), 24);
+  const padX = Math.max(0, minX - pad);
+  const rw = Math.min(w - padX, maxX - minX + pad * 2);
+  const y = Math.max(0, bestY - Math.floor(rh / 2));
+  return { padX, y, rw, rh };
 }
 
 async function writeJpegFrom(src, relPath) {
@@ -76,18 +107,11 @@ const confirmSrc =
 const playProtectSrc =
   process.env.ANDROID_PLAY_PROTECT_SRC ?? join(assets, "android-play-protect-source.jpg");
 
-const androidAppFull = join(root, "public", "help", "install", "android-1-app.png");
 const androidHeader =
   process.env.ANDROID_HEADER_SRC ??
   join(assets, "android-header-install.png");
 
 async function writeAndroidStepImages() {
-  const meta = await sharp(androidAppFull).metadata();
-  const topCrop = Math.min(480, meta.height ?? 480);
-  const topBuf = await sharp(androidAppFull)
-    .extract({ left: 0, top: 0, width: meta.width, height: topCrop })
-    .toBuffer();
-  await writePairJpeg(topBuf, "android-1-app.jpg");
   await writePairJpeg(androidHeader, "android-2-install.jpg");
 }
 

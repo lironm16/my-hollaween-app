@@ -43,14 +43,8 @@ const IPHONE_STEPS = [
 
 const ANDROID_STEPS = [
   {
-    title: "פתחו ב-Chrome",
-    body: "השתמשו ב-Google Chrome (לא Samsung Internet). אם HallowHood כבר מותקנת ו-Google חוסם — מחקו אותה מהגדרות → אפליקציות.",
-    image: installHelpImage("android-1-app.jpg"),
-    imageAlt: "HallowHood ב-Chrome",
-  },
-  {
     title: "התקנת האפליקציה",
-    body: "לחצו על **התקנת האפליקציה** (אייקון ההורדה בראש המסך) ואשרו בהתקנה.",
+    body: "פתחו את האתר ב-**Google Chrome** (לא Samsung Internet). לחצו על **התקנת האפליקציה** (אייקון ההורדה בראש המסך) ואשרו בהתקנה. אם HallowHood כבר מותקנת ו-Google חוסם — מחקו אותה מהגדרות → אפליקציות ונסו שוב.",
     image: installHelpImage("android-2-install.jpg"),
     imageHighlight: ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
     imageAlt: "כפתור התקנת האפליקציה ב-Chrome",
@@ -91,7 +85,7 @@ function AndroidInstallSection() {
       <p className="text-base leading-relaxed text-violet-200/90">
         <HelpText>
           {
-            "באנדרואיד: התקינו דרך כפתור **התקנת האפליקציה** בראש המסך (Chrome). בטלפונים חדשים Google Play Protect לפעמים חוסם — זה לא באג באתר; ראו **פתרון** למטה."
+            "בטלפונים חדשים Google Play Protect לפעמים חוסם אחרי ההתקנה — זה לא באג באתר; ראו **פתרון** למטה."
           }
         </HelpText>
       </p>
