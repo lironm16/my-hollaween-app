@@ -5,6 +5,7 @@ import { HelpExpandable, HelpShell, HelpStep } from "@/components/help-shell";
 import { HelpText } from "@/lib/render-help-text";
 import { helpImage } from "@/lib/help-images";
 import {
+  ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
   IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT,
   IOS_INSTALL_ADD_HOME_HIGHLIGHT,
   IOS_INSTALL_SHARE_HIGHLIGHT,
@@ -50,7 +51,8 @@ const ANDROID_STEPS = [
   {
     title: "התקנת האפליקציה",
     body: "לחצו על **התקנת האפליקציה** (אייקון ההורדה בראש המסך) ואשרו בהתקנה.",
-    image: installHelpImage("android-1-app.jpg"),
+    image: installHelpImage("android-2-install.jpg"),
+    imageHighlight: ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
     imageAlt: "כפתור התקנת האפליקציה ב-Chrome",
   },
 ] as const;

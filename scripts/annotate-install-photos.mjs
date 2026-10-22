@@ -25,39 +25,15 @@ async function rawRgb(src) {
   return { data, w: info.width, h: info.height, c: info.channels };
 }
 
-async function detectPlayProtectButton(src) {
-  const { data, w, h, c } = await rawRgb(src);
-  let minX = 1e9;
-  let minY = 1e9;
-  let maxX = 0;
-  let maxY = 0;
-  let n = 0;
-  for (let y = Math.floor(h * 0.5); y < Math.floor(h * 0.78); y++) {
-    for (let x = Math.floor(w * 0.1); x < Math.floor(w * 0.9); x++) {
-      const i = (y * w + x) * c;
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      if (b > 140 && g > 80 && r < 80 && b > g) {
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-        n++;
-      }
-    }
-  }
-  if (n < 100) {
-    return { padX: w * 0.1, y: h * 0.666, rw: w * 0.8, rh: h * 0.048 };
-  }
-  const pad = w * 0.028;
-  const padY = h * 0.012;
-  return {
-    padX: minX - pad,
-    y: minY - padY,
-    rw: maxX - minX + pad * 2,
-    rh: maxY - minY + padY * 2,
-  };
+/** «פרטים נוספים» link row — above the blue **הבנתי** button. */
+async function detectPlayProtectDetailsLink(src) {
+  const meta = await sharp(src).metadata();
+  const w = meta.width;
+  const h = meta.height;
+  const padX = w * 0.14;
+  const y = h * 0.592;
+  const rh = h * 0.042;
+  return { padX, y, rw: w - padX * 2, rh };
 }
 
 async function writeJpegFrom(src, relPath) {
@@ -85,7 +61,7 @@ function writePairCopy(src, baseName) {
 }
 
 async function annotatePlayProtect(src) {
-  const box = await detectPlayProtectButton(src);
+  const box = await detectPlayProtectDetailsLink(src);
   const meta = await sharp(src).metadata();
   const w = meta.width;
   const h = meta.height;
@@ -101,7 +77,21 @@ const playProtectSrc =
   process.env.ANDROID_PLAY_PROTECT_SRC ?? join(assets, "android-play-protect-source.jpg");
 
 const androidAppFull = join(root, "public", "help", "install", "android-1-app.png");
-await writePairJpeg(androidAppFull, "android-1-app.jpg");
+const androidHeader =
+  process.env.ANDROID_HEADER_SRC ??
+  join(assets, "android-header-install.png");
+
+async function writeAndroidStepImages() {
+  const meta = await sharp(androidAppFull).metadata();
+  const topCrop = Math.min(480, meta.height ?? 480);
+  const topBuf = await sharp(androidAppFull)
+    .extract({ left: 0, top: 0, width: meta.width, height: topCrop })
+    .toBuffer();
+  await writePairJpeg(topBuf, "android-1-app.jpg");
+  await writePairJpeg(androidHeader, "android-2-install.jpg");
+}
+
+await writeAndroidStepImages();
 
 writePairCopy(shareSrc, "ios-2-share-photo.jpg");
 writePairCopy(homeSrc, "ios-3-add-home-photo.png");
