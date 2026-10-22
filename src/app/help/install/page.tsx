@@ -46,8 +46,6 @@ const ANDROID_STEPS = [
   {
     title: "התקנת האפליקציה",
     body: "ב-**Chrome** — לחצו **הורדה** בראש המסך ואשרו.",
-    issueNote:
-      "כבר מותקן ו-Google חוסם? מחקו מ**הגדרות → אפליקציות** ונסו שוב.",
     imageFirst: true,
     image: installHelpImage("android-2-install.jpg"),
     imageHighlight: ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
