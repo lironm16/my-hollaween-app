@@ -8,23 +8,23 @@ export const IOS_INSTALL_SHARE_HIGHLIGHT: HelpShotHighlight = {
   kind: "ring",
   cx: 0.479,
   cy: 0.929,
-  r: 0.038,
+  r: 0.056,
 };
 
 /** iOS share sheet — **Add to Home Screen** row (924×2000 reference). */
 export const IOS_INSTALL_ADD_HOME_HIGHLIGHT: HelpShotHighlight = {
   kind: "row",
-  x: 0.035,
-  y: 0.477,
-  w: 0.93,
-  h: 0.042,
+  x: 0.02,
+  y: 0.465,
+  w: 0.96,
+  h: 0.062,
 };
 
 /** iOS **Add to Home Screen** confirm — **Add** (969×2000 reference). */
 export const IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT: HelpShotHighlight = {
   kind: "row",
-  x: 0.808,
-  y: 0.036,
-  w: 0.17,
-  h: 0.038,
+  x: 0.772,
+  y: 0.028,
+  w: 0.21,
+  h: 0.052,
 };

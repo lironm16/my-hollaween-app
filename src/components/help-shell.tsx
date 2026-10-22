@@ -105,14 +105,14 @@ function HelpShotHighlightLayer({ spec }: { spec: HelpShotHighlight }) {
         }}
         aria-hidden
       >
-        <div className="absolute inset-0 rounded-full border-[3px] border-[#ff9500]" />
-        <div className="absolute inset-[-14%] rounded-full border-2 border-dashed border-[#ff9500]" />
+        <div className="absolute inset-0 rounded-full border-[4px] border-[#ff9500]" />
+        <div className="absolute inset-[-22%] rounded-full border-[3px] border-dashed border-[#ff9500]" />
       </div>
     );
   }
   return (
     <div
-      className="pointer-events-none absolute rounded-xl border-[3px] border-[#ff9500] bg-[rgba(255,149,0,0.22)]"
+      className="pointer-events-none absolute rounded-xl border-[4px] border-[#ff9500] bg-[rgba(255,149,0,0.22)]"
       style={{
         left: `${spec.x * 100}%`,
         top: `${spec.y * 100}%`,

@@ -49,12 +49,13 @@ async function detectPlayProtectButton(src) {
   if (n < 100) {
     return { padX: w * 0.1, y: h * 0.666, rw: w * 0.8, rh: h * 0.048 };
   }
-  const pad = w * 0.012;
+  const pad = w * 0.028;
+  const padY = h * 0.012;
   return {
     padX: minX - pad,
-    y: minY - pad,
+    y: minY - padY,
     rw: maxX - minX + pad * 2,
-    rh: maxY - minY + pad * 2,
+    rh: maxY - minY + padY * 2,
   };
 }
 
@@ -91,6 +92,9 @@ const confirmSrc =
   process.env.IOS_ADD_CONFIRM_SRC ?? join(assets, "ios-install-add-confirm-source.jpg");
 const playProtectSrc =
   process.env.ANDROID_PLAY_PROTECT_SRC ?? join(assets, "android-play-protect-source.jpg");
+
+const androidAppFull = join(root, "public", "help", "install", "android-1-app.png");
+await writeOutFile(androidAppFull, "public/images/help/install/android-1-app.png");
 
 await writePairFile(shareSrc, "ios-2-share-photo.jpg");
 await writePairFile(homeSrc, "ios-3-add-home-photo.png");
