@@ -87,21 +87,19 @@ function PlatformSteps({
 
 function AndroidInstallSection() {
   return (
-    <div className="space-y-4">
-      <p className="text-base leading-relaxed text-violet-200/90">
-        <HelpText>
-          {
-            "בטלפונים חדשים Google Play Protect לפעמים חוסם אחרי ההתקנה — זה לא באג באתר; ראו **פתרון** למטה."
-          }
-        </HelpText>
-      </p>
+    <div className="space-y-3">
       <PlatformSteps steps={ANDROID_STEPS} />
       <HelpExpandable title="Google Play Protect חוסם?" subtitle="פתרון" defaultOpen={false}>
         <ul className="space-y-3">
           <HelpStep
             variant="tip"
             hideTitle
-            body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **פרטים נוספים**, ואז **הבנתי**. אם זה חוזר — מחקו את HallowHood מהגדרות → אפליקציות ונסו שוב מכפתור ההתקנה."
+            body="**כבר מותקן ו-Google חוסם?** מחקו את HallowHood מ**הגדרות → אפליקציות** ונסו שוב מכפתור **הורדה**."
+          />
+          <HelpStep
+            variant="tip"
+            hideTitle
+            body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **פרטים נוספים**, ואז **הבנתי**."
             image={installHelpImage("android-play-protect.jpg")}
             imageHighlight={ANDROID_PLAY_PROTECT_DETAILS_HIGHLIGHT}
             imageAlt="Google Play Protect — אפליקציה לא בטוחה נחסמה"
