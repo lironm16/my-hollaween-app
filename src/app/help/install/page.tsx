@@ -45,9 +45,10 @@ const IPHONE_STEPS = [
 const ANDROID_STEPS = [
   {
     title: "התקנת האפליקציה",
-    body: "פתחו את האתר ב-**Google Chrome** (לא Samsung Internet). לחצו על **התקנת האפליקציה** (אייקון ההורדה בראש המסך) ואשרו בהתקנה.",
+    body: "ב-**Chrome** — לחצו **הורדה** בראש המסך ואשרו.",
     issueNote:
-      "אם HallowHood כבר מותקנת ו-Google חוסם — מחקו אותה מהגדרות → אפליקציות ונסו שוב.",
+      "כבר מותקן ו-Google חוסם? מחקו מ**הגדרות → אפליקציות** ונסו שוב.",
+    imageFirst: true,
     image: installHelpImage("android-2-install.jpg"),
     imageHighlight: ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
     imageAlt: "כפתור התקנת האפליקציה ב-Chrome",
@@ -61,6 +62,7 @@ function PlatformSteps({
     title: string;
     body: string;
     issueNote?: string;
+    imageFirst?: boolean;
     image: string;
     imageAlt: string;
     imageHighlight?: HelpShotHighlight;
@@ -75,6 +77,7 @@ function PlatformSteps({
           title={step.title}
           body={step.body}
           issueNote={step.issueNote}
+          imageFirst={step.imageFirst}
           image={step.image}
           imageAlt={step.imageAlt}
           imageHighlight={step.imageHighlight}

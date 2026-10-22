@@ -165,6 +165,7 @@ export function HelpStep({
   parseBody = typeof body === "string",
   variant = "step",
   hideTitle = false,
+  imageFirst = false,
 }: {
   n?: number;
   title?: ReactNode;
@@ -180,11 +181,17 @@ export function HelpStep({
   /** `tip` = troubleshooting block (?) instead of a numbered step. */
   variant?: "step" | "tip";
   hideTitle?: boolean;
+  /** Show screenshot above the step text (Android install). */
+  imageFirst?: boolean;
 }) {
   const renderedTitle = typeof title === "string" ? renderHelpText(title) : title;
   const renderedBody =
     parseBody && typeof body === "string" ? renderHelpText(body) : body;
   const renderedIssue = issueNote ? renderHelpText(issueNote) : null;
+
+  const shot = image ? (
+    <HelpShot src={image} alt={imageAlt ?? ""} highlight={imageHighlight} />
+  ) : null;
 
   const badge =
     variant === "tip" ? (
@@ -236,6 +243,7 @@ export function HelpStep({
               <h2 className="text-xl font-semibold text-orange-50">{renderedTitle}</h2>
             ) : null}
           </div>
+          {imageFirst ? shot : null}
           <div className="space-y-3 text-lg leading-relaxed text-orange-50">
             {renderedBody}
             {renderedIssue ? (
@@ -253,9 +261,7 @@ export function HelpStep({
         </>
       )}
       {action}
-      {image ? (
-        <HelpShot src={image} alt={imageAlt ?? ""} highlight={imageHighlight} />
-      ) : null}
+      {!imageFirst ? shot : null}
     </li>
   );
 }
