@@ -114,8 +114,9 @@ export function HelpStep({
   imageAlt,
   action,
   parseBody = typeof body === "string",
+  variant = "step",
 }: {
-  n: number;
+  n?: number;
   title: ReactNode;
   body: ReactNode;
   /** When true (default for string bodies), `body` is parsed for **strong** / *em* only. */
@@ -123,20 +124,39 @@ export function HelpStep({
   image?: string;
   imageAlt?: string;
   action?: ReactNode;
+  /** `tip` = troubleshooting block (?) instead of a numbered step. */
+  variant?: "step" | "tip";
 }) {
   const renderedTitle = typeof title === "string" ? renderHelpText(title) : title;
   const renderedBody =
     parseBody && typeof body === "string" ? renderHelpText(body) : body;
 
+  const badge =
+    variant === "tip" ? (
+      <span
+        className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-violet-600/90 text-xl font-bold text-violet-50 ring-1 ring-violet-400/40"
+        aria-hidden
+      >
+        ?
+      </span>
+    ) : (
+      <span
+        className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-lg font-bold text-black"
+        aria-hidden
+      >
+        {n}
+      </span>
+    );
+
   return (
-    <li className="space-y-3 rounded-2xl bg-[#14081c] p-4 ring-1 ring-orange-500/15">
+    <li
+      className={cn(
+        "space-y-3 rounded-2xl p-4 ring-1",
+        variant === "tip" ? "bg-[#181028] ring-violet-500/25" : "bg-[#14081c] ring-orange-500/15",
+      )}
+    >
       <div className="flex items-center gap-3">
-        <span
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-lg font-bold text-black"
-          aria-hidden
-        >
-          {n}
-        </span>
+        {badge}
         <h2 className="text-xl font-semibold text-orange-50">{renderedTitle}</h2>
       </div>
       <div className="text-lg leading-relaxed text-orange-50">{renderedBody}</div>

@@ -33,14 +33,8 @@ const ANDROID_STEPS = [
     imageAlt: "HallowHood ב-Chrome",
   },
   {
-    title: "אם Google Play Protect חוסם",
-    body: "אחרי «התקנת אפל» Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **הבנתי** והוסיפו **קיצור דרך** מהתפריט (שלב הבא) — לא WebAPK.",
-    image: installHelpImage("android-play-protect"),
-    imageAlt: "Google Play Protect — אפליקציה לא בטוחה נחסמה",
-  },
-  {
     title: "קיצור דרך למסך הבית",
-    body: "בתפריט ⋮ בחרו **הוסף למסך הבית** (לא «התקנת אפל»). פתיחה מהאייקון תמשיך ב-Chrome — המפה וההתראות עובדים.",
+    body: "בתפריט ⋮ בחרו **הוסף למסך הבית**. אל תשתמשו ב**התקנת אפל** — ראו למה למטה.",
     image: installHelpImage("android-2-menu"),
     imageAlt: "תפריט Chrome — הוסף למסך הבית",
   },
@@ -73,11 +67,22 @@ function AndroidInstallSection() {
       <p className="text-base leading-relaxed text-violet-200/90">
         <HelpText>
           {
-            "באנדרואיד חדש Google עלול לחסום «התקנת אפל» בגלל דרישות אבטחה — זה לא באג באתר. קיצור דרך ב-Chrome מספיק; אין צורך באפליקציה נפרדת."
+            "למה לא «התקנת אפל»? Chrome מנסה ליצור WebAPK — Google Play Protect עלול לחסום («אפליקציה לא בטוחה»). **הוסף למסך הבית** מוסיף קיצור דרך לאותה HallowHood: מפה, התראות ושמירה בטלפון — בלי חסימה."
           }
         </HelpText>
       </p>
       <PlatformSteps steps={ANDROID_STEPS} />
+      <HelpExpandable title="Google Play Protect חוסם?" subtitle="פתרון" defaultOpen={false}>
+        <ul className="space-y-3">
+          <HelpStep
+            variant="tip"
+            title="אחרי «התקנת אפל»"
+            body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **הבנתי**, חזרו ל-Chrome ובחרו **הוסף למסך הבית** (שלב 2) — לא WebAPK."
+            image={installHelpImage("android-play-protect")}
+            imageAlt="Google Play Protect — אפליקציה לא בטוחה נחסמה"
+          />
+        </ul>
+      </HelpExpandable>
     </div>
   );
 }
@@ -102,9 +107,7 @@ export default function InstallHelpPage() {
   return (
     <HelpShell title="איך מתקינים את האפליקציה?">
       <p className="mb-4 text-lg leading-relaxed text-orange-50">
-        <HelpText>
-          {"התקנה = הוספה למסך הבית. פתחו פעם אחת ברשת כדי שהמפה תישמר בטלפון."}
-        </HelpText>
+        <HelpText>{"התקנה = הוספה למסך הבית."}</HelpText>
       </p>
       <div className="space-y-3">
         <HelpExpandable title="אייפון" subtitle="Safari בלבד" defaultOpen={iphoneDefaultOpen}>

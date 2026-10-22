@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 /**
  * Overlay orange highlights on real install-help screenshots.
- * Tune *_REGIONS below when source photos change.
- *
- *   node scripts/annotate-install-photos.mjs
- *   IOS_SHARE_SRC=... IOS_ADD_HOME_SRC=... ANDROID_PLAY_PROTECT_SRC=... node scripts/annotate-install-photos.mjs
+ * Positions are detected from pixels; override with env JSON if needed.
  */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -14,11 +11,6 @@ import sharp from "sharp";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const assets = join(root, "scripts", "assets");
 const ORANGE = "#ff9500";
-
-const IOS_SHARE = { cx: 0.502, cy: 0.968, r: 0.038 };
-const IOS_ADD_HOME = { padX: 0.04, rowStartY: 0.248, rowHeight: 0.048, rowIndex: 4 };
-/** «הבנתי» on Google Play Protect sheet (923×2000 reference). */
-const ANDROID_PLAY_PROTECT = { padX: 0.1, y: 0.612, h: 0.055, w: 0.8 };
 
 function ringOverlay(w, h, cx, cy, r) {
   const sw = Math.max(4, w * 0.006);
@@ -35,39 +27,137 @@ function rowOverlay(w, h, padX, y, rw, rh) {
   </svg>`);
 }
 
+async function rawRgb(src) {
+  const { data, info } = await sharp(src).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  return { data, w: info.width, h: info.height, c: info.channels };
+}
+
+/** Safari bottom toolbar — Share is the middle blue icon cluster. */
+async function detectIosShare(src) {
+  const { data, w, h, c } = await rawRgb(src);
+  const y0 = h - Math.floor(h * 0.085);
+  const buckets = Array.from({ length: 12 }, () => ({ sx: 0, sy: 0, n: 0 }));
+  for (let y = y0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * c;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      if (b > 150 && b > r + 25 && b > g) {
+        const bkt = Math.min(11, Math.floor((x / w) * 12));
+        buckets[bkt].sx += x;
+        buckets[bkt].sy += y;
+        buckets[bkt].n++;
+      }
+    }
+  }
+  const active = buckets
+    .map((b, i) => ({ i, ...b, cx: b.n ? b.sx / b.n : 0, cy: b.n ? b.sy / b.n : 0 }))
+    .filter((b) => b.n > 40);
+  const centerish = active.filter((b) => b.cx / w > 0.38 && b.cx / w < 0.62);
+  const pick =
+    centerish.sort((a, b) => b.n - a.n)[0] ??
+    active.sort((a, b) => Math.abs(a.cx / w - 0.5) - Math.abs(b.cx / w - 0.5))[0];
+  if (!pick?.n) {
+    return { cx: w * 0.5, cy: h * 0.933, r: w * 0.038 };
+  }
+  return { cx: pick.cx, cy: pick.cy, r: w * 0.038 };
+}
+
+/** Share sheet — highlight the «Add to Home Screen» row (4th action). */
+async function detectIosAddHomeRow(src) {
+  const { data, w, h, c } = await rawRgb(src);
+  const candidates = [];
+  for (let y = Math.floor(h * 0.18); y < Math.floor(h * 0.52); y += 2) {
+    let white = 0;
+    for (let x = Math.floor(w * 0.06); x < Math.floor(w * 0.18); x++) {
+      const i = (y * w + x) * c;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      if (r > 200 && g > 200 && b > 200) white++;
+    }
+    candidates.push({ y, white });
+  }
+  const peaks = candidates.filter(
+    (p, i, a) => p.white > 30 && (i === 0 || p.white >= a[i - 1].white) && (i === a.length - 1 || p.white >= a[i + 1].white),
+  );
+  const sorted = peaks.sort((a, b) => a.y - b.y);
+  const groups = [];
+  for (const p of sorted) {
+    const merge = groups.find((g) => Math.abs(g.y - p.y) <= h * 0.028);
+    if (merge) merge.y = (merge.y + p.y) / 2;
+    else groups.push({ y: p.y });
+  }
+  groups.sort((a, b) => a.y - b.y);
+  const menuGroups = groups.filter((g) => g.y / h < 0.52);
+  const addHomeGroup = menuGroups.at(-1);
+  const rowCenterY = addHomeGroup?.y ?? h * 0.42;
+  const rh = h * 0.042;
+  const y = rowCenterY - rh * 0.5;
+  const padX = w * 0.035;
+  return { padX, y, rw: w - padX * 2, rh };
+}
+
+/** Play Protect dialog — blue «הבנתי» pill. */
+async function detectPlayProtectButton(src) {
+  const { data, w, h, c } = await rawRgb(src);
+  let minX = 1e9;
+  let minY = 1e9;
+  let maxX = 0;
+  let maxY = 0;
+  let n = 0;
+  for (let y = Math.floor(h * 0.58); y < Math.floor(h * 0.74); y++) {
+    for (let x = Math.floor(w * 0.1); x < Math.floor(w * 0.9); x++) {
+      const i = (y * w + x) * c;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      if (b > 140 && g > 80 && r < 80 && b > g) {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        n++;
+      }
+    }
+  }
+  if (n < 100) {
+    return { padX: w * 0.1, y: h * 0.666, rw: w * 0.8, rh: h * 0.048 };
+  }
+  const pad = w * 0.012;
+  return {
+    padX: minX - pad,
+    y: minY - pad,
+    rw: maxX - minX + pad * 2,
+    rh: maxY - minY + pad * 2,
+  };
+}
+
 async function annotateShare(src) {
+  const { cx, cy, r } = await detectIosShare(src);
   const meta = await sharp(src).metadata();
   const w = meta.width;
   const h = meta.height;
-  const cx = w * IOS_SHARE.cx;
-  const cy = h * IOS_SHARE.cy;
-  const r = w * IOS_SHARE.r;
   const svg = ringOverlay(w, h, cx, cy, r);
   return sharp(src).composite([{ input: svg, top: 0, left: 0 }]).png({ compressionLevel: 9 }).toBuffer();
 }
 
 async function annotateAddHome(src) {
+  const box = await detectIosAddHomeRow(src);
   const meta = await sharp(src).metadata();
   const w = meta.width;
   const h = meta.height;
-  const padX = w * IOS_ADD_HOME.padX;
-  const rh = h * IOS_ADD_HOME.rowHeight;
-  const y = h * IOS_ADD_HOME.rowStartY + rh * IOS_ADD_HOME.rowIndex;
-  const rw = w - padX * 2;
-  const svg = rowOverlay(w, h, padX, y, rw, rh);
+  const svg = rowOverlay(w, h, box.padX, box.y, box.rw, box.rh);
   return sharp(src).composite([{ input: svg, top: 0, left: 0 }]).png({ compressionLevel: 9 }).toBuffer();
 }
 
 async function annotatePlayProtect(src) {
+  const box = await detectPlayProtectButton(src);
   const meta = await sharp(src).metadata();
   const w = meta.width;
   const h = meta.height;
-  const padX = w * ANDROID_PLAY_PROTECT.padX;
-  const y = h * ANDROID_PLAY_PROTECT.y;
-  const rh = h * ANDROID_PLAY_PROTECT.h;
-  const rw = w * ANDROID_PLAY_PROTECT.w;
-  const x = (w - rw) / 2;
-  const svg = rowOverlay(w, h, x, y, rw, rh);
+  const svg = rowOverlay(w, h, box.padX, box.y, box.rw, box.rh);
   return sharp(src).composite([{ input: svg, top: 0, left: 0 }]).png({ compressionLevel: 9 }).toBuffer();
 }
 
@@ -88,8 +178,12 @@ const homeSrc = process.env.IOS_ADD_HOME_SRC ?? join(assets, "ios-install-add-ho
 const playProtectSrc =
   process.env.ANDROID_PLAY_PROTECT_SRC ?? join(assets, "android-play-protect-source.jpg");
 
-await writePair(await annotateShare(shareSrc), "ios-2-share.png");
-await writePair(await annotateAddHome(homeSrc), "ios-3-add-home.png");
-await writePair(await annotatePlayProtect(playProtectSrc), "android-play-protect.png");
+const shareBuf = await annotateShare(shareSrc);
+const homeBuf = await annotateAddHome(homeSrc);
+const playBuf = await annotatePlayProtect(playProtectSrc);
+
+await writePair(shareBuf, "ios-2-share.png");
+await writePair(homeBuf, "ios-3-add-home.png");
+await writePair(playBuf, "android-play-protect.png");
 
 console.log("Wrote annotated install help screenshots.");
