@@ -8,7 +8,7 @@ export const IOS_INSTALL_SHARE_HIGHLIGHT: HelpShotHighlight = {
   kind: "ring",
   cx: 0.495,
   cy: 0.923,
-  r: 0.058,
+  r: 0.068,
 };
 
 /** iOS share sheet — **Add to Home Screen** row (924×2000 reference). */
