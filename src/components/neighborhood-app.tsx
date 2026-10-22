@@ -373,7 +373,7 @@ export function NeighborhoodApp({
     restoreRedactedLocations,
     nightPassLinkedHouseId,
   });
-  /** Removed-from-catalog rows stay on «במכשיר שלי» only — inject for ?focus= from that tab. */
+  /** Removed-from-catalog rows stay on **במכשיר שלי** only — inject for ?focus= from that tab. */
   const housesForMap = useMemo(() => {
     if (!focusId || adminForHouseSet || houses.some((house) => house.id === focusId)) {
       return houses;
@@ -471,7 +471,7 @@ export function NeighborhoodApp({
     () => gemMapRingHouses.filter((house) => matchedIds.has(house.id)),
     [gemMapRingHouses, matchedIds],
   );
-  /** Admin-only hide map — cookie admin, not «תצוגת משתמש» (independent of gemHuntPublic). */
+  /** Admin-only hide map — cookie admin, not **תצוגת משתמש** (independent of gemHuntPublic). */
   const adminGemHideMapEligible = adminShowsPrivateHouseFields(adminForHouseSet, gemPreviewAsUser);
   const adminGemAnchorHouses = useMemo(
     () =>

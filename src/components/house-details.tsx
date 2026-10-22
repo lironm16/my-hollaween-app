@@ -296,7 +296,7 @@ export function HouseDetails({
   distanceM,
   index,
   hideHoursBanner = false,
-  /** Stable «דוכן N» on school campus clusters. */
+  /** Stable **דוכן N** on school campus clusters. */
   clusterBoothTag,
 }: {
   house: PublicHouse;

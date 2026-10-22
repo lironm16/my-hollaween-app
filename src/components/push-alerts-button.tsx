@@ -227,7 +227,7 @@ function PushAlertsButtonInner() {
         return;
       }
       if (result === "ios-install") {
-        toast.message("באייפון ההתראות עובדות אחרי «הוספה למסך הבית».");
+        toast.message("באייפון ההתראות עובדות אחרי **הוספה למסך הבית**.");
         return;
       }
       toast.message("בלי הרשאה לא נשלח התראות לטלפון.");
@@ -314,13 +314,13 @@ function PushAlertsButtonInner() {
             : "הפעל התראות מהשכונה";
 
   const helpDescription = ios
-    ? "באייפון צריך קודם «הוספה למסך הבית», ואז נפתח חלון ההרשאה."
+    ? "באייפון צריך קודם **הוספה למסך הבית**, ואז נפתח חלון ההרשאה."
     : denied
       ? android
         ? "באנדרואיד: הגדרות → אפליקציות → Chrome → התראות → אפשר. ואז ב-Chrome: סמל המנעול ליד הכתובת → התראות → אפשר."
-        : "כדי לקבל התראות: לחצו על סמל המנעול או «i» ליד הכתובת, בחרו «התראות» → «אפשר», ואז חזרו לכאן ולחצו «הפעל»."
+        : "כדי לקבל התראות: לחצו על סמל המנעול או **i** ליד הכתובת, בחרו **התראות** → **אפשר**, ואז חזרו לכאן ולחצו **הפעל**."
       : unsupported
-        ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי «הוספה למסך הבית»."
+        ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי **הוספה למסך הבית**."
         : null;
 
   const showAndroidHelp = android && !ios && !unsupported && !subscribed && !denied;
@@ -355,7 +355,7 @@ function PushAlertsButtonInner() {
           onClick={() => {
             if (ios) {
               setAskOpen(true);
-              toast.message("באייפון ההתראות עובדות אחרי «הוספה למסך הבית».");
+              toast.message("באייפון ההתראות עובדות אחרי **הוספה למסך הבית**.");
               return;
             }
             if (denied || unsupported) {
@@ -434,7 +434,7 @@ function PushAlertsButtonInner() {
                   שלחו לי התראת בדיקה
                 </Button>
               ) : !canEnable ? (
-                <p className="px-1 text-base text-amber-200/90">סמנו לפחות סוג אחד, ואז «הפעל».</p>
+                <p className="px-1 text-base text-amber-200/90">סמנו לפחות סוג אחד, ואז **הפעל**.</p>
               ) : null}
             </div>
           )}

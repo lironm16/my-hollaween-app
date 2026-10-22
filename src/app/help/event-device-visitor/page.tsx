@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const STEPS = [
   {
-    title: "«יש לי קוד כניסה» במפה",
+    title: "**יש לי קוד כניסה** במפה",
     body: "אם עדיין לא רשומים, מופיעה פס כהה בראש המפה. לחצו יש לי קוד כניסה.",
     image: helpImage("event-device-visitor-banner.png"),
     imageAlt: "פס יש לי קוד כניסה בראש המפה",

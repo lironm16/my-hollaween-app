@@ -112,7 +112,7 @@ export type House = {
   storeId?: string;
   /** Set when removed from the public catalog; document kept in Firestore for recovery. */
   deletedAt?: string | null;
-  /** QA / rehearsal row — hidden from «אמיתיים» map and visitor counts. */
+  /** QA / rehearsal row — hidden from **אמיתיים** map and visitor counts. */
   isStub?: boolean;
   /** Legacy rows only — excluded from map, stats, and routes. */
   isPractice?: boolean;

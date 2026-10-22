@@ -12,7 +12,7 @@ export function gemBagMenuVisible(isAdmin: boolean, gemHuntPublic = false) {
   return gemHuntVisible(isAdmin, gemHuntPublic);
 }
 
-/** Map legend «שדונים» section — whenever gem hunt UI is enabled (independent of the pin-ring toggle). */
+/** Map legend **שדונים** section — whenever gem hunt UI is enabled (independent of the pin-ring toggle). */
 export function gemMapLegendVisible(isAdmin: boolean, gemHuntPublic = false) {
   return gemHuntVisible(isAdmin, gemHuntPublic);
 }

@@ -6,7 +6,7 @@ import { GEM_TELL_ME_RANGE_HE } from "@/lib/gem-hunt-copy";
 
 export const GEM_TELL_ME_OUT_OF_RANGE_MESSAGE = GEM_TELL_ME_RANGE_HE;
 
-/** Visitors always gated; admins only when «תצוגת משתמש» is on. */
+/** Visitors always gated; admins only when **תצוגת משתמש** is on. */
 export function gemTellMeHuntRadiusEnforced(isAdmin: boolean, previewAsUser: boolean): boolean {
   if (!isAdmin) return true;
   return previewAsUser;

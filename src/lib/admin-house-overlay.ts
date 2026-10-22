@@ -15,7 +15,7 @@ function pickTextField(
 }
 
 /** Overlay catalog/redacted rows with the admin API snapshot (street, arrival, contact). */
-/** Street / arrival / notes only — for «תצוגת משתמש» after simulated reveal (no owner contact). */
+/** Street / arrival / notes only — for **תצוגת משתמש** after simulated reveal (no owner contact). */
 export function mergePublicHouseLocationFromAdminRow(
   house: PublicHouse,
   admin?: House | null,

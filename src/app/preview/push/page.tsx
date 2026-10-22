@@ -37,7 +37,7 @@ export default function PushPreviewPage() {
           <h2 className="text-base font-medium text-orange-100">עדכוני לילה — אוטומטיים</h2>
           <p className="text-base text-violet-300">
             נשלחים כשבעל בית מעדכן מלאי או מצב ביקור בבית שמפורסם במפה. חמש כותרות שונות, ואותה כותרת
-            «יש שוב ממתקים» לשני מקרים.
+            **יש שוב ממתקים** לשני מקרים.
           </p>
           {houseScenes.map((scene) => (
             <article

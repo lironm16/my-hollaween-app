@@ -42,7 +42,7 @@ export function isCatalogRemoved(id: string | undefined | null) {
   return readEntries().some((entry) => entry.id === id);
 }
 
-/** Night-pass on this house — still show it on the map even if a scope sync marked it «removed». */
+/** Night-pass on this house — still show it on the map even if a scope sync marked it **removed**. */
 export function isCatalogRemovedForDevice(
   id: string | undefined | null,
   linkedPassHouseId?: string | null,

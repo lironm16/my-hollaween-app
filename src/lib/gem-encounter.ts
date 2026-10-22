@@ -52,7 +52,7 @@ export function encounterUiChromeHidden(phase: GemEncounterPhase): boolean {
   );
 }
 
-/** Tap / swipe resolve chain — hide close + show «מצאתם…» copy. */
+/** Tap / swipe resolve chain — hide close + show **מצאתם…** copy. */
 export function encounterCollectFeedbackActive(phase: GemEncounterPhase): boolean {
   return (
     phase === "resolve-hit" ||

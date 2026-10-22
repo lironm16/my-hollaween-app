@@ -39,7 +39,7 @@ function updateIds(removed: string[], listed: Set<string>) {
 /**
  * Apply one live server response: rows it returns are listed right now (restored houses come back),
  * explicit `removed` ids stay hidden on this device until the server lists them again.
- * Also drives the «removed from guide» label, whichever refresh path delivered the response.
+ * Also drives the **removed from guide** label, whichever refresh path delivered the response.
  */
 export function recordLiveCatalogRemovals(live: {
   houses?: Array<{ id: string }>;
@@ -66,7 +66,7 @@ export function noteServerRemovedHouses(ids: string[]) {
   window.dispatchEvent(new Event("hw-owned-changed"));
 }
 
-/** Drop false «הוסר מהמפה» labels when the server did not delete those houses. */
+/** Drop false **הוסר מהמפה** labels when the server did not delete those houses. */
 export function reconcileCatalogRemovedWithServer() {
   if (typeof window === "undefined") return;
   const serverRemoved = new Set(loadServerRemovedHouseIds());

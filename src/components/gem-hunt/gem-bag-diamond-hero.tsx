@@ -5,7 +5,7 @@ import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { GEM_ALBUM_ALL_HE, GEM_ALBUM_SLOTS_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
-/** Top section on the sticker bag — album progress only (no separate «diamond» count). */
+/** Top section on the sticker bag — album progress only (no separate **diamond** count). */
 export function GemBagDiamondHero({
   filledCount,
   totalSlots,

@@ -103,7 +103,7 @@ export function VisitPosterPanel({ house, actions }: { house: PublicHouse; actio
 
       <p className="text-base leading-relaxed text-violet-100">
         תלו את הדף ליד הדלת. אורחים סורקים את הקוד במצלמת הטלפון ולוחצים על הקישור — האפליקציה
-        נפתחת על הבית והוא מסומן «ביקרתי».{" "}
+        נפתחת על הבית והוא מסומן **ביקרתי**.{" "}
         <Link href="/help/scan-visit" className="inline-flex items-center gap-1 text-orange-300 underline">
           <HelpCircle className="size-4" aria-hidden />
           איך סורקים ומדפיסים?

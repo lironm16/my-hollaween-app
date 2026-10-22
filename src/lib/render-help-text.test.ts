@@ -33,3 +33,7 @@ test("renderHelpText mixes plain labels and emphasis", () => {
 test("renderHelpText replaces → with ← for RTL menu paths", () => {
   assert.equal(renderHelpText("הגדרות → אפליקציות"), "הגדרות ← אפליקציות");
 });
+
+test("renderHelpText converts guillemets to strong markers", () => {
+  assert.notEqual(renderHelpText("לחצו על \u00ABקוד\u00BB"), "לחצו על \u00ABקוד\u00BB");
+});

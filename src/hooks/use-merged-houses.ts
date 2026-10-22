@@ -95,7 +95,7 @@ export function mergeVisibleHouses({
   includeCatalogWhenAdmin?: boolean;
   /** Admin merge can fill address back after catalog redaction — off in תצוגת משתמש. */
   restoreRedactedLocations?: boolean;
-  /** Registered night pass on this house — keep visible even if a scope sync flagged «removed». */
+  /** Registered night pass on this house — keep visible even if a scope sync flagged **removed**. */
   nightPassLinkedHouseId?: string | null;
 }): PublicHouse[] {
   const restoreLocations = restoreRedactedLocations ?? admin;

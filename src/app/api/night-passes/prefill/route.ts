@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "private, no-store" };
 
-/** Owner prefill for «להשתמש בטלפון הזה» — name + phone from the house row. */
+/** Owner prefill for **להשתמש בטלפון הזה** — name + phone from the house row. */
 export async function GET(request: Request) {
   const code = normalizeHouseAccessCode(new URL(request.url).searchParams.get("code"));
   if (!code) {

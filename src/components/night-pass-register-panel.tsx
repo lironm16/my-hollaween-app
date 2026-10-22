@@ -51,7 +51,7 @@ type Props = {
   compact?: boolean;
 };
 
-/** Redeem a pass code on this device — no «פרטים» screen for already-registered devices. */
+/** Redeem a pass code on this device — no **פרטים** screen for already-registered devices. */
 export function NightPassRegisterPanel({
   initialCode = "",
   inviteToken = "",

@@ -186,9 +186,9 @@ export function GemHuntOverlay({
   const [, setHint] = useState<"scan" | "warm" | "found" | "help">("scan");
   const [, setShowHelp] = useState(false);
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
-  /** User chose «גלה לי» — centered gem on the camera (not orbit hint box). */
+  /** User chose **גלה לי** — centered gem on the camera (not orbit hint box). */
   const [centerReveal, setCenterReveal] = useState(false);
-  /** User tapped «הסתר» or opened «רמז» after center — do not keep encounter/tell-me center lock. */
+  /** User tapped **הסתר** or opened **רמז** after center — do not keep encounter/tell-me center lock. */
   const [userDismissedCenterGem, setUserDismissedCenterGem] = useState(false);
   const gemTapStartRef = useRef<{ x: number; y: number } | null>(null);
   const scanStartRef = useRef(0);
@@ -291,7 +291,7 @@ export function GemHuntOverlay({
     setHintPanel(null);
   }, [distanceM, sim]);
 
-  /** In range: skip 5s scan wait so footer + «גלה לי» work immediately. */
+  /** In range: skip 5s scan wait so footer + **גלה לי** work immediately. */
   useEffect(() => {
     if (!allowAutoReveal) return;
     reveal();
@@ -560,7 +560,7 @@ export function GemHuntOverlay({
     }
   }, [encounterMode, encounterPhase, canCollectNow, sim]);
 
-  /** «גלה לי» during approach: enable swipe-treat fallback and tap-collect (skip approach wait). */
+  /** **גלה לי** during approach: enable swipe-treat fallback and tap-collect (skip approach wait). */
   useEffect(() => {
     if (!encounterMode || !centerReveal || userDismissedCenterGem || encounterPhase !== "approach")
       return;
@@ -645,11 +645,11 @@ export function GemHuntOverlay({
     liveLoc != null ? relativeWalkBearingDeg(liveLoc, anchor, heading) : null;
   const facingTarget =
     turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
-  /** Real hunt: compass-pinned gem when not in «גלה לי» center mode. */
+  /** Real hunt: compass-pinned gem when not in **גלה לי** center mode. */
   const arPinGuideMode = gemVisible && !centerReveal;
   const pinCollectReady =
     arPinGuideMode && canCollectNow && gemWorldPinVisible(pinDisplay ?? pinPlacement, huntBandM);
-  /** Show centered gem after reveal even before «stand still» — tap only when collectEnabled. */
+  /** Show centered gem after reveal even before **stand still** — tap only when collectEnabled. */
   /** Show when anchor bearing is in the camera cone — gated by activeGemHuntMeters(). */
   const encounterForcesCenter =
     gemVisibleBand &&
@@ -902,7 +902,7 @@ export function GemHuntOverlay({
         <div className="gem-hunt-overlay__camera-banner" role="status">
           <p className="gem-hunt-overlay__camera-banner-title">אין גישה למצלמה</p>
           <p className="gem-hunt-overlay__camera-banner-text">
-            אפשר לצוד עם «גלה לי» למטה, או לאשר מצלמה ולנסות שוב.
+            אפשר לצוד עם **גלה לי** למטה, או לאשר מצלמה ולנסות שוב.
           </p>
           <button type="button" className="gem-hunt-overlay__fallback-btn" onClick={() => void retryCamera()}>
             נסו שוב — אישור מצלמה

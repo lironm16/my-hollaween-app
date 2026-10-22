@@ -142,7 +142,7 @@ let refreshPausedForEventModal = false;
 export function setNightPassRefreshPaused(paused: boolean) {
   refreshPausedForEventModal = paused;
 }
-/** Intentional «התנתקות» — do not show «pass lost» toast. */
+/** Intentional **התנתקות** — do not show **pass lost** toast. */
 let suppressNextPassLostEvent = false;
 
 const ownerUnlockAttempted = new Set<string>();

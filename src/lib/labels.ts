@@ -123,10 +123,10 @@ export const catalogRemovedBannerLabel = "הוסר מהמפה";
 export const catalogRemovedEditBlockedToast = "הבית הוסר מהמפה — אי אפשר לערוך";
 
 export const catalogRemovedViewOnlyNotice =
-  "הבית הוסר מהמפה — צפייה בלבד. אפשר להסיר את הכרטיס מ«במכשיר שלי».";
+  "הבית הוסר מהמפה — צפייה בלבד. אפשר להסיר את הכרטיס מ**במכשיר שלי**.";
 
 export const catalogRemovedViewOnlyEditPage =
-  "הבית הוסר מהמפה — צפייה בלבד. להסרה מהמכשיר: «במכשיר שלי» → «הסר מהמכשיר».";
+  "הבית הוסר מהמפה — צפייה בלבד. להסרה מהמכשיר: **במכשיר שלי** → **הסר מהמכשיר**.";
 
 export const stockLabels: Record<StockLevel, string> = {
   plenty: "יש",

@@ -1,4 +1,4 @@
-/** Start/end immersive AR in the same user gesture as «התחילו מפגש» / map diamond. */
+/** Start/end immersive AR in the same user gesture as **התחילו מפגש** / map diamond. */
 
 import { getGemHuntDomOverlayRoot } from "@/lib/gem-hunt-portal-root";
 

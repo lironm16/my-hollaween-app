@@ -101,7 +101,7 @@ type Props = {
 
 const AUTO_PLACE_STABLE_FRAMES = 28;
 /** World-space target size for GLB pets in immersive AR (meters-ish after frameModel). */
-/** Sized to match iOS «גלה לי» inspect360 frame (after GEM_TELL_ME_CENTER_ZOOM). */
+/** Sized to match iOS **גלה לי** inspect360 frame (after GEM_TELL_ME_CENTER_ZOOM). */
 const MODEL_SCALE_IOS_WEBXR = 0.82;
 
 function hashFloat(seed: string, salt: string) {
@@ -167,7 +167,7 @@ export function GemHuntWebXrAr({
     [house.id, house.lat, house.lng, anchorOverrides],
   );
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
-  /** «גלה לי» — same semantics as iOS centerReveal (AR model stays in world). */
+  /** **גלה לי** — same semantics as iOS centerReveal (AR model stays in world). */
   const [centerReveal, setCenterReveal] = useState(false);
   const [userDismissedCenterGem, setUserDismissedCenterGem] = useState(false);
   const userDismissedCenterGemRef = useRef(false);
@@ -340,7 +340,7 @@ export function GemHuntWebXrAr({
     lng: house.lng,
   };
 
-  /** «גלה לי» — block WebXR/encounter auto-handoff from collecting without a gem tap. */
+  /** **גלה לי** — block WebXR/encounter auto-handoff from collecting without a gem tap. */
   const userInitiatedCollectRef = useRef(false);
   /** DOM inspect360 gem — only during tell-me / collect started from tell-me tap. */
   const [collectViaTellMe, setCollectViaTellMe] = useState(false);
@@ -457,7 +457,7 @@ export function GemHuntWebXrAr({
     }
   }, [encounterMode, encounterPhase, canCollectNow, simulateInRange]);
 
-  /** «גלה לי» during approach — skip wait (iOS parity). */
+  /** **גלה לי** during approach — skip wait (iOS parity). */
   useEffect(() => {
     if (!encounterMode || !centerReveal || userDismissedCenterGem || encounterPhase !== "approach")
       return;
@@ -471,7 +471,7 @@ export function GemHuntWebXrAr({
       encounterPhase.startsWith("resolve") ||
       encounterPhase === "reward");
   const tellMeRevealActive = centerReveal || encounterForcesReveal;
-  /** DOM center gem for «גלה לי» (world AR model hidden while centerReveal). */
+  /** DOM center gem for **גלה לי** (world AR model hidden while centerReveal). */
   const tellMeCenterSession =
     centerReveal && sessionActive && !userDismissedCenterGem;
   const showTellMeCenterGem = tellMeCenterSession && phase !== "collecting";
@@ -1011,7 +1011,7 @@ export function GemHuntWebXrAr({
 
     const onSelect = () => {
       if (collectingRef.current) return;
-      /** «גלה לי» — collect only via center DOM gem tap (iOS parity). */
+      /** **גלה לי** — collect only via center DOM gem tap (iOS parity). */
       if (centerRevealRef.current) return;
       if (isPlaced) {
         if (encounterMode) {

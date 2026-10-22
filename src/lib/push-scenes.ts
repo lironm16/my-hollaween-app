@@ -83,7 +83,7 @@ export function pushPreviewScenes(): PushScene[] {
     houseScene(
       "decor-only",
       "מקושט בלי ממתקים",
-      "בעל הבית מסמן «בלי ממתקים» — הבית מקושט בלי חלוקת ממתקים.",
+      "בעל הבית מסמן **בלי ממתקים** — הבית מקושט בלי חלוקת ממתקים.",
       withVisit("come", "plenty"),
       demoHouse({
         visit: "decorOnly",
@@ -131,7 +131,7 @@ export function pushPreviewScenes(): PushScene[] {
     houseScene(
       "candy-restock",
       "חזרו למלאי",
-      "אותה כותרת «חזרו למלאי» כשהבית כבר פתוח ורק המלאי התמלא.",
+      "אותה כותרת **חזרו למלאי** כשהבית כבר פתוח ורק המלאי התמלא.",
       withVisit("come", "out"),
       withVisit("come", "plenty"),
     ),

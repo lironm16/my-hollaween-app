@@ -642,7 +642,7 @@ function findMonsterEntry(id: string): GemCatalogEntry | undefined {
   return GEM_MONSTER_CATALOG.find((m) => m.id === id);
 }
 
-/** Cute display name (e.g. «עכי העכביש»). */
+/** Cute display name (e.g. **עכי העכביש**). */
 export function gemLabelHe(variantOrMonsterId: string) {
   const meta = findMonsterEntry(variantOrMonsterId);
   return meta ? meta.petNameHe : DEFAULT_MONSTER.petNameHe;
@@ -686,7 +686,7 @@ export function mainMapGemEligibleHouses(
   return gemVisibleMapHouses(mapHouses, houseSet, ctx);
 }
 
-/** Card-top «מצא שדון» and deep links — same rule as {@link mainMapGemEligibleHouses} for one row. */
+/** Card-top **מצא שדון** and deep links — same rule as {@link mainMapGemEligibleHouses} for one row. */
 export function houseGemHuntUiEligible(
   house: PublicHouse,
   houseSet: HouseSet,

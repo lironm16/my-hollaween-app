@@ -55,7 +55,7 @@ export default function ImpIconsPreviewPage() {
         <section className="space-y-4 rounded-3xl bg-[#faf8f5] p-6 text-stone-900 shadow-xl ring-1 ring-stone-200">
           <div className="text-center">
             <h2 className="text-xl font-bold text-stone-800">העתק מדויק — תצוגה בהירה</h2>
-            <p className="text-sm text-stone-500">זהה לחלוטין לכרטיס «גרסאות צבע וצורה» שהעלית</p>
+            <p className="text-sm text-stone-500">זהה לחלוטין לכרטיס **גרסאות צבע וצורה** שהעלית</p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-12 py-6" dir="ltr">

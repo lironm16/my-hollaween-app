@@ -5,7 +5,7 @@ import { gemBagMenuVisible, gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { readAdminPreviewAsUser, subscribeAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
 import { useCatalog } from "@/hooks/use-catalog";
 
-/** Re-renders when תפריט → «תצוגת משתמש» toggles. */
+/** Re-renders when תפריט → **תצוגת משתמש** toggles. */
 export function useGemHuntAdminUi(isAdmin: boolean) {
   const { catalog } = useCatalog();
   const gemHuntPublic = catalog?.eventSettings?.gemHuntPublic === true;

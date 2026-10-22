@@ -148,7 +148,7 @@ export type NightPassRequestViewer = {
 };
 
 /**
- * Who is asking. `asUser` = admin «תצוגת משתמש» — evaluate the admin device like a visitor
+ * Who is asking. `asUser` = admin **תצוגת משתמש** — evaluate the admin device like a visitor
  * (its own pass / owned houses still count).
  */
 export async function resolveNightPassViewer(options?: {

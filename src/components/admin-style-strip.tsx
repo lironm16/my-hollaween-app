@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Shared chrome for admin «תצוגת משתמש» and registered night-pass on map/menu. */
+/** Shared chrome for admin **תצוגת משתמש** and registered night-pass on map/menu. */
 export function adminStyleStripClass(className?: string) {
   return cn(
     "flex items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-2.5 ring-1 ring-orange-500/20",

@@ -37,9 +37,11 @@ function renderLine(text: string, keyPrefix: string): ReactNode {
   return <Fragment>{parts}</Fragment>;
 }
 
-/** Legacy help copy used «<<label>>» — treat as **strong**. */
+/** Legacy help copy: <<label>> or guillemet quotes → **strong**. */
 function normalizeHelpEmphasis(text: string): string {
-  return text.replace(/<<([^>]+)>>/g, "**$1**");
+  return text
+    .replace(/<<([^>]+)>>/g, "**$1**")
+    .replace(/\u00AB([^\u00BB]+)\u00BB/g, "**$1**");
 }
 
 /** U+2192 mirrors in `dir=rtl` and reads backwards for Hebrew menu paths — use ←. */

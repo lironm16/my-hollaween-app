@@ -23,7 +23,7 @@ export function GemResetConfirmDialog({
 }: {
   open: boolean;
   house: PublicHouse | null;
-  /** Reset every inner house at this address (cluster ⋮ «מצאתי הכל»). */
+  /** Reset every inner house at this address (cluster ⋮ **מצאתי הכל**). */
   cluster?: boolean;
   clusterHouses?: PublicHouse[];
   onConfirm: () => void;

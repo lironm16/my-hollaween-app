@@ -15,7 +15,7 @@ export function useGemTellMeButton({
   enforceHuntRadius,
   inRange,
   centerReveal,
-  /** In collect band with world/camera gem showing — skip green «ready» nudge. */
+  /** In collect band with world/camera gem showing — skip green **ready** nudge. */
   naturalDiscoverActive = false,
   blocked,
   onActivate,

@@ -48,7 +48,7 @@ export function pwaInstallPromptEligible(options: {
 
 /** Toast when help/demo install is tapped without a native prompt (e.g. iOS viewing Android Q&A). */
 export const PWA_INSTALL_UNAVAILABLE_TOAST =
-  "«התקנת אפל» לא זמינה כאן — פתחו ב-Chrome ולחצו על כפתור ההורדה בראש, או ראו עזרה ← התקנת האפליקציה.";
+  "**התקנת אפל** לא זמינה כאן — פתחו ב-Chrome ולחצו על כפתור ההורדה בראש, או ראו עזרה ← התקנת האפליקציה.";
 
 export function shouldShowPwaInstallButton(options: {
   canInstall: boolean;

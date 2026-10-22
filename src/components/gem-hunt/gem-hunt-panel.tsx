@@ -71,7 +71,7 @@ export function GemHuntPanel({
   userLocation: UserLocation | null;
   isAdmin: boolean;
   adminSimulateInRange?: boolean;
-  /** Same tap as «פתחו מצלמה» — request GPS + sensors (iOS needs gesture). */
+  /** Same tap as **פתחו מצלמה** — request GPS + sensors (iOS needs gesture). */
   onOpenHunt?: GemHuntOpenPrepare;
   /** Map-eligible houses — used for milestone query on /gem-bag after collect. */
   mapHousesForCelebrate?: PublicHouse[];

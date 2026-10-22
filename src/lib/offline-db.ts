@@ -260,7 +260,7 @@ export function loadOwnedHouses(): OwnedHouse[] {
   }
 }
 
-/** When the live catalog row is newer, drop stale preview fields (e.g. old address on «במכשיר שלי»). */
+/** When the live catalog row is newer, drop stale preview fields (e.g. old address on **במכשיר שלי**). */
 export function refreshStaleOwnedPreviews(catalogHouses: readonly PublicHouse[]) {
   if (typeof window === "undefined") return;
   const byId = new Map(catalogHouses.map((house) => [house.id, house]));

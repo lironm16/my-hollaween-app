@@ -12,7 +12,7 @@ function withPlace(lead: string) {
 const backScenes = [
   {
     id: "back-active",
-    label: "חוזרים מ«הפסקה» או מ«סגור» לפתוח",
+    label: "חוזרים מ**הפסקה** או מ**סגור** לפתוח",
     time: "20:01",
     payload: {
       title: `${NICK} חזרת לפעילות!`,
@@ -25,7 +25,7 @@ const backScenes = [
 const visitChoiceScenes = [
   {
     id: "decor-only",
-    label: "בעל הבית מסמן «מקושט בלי ממתקים» — עדיין אפשר להסתכל",
+    label: "בעל הבית מסמן **מקושט בלי ממתקים** — עדיין אפשר להסתכל",
     time: "19:10",
     payload: {
       title: `${NICK} - כל הממתקים אזלו...`,
@@ -35,7 +35,7 @@ const visitChoiceScenes = [
   },
   {
     id: "closed-visits",
-    label: "בעל הבית מסמן «נגמר המלאי» — נסגר לביקור",
+    label: "בעל הבית מסמן **נגמר המלאי** — נסגר לביקור",
     time: "21:14",
     payload: {
       title: `${NICK} נסגר לביקור`,
@@ -95,7 +95,7 @@ export default function PushCopyTryPage() {
           <p className="text-base text-violet-300">{config.brandEn} · ניסוי כותרת</p>
           <h1 className="text-2xl font-semibold text-orange-100">כינוי הבית בכותרת</h1>
           <p className="text-base text-violet-200">
-            כינוי בכותרת, ואז משפט קצר. השורה האחרונה תמיד רחוב ושכונה. «מקושט בלי ממתקים» ו«נסגר» הם שני
+            כינוי בכותרת, ואז משפט קצר. השורה האחרונה תמיד רחוב ושכונה. **מקושט בלי ממתקים** ו**נסגר** הם שני
             מצבים שונים — לפי מה שבעל הבית בוחר.
           </p>
           <PreviewNav current="/preview/push" />

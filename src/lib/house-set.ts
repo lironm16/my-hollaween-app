@@ -140,7 +140,7 @@ export function catalogHasRealHouses(catalog: { houses: readonly StubFlagHouse[]
 
 /**
  * Non-admins see real houses only (preview URLs match production visitors).
- * Admins on preview may fall back to «all» when the catalog is stub-only for QA.
+ * Admins on preview may fall back to **all** when the catalog is stub-only for QA.
  */
 export function resolveViewerHouseSet(
   catalog: { houses: { isStub?: boolean; deviceCacheStub?: boolean }[] } | null,

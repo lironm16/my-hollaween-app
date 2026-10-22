@@ -89,7 +89,7 @@ function AndroidInstallSection() {
       <p className="text-base leading-relaxed text-violet-200/90">
         <HelpText>
           {
-            "באנדרואיד: התקינו דרך כפתור **התקנת האפליקציה** בראש המסך (Chrome). בטלפונים חדשים Google Play Protect לפעמים חוסם — זה לא באג באתר; ראו «פתרון» למטה."
+            "באנדרואיד: התקינו דרך כפתור **התקנת האפליקציה** בראש המסך (Chrome). בטלפונים חדשים Google Play Protect לפעמים חוסם — זה לא באג באתר; ראו **פתרון** למטה."
           }
         </HelpText>
       </p>
@@ -98,7 +98,7 @@ function AndroidInstallSection() {
         <ul className="space-y-3">
           <HelpStep
             variant="tip"
-            title="אחרי «התקנת אפל»"
+            title="אחרי **התקנת אפל**"
             body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **הבנתי**. אם זה חוזר — מחקו את HallowHood מהגדרות → אפליקציות ונסו שוב מכפתור ההתקנה."
             image={installHelpImage("android-play-protect")}
             imageAlt="Google Play Protect — אפליקציה לא בטוחה נחסמה"

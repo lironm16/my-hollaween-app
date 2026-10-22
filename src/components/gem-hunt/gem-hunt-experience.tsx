@@ -22,7 +22,7 @@ export type GemHuntExperienceProps = {
   collectEnabled?: boolean;
   encounterMode?: boolean;
   repeatVisit?: boolean;
-  /** When true, «גלה לי» only works within hunt radius (visitors + admin «תצוגת משתמש»). */
+  /** When true, **גלה לי** only works within hunt radius (visitors + admin **תצוגת משתמש**). */
   tellMeHuntRadiusEnforced?: boolean;
   /** Android: session started on the same tap as hunt open (avoids second AR button). */
   initialWebXrSession?: XRSession | null;
@@ -38,7 +38,7 @@ export type GemHuntExperienceProps = {
   onClusterSkipHouse?: () => void;
   clusterSkipAvailable?: boolean;
   clusterFinishAvailable?: boolean;
-  /** Map roving hunt — pick closest gem before «גלה לי» / «רמז» (sticky until next tap). */
+  /** Map roving hunt — pick closest gem before **גלה לי** / **רמז** (sticky until next tap). */
   onBeforeNavigationAssist?: () => void;
 };
 

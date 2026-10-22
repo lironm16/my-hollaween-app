@@ -1,6 +1,6 @@
 import type { LocationStatus } from "@/hooks/use-user-location";
 
-/** User can still tap «המיקום שלי» — only hard blocks are denied API / no geolocation. */
+/** User can still tap **המיקום שלי** — only hard blocks are denied API / no geolocation. */
 export function geoCanPromptLocation(status: LocationStatus): boolean {
   return status !== "denied" && status !== "unavailable";
 }

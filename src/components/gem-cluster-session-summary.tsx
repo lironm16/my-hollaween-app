@@ -23,7 +23,7 @@ export function GemClusterSessionSummary({
   open: boolean;
   catches: GemClusterSessionCatch[];
   onClose: () => void;
-  /** Opens the sticker album (replaces plain «סגור»). */
+  /** Opens the sticker album (replaces plain **סגור**). */
   onOpenStickerBook: () => void;
 }) {
   if (!open || catches.length === 0) return null;

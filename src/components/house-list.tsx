@@ -35,7 +35,7 @@ export function HouseList({
   showSort?: boolean;
   onRemoveFromDevice?: (id: string) => void;
   emptyAction?: ReactNode;
-  /** Bulk select + «הסר מהרשימה» (e.g. /my tabs). */
+  /** Bulk select + **הסר מהרשימה** (e.g. /my tabs). */
   selection?: {
     selectedIds: ReadonlySet<string>;
     onToggleId: (id: string) => void;

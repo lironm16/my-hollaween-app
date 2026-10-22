@@ -17,7 +17,7 @@ export type GemAnchorEditState = {
   onMove: (point: LatLng) => void;
   /** Bumped when the placement dialog opens — fit the 40 m circle in view once. */
   fitTick?: number;
-  /** GPS «המיקום שלי» — shown even when outside the placement circle. */
+  /** GPS **המיקום שלי** — shown even when outside the placement circle. */
   myLocation?: LatLng | null;
   myLocationAccuracyM?: number | null;
 };

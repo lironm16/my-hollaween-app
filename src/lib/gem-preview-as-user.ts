@@ -1,4 +1,4 @@
-/** @deprecated Use `@/lib/admin-preview-as-user` — one shared «תצוגת משתמש» toggle. */
+/** @deprecated Use `@/lib/admin-preview-as-user` — one shared **תצוגת משתמש** toggle. */
 export {
   adminBypassesAddHouseCutoff,
   adminShowsPrivateHouseFields,

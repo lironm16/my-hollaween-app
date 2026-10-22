@@ -1,7 +1,7 @@
 /** Product name for the dwarf hunt mini-game. */
 export const GEM_GAME_TITLE_HE = "משחק השדונים";
 
-/** «Found» terminology (replaces «נאסף» / «אספתי»). */
+/** **Found** terminology (replaces **נאסף** / **אספתי**). */
 export const GEM_FOUND_CHEER_HE = "מצאת שדון!";
 export const GEM_FOUND_STATE_HE = "נמצא";
 export const GEM_FOUND_I_HE = "מצאתי";
@@ -34,7 +34,7 @@ export const GEM_ACTION_FIND_HE = "מצא שדון";
 export const GEM_CLUSTER_FIND_ALL_HE = "מצא הכל";
 export const GEM_CLUSTER_FOUND_ALL_HE = "מצאתי הכל";
 export const GEM_CAMPUS_TAP_SAVE_HE = "שמרו שדון";
-/** Footer collect while «גלה לי» center gem is on screen (orbit on the model). */
+/** Footer collect while **גלה לי** center gem is on screen (orbit on the model). */
 export const GEM_TELL_ME_COLLECT_HE = "אספו את השדון";
 
 export const GEM_RESET_TITLE_HE = "לאפס מציאת שדון?";
@@ -82,7 +82,7 @@ export const GEM_PANEL_NEAR_GPS_HE = "ליד השדון — המתינו רגע 
 export const gemPanelApproachHe = (m: number) => `התקרבו ל־${m} מ׳ לשדון על המדרכה`;
 export const gemPanelOpenCameraHe = (m: number) => `~${m} מ׳ לשדון — פתחו מצלמה`;
 
-export const GEM_TELL_ME_RANGE_HE = "יש להתקרב לשדון כדי להשתמש ב«גלה לי»";
+export const GEM_TELL_ME_RANGE_HE = "יש להתקרב לשדון כדי להשתמש ב**גלה לי**";
 export const GEM_AR_LOCATING_HE = "מאתרים את השדון (אותה נקודה כמו במפה)…";
 export const GEM_BEARING_ARIA_HE = (label: string, distance?: string) =>
   `כיוון השדון: ${label}${distance ?? ""}`;

@@ -43,7 +43,7 @@ export default function ScanVisitHelpPage() {
           <h2 className="text-xl font-semibold text-orange-200">איך סורקים?</h2>
           <Steps steps={VISITOR_STEPS} />
           <p className="text-base leading-relaxed text-violet-200">
-            סרקתם שוב את אותו בית? הוא נשאר מסומן «ביקרתי» — הסריקה לא מבטלת ביקור.
+            סרקתם שוב את אותו בית? הוא נשאר מסומן **ביקרתי** — הסריקה לא מבטלת ביקור.
           </p>
         </section>
         <section className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
@@ -51,11 +51,11 @@ export default function ScanVisitHelpPage() {
           <Steps steps={OWNER_STEPS} />
           <div className="space-y-2 rounded-xl border border-orange-500/30 bg-orange-950/40 p-3 text-sm leading-relaxed text-orange-200">
             <p>
-              <strong>הודעה בספארי באייפון?</strong> אם קופצת חלונית «This website has been blocked from automatically printing», לחצו על{" "}
+              <strong>הודעה בספארי באייפון?</strong> אם קופצת חלונית **This website has been blocked from automatically printing**, לחצו על{" "}
               <strong>Allow</strong> (אפשר). זוהי הגנת אבטחה שגרתית של אפל לחלונות הדפסה מאתרים.
             </p>
             <p>
-              <strong>ספארי במק?</strong> בחלון ההדפסה: כבו «כותרות ותחתיות» (Headers and Footers), הפעילו «Print backgrounds» / «הדפסת רקעים», וודאו שהגודל הוא 100%.
+              <strong>ספארי במק?</strong> בחלון ההדפסה: כבו **כותרות ותחתיות** (Headers and Footers), הפעילו **Print backgrounds** / **הדפסת רקעים**, וודאו שהגודל הוא 100%.
             </p>
           </div>
         </section>

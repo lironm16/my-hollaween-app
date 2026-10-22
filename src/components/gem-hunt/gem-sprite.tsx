@@ -18,7 +18,7 @@ export function GemSprite({
   className,
   size = "lg",
   mode = "auto",
-  /** Center «גלה לי» — no spin/drag; parent button handles tap to collect. */
+  /** Center **גלה לי** — no spin/drag; parent button handles tap to collect. */
   tapCollect = false,
   spinWhileCollect = true,
   motion = "idle",

@@ -28,7 +28,7 @@ export type HouseCardActionContext = {
   onClusterRestoreAll?: (houses: PublicHouse[]) => void;
   onClusterLikeAll?: (houses: PublicHouse[]) => void;
   onClusterUnlikeAll?: (houses: PublicHouse[]) => void;
-  /** Cluster ⋮ — sequential camera session for every inner house (not per-house «מצא שדון»). */
+  /** Cluster ⋮ — sequential camera session for every inner house (not per-house **מצא שדון**). */
   onClusterFindAllGems?: (houses: PublicHouse[]) => void;
   onClusterResetAllGems?: (houses: PublicHouse[]) => void;
   /** When set, per-house gate for the card-top gem button (map/list still use full ctx.onToggleGem). */
@@ -42,7 +42,7 @@ export type HouseCardActionContext = {
   /** This device's registered night pass is for this house id. */
   registeredNightPassOnHouse?: (id: string) => boolean;
   onNightPasses?: (house: PublicHouse) => void;
-  /** Owner/admin ⋮ «מיקום השדון» — only shown on houses this device may edit. */
+  /** Owner/admin ⋮ **מיקום השדון** — only shown on houses this device may edit. */
   onPlaceGem?: (house: PublicHouse) => void;
   skipMetaFor?: (id: string) => SkippedHouseMeta | undefined;
   onApproveSkipReturn?: (id: string) => void;

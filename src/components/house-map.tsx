@@ -888,7 +888,7 @@ type Props = {
   filterDimActive?: boolean;
   /** Compact embed on house link pages — center on the house, theme toggle only. */
   embed?: boolean;
-  /** Show «המיקום שלי» on embed maps (admin gem manager). */
+  /** Show **המיקום שלי** on embed maps (admin gem manager). */
   showLocateButton?: boolean;
   /** When embed + selectedId, pan/zoom to house (off for admin gem map). */
   embedCenterOnSelect?: boolean;
@@ -898,7 +898,7 @@ type Props = {
   showGemAnchors?: boolean;
   /** When false, gem anchor markers stay bright even if house filters hide other pins. */
   gemAnchorRespectFilters?: boolean;
-  /** Map legend «יהלומים» section — when gem hunt UI is on (independent of anchor toggle). */
+  /** Map legend **יהלומים** section — when gem hunt UI is on (independent of anchor toggle). */
   showGemLegend?: boolean;
   gemAnchorHouses?: PublicHouse[];
   /** Houses that get yellow gem pin rings — defaults to {@link gemAnchorHouses} when omitted. */

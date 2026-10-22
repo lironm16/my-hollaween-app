@@ -106,7 +106,7 @@ export default function GemHuntHelpPage() {
           </ol>
         </HelpExpandable>
 
-        <HelpExpandable title="רמז ו«גלה לי»">
+        <HelpExpandable title="רמז ו**גלה לי**">
           <div className="space-y-3 text-lg leading-relaxed text-orange-50">
             <p>
               <HelpText>

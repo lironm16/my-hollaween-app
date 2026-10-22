@@ -66,7 +66,7 @@ export const GEM_IOS_HUNT_METERS = 10;
 /** After reveal, keep the on-screen gem until the user walks this far past the distance at find. */
 export const GEM_HUNT_FOUND_STAY_VISIBLE_M = 5;
 
-/** Stay in «found» view when GPS flickers out of hunt band until user walks away from find spot. */
+/** Stay in **found** view when GPS flickers out of hunt band until user walks away from find spot. */
 export function gemHuntGemStayVisible(
   distanceM: number | null,
   foundDistanceM: number | null,
@@ -82,11 +82,11 @@ export const GEM_STILL_SECONDS = 0;
 export const GEM_FACING_TOLERANCE_DEG = 60;
 /** Guaranteed gem reveal after this many seconds of panning in range. */
 export const GEM_SCAN_REVEAL_SECONDS = 5;
-/** «גלה לי» center view — inspect360 framing leaves wide orbit margins, so zoom in (iOS + Android DOM overlay). */
+/** **גלה לי** center view — inspect360 framing leaves wide orbit margins, so zoom in (iOS + Android DOM overlay). */
 export const GEM_TELL_ME_CENTER_ZOOM = 1.58;
 /** Model scale inside the fixed hunt frame (frame CSS unchanged). */
 export const GEM_HUNT_MODEL_ZOOM_INSET = 0.86;
-/** Android «גלה לי» DOM overlay — smaller model inside the same frame. */
+/** Android **גלה לי** DOM overlay — smaller model inside the same frame. */
 export const GEM_HUNT_MODEL_ZOOM_ANDROID_INSET = 0.66;
 
 /** Camera zoom for centered inspect360 (frame CSS unchanged). */
@@ -134,7 +134,7 @@ export const GEM_CLUSTER_ANCHOR_MIN_METERS = 8;
 export const GEM_CLUSTER_ANCHOR_MAX_METERS = 28;
 /**
  * When reported distance to pin/anchor is this small, trust on-site GPS despite noisy accuracy.
- * (Avoids «2 m away» but still «far» when accuracy is 60–100 m.)
+ * (Avoids **2 m away** but still **far** when accuracy is 60–100 m.)
  */
 export const GEM_ONSITE_TRUST_METERS = 12;
 

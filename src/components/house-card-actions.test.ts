@@ -56,7 +56,7 @@ describe("houseCardPropsFor", () => {
     assert.equal(props.onToggleGem, undefined);
   });
 
-  it("offers «מיקום השדון» only on houses this device may edit", () => {
+  it("offers **מיקום השדון** only on houses this device may edit", () => {
     const owner = houseCardPropsFor({ ...house, id: "owned-1" }, { ...ctx, onPlaceGem: () => {} });
     assert.equal(typeof owner.onPlaceGem, "function");
     const visitor = houseCardPropsFor(

@@ -29,8 +29,8 @@ npm run lint          # ESLint (also first step in npm run ci; compiler hygiene 
 | Checklist ID | Automated coverage |
 |--------------|-------------------|
 | INS-07 / INS-08 | `scripts/check-offline-catalog.mjs` (catalog in `localStorage`, offline relaunch) |
-| OFF-02 | Same script (`hw-sim-server` + «השרת לא עונה») |
-| OFF-03 | Same script (`context.setOffline`, «אין אינטרנט») |
+| OFF-02 | Same script (`hw-sim-server` + **השרת לא עונה**) |
+| OFF-03 | Same script (`context.setOffline`, **אין אינטרנט**) |
 | MAP / ROUTE / EDIT (partial) | `scripts/e2e-visitor-flows.mjs`, `e2e-batch3`–`7` with `?rehearsal=open` |
 | Rehearsal clock / admin sim | `e2e-batch7` (ADM-05/06), unit tests in `src/lib/app-clock.test.ts` |
 

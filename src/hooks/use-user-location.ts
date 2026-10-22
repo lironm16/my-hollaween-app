@@ -59,7 +59,7 @@ export function readUserLocation(options: PositionOptions = GEOLOCATION_CACHED_O
   });
 }
 
-/** Shared lookup for «המיקום שלי» — reuse app GPS, then cached, then fresh. */
+/** Shared lookup for **המיקום שלי** — reuse app GPS, then cached, then fresh. */
 export async function resolveUserLocationForUi(input?: {
   seed?: UserLocation | null;
   refresh?: () => Promise<UserLocation | null>;
