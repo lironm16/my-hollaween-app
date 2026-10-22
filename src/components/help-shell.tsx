@@ -142,7 +142,7 @@ export function HelpShot({
           alt={alt}
           width={390}
           height={780}
-          className="block h-auto min-h-[12rem] w-full bg-[#12081a] object-contain object-top"
+          className="block h-auto w-full bg-[#12081a]"
           decoding="sync"
         />
         {layers.map((spec, index) => (
@@ -157,16 +157,20 @@ export function HelpStep({
   n,
   title,
   body,
+  issueNote,
   image,
   imageAlt,
   imageHighlight,
   action,
   parseBody = typeof body === "string",
   variant = "step",
+  hideTitle = false,
 }: {
   n?: number;
-  title: ReactNode;
+  title?: ReactNode;
   body: ReactNode;
+  /** Shown below the main body — troubleshooting, not part of the numbered flow. */
+  issueNote?: string;
   /** When true (default for string bodies), `body` is parsed for **strong** / *em* only. */
   parseBody?: boolean;
   image?: string;
@@ -175,10 +179,12 @@ export function HelpStep({
   action?: ReactNode;
   /** `tip` = troubleshooting block (?) instead of a numbered step. */
   variant?: "step" | "tip";
+  hideTitle?: boolean;
 }) {
   const renderedTitle = typeof title === "string" ? renderHelpText(title) : title;
   const renderedBody =
     parseBody && typeof body === "string" ? renderHelpText(body) : body;
+  const renderedIssue = issueNote ? renderHelpText(issueNote) : null;
 
   const badge =
     variant === "tip" ? (
@@ -204,11 +210,48 @@ export function HelpStep({
         variant === "tip" ? "bg-[#181028] ring-violet-500/25" : "bg-[#14081c] ring-orange-500/15",
       )}
     >
-      <div className="flex items-center gap-3">
-        {badge}
-        <h2 className="text-xl font-semibold text-orange-50">{renderedTitle}</h2>
-      </div>
-      <div className="text-lg leading-relaxed text-orange-50">{renderedBody}</div>
+      {hideTitle ? (
+        <div className="flex items-start gap-3">
+          {badge}
+          <div className="min-w-0 flex-1 space-y-3 text-lg leading-relaxed text-orange-50">
+            {renderedBody}
+            {renderedIssue ? (
+              <div className="flex items-start gap-3 rounded-xl bg-violet-950/45 p-3 text-base leading-relaxed text-violet-100 ring-1 ring-violet-500/25">
+                <span
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-violet-600/90 text-lg font-bold text-violet-50"
+                  aria-hidden
+                >
+                  !
+                </span>
+                <div>{renderedIssue}</div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-3">
+            {badge}
+            {title != null && title !== "" ? (
+              <h2 className="text-xl font-semibold text-orange-50">{renderedTitle}</h2>
+            ) : null}
+          </div>
+          <div className="space-y-3 text-lg leading-relaxed text-orange-50">
+            {renderedBody}
+            {renderedIssue ? (
+              <div className="flex items-start gap-3 rounded-xl bg-violet-950/45 p-3 text-base leading-relaxed text-violet-100 ring-1 ring-violet-500/25">
+                <span
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-violet-600/90 text-lg font-bold text-violet-50"
+                  aria-hidden
+                >
+                  !
+                </span>
+                <div>{renderedIssue}</div>
+              </div>
+            ) : null}
+          </div>
+        </>
+      )}
       {action}
       {image ? (
         <HelpShot src={image} alt={imageAlt ?? ""} highlight={imageHighlight} />

@@ -6,6 +6,7 @@ import { HelpText } from "@/lib/render-help-text";
 import { helpImage } from "@/lib/help-images";
 import {
   ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
+  ANDROID_PLAY_PROTECT_DETAILS_HIGHLIGHT,
   IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT,
   IOS_INSTALL_ADD_HOME_HIGHLIGHT,
   IOS_INSTALL_SHARE_HIGHLIGHT,
@@ -44,7 +45,9 @@ const IPHONE_STEPS = [
 const ANDROID_STEPS = [
   {
     title: "התקנת האפליקציה",
-    body: "פתחו את האתר ב-**Google Chrome** (לא Samsung Internet). לחצו על **התקנת האפליקציה** (אייקון ההורדה בראש המסך) ואשרו בהתקנה. אם HallowHood כבר מותקנת ו-Google חוסם — מחקו אותה מהגדרות → אפליקציות ונסו שוב.",
+    body: "פתחו את האתר ב-**Google Chrome** (לא Samsung Internet). לחצו על **התקנת האפליקציה** (אייקון ההורדה בראש המסך) ואשרו בהתקנה.",
+    issueNote:
+      "אם HallowHood כבר מותקנת ו-Google חוסם — מחקו אותה מהגדרות → אפליקציות ונסו שוב.",
     image: installHelpImage("android-2-install.jpg"),
     imageHighlight: ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
     imageAlt: "כפתור התקנת האפליקציה ב-Chrome",
@@ -57,6 +60,7 @@ function PlatformSteps({
   steps: readonly {
     title: string;
     body: string;
+    issueNote?: string;
     image: string;
     imageAlt: string;
     imageHighlight?: HelpShotHighlight;
@@ -70,6 +74,7 @@ function PlatformSteps({
           n={index + 1}
           title={step.title}
           body={step.body}
+          issueNote={step.issueNote}
           image={step.image}
           imageAlt={step.imageAlt}
           imageHighlight={step.imageHighlight}
@@ -94,9 +99,10 @@ function AndroidInstallSection() {
         <ul className="space-y-3">
           <HelpStep
             variant="tip"
-            title="אחרי **התקנת אפל**"
-            body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **הבנתי**. אם זה חוזר — מחקו את HallowHood מהגדרות → אפליקציות ונסו שוב מכפתור ההתקנה."
+            hideTitle
+            body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **פרטים נוספים**, ואז **הבנתי**. אם זה חוזר — מחקו את HallowHood מהגדרות → אפליקציות ונסו שוב מכפתור ההתקנה."
             image={installHelpImage("android-play-protect.jpg")}
+            imageHighlight={ANDROID_PLAY_PROTECT_DETAILS_HIGHLIGHT}
             imageAlt="Google Play Protect — אפליקציה לא בטוחה נחסמה"
           />
         </ul>

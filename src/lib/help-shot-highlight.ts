@@ -32,7 +32,16 @@ export const IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT: HelpShotHighlight = {
 /** Android header — download / install button (1082×200 reference). */
 export const ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT: HelpShotHighlight = {
   kind: "ring",
-  cx: 0.118,
-  cy: 0.48,
-  r: 0.095,
+  cx: 0.124,
+  cy: 0.488,
+  r: 0.1,
+};
+
+/** Play Protect dialog — **פרטים נוספים** row (945×1966 reference). */
+export const ANDROID_PLAY_PROTECT_DETAILS_HIGHLIGHT: HelpShotHighlight = {
+  kind: "row",
+  x: 0.612,
+  y: 0.593,
+  w: 0.288,
+  h: 0.028,
 };
