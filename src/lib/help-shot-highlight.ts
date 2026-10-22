@@ -19,3 +19,12 @@ export const IOS_INSTALL_ADD_HOME_HIGHLIGHT: HelpShotHighlight = {
   w: 0.93,
   h: 0.042,
 };
+
+/** iOS «Add to Home Screen» confirm — **Add** (969×2000 reference). */
+export const IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT: HelpShotHighlight = {
+  kind: "row",
+  x: 0.808,
+  y: 0.036,
+  w: 0.17,
+  h: 0.038,
+};

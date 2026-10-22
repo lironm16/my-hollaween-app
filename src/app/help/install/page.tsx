@@ -5,6 +5,7 @@ import { HelpExpandable, HelpShell, HelpStep } from "@/components/help-shell";
 import { HelpText } from "@/lib/render-help-text";
 import { helpImage } from "@/lib/help-images";
 import {
+  IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT,
   IOS_INSTALL_ADD_HOME_HIGHLIGHT,
   IOS_INSTALL_SHARE_HIGHLIGHT,
   type HelpShotHighlight,
@@ -25,10 +26,17 @@ const IPHONE_STEPS = [
   },
   {
     title: "הוספה למסך הבית",
-    body: "גללו ובחרו הוספה למסך הבית → הוסף. האייקון יופיע במסך הבית.",
+    body: "גללו ובחרו **הוספה למסך הבית** בתפריט השיתוף.",
     image: installHelpImage("ios-3-add-home-photo.png"),
     imageHighlight: IOS_INSTALL_ADD_HOME_HIGHLIGHT,
     imageAlt: "הוספה למסך הבית בתפריט השיתוף",
+  },
+  {
+    title: "אישור",
+    body: "לחצו **הוסף** (Add) למעלה מימין. האייקון יופיע במסך הבית.",
+    image: installHelpImage("ios-4-add-confirm-photo.jpg"),
+    imageHighlight: IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT,
+    imageAlt: "מסך אישור — הוסף למסך הבית",
   },
 ] as const;
 

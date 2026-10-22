@@ -31,7 +31,7 @@ async function detectPlayProtectButton(src) {
   let maxX = 0;
   let maxY = 0;
   let n = 0;
-  for (let y = Math.floor(h * 0.58); y < Math.floor(h * 0.74); y++) {
+  for (let y = Math.floor(h * 0.5); y < Math.floor(h * 0.78); y++) {
     for (let x = Math.floor(w * 0.1); x < Math.floor(w * 0.9); x++) {
       const i = (y * w + x) * c;
       const r = data[i];
@@ -87,11 +87,14 @@ async function annotatePlayProtect(src) {
 
 const shareSrc = process.env.IOS_SHARE_SRC ?? join(assets, "ios-install-share-source.jpg");
 const homeSrc = process.env.IOS_ADD_HOME_SRC ?? join(assets, "ios-install-add-home-source.png");
+const confirmSrc =
+  process.env.IOS_ADD_CONFIRM_SRC ?? join(assets, "ios-install-add-confirm-source.jpg");
 const playProtectSrc =
   process.env.ANDROID_PLAY_PROTECT_SRC ?? join(assets, "android-play-protect-source.jpg");
 
 await writePairFile(shareSrc, "ios-2-share-photo.jpg");
 await writePairFile(homeSrc, "ios-3-add-home-photo.png");
+await writePairFile(confirmSrc, "ios-4-add-confirm-photo.jpg");
 
 const playBuf = await annotatePlayProtect(playProtectSrc);
 for (const dir of ["public/images/help/install", "public/help/install"]) {
