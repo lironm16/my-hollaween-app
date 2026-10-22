@@ -3,7 +3,7 @@
  * Copy clean iOS install photos; bake Play Protect highlight only (Android).
  * iOS highlights are CSS overlays — tune src/lib/help-shot-highlight.ts.
  */
-import { mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -11,6 +11,7 @@ import sharp from "sharp";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const assets = join(root, "scripts", "assets");
 const ORANGE = "#ff9500";
+const HELP_WIDTH = 960;
 
 function rowOverlay(w, h, padX, y, rw, rh) {
   const stroke = Math.max(3, w * 0.005);
@@ -59,21 +60,27 @@ async function detectPlayProtectButton(src) {
   };
 }
 
-async function writeOutFile(src, relPath) {
+async function writeJpegFrom(src, relPath) {
   const full = join(root, relPath);
   mkdirSync(dirname(full), { recursive: true });
-  await sharp(src).toFile(full);
+  await sharp(src)
+    .rotate()
+    .resize({ width: HELP_WIDTH, withoutEnlargement: true })
+    .jpeg({ quality: 86, mozjpeg: true })
+    .toFile(full);
 }
 
-async function writeOutBuf(buf, relPath) {
-  const full = join(root, relPath);
-  mkdirSync(dirname(full), { recursive: true });
-  await sharp(buf).toFile(full);
-}
-
-async function writePairFile(src, baseName) {
+async function writePairJpeg(src, baseName) {
   for (const dir of ["public/images/help/install", "public/help/install"]) {
-    await writeOutFile(src, `${dir}/${baseName}`);
+    await writeJpegFrom(src, `${dir}/${baseName}`);
+  }
+}
+
+function writePairCopy(src, baseName) {
+  for (const dir of ["public/images/help/install", "public/help/install"]) {
+    const full = join(root, dir, baseName);
+    mkdirSync(dirname(full), { recursive: true });
+    copyFileSync(src, full);
   }
 }
 
@@ -94,15 +101,15 @@ const playProtectSrc =
   process.env.ANDROID_PLAY_PROTECT_SRC ?? join(assets, "android-play-protect-source.jpg");
 
 const androidAppFull = join(root, "public", "help", "install", "android-1-app.png");
-await writeOutFile(androidAppFull, "public/images/help/install/android-1-app.png");
+await writePairJpeg(androidAppFull, "android-1-app.jpg");
 
-await writePairFile(shareSrc, "ios-2-share-photo.jpg");
-await writePairFile(homeSrc, "ios-3-add-home-photo.png");
-await writePairFile(confirmSrc, "ios-4-add-confirm-photo.jpg");
+writePairCopy(shareSrc, "ios-2-share-photo.jpg");
+writePairCopy(homeSrc, "ios-3-add-home-photo.png");
+writePairCopy(confirmSrc, "ios-4-add-confirm-photo.jpg");
 
 const playBuf = await annotatePlayProtect(playProtectSrc);
-for (const dir of ["public/images/help/install", "public/help/install"]) {
-  await writeOutBuf(playBuf, `${dir}/android-play-protect.png`);
-}
+const playTmp = join(root, ".tmp-play-protect.png");
+await sharp(playBuf).toFile(playTmp);
+await writePairJpeg(playTmp, "android-play-protect.jpg");
 
-console.log("Wrote install help photos (iOS clean, Play Protect annotated).");
+console.log("Wrote install help photos (iOS clean, Android JPEG, Play Protect annotated).");

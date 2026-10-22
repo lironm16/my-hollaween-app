@@ -106,7 +106,7 @@ function HelpShotHighlightLayer({ spec }: { spec: HelpShotHighlight }) {
         aria-hidden
       >
         <div className="absolute inset-0 rounded-full border-[4px] border-[#ff9500]" />
-        <div className="absolute inset-[-22%] rounded-full border-[3px] border-dashed border-[#ff9500]" />
+        <div className="absolute inset-[-30%] rounded-full border-[3px] border-dashed border-[#ff9500]" />
       </div>
     );
   }

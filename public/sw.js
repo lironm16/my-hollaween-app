@@ -126,6 +126,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  /** Install help photos — always network (avoid stale SW cache after asset swaps). */
+  if (url.pathname.startsWith("/images/help/")) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
   if (MapTileCache.isMapTileHost(url.hostname)) {
     if (MapTileCache.shouldCacheUrl(url)) {
       event.respondWith(MapTileCache.respondWithCachedTile(req));

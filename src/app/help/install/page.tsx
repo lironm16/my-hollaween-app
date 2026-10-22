@@ -44,13 +44,13 @@ const ANDROID_STEPS = [
   {
     title: "פתחו ב-Chrome",
     body: "השתמשו ב-Google Chrome (לא Samsung Internet). אם HallowHood כבר מותקנת ו-Google חוסם — מחקו אותה מהגדרות → אפליקציות.",
-    image: installHelpImage("android-1-app"),
+    image: installHelpImage("android-1-app.jpg"),
     imageAlt: "HallowHood ב-Chrome",
   },
   {
     title: "התקנת האפליקציה",
     body: "לחצו על **התקנת האפליקציה** (אייקון ההורדה בראש המסך) ואשרו בהתקנה.",
-    image: installHelpImage("android-1-app"),
+    image: installHelpImage("android-1-app.jpg"),
     imageAlt: "כפתור התקנת האפליקציה ב-Chrome",
   },
 ] as const;
@@ -100,7 +100,7 @@ function AndroidInstallSection() {
             variant="tip"
             title="אחרי **התקנת אפל**"
             body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **הבנתי**. אם זה חוזר — מחקו את HallowHood מהגדרות → אפליקציות ונסו שוב מכפתור ההתקנה."
-            image={installHelpImage("android-play-protect")}
+            image={installHelpImage("android-play-protect.jpg")}
             imageAlt="Google Play Protect — אפליקציה לא בטוחה נחסמה"
           />
         </ul>
