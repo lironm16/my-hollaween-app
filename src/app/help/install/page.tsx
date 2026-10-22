@@ -33,8 +33,14 @@ const ANDROID_STEPS = [
     imageAlt: "HallowHood ב-Chrome",
   },
   {
+    title: "אם Google Play Protect חוסם",
+    body: "אחרי «התקנת אפל» Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **הבנתי** והוסיפו **קיצור דרך** מהתפריט (שלב הבא) — לא WebAPK.",
+    image: installHelpImage("android-play-protect"),
+    imageAlt: "Google Play Protect — אפליקציה לא בטוחה נחסמה",
+  },
+  {
     title: "קיצור דרך למסך הבית",
-    body: "בתפריט ⋮ בחרו הוסף למסך הבית (לא «התקנת אפל» אם מופיעה אזהרת Google Play Protect). פתיחה מהאייקון תמשיך ב-Chrome — המפה וההתראות עובדים.",
+    body: "בתפריט ⋮ בחרו **הוסף למסך הבית** (לא «התקנת אפל»). פתיחה מהאייקון תמשיך ב-Chrome — המפה וההתראות עובדים.",
     image: installHelpImage("android-2-menu"),
     imageAlt: "תפריט Chrome — הוסף למסך הבית",
   },

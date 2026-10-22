@@ -42,9 +42,14 @@ function normalizeHelpEmphasis(text: string): string {
   return text.replace(/<<([^>]+)>>/g, "**$1**");
 }
 
+/** U+2192 mirrors in `dir=rtl` and reads backwards for Hebrew menu paths — use ←. */
+function normalizeRtlFlowArrows(text: string): string {
+  return text.replace(/\s→\s/g, " ← ");
+}
+
 /** Split copy on optional **strong** / *em* markers. */
 export function renderHelpText(text: string): ReactNode {
-  const normalized = normalizeHelpEmphasis(text);
+  const normalized = normalizeRtlFlowArrows(normalizeHelpEmphasis(text));
   const lines = normalized.split("\n");
   if (lines.length === 1) return renderLine(normalized, "line");
 

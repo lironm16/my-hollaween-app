@@ -29,3 +29,7 @@ test("renderHelpText mixes plain labels and emphasis", () => {
   const node = renderHelpText("לחצו איפוס על **רק** אלה");
   assert.notEqual(node, "לחצו איפוס על **רק** אלה");
 });
+
+test("renderHelpText replaces → with ← for RTL menu paths", () => {
+  assert.equal(renderHelpText("הגדרות → אפליקציות"), "הגדרות ← אפליקציות");
+});
