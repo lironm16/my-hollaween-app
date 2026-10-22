@@ -9,6 +9,7 @@ import { renderHelpText } from "@/lib/render-help-text";
 import { appVersion } from "@/lib/app-version";
 import { fetchPublishedAppVersion, versionsDiffer } from "@/lib/sw-update";
 import { cn } from "@/lib/utils";
+import type { HelpShotHighlight } from "@/lib/help-shot-highlight";
 
 export function HelpShell({
   title,
@@ -90,18 +91,65 @@ export function HelpExpandable({
   );
 }
 
-export function HelpShot({ src, alt }: { src: string; alt: string }) {
+function HelpShotHighlightLayer({ spec }: { spec: HelpShotHighlight }) {
+  if (spec.kind === "ring") {
+    return (
+      <div
+        className="pointer-events-none absolute"
+        style={{
+          left: `${spec.cx * 100}%`,
+          top: `${spec.cy * 100}%`,
+          width: `${spec.r * 200}%`,
+          aspectRatio: "1",
+          transform: "translate(-50%, -50%)",
+        }}
+        aria-hidden
+      >
+        <div className="absolute inset-0 rounded-full border-[3px] border-[#ff9500]" />
+        <div className="absolute inset-[-14%] rounded-full border-2 border-dashed border-[#ff9500]" />
+      </div>
+    );
+  }
+  return (
+    <div
+      className="pointer-events-none absolute rounded-xl border-[3px] border-[#ff9500] bg-[rgba(255,149,0,0.22)]"
+      style={{
+        left: `${spec.x * 100}%`,
+        top: `${spec.y * 100}%`,
+        width: `${spec.w * 100}%`,
+        height: `${spec.h * 100}%`,
+      }}
+      aria-hidden
+    />
+  );
+}
+
+export function HelpShot({
+  src,
+  alt,
+  highlight,
+}: {
+  src: string;
+  alt: string;
+  highlight?: HelpShotHighlight | HelpShotHighlight[];
+}) {
+  const layers = highlight ? (Array.isArray(highlight) ? highlight : [highlight]) : [];
   return (
     <div className="overflow-hidden rounded-xl bg-[#12081a] ring-1 ring-orange-500/25">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        width={390}
-        height={780}
-        className="block h-auto min-h-[12rem] w-full bg-[#12081a] object-contain object-top"
-        decoding="sync"
-      />
+      <div className="relative w-full">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          width={390}
+          height={780}
+          className="block h-auto min-h-[12rem] w-full bg-[#12081a] object-contain object-top"
+          decoding="sync"
+        />
+        {layers.map((spec, index) => (
+          <HelpShotHighlightLayer key={index} spec={spec} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -112,6 +160,7 @@ export function HelpStep({
   body,
   image,
   imageAlt,
+  imageHighlight,
   action,
   parseBody = typeof body === "string",
   variant = "step",
@@ -123,6 +172,7 @@ export function HelpStep({
   parseBody?: boolean;
   image?: string;
   imageAlt?: string;
+  imageHighlight?: HelpShotHighlight | HelpShotHighlight[];
   action?: ReactNode;
   /** `tip` = troubleshooting block (?) instead of a numbered step. */
   variant?: "step" | "tip";
@@ -161,7 +211,9 @@ export function HelpStep({
       </div>
       <div className="text-lg leading-relaxed text-orange-50">{renderedBody}</div>
       {action}
-      {image ? <HelpShot src={image} alt={imageAlt ?? ""} /> : null}
+      {image ? (
+        <HelpShot src={image} alt={imageAlt ?? ""} highlight={imageHighlight} />
+      ) : null}
     </li>
   );
 }

@@ -4,23 +4,30 @@ import { useEffect, useState } from "react";
 import { HelpExpandable, HelpShell, HelpStep } from "@/components/help-shell";
 import { HelpText } from "@/lib/render-help-text";
 import { helpImage } from "@/lib/help-images";
+import {
+  IOS_INSTALL_ADD_HOME_HIGHLIGHT,
+  IOS_INSTALL_SHARE_HIGHLIGHT,
+  type HelpShotHighlight,
+} from "@/lib/help-shot-highlight";
 import { isAndroidDevice, isIosDevice } from "@/lib/push-client";
 
 function installHelpImage(name: string) {
-  return helpImage(`install/${name}.png`);
+  return helpImage(`install/${name}`);
 }
 
 const IPHONE_STEPS = [
   {
     title: "לחצו שיתוף",
     body: "ב-Safari, בסרגל התחתון — כפתור שיתוף (חץ למעלה מריבוע).",
-    image: installHelpImage("ios-2-share"),
+    image: installHelpImage("ios-2-share-photo.jpg"),
+    imageHighlight: IOS_INSTALL_SHARE_HIGHLIGHT,
     imageAlt: "כפתור שיתוף בסафari",
   },
   {
     title: "הוספה למסך הבית",
     body: "גללו ובחרו הוספה למסך הבית → הוסף. האייקון יופיע במסך הבית.",
-    image: installHelpImage("ios-3-add-home"),
+    image: installHelpImage("ios-3-add-home-photo.png"),
+    imageHighlight: IOS_INSTALL_ADD_HOME_HIGHLIGHT,
     imageAlt: "הוספה למסך הבית בתפריט השיתוף",
   },
 ] as const;
@@ -28,22 +35,28 @@ const IPHONE_STEPS = [
 const ANDROID_STEPS = [
   {
     title: "פתחו ב-Chrome",
-    body: "השתמשו ב-Google Chrome (לא Samsung Internet). אם כבר הותקן «אפל» ו-Google חוסם — מחקו את HallowHood מהגדרות → אפליקציות.",
+    body: "השתמשו ב-Google Chrome (לא Samsung Internet). אם HallowHood כבר מותקנת ו-Google חוסם — מחקו אותה מהגדרות → אפליקציות.",
     image: installHelpImage("android-1-app"),
     imageAlt: "HallowHood ב-Chrome",
   },
   {
-    title: "קיצור דרך למסך הבית",
-    body: "בתפריט ⋮ בחרו **הוסף למסך הבית**. אל תשתמשו ב**התקנת אפל** — ראו למה למטה.",
-    image: installHelpImage("android-2-menu"),
-    imageAlt: "תפריט Chrome — הוסף למסך הבית",
+    title: "התקנת האפליקציה",
+    body: "לחצו על **התקנת האפליקציה** (אייקון ההורדה בראש המסך) ואשרו בהתקנה.",
+    image: installHelpImage("android-1-app"),
+    imageAlt: "כפתור התקנת האפליקציה ב-Chrome",
   },
 ] as const;
 
 function PlatformSteps({
   steps,
 }: {
-  steps: readonly { title: string; body: string; image: string; imageAlt: string }[];
+  steps: readonly {
+    title: string;
+    body: string;
+    image: string;
+    imageAlt: string;
+    imageHighlight?: HelpShotHighlight;
+  }[];
 }) {
   return (
     <ol className="space-y-3">
@@ -55,6 +68,7 @@ function PlatformSteps({
           body={step.body}
           image={step.image}
           imageAlt={step.imageAlt}
+          imageHighlight={step.imageHighlight}
         />
       ))}
     </ol>
@@ -67,7 +81,7 @@ function AndroidInstallSection() {
       <p className="text-base leading-relaxed text-violet-200/90">
         <HelpText>
           {
-            "למה לא «התקנת אפל»? Chrome מנסה ליצור WebAPK — Google Play Protect עלול לחסום («אפליקציה לא בטוחה»). **הוסף למסך הבית** מוסיף קיצור דרך לאותה HallowHood: מפה, התראות ושמירה בטלפון — בלי חסימה."
+            "באנדרואיד: התקינו דרך כפתור **התקנת האפליקציה** בראש המסך (Chrome). בטלפונים חדשים Google Play Protect לפעמים חוסם — זה לא באג באתר; ראו «פתרון» למטה."
           }
         </HelpText>
       </p>
@@ -77,7 +91,7 @@ function AndroidInstallSection() {
           <HelpStep
             variant="tip"
             title="אחרי «התקנת אפל»"
-            body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **הבנתי**, חזרו ל-Chrome ובחרו **הוסף למסך הבית** (שלב 2) — לא WebAPK."
+            body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **הבנתי**. אם זה חוזר — מחקו את HallowHood מהגדרות → אפליקציות ונסו שוב מכפתור ההתקנה."
             image={installHelpImage("android-play-protect")}
             imageAlt="Google Play Protect — אפליקציה לא בטוחה נחסמה"
           />
