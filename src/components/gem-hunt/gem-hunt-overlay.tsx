@@ -29,6 +29,7 @@ import {
   gemHuntOnsiteCenterModelZoom,
   gemHuntGemStayVisible,
   gemWalkNavTarget,
+  withinGemHuntMeters,
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
@@ -257,7 +258,7 @@ export function GemHuntOverlay({
     liveLoc != null && !sim ? gemDistanceMeters(liveLoc, house) : null;
   const huntBandM = activeGemHuntMeters();
   const inDistanceBand =
-    liveLoc != null && !sim && gemDistanceMeters(liveLoc, house) <= huntBandM;
+    liveLoc != null && !sim && withinGemHuntMeters(liveLoc, anchor, huntBandM);
   const tellMeInRange = gemTellMeInRange(liveLoc ?? effectiveLoc, house, sim);
 
   /** Freshest GPS for AR pin — keeps the gem on the sidewalk anchor, not on the user. */
