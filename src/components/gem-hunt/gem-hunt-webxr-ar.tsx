@@ -20,6 +20,8 @@ import {
   gemTellMeCenterModelZoom,
   gemHuntGemStayVisible,
   gemWalkNavTarget,
+  activeGemHuntMeters,
+  withinGemHuntMeters,
   GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M,
   GEM_WEBXR_MODEL_SCALE_ANDROID,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
@@ -280,11 +282,12 @@ export function GemHuntWebXrAr({
   geoTargetRef.current = { lat: anchor.lat, lng: anchor.lng };
   simulateInRangeRef.current = simulateInRange;
   const approachScreenPin = pinDisplay ?? pinPlacement;
+  const huntBandM = activeGemHuntMeters();
   const distanceM =
     liveLoc != null ? gemDistanceMeters(liveLoc, house) : null;
   const inWebXrHuntBand =
     simulateInRange ||
-    (liveLoc != null && gemDistanceMeters(liveLoc, house) <= GEM_WEBXR_HUNT_METERS);
+    (liveLoc != null && withinGemHuntMeters(liveLoc, anchor, huntBandM));
 
   useEffect(() => {
     if (simulateInRange) return;
@@ -298,7 +301,7 @@ export function GemHuntWebXrAr({
     !simulateInRange &&
     inWebXrHuntBand &&
     approachScreenPin != null &&
-    gemWorldPinVisible(approachScreenPin, GEM_WEBXR_HUNT_METERS);
+    gemWorldPinVisible(approachScreenPin, huntBandM);
   const inWebXrCollectZone = simulateInRange || inWebXrHuntBand;
   const tellMeInRange = gemTellMeInRange(liveLoc, house, simulateInRange);
   /** Android: onsite GPS band or gem visible in camera (up to approach range). */
@@ -489,8 +492,9 @@ export function GemHuntWebXrAr({
     phase === "collecting" && sessionActive && collectViaTellMe;
   const showDomFakeGem = showTellMeCenterGem || showCenterCollectGem;
 
-  /** Hide compass-pinned overlay after world lock — collect via the WebXR model (Android world AR). */
-  const suppressApproachGemForWorldAr = placed && inWebXrHuntBand && showArGem;
+  /** iOS: hide 2D pin after world lock. Android: keep GPS pin when the WebXR GLB may not draw. */
+  const suppressApproachGemForWorldAr =
+    placed && inWebXrHuntBand && showArGem && !androidImmersiveAr;
   const showApproachScreenGem =
     sessionActive &&
     encounterMode &&
@@ -504,16 +508,21 @@ export function GemHuntWebXrAr({
 
   showApproachScreenGemRef.current = showApproachScreenGem;
 
-  /** Green stop frame when gem is discoverable — world AR stays latched in hunt band (not compass flicker). */
+  /** Green frame + swipe when a gem is actually on screen (full hunt band, not only at the pin). */
   const gemRenderedForStopFrame =
     showTellMeCenterGem ||
     showApproachScreenGem ||
+    gemVisibleInCam ||
     (placed &&
       worldModelLoaded &&
       showArGem &&
       !userDismissedCenterGem &&
-      !centerReveal &&
-      inWebXrHuntBand);
+      !centerReveal);
+  const naturalDiscoverActive =
+    !centerReveal &&
+    sessionActive &&
+    inWebXrHuntBand &&
+    gemRenderedForStopFrame;
 
   const inGemStayVisibleBand =
     simulateInRange ||
@@ -753,8 +762,6 @@ export function GemHuntWebXrAr({
     gemLabelHe(monsterId),
     isNewGemTypeLatched,
   );
-  const naturalDiscoverActive =
-    !centerReveal && sessionActive && inOnsiteBand && gemRenderedForStopFrame;
   const hideHuntHintControls =
     !centerReveal && !campusSession && naturalDiscoverActive && !navHintOpen;
 
