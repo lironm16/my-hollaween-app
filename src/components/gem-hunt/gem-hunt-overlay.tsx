@@ -764,12 +764,16 @@ export function GemHuntOverlay({
   ]);
 
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
+  const gemRenderedForStopFrame =
+    showHuntGem &&
+    (gemAtCenter ||
+      (showWorldGemSprite && (pinDisplay ?? pinPlacement)?.inView === true));
   const naturalDiscoverActive =
     !centerReveal &&
     canCollectNow &&
     phase === "visible" &&
     gemVisibleBand &&
-    showHuntGem;
+    gemRenderedForStopFrame;
   const hideHuntHintControls =
     !centerReveal && !campusSession && naturalDiscoverActive;
 
@@ -1049,7 +1053,10 @@ export function GemHuntOverlay({
       </div>
       ) : null}
 
-      {encounterPhase === "encounter" && !centerReveal && phase !== "collecting" ? (
+      {encounterPhase === "encounter" &&
+      !centerReveal &&
+      phase !== "collecting" &&
+      gemRenderedForStopFrame ? (
         <div
           className="gem-hunt-overlay__encounter-swipe-zone"
           aria-hidden

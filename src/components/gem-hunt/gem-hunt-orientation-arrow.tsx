@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowUp } from "lucide-react";
+import { Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Phone-relative walk needle (rotates with you toward the nav target). */
+/** Phone-relative walk needle in the scan ring (Lucide Navigation — original gem cam compass). */
 export function GemHuntOrientationArrow({
   bearingDeg,
   facing = false,
@@ -28,7 +28,7 @@ export function GemHuntOrientationArrow({
       role="img"
       aria-label="כיוון הליכה — מחט מצפן"
     >
-      <ArrowUp className="gem-hunt-overlay__scan-compass-icon" strokeWidth={2.5} aria-hidden />
+      <Navigation className="gem-hunt-overlay__scan-compass-icon" strokeWidth={2.5} aria-hidden />
     </div>
   );
 }
