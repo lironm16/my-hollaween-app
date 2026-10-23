@@ -114,7 +114,7 @@ export const GEM_WEBXR_FLOAT_HEIGHT_M = 1.05;
 /** Android immersive AR — knee/chest height so pets read above floor clutter (was ~ground). */
 export const GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M = 0.82;
 /** Slightly larger world-space pets on Android AR (meters after frameModel). */
-export const GEM_WEBXR_MODEL_SCALE_ANDROID = 0.94;
+export const GEM_WEBXR_MODEL_SCALE_ANDROID = 1.05;
 /** Place Android AR pet at gemAnchorForHouse (GPS + anchor), not only hit-test at feet. */
 export const GEM_WEBXR_GEO_PLACEMENT_ENABLED = true;
 /** Approx. vertical FOV — used when tilting the phone up/down. */
@@ -238,6 +238,11 @@ export function gemDistanceMeters(
 ) {
   const anchor = gemAnchorForHouse(house);
   return distanceMeters(user, anchor);
+}
+
+/** Walk hint / compass — map building pin, not the sidewalk gem anchor (anchor can sit off to the side). */
+export function gemWalkNavTarget(house: Pick<PublicHouse, "lat" | "lng">) {
+  return house;
 }
 
 function gemClusterFanAnchor(house: GemAnchorHouse, cluster: { index: number; size: number }): GemAnchor {

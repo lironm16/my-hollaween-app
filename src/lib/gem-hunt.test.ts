@@ -28,6 +28,7 @@ import {
   userWithinGemHuntRange,
   withinGemHuntMeters,
   gemHuntGemStayVisible,
+  gemWalkNavTarget,
   GEM_HUNT_FOUND_STAY_VISIBLE_M,
   GEM_ANCHOR_MIN_METERS,
   GEM_ANCHOR_MAX_METERS,
@@ -128,6 +129,12 @@ describe("gem hunt geo", () => {
     assert.equal(gemAndroidArCollectWhenVisible(false, true, false, place), false);
     assert.equal(gemAndroidArCollectWhenVisible(false, true, true, place), true);
     assert.equal(gemAndroidArCollectWhenVisible(false, true, false, null), false);
+  });
+
+  it("walk nav target is the house map pin", () => {
+    const nav = gemWalkNavTarget(house);
+    assert.equal(nav.lat, house.lat);
+    assert.equal(nav.lng, house.lng);
   });
 
   it("keeps found gem visible until user walks past find distance + buffer", () => {

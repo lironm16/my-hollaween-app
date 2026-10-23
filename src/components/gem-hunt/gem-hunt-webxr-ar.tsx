@@ -19,6 +19,7 @@ import {
   GEM_FACING_TOLERANCE_DEG,
   gemTellMeCenterModelZoom,
   gemHuntGemStayVisible,
+  gemWalkNavTarget,
   GEM_WEBXR_FLOAT_HEIGHT_ANDROID_M,
   GEM_WEBXR_MODEL_SCALE_ANDROID,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
@@ -481,9 +482,8 @@ export function GemHuntWebXrAr({
     phase === "collecting" && sessionActive && collectViaTellMe;
   const showDomFakeGem = showTellMeCenterGem || showCenterCollectGem;
 
-  /** iOS: hide compass-pinned gem once world AR is placed. Android: keep GPS compass pin so turning toward the anchor still reveals the demon when WebXR geo lock is off. */
-  const suppressApproachGemForWorldAr =
-    placed && inWebXrHuntBand && showArGem && !androidImmersiveAr;
+  /** Hide compass-pinned overlay once world AR is placed — walk around the stable WebXR model (Android included). */
+  const suppressApproachGemForWorldAr = placed && inWebXrHuntBand && showArGem;
   const showApproachScreenGem =
     sessionActive &&
     encounterMode &&
@@ -492,9 +492,7 @@ export function GemHuntWebXrAr({
     !userDismissedCenterGem &&
     phase !== "collecting" &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
-    approachScreenPin != null &&
-    (gemVisibleInCam ||
-      (androidImmersiveAr && placed && inWebXrHuntBand)) &&
+    gemVisibleInCam &&
     !suppressApproachGemForWorldAr;
 
   showApproachScreenGemRef.current = showApproachScreenGem;
@@ -542,25 +540,26 @@ export function GemHuntWebXrAr({
     if (error && onFallbackCamera) onFallbackCamera();
   }, [error, onFallbackCamera]);
 
+  const walkNavTarget = gemWalkNavTarget(house);
   const turnBearing =
-    liveLoc != null ? relativeWalkBearingDeg(liveLoc, anchor, heading) : null;
+    liveLoc != null ? relativeWalkBearingDeg(liveLoc, walkNavTarget, heading) : null;
   const facingTarget =
     turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
-  const gpsBearingToAnchor =
-    liveLoc != null ? bearingDegrees(liveLoc, anchor) : null;
+  const gpsBearingToNav =
+    liveLoc != null ? bearingDegrees(liveLoc, walkNavTarget) : null;
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const navTurnBearing = turnBearing;
-  const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToAnchor;
-  const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
+  const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToNav;
+  const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToNav != null;
   const walkGuideCopy = gemWalkGuideCopy(
     huntArrowPhoneRelative,
     facingTarget,
     navTurnBearing,
-    gpsBearingToAnchor,
+    gpsBearingToNav,
   );
   const mapsWalkUrl =
     liveLoc != null && !simulateInRange
-      ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
+      ? googleMapsNavigateUrl(liveLoc, { lat: walkNavTarget.lat, lng: walkNavTarget.lng })
       : null;
   const showNavCompass = encounterMode
       ? sessionActive &&
@@ -1421,9 +1420,9 @@ export function GemHuntWebXrAr({
 
       {showNavCompass ? (
         <div className="gem-hunt-overlay__nav-layer gem-hunt-webxr__nav-layer" aria-hidden>
-          {huntArrowMapNorth && gpsBearingToAnchor != null ? (
+          {huntArrowMapNorth && gpsBearingToNav != null ? (
             <GpsBearingDial
-              bearingDeg={gpsBearingToAnchor}
+              bearingDeg={gpsBearingToNav}
               distanceM={distanceM}
               compact
               className="gem-hunt-overlay__nav-dial"

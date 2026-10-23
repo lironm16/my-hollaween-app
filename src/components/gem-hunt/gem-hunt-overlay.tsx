@@ -28,6 +28,7 @@ import {
   gemTellMeCenterModelZoom,
   gemHuntOnsiteCenterModelZoom,
   gemHuntGemStayVisible,
+  gemWalkNavTarget,
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
@@ -642,8 +643,9 @@ export function GemHuntOverlay({
     onClose();
   }
 
+  const walkNavTarget = gemWalkNavTarget(house);
   const turnBearing =
-    liveLoc != null ? relativeWalkBearingDeg(liveLoc, anchor, heading) : null;
+    liveLoc != null ? relativeWalkBearingDeg(liveLoc, walkNavTarget, heading) : null;
   const facingTarget =
     turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
   /** Real hunt: compass-pinned gem when not in **גלה לי** center mode. */
@@ -688,22 +690,22 @@ export function GemHuntOverlay({
     distanceM > huntBandM &&
     phase !== "collecting" &&
     !centerReveal;
-  const gpsBearingToAnchor =
-    liveLoc != null ? bearingDegrees(liveLoc, anchor) : null;
+  const gpsBearingToNav =
+    liveLoc != null ? bearingDegrees(liveLoc, walkNavTarget) : null;
   /** Glowing Navigation arrow — phone-relative when compass works, else map-north bearing. */
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const navTurnBearing = turnBearing;
-  const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToAnchor;
-  const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToAnchor != null;
+  const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToNav;
+  const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToNav != null;
   const mapsWalkUrl =
     liveLoc != null && !sim
-      ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
+      ? googleMapsNavigateUrl(liveLoc, { lat: walkNavTarget.lat, lng: walkNavTarget.lng })
       : null;
   const walkGuideCopy = gemWalkGuideCopy(
     huntArrowPhoneRelative,
     facingTarget,
     navTurnBearing,
-    gpsBearingToAnchor,
+    gpsBearingToNav,
   );
   const showCompassEnable =
     huntArrowMapNorth &&
@@ -973,9 +975,9 @@ export function GemHuntOverlay({
       >
         {showNavCompass ? (
           <div className="gem-hunt-overlay__nav-layer" aria-hidden>
-            {huntArrowMapNorth && gpsBearingToAnchor != null ? (
+            {huntArrowMapNorth && gpsBearingToNav != null ? (
               <GpsBearingDial
-                bearingDeg={gpsBearingToAnchor}
+                bearingDeg={gpsBearingToNav}
                 distanceM={distanceM}
                 compact
                 className="gem-hunt-overlay__nav-dial"
