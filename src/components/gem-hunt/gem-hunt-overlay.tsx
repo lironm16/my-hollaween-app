@@ -763,6 +763,7 @@ export function GemHuntOverlay({
     repeatVisitLatched,
   ]);
 
+  const navHintOpen = hintPanel === "nav";
   const showHuntGem = gemVisible && (gemAtCenter || showWorldGemSprite);
   const gemRenderedForStopFrame =
     showHuntGem &&
@@ -775,7 +776,7 @@ export function GemHuntOverlay({
     gemVisibleBand &&
     gemRenderedForStopFrame;
   const hideHuntHintControls =
-    !centerReveal && !campusSession && naturalDiscoverActive;
+    !centerReveal && !campusSession && naturalDiscoverActive && !navHintOpen;
 
   const tellMeButton = useGemTellMeButton({
     enforceHuntRadius: tellMeHuntRadiusEnforced,
@@ -796,19 +797,16 @@ export function GemHuntOverlay({
       : encounterMode
         ? encounterPhase === "encounter" && gemAtCenter
         : gemAtCenter || pinCollectReady);
-  const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
-  const showNavCompass = encounterMode
-    ? encounterPhase === "approach" &&
-      showWalkNavGuide &&
-      !centerReveal &&
-      huntArrowDeg != null &&
-      liveLoc != null &&
-      !sim
-    : showWalkNavGuide &&
-      !centerReveal &&
-      huntArrowDeg != null &&
-      liveLoc != null &&
-      !sim;
+  const showWalkNavGuide = navHintOpen;
+  const showNavCompass =
+    navHintOpen &&
+    !centerReveal &&
+    huntArrowDeg != null &&
+    liveLoc != null &&
+    !sim &&
+    (encounterMode
+      ? encounterPhase === "approach" || encounterPhase === "encounter"
+      : true);
   const showFoundOnScreenBanner = phase === "collecting";
 
   const gemEncounterWiggle =
@@ -1056,7 +1054,8 @@ export function GemHuntOverlay({
       {encounterPhase === "encounter" &&
       !centerReveal &&
       phase !== "collecting" &&
-      gemRenderedForStopFrame ? (
+      gemRenderedForStopFrame &&
+      !navHintOpen ? (
         <div
           className="gem-hunt-overlay__encounter-swipe-zone"
           aria-hidden

@@ -169,6 +169,7 @@ export function GemHuntWebXrAr({
     [house.id, house.lat, house.lng, anchorOverrides],
   );
   const [hintPanel, setHintPanel] = useState<null | "nav">(null);
+  const hintPanelRef = useRef<null | "nav">(null);
   /** **גלה לי** — same semantics as iOS centerReveal (AR model stays in world). */
   const [centerReveal, setCenterReveal] = useState(false);
   const [userDismissedCenterGem, setUserDismissedCenterGem] = useState(false);
@@ -210,6 +211,10 @@ export function GemHuntWebXrAr({
   useEffect(() => {
     centerRevealRef.current = centerReveal;
   }, [centerReveal]);
+
+  useEffect(() => {
+    hintPanelRef.current = hintPanel;
+  }, [hintPanel]);
 
   useEffect(() => {
     beginMapListOverlayCapture();
@@ -499,7 +504,7 @@ export function GemHuntWebXrAr({
 
   showApproachScreenGemRef.current = showApproachScreenGem;
 
-  /** Green stop frame + encounter taps only when a gem is on screen (not in-range GPS alone). */
+  /** Green stop frame when gem is discoverable — world AR stays latched in hunt band (not compass flicker). */
   const gemRenderedForStopFrame =
     showTellMeCenterGem ||
     showApproachScreenGem ||
@@ -508,7 +513,7 @@ export function GemHuntWebXrAr({
       showArGem &&
       !userDismissedCenterGem &&
       !centerReveal &&
-      gemVisibleInCam);
+      inWebXrHuntBand);
 
   const inGemStayVisibleBand =
     simulateInRange ||
@@ -532,7 +537,8 @@ export function GemHuntWebXrAr({
           (showTellMeCenterGem || gemVisibleInCam || showApproachScreenGem)
         : showTellMeCenterGem || gemVisibleInCam || showApproachScreenGem);
   const androidWebXrUi = platformMod === "gem-hunt-webxr--android";
-  const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
+  const navHintOpen = hintPanel === "nav";
+  const showWalkNavGuide = navHintOpen;
 
   const treatSwipe = useTreatSwipe({
     onSuccess: () => {
@@ -572,20 +578,16 @@ export function GemHuntWebXrAr({
     liveLoc != null && !simulateInRange
       ? googleMapsNavigateUrl(liveLoc, { lat: walkNavTarget.lat, lng: walkNavTarget.lng })
       : null;
-  const showNavCompass = encounterMode
-      ? sessionActive &&
-        encounterPhase === "approach" &&
-        showWalkNavGuide &&
-        !centerReveal &&
-        huntArrowDeg != null &&
-        liveLoc != null &&
-        !simulateInRange
-      : sessionActive &&
-        showWalkNavGuide &&
-        !centerReveal &&
-        huntArrowDeg != null &&
-        liveLoc != null &&
-        !simulateInRange;
+  const showNavCompass =
+    navHintOpen &&
+    sessionActive &&
+    !centerReveal &&
+    huntArrowDeg != null &&
+    liveLoc != null &&
+    !simulateInRange &&
+    (encounterMode
+      ? encounterPhase === "approach" || encounterPhase === "encounter"
+      : true);
   const hideFooterChrome = encounterMode && encounterUiChromeHidden(encounterPhase);
   const showEncounterFooter =
     encounterMode &&
@@ -601,6 +603,7 @@ export function GemHuntWebXrAr({
   });
 
   const offerEncounterCollect = useCallback(() => {
+    if (hintPanelRef.current === "nav") return;
     if (centerRevealRef.current) return;
     if (encounterPhase !== "encounter") return;
     if (repeatVisitLatched) {
@@ -753,7 +756,7 @@ export function GemHuntWebXrAr({
   const naturalDiscoverActive =
     !centerReveal && sessionActive && inOnsiteBand && gemRenderedForStopFrame;
   const hideHuntHintControls =
-    !centerReveal && !campusSession && naturalDiscoverActive;
+    !centerReveal && !campusSession && naturalDiscoverActive && !navHintOpen;
 
   const tellMeButton = useGemTellMeButton({
     enforceHuntRadius: tellMeHuntRadiusEnforced,
@@ -1025,6 +1028,7 @@ export function GemHuntWebXrAr({
 
     const onSelect = () => {
       if (collectingRef.current) return;
+      if (hintPanelRef.current === "nav") return;
       /** **גלה לי** — collect only via center DOM gem tap (iOS parity). */
       if (centerRevealRef.current) return;
       if (isPlaced) {
@@ -1453,7 +1457,8 @@ export function GemHuntWebXrAr({
       {encounterPhase === "encounter" &&
       !centerReveal &&
       phase !== "collecting" &&
-      gemRenderedForStopFrame ? (
+      gemRenderedForStopFrame &&
+      !navHintOpen ? (
         <div
           className="gem-hunt-overlay__encounter-swipe-zone"
           aria-hidden
