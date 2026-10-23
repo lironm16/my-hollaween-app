@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { GemHuntOrientationArrow } from "@/components/gem-hunt/gem-hunt-orientation-arrow";
+import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
+import { GpsBearingDial } from "@/components/gem-hunt/gps-bearing-dial";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useDeviceHeading } from "@/hooks/use-device-heading";
@@ -676,7 +677,7 @@ export function GemHuntOverlay({
       : !gemAtCenter &&
         worldPinPlacement != null &&
         (gemWorldPinVisible(worldPinPlacement, huntBandM) ||
-          (!isAndroidLike() && gemWorldPinApproachVisible(worldPinPlacement)));
+          gemWorldPinApproachVisible(worldPinPlacement));
   const worldLockRevealed =
     arPinGuideMode && showWorldGemSprite && (phase === "visible" || phase === "collecting");
   const isFarForHints =
@@ -790,7 +791,7 @@ export function GemHuntOverlay({
         ? encounterPhase === "encounter" && gemAtCenter
         : gemAtCenter || pinCollectReady);
   const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
-  const showNavArrow = encounterMode
+  const showNavCompass = encounterMode
     ? encounterPhase === "approach" &&
       showWalkNavGuide &&
       !centerReveal &&
@@ -970,13 +971,22 @@ export function GemHuntOverlay({
         )}
         aria-hidden={false}
       >
-        {showNavArrow ? (
+        {showNavCompass ? (
           <div className="gem-hunt-overlay__nav-layer" aria-hidden>
-            <GemHuntOrientationArrow
-              bearingDeg={huntArrowDeg!}
-              facing={facingTarget && !huntArrowMapNorth}
-              mapNorth={huntArrowMapNorth}
-            />
+            {huntArrowMapNorth && gpsBearingToAnchor != null ? (
+              <GpsBearingDial
+                bearingDeg={gpsBearingToAnchor}
+                distanceM={distanceM}
+                compact
+                className="gem-hunt-overlay__nav-dial"
+              />
+            ) : (
+              <GemHuntDirectionRose
+                bearingDeg={huntArrowDeg!}
+                facing={facingTarget}
+                className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
+              />
+            )}
           </div>
         ) : null}
 

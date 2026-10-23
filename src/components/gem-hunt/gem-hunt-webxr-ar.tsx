@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
-import { GemHuntOrientationArrow } from "@/components/gem-hunt/gem-hunt-orientation-arrow";
+import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
+import { GpsBearingDial } from "@/components/gem-hunt/gps-bearing-dial";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ARButton } from "three/addons/webxr/ARButton.js";
@@ -483,18 +484,6 @@ export function GemHuntWebXrAr({
   /** iOS: hide compass-pinned gem once world AR is placed. Android: keep GPS compass pin so turning toward the anchor still reveals the demon when WebXR geo lock is off. */
   const suppressApproachGemForWorldAr =
     placed && inWebXrHuntBand && showArGem && !androidImmersiveAr;
-  /** Prefer compass pin over world GLB on Android while the anchor bearing is in view (avoids duplicate + wrong-heading placement). */
-  const androidHideWorldForCompassPin =
-    androidImmersiveAr &&
-    placed &&
-    !centerReveal &&
-    !userDismissedCenterGem &&
-    phase !== "collecting" &&
-    inWebXrHuntBand &&
-    gemVisibleInCam;
-  const androidHideWorldForCompassPinRef = useRef(false);
-  androidHideWorldForCompassPinRef.current = androidHideWorldForCompassPin;
-
   const showApproachScreenGem =
     sessionActive &&
     encounterMode &&
@@ -503,7 +492,9 @@ export function GemHuntWebXrAr({
     !userDismissedCenterGem &&
     phase !== "collecting" &&
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
-    gemVisibleInCam &&
+    approachScreenPin != null &&
+    (gemVisibleInCam ||
+      (androidImmersiveAr && placed && inWebXrHuntBand)) &&
     !suppressApproachGemForWorldAr;
 
   showApproachScreenGemRef.current = showApproachScreenGem;
@@ -571,7 +562,7 @@ export function GemHuntWebXrAr({
     liveLoc != null && !simulateInRange
       ? googleMapsNavigateUrl(liveLoc, { lat: anchor.lat, lng: anchor.lng })
       : null;
-  const showNavArrow = encounterMode
+  const showNavCompass = encounterMode
       ? sessionActive &&
         encounterPhase === "approach" &&
         showWalkNavGuide &&
@@ -797,13 +788,7 @@ export function GemHuntWebXrAr({
       isPlaced = true;
       stableHitFrames = 0;
       reticle.visible = false;
-      if (
-        !centerRevealRef.current &&
-        !collectViaTellMeRef.current &&
-        !androidHideWorldForCompassPinRef.current
-      ) {
-        anchorGroup.visible = true;
-      }
+      if (!centerRevealRef.current && !collectViaTellMeRef.current) anchorGroup.visible = true;
       setPlaced(true);
       setPhase("placed");
       setGeoLockModeRef.current(mode);
@@ -821,7 +806,6 @@ export function GemHuntWebXrAr({
         (collectingRef.current && collectViaTellMeRef.current);
       anchorGroup.visible =
         !hideWorldForDomGem &&
-        !androidHideWorldForCompassPinRef.current &&
         (collectingRef.current || !userDismissedCenterGemRef.current);
     };
 
@@ -974,10 +958,7 @@ export function GemHuntWebXrAr({
         const off = viewerLocalOffsetMeters(loc, target, h);
         anchorGroup.position.set(off.x, 0, off.z);
       }
-      anchorGroup.visible =
-        !centerRevealRef.current &&
-        !collectViaTellMeRef.current &&
-        !androidHideWorldForCompassPinRef.current;
+      anchorGroup.visible = !centerRevealRef.current && !collectViaTellMeRef.current;
       isPlaced = true;
       setPlaced(true);
       setPhase("placed");
@@ -1167,7 +1148,6 @@ export function GemHuntWebXrAr({
           anchorGroup.visible =
             isPlaced &&
             !hideWorldForDomGem &&
-            !androidHideWorldForCompassPinRef.current &&
             (collectingRef.current || !userDismissedCenterGemRef.current);
         }
 
@@ -1364,7 +1344,7 @@ export function GemHuntWebXrAr({
           <div
             className={cn(
               "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pinned is-revealed is-approach-preview",
-              !approachScreenPin.inView && "is-off-screen",
+              approachScreenPin && !approachScreenPin.inView && "is-off-screen",
               canCollectNow && encounterPhase === "encounter" && "is-tap-collect-ready",
             )}
             style={{
@@ -1439,13 +1419,22 @@ export function GemHuntWebXrAr({
         />
       ) : null}
 
-      {showNavArrow ? (
+      {showNavCompass ? (
         <div className="gem-hunt-overlay__nav-layer gem-hunt-webxr__nav-layer" aria-hidden>
-          <GemHuntOrientationArrow
-            bearingDeg={huntArrowDeg!}
-            facing={facingTarget && !huntArrowMapNorth}
-            mapNorth={huntArrowMapNorth}
-          />
+          {huntArrowMapNorth && gpsBearingToAnchor != null ? (
+            <GpsBearingDial
+              bearingDeg={gpsBearingToAnchor}
+              distanceM={distanceM}
+              compact
+              className="gem-hunt-overlay__nav-dial"
+            />
+          ) : (
+            <GemHuntDirectionRose
+              bearingDeg={huntArrowDeg!}
+              facing={facingTarget}
+              className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
+            />
+          )}
         </div>
       ) : null}
 

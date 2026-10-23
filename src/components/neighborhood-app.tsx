@@ -577,29 +577,42 @@ export function NeighborhoodApp({
     [bootMapGemHunt, gemHouseHuntAllowed, gems.collected, gps],
   );
 
-  const restoreAfterGemHunt = useCallback(() => {
-    if (gemHuntOpenedFromViewRef.current !== "list") return;
-    setView("list");
-    selection.closeSelection();
-  }, [selection]);
+  const restoreAfterGemHunt = useCallback(
+    (house?: PublicHouse | null) => {
+      if (gemHuntOpenedFromViewRef.current === "list") {
+        setView("list");
+        selection.closeSelection();
+        return;
+      }
+      if (gemHuntOpenedFromViewRef.current === "map" && house) {
+        setView("map");
+        selection.selectOnMap(house);
+      }
+    },
+    [selection],
+  );
 
   useEffect(() => {
     if (!mapGemHouse) stopGemHuntCameraStream();
   }, [mapGemHouse]);
 
-  const closeMapGemHunt = useCallback(() => {
-    mapGemOpenGenRef.current += 1;
-    releaseGemHuntCamera();
-    stopGemHuntCameraStream();
-    void endGemHuntWebXrSession(mapGemWebXrSession);
-    setMapGemWebXrSession(null);
-    setMapGemHouse(null);
-    setMapGemClusterMembers(null);
-    setMapGemGps(null);
-    setMapGemClusterCatchCount(0);
-    restoreAfterGemHunt();
-    void geo.refresh();
-  }, [geo, mapGemWebXrSession, restoreAfterGemHunt]);
+  const closeMapGemHunt = useCallback(
+    (restoreHouse?: PublicHouse | null) => {
+      const houseForSheet = restoreHouse ?? mapGemHouse;
+      mapGemOpenGenRef.current += 1;
+      releaseGemHuntCamera();
+      stopGemHuntCameraStream();
+      void endGemHuntWebXrSession(mapGemWebXrSession);
+      setMapGemWebXrSession(null);
+      setMapGemHouse(null);
+      setMapGemClusterMembers(null);
+      setMapGemGps(null);
+      setMapGemClusterCatchCount(0);
+      restoreAfterGemHunt(houseForSheet);
+      void geo.refresh();
+    },
+    [geo, mapGemHouse, mapGemWebXrSession, restoreAfterGemHunt],
+  );
 
   const mapGemClusterQueueUi = useMemo(() => {
     if (!mapGemHouse || !mapGemClusterMembers) return undefined;
@@ -1940,7 +1953,7 @@ export function NeighborhoodApp({
                 ? gemBagCelebrateAfterCollect(gemMapRingHouses, collectedBefore, h.id, monsterId)
                 : null;
             gems.collect(h.id, monsterId);
-            closeMapGemHunt();
+            closeMapGemHunt(h);
             celebrateGemCollect();
             if (options?.navigateStickerBook) {
               router.push(gemBagCollectHref(monsterId, celebrate));
