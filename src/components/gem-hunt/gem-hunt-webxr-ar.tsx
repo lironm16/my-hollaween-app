@@ -480,9 +480,20 @@ export function GemHuntWebXrAr({
     phase === "collecting" && sessionActive && collectViaTellMe;
   const showDomFakeGem = showTellMeCenterGem || showCenterCollectGem;
 
-  /** iOS hides compass-pinned gem once world AR is placed; Android keeps 2D gem when WebGL model may be invisible (e.g. Pixel 2). */
-  /** Hide compass-pinned overlay gem once world AR is placed — collect via the world model only. */
-  const suppressApproachGemForWorldAr = placed && inWebXrHuntBand && showArGem;
+  /** iOS: hide compass-pinned gem once world AR is placed. Android: keep GPS compass pin so turning toward the anchor still reveals the demon when WebXR geo lock is off. */
+  const suppressApproachGemForWorldAr =
+    placed && inWebXrHuntBand && showArGem && !androidImmersiveAr;
+  /** Prefer compass pin over world GLB on Android while the anchor bearing is in view (avoids duplicate + wrong-heading placement). */
+  const androidHideWorldForCompassPin =
+    androidImmersiveAr &&
+    placed &&
+    !centerReveal &&
+    !userDismissedCenterGem &&
+    phase !== "collecting" &&
+    inWebXrHuntBand &&
+    gemVisibleInCam;
+  const androidHideWorldForCompassPinRef = useRef(false);
+  androidHideWorldForCompassPinRef.current = androidHideWorldForCompassPin;
 
   const showApproachScreenGem =
     sessionActive &&
@@ -786,7 +797,13 @@ export function GemHuntWebXrAr({
       isPlaced = true;
       stableHitFrames = 0;
       reticle.visible = false;
-      if (!centerRevealRef.current && !collectViaTellMeRef.current) anchorGroup.visible = true;
+      if (
+        !centerRevealRef.current &&
+        !collectViaTellMeRef.current &&
+        !androidHideWorldForCompassPinRef.current
+      ) {
+        anchorGroup.visible = true;
+      }
       setPlaced(true);
       setPhase("placed");
       setGeoLockModeRef.current(mode);
@@ -804,6 +821,7 @@ export function GemHuntWebXrAr({
         (collectingRef.current && collectViaTellMeRef.current);
       anchorGroup.visible =
         !hideWorldForDomGem &&
+        !androidHideWorldForCompassPinRef.current &&
         (collectingRef.current || !userDismissedCenterGemRef.current);
     };
 
@@ -956,7 +974,10 @@ export function GemHuntWebXrAr({
         const off = viewerLocalOffsetMeters(loc, target, h);
         anchorGroup.position.set(off.x, 0, off.z);
       }
-      anchorGroup.visible = !centerRevealRef.current && !collectViaTellMeRef.current;
+      anchorGroup.visible =
+        !centerRevealRef.current &&
+        !collectViaTellMeRef.current &&
+        !androidHideWorldForCompassPinRef.current;
       isPlaced = true;
       setPlaced(true);
       setPhase("placed");
@@ -1146,6 +1167,7 @@ export function GemHuntWebXrAr({
           anchorGroup.visible =
             isPlaced &&
             !hideWorldForDomGem &&
+            !androidHideWorldForCompassPinRef.current &&
             (collectingRef.current || !userDismissedCenterGemRef.current);
         }
 
