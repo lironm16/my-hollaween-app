@@ -3,7 +3,7 @@
 import { ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Single phone-relative direction chevron (replaces the eight-spoke hunt ring). */
+/** Phone-relative walk needle (rotates with you toward the nav target). */
 export function GemHuntOrientationArrow({
   bearingDeg,
   facing = false,
@@ -26,7 +26,7 @@ export function GemHuntOrientationArrow({
       dir="ltr"
       style={{ transform: `translate(-50%, -50%) rotate(${bearingDeg}deg)` }}
       role="img"
-      aria-label="כיוון הליכה — חץ"
+      aria-label="כיוון הליכה — מחט מצפן"
     >
       <ArrowUp className="gem-hunt-overlay__scan-compass-icon" strokeWidth={2.5} aria-hidden />
     </div>

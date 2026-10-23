@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
-import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
+import { GemHuntOrientationArrow } from "@/components/gem-hunt/gem-hunt-orientation-arrow";
 import { GpsBearingDial } from "@/components/gem-hunt/gps-bearing-dial";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -482,8 +482,15 @@ export function GemHuntWebXrAr({
     phase === "collecting" && sessionActive && collectViaTellMe;
   const showDomFakeGem = showTellMeCenterGem || showCenterCollectGem;
 
-  /** Hide compass-pinned overlay once world AR is placed — walk around the stable WebXR model (Android included). */
-  const suppressApproachGemForWorldAr = placed && inWebXrHuntBand && showArGem;
+  /**
+   * iOS: hide compass-pinned overlay after world lock. Android: keep world GLB when anchor is in
+   * view; otherwise show a stable center fallback (weak GPUs / wrong heading).
+   */
+  const suppressApproachGemForWorldAr =
+    placed &&
+    inWebXrHuntBand &&
+    showArGem &&
+    (!androidImmersiveAr || gemVisibleInCam);
   const showApproachScreenGem =
     sessionActive &&
     encounterMode &&
@@ -494,6 +501,22 @@ export function GemHuntWebXrAr({
     (encounterPhase === "approach" || encounterPhase === "encounter") &&
     gemVisibleInCam &&
     !suppressApproachGemForWorldAr;
+
+  const showAndroidOnsiteCenterGem =
+    androidImmersiveAr &&
+    sessionActive &&
+    encounterMode &&
+    !simulateInRange &&
+    !showTellMeCenterGem &&
+    !userDismissedCenterGem &&
+    phase !== "collecting" &&
+    encounterPhase === "encounter" &&
+    inWebXrHuntBand &&
+    placed &&
+    showArGem &&
+    !centerReveal &&
+    !showApproachScreenGem &&
+    !gemVisibleInCam;
 
   showApproachScreenGemRef.current = showApproachScreenGem;
 
@@ -506,7 +529,8 @@ export function GemHuntWebXrAr({
   const showHuntGemOnScreen =
     showTellMeCenterGem ||
     showApproachScreenGem ||
-    (sessionActive && placed && showArGem && gemVisibleBand && !androidImmersiveAr);
+    showAndroidOnsiteCenterGem ||
+    (sessionActive && placed && showArGem && gemVisibleBand);
   const gemFoundInView =
     sessionActive &&
     phase === "placed" &&
@@ -518,7 +542,8 @@ export function GemHuntWebXrAr({
         ? encounterPhase === "encounter" &&
           (showTellMeCenterGem ||
             gemVisibleInCam ||
-            (placed && showArGem && !userDismissedCenterGem))
+            showAndroidOnsiteCenterGem ||
+            (placed && showArGem && !userDismissedCenterGem && !androidImmersiveAr))
         : showTellMeCenterGem || gemVisibleInCam);
   const androidWebXrUi = platformMod === "gem-hunt-webxr--android";
   const showWalkNavGuide = hintPanel === "nav" && !gemFoundInView;
@@ -743,7 +768,10 @@ export function GemHuntWebXrAr({
     !centerReveal &&
     sessionActive &&
     inOnsiteBand &&
-    (showArGem || showApproachScreenGem || gemVisibleInCam);
+    (showApproachScreenGem ||
+      showAndroidOnsiteCenterGem ||
+      gemVisibleInCam ||
+      (showArGem && (!androidImmersiveAr || showAndroidOnsiteCenterGem || gemVisibleInCam)));
   const hideHuntHintControls =
     !centerReveal && !campusSession && naturalDiscoverActive;
 
@@ -1369,6 +1397,32 @@ export function GemHuntWebXrAr({
         </div>
       ) : null}
 
+      {showAndroidOnsiteCenterGem ? (
+        <div
+          className="gem-hunt-overlay__stage gem-hunt-webxr__android-onsite-stage is-gem-interactive"
+          aria-hidden={false}
+        >
+          <div
+            className={cn(
+              "gem-hunt-overlay__gem-hit gem-hunt-overlay__gem-pin is-pin-collect is-revealed is-inspect360",
+              "is-ring-center is-center-collect is-collect-layer is-android-ar-fallback",
+              canCollectNow && encounterPhase === "encounter" && "is-tap-collect-ready",
+            )}
+          >
+            <GemSprite
+              house={house}
+              mode="3d"
+              size="lg"
+              tapCollect={canCollectNow && encounterPhase === "encounter"}
+              spinWhileCollect={false}
+              onInspectTap={() => {
+                if (encounterPhase === "encounter") offerEncounterCollect();
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
+
       {showDomFakeGem ? (
         <div
           className="gem-hunt-overlay__stage gem-hunt-webxr__tell-me-stage is-gem-interactive"
@@ -1420,20 +1474,20 @@ export function GemHuntWebXrAr({
 
       {showNavCompass ? (
         <div className="gem-hunt-overlay__nav-layer gem-hunt-webxr__nav-layer" aria-hidden>
-          {huntArrowMapNorth && gpsBearingToNav != null ? (
-            <GpsBearingDial
-              bearingDeg={gpsBearingToNav}
-              distanceM={distanceM}
-              compact
-              className="gem-hunt-overlay__nav-dial"
-            />
-          ) : (
-            <GemHuntDirectionRose
-              bearingDeg={huntArrowDeg!}
-              facing={facingTarget}
-              className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
-            />
-          )}
+            {huntArrowMapNorth && gpsBearingToNav != null ? (
+              <GpsBearingDial
+                bearingDeg={gpsBearingToNav}
+                distanceM={distanceM}
+                compact
+                className="gem-hunt-overlay__nav-dial"
+              />
+            ) : (
+              <GemHuntOrientationArrow
+                bearingDeg={huntArrowDeg!}
+                facing={facingTarget}
+                mapNorth={false}
+              />
+            )}
         </div>
       ) : null}
 

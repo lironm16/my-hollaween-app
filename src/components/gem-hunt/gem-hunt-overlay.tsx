@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { GemHuntDirectionRose } from "@/components/gem-hunt/gem-hunt-direction-rose";
+import { GemHuntOrientationArrow } from "@/components/gem-hunt/gem-hunt-orientation-arrow";
 import { GpsBearingDial } from "@/components/gem-hunt/gps-bearing-dial";
 import { GemSprite } from "@/components/gem-hunt/gem-sprite";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
@@ -983,10 +983,10 @@ export function GemHuntOverlay({
                 className="gem-hunt-overlay__nav-dial"
               />
             ) : (
-              <GemHuntDirectionRose
+              <GemHuntOrientationArrow
                 bearingDeg={huntArrowDeg!}
                 facing={facingTarget}
-                className="gem-hunt-overlay__nav-rose gem-hunt-direction-rose--ring"
+                mapNorth={false}
               />
             )}
           </div>
