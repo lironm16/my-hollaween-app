@@ -360,13 +360,14 @@ export function NightPassesCard({
   }
   if (!data.enabled && !admin) return null;
 
-  const access = data.access;
+  const cardData = data;
+  const access = cardData.access;
   const ownerDeviceCount = access?.devices.filter((d) => d.role === "owner").length ?? 0;
 
   function canChangeDeviceRole(device: AccessView["devices"][number]) {
     if (!canPromoteOwner) return false;
     if (device.role === "editor") {
-      return admin || data.myRole === "owner";
+      return admin || cardData.myRole === "owner";
     }
     return ownerDeviceCount > 1;
   }

@@ -418,7 +418,9 @@ export type HouseAccessView = {
   resetCount: number;
 };
 
-export function accessRecordLacksOwner(record: Pick<NightPassRecord, "sessions">) {
+export function accessRecordLacksOwner(record: {
+  sessions: readonly HouseAccessSession[];
+}) {
   return countOwnerSessions(record.sessions) === 0;
 }
 
