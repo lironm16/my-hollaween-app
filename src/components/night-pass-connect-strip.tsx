@@ -16,7 +16,6 @@ export function NightPassConnectStrip({
     <div className={cn(adminStyleStripClass(className), "items-center")}>
       <div className="min-w-0 flex-1 text-start">
         <p className="text-base font-medium text-orange-100">מכשיר לא מחובר</p>
-        <p className="truncate text-sm text-violet-400">לא רשום לאירוע</p>
       </div>
       <Button
         type="button"

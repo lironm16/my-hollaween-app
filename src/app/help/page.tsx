@@ -3,6 +3,8 @@ import { readNightPassSettings } from "@/lib/night-pass-store";
 import { getDbSnapshot } from "@/lib/store/houses";
 import { HelpPageClient } from "./help-page-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function HelpPage() {
   const [nightPass, db] = await Promise.all([readNightPassSettings(), getDbSnapshot()]);
   return (

@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { ChevronLeft } from "lucide-react";
 import { HelpShell } from "@/components/help-shell";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useNightPass } from "@/hooks/use-night-pass";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
+import { refreshNightPassState } from "@/lib/night-pass-client";
 
 type HelpLink = { question: string; href: string };
 
@@ -70,17 +72,24 @@ export function HelpPageClient({
   gemHuntPublicFromServer,
 }: HelpPageClientProps) {
   const { admin } = useAdminSession();
+  const nightPass = useNightPass();
+
+  useEffect(() => {
+    void refreshNightPassState({ force: true });
+  }, []);
+
+  const eventDeviceHelp = eventDeviceHelpFromServer || nightPass.enabled;
 
   const items = useMemo(() => {
     const list = [...QUESTIONS];
-    if (eventDeviceHelpFromServer) {
+    if (eventDeviceHelp) {
       list.splice(2, 0, ...EVENT_DEVICE_QUESTIONS);
     }
     if (gemHuntVisible(admin, gemHuntPublicFromServer)) {
       list.push({ question: GEM_GAME_TITLE_HE, href: "/help/gem-hunt" });
     }
     return list;
-  }, [admin, eventDeviceHelpFromServer, gemHuntPublicFromServer]);
+  }, [admin, eventDeviceHelp, gemHuntPublicFromServer]);
 
   return (
     <HelpShell title="שאלות ותשובות" backHref="/" backLabel="מפה">
