@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import Link from "next/link";
@@ -72,22 +73,19 @@ export default function HelpPage() {
   if (showGemHuntHelp) {
     items.push({ question: GEM_GAME_TITLE_HE, href: "/help/gem-hunt" });
   }
+=======
+import { gemHuntPublicFromDb } from "@/lib/event-settings";
+import { readNightPassSettings } from "@/lib/night-pass-store";
+import { getDbSnapshot } from "@/lib/store/houses";
+import { HelpPageClient } from "./help-page-client";
+>>>>>>> ca000cee (Fix /help hydration mismatch for event-device links)
 
+export default async function HelpPage() {
+  const [nightPass, db] = await Promise.all([readNightPassSettings(), getDbSnapshot()]);
   return (
-    <HelpShell title="שאלות ותשובות" backHref="/" backLabel="מפה">
-      <ul className="space-y-2">
-        {items.map((item) => (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              className="flex items-center gap-3 rounded-2xl bg-[#1d1028] px-4 py-5 ring-1 ring-orange-500/20 transition hover:bg-[#241332]"
-            >
-              <span className="min-w-0 flex-1 text-xl font-medium text-orange-50">{item.question}</span>
-              <ChevronLeft className="size-7 shrink-0 text-orange-400/70" aria-hidden />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </HelpShell>
+    <HelpPageClient
+      eventDeviceHelpFromServer={nightPass.enabled}
+      gemHuntPublicFromServer={gemHuntPublicFromDb(db.eventSettings)}
+    />
   );
 }
