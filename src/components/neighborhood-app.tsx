@@ -385,7 +385,7 @@ export function NeighborhoodApp({
   const lastHousesRef = useRef<PublicHouse[]>([]);
   const displayHouses = useMemo(() => {
     const applyVisitorLocations = (list: PublicHouse[]) =>
-      gemPreviewAsUser ? housesWithLocationPolicy(list, addressReveal) : list;
+      housesWithLocationPolicy(list, addressReveal);
     const applyAdminLocations = (list: PublicHouse[]) => {
       if (restoreRedactedLocations) {
         return enrichHousesWithAdminLocations(list, adminHouses, true);

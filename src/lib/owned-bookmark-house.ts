@@ -2,7 +2,12 @@ import { fetchPublicHouse } from "@/lib/fetch-public-house";
 import { rememberSessionHouseDetail } from "@/lib/house-detail-session-cache";
 import { mergeOwnedLocationFields } from "@/lib/owned-location-merge";
 import type { PublicHouse } from "@/lib/types";
-import { loadOwnedHouses, saveOwnedHouse, type OwnedHouse } from "@/lib/offline-db";
+import {
+  loadOwnedHouses,
+  notifyCatalogChanged,
+  saveOwnedHouse,
+  type OwnedHouse,
+} from "@/lib/offline-db";
 
 function hasStreetAddress(house: Pick<PublicHouse, "address"> | null | undefined): boolean {
   return Boolean(house?.address?.trim());
@@ -61,11 +66,14 @@ export function houseFromOwnedBookmark(
 /** Heal previews wiped by redacted catalog sync — owner cookie returns full row from GET /api/houses/[id]. */
 export async function repairOwnedPreviewsMissingAddress() {
   if (typeof window === "undefined") return;
+  let changed = false;
   for (const item of loadOwnedHouses()) {
     if (hasStreetAddress(item.preview)) continue;
     const result = await fetchPublicHouse(item.id);
     if (!result.ok || !hasStreetAddress(result.house)) continue;
     saveOwnedHouse({ ...item, preview: result.house });
     rememberSessionHouseDetail(result.house);
+    changed = true;
   }
+  if (changed) notifyCatalogChanged();
 }

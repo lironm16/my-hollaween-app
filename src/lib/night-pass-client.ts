@@ -8,6 +8,7 @@ import {
   saveOwnedHouse,
   storedOwnedHouseEditCode,
 } from "@/lib/offline-db";
+import { repairOwnedPreviewsMissingAddress } from "@/lib/owned-bookmark-house";
 import type { CatalogDelta, NightPassViewer } from "@/lib/types";
 
 /** Mirror of `GET /api/night-passes/me`. */
@@ -92,6 +93,7 @@ export async function disconnectNightPassOnDevice(): Promise<boolean> {
     suppressNextPassLostEvent = true;
     notifyNightPassSlotsChanged();
     await refreshNightPassState({ force: true });
+    void repairOwnedPreviewsMissingAddress();
     return true;
   } catch {
     return false;

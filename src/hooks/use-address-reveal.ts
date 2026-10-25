@@ -37,8 +37,11 @@ export function useAddressReveal(): AddressRevealContext & {
   const ownedHouseIds = useMemo(() => {
     const ids = new Set(owned.map((item) => item.id));
     if (nightPass.registered && nightPass.houseId) ids.add(nightPass.houseId);
+    for (const id of nightPass.ownedHouseIds ?? []) {
+      if (id.trim()) ids.add(id.trim());
+    }
     return ids;
-  }, [owned, nightPass.registered, nightPass.houseId]);
+  }, [owned, nightPass.registered, nightPass.houseId, nightPass.ownedHouseIds]);
   const addressRevealFromCatalog = catalog?.eventSettings?.addressReveal;
   const audience = nightPassAudience(nightPass);
   const publicLocationIds = useMemo(

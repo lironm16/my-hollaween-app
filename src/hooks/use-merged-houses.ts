@@ -56,13 +56,11 @@ function mergeIncomingHouse(
   restoreRedactedLocations: boolean,
 ): PublicHouse {
   let merged = incoming;
-  if (restoreRedactedLocations) {
-    const street = incoming.address?.trim() || current?.address?.trim() || "";
-    const arrival =
-      incoming.arrival?.trim() || current?.arrival?.trim() || "";
-    if (street !== (incoming.address ?? "") || arrival !== (incoming.arrival ?? "")) {
-      merged = { ...incoming, address: street, arrival };
-    }
+  /** Night-pass catalog may redact homes — never drop a street line the device already had. */
+  const street = incoming.address?.trim() || current?.address?.trim() || "";
+  const arrival = incoming.arrival?.trim() || current?.arrival?.trim() || "";
+  if (street !== (incoming.address ?? "") || arrival !== (incoming.arrival ?? "")) {
+    merged = { ...incoming, address: street, arrival };
   }
   if (current && isStubHouse(current) && !isStubHouse(merged)) {
     merged = {
