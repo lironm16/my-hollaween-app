@@ -6,6 +6,7 @@ import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-se
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { AdminGemHuntPublicSettings } from "@/components/admin-gem-hunt-public-settings";
 import { AdminCountdownBannerSettings } from "@/components/admin-countdown-banner-settings";
+import { AdminNightPassDeviceSummary } from "@/components/admin-night-pass-device-summary";
 import { AdminNightPassesSettings } from "@/components/admin-night-passes-settings";
 import { AdminHelpDetails, AdminSection } from "@/components/admin-section";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -128,6 +129,7 @@ export function AdminDryRunPanel() {
           <AdminAddHouseCutoffSettings embedded />
           <AdminAddressRevealSettings embedded />
           <AdminNightPassesSettings embedded />
+          <AdminNightPassDeviceSummary embedded />
         </div>
       </AdminSection>
 

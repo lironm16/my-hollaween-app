@@ -167,6 +167,20 @@ export async function listHouseNightPasses(houseId: string): Promise<NightPassRe
   return rows;
 }
 
+/** All pass records — admin device counts (one doc per house in practice). */
+export async function listAllNightPassRecords(): Promise<NightPassRecord[]> {
+  let rows: NightPassRecord[];
+  if (firestoreConfigured()) {
+    await resolveAdminFirestore();
+    const snap = await nightPassesCollection().get();
+    rows = snap.docs.map((doc) => doc.data() as NightPassRecord);
+  } else {
+    rows = Object.values((await readLocal()).passes);
+  }
+  for (const row of rows) passMem.set(row.id, { value: row, at: Date.now() });
+  return rows;
+}
+
 /** Read-modify-write one pass atomically. `mutate` returns the next record, or null to leave it. */
 export async function updateNightPass(
   id: string,
