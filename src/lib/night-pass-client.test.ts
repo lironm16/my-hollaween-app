@@ -4,6 +4,7 @@ import {
   adminSeesAllHouses,
   catalogScopeMismatchesResponse,
   catalogUrls,
+  nightPassGrantsHouseEdit,
 } from "@/lib/night-pass-client";
 
 describe("catalogUrls", () => {
@@ -61,6 +62,40 @@ describe("catalogScopeMismatchesResponse", () => {
         { enabled: true, viewer: "pass", registered: true },
         "pass",
       ),
+      false,
+    );
+  });
+});
+
+describe("nightPassGrantsHouseEdit", () => {
+  it("allows edit for hw_owner houses from /me", () => {
+    assert.equal(
+      nightPassGrantsHouseEdit("בית-1", {
+        ownedHouseIds: ["בית-1"],
+        registered: false,
+      }),
+      true,
+    );
+  });
+
+  it("allows edit for registered owner role on the pass house", () => {
+    assert.equal(
+      nightPassGrantsHouseEdit("בית-2", {
+        registered: true,
+        houseId: "בית-2",
+        accessRole: "owner",
+      }),
+      true,
+    );
+  });
+
+  it("denies edit for registered editor on the pass house", () => {
+    assert.equal(
+      nightPassGrantsHouseEdit("בית-2", {
+        registered: true,
+        houseId: "בית-2",
+        accessRole: "editor",
+      }),
       false,
     );
   });

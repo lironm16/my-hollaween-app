@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { maskPhone } from "@/lib/house-access-code";
+import { sessionIsOwner } from "@/lib/house-access-role";
 import { houseAccessSessionForDevice } from "@/lib/night-pass-service";
 import {
   describeNightPassLost,
@@ -22,6 +23,10 @@ export type NightPassMeResponse = {
   holderPhone?: string;
   houseName?: string;
   houseId?: string;
+  /** hw_owner cookie houses — client may edit without a cached edit code. */
+  ownedHouseIds?: string[];
+  /** Role on the registered pass for this device, when registered. */
+  accessRole?: "owner" | "editor";
   lost?: NightPassLost;
 };
 
@@ -44,6 +49,10 @@ export async function GET(request: Request) {
     pass ? Promise.resolve(null) : takeNightPassLost(),
   ]);
   const lost = freshLost ?? storedLost;
+  const ownedHouseIds =
+    resolved.scope && resolved.scope.ownedIds.size > 0
+      ? [...resolved.scope.ownedIds]
+      : undefined;
   const body: NightPassMeResponse = {
     enabled: resolved.enabled,
     viewer: resolved.viewer,
@@ -52,6 +61,10 @@ export async function GET(request: Request) {
     ...(session?.holderPhone ? { holderPhone: maskPhone(session.holderPhone) } : {}),
     ...(house?.name ? { houseName: house.name } : {}),
     ...(house?.id ? { houseId: house.id } : {}),
+    ...(ownedHouseIds ? { ownedHouseIds } : {}),
+    ...(session && pass
+      ? { accessRole: sessionIsOwner(session) ? ("owner" as const) : ("editor" as const) }
+      : {}),
     ...(lost ? { lost } : {}),
   };
   return NextResponse.json(body, { headers: { "Cache-Control": "private, no-store" } });

@@ -13,6 +13,8 @@ export type NightPassState = {
   holderPhone?: string;
   houseName?: string;
   houseId?: string;
+  ownedHouseIds?: string[];
+  accessRole?: "owner" | "editor";
 };
 
 const STATE_KEY = "hw-night-pass-state";
@@ -103,7 +105,29 @@ function asState(value: unknown): NightPassState | null {
     ...(raw.holderPhone ? { holderPhone: raw.holderPhone } : {}),
     ...(raw.houseName ? { houseName: raw.houseName } : {}),
     ...(raw.houseId ? { houseId: raw.houseId } : {}),
+    ...(Array.isArray(raw.ownedHouseIds)
+      ? { ownedHouseIds: raw.ownedHouseIds.filter((id): id is string => typeof id === "string") }
+      : {}),
+    ...(raw.accessRole === "owner" || raw.accessRole === "editor"
+      ? { accessRole: raw.accessRole }
+      : {}),
   };
+}
+
+/** Server owner session or registered owner role — edit without a cached edit code. */
+export function nightPassGrantsHouseEdit(
+  houseId: string,
+  state: Pick<
+    NightPassState,
+    "ownedHouseIds" | "registered" | "houseId" | "accessRole"
+  >,
+): boolean {
+  if (state.ownedHouseIds?.includes(houseId)) return true;
+  return (
+    Boolean(state.registered) &&
+    state.houseId === houseId &&
+    state.accessRole === "owner"
+  );
 }
 
 export function readNightPassState(): NightPassState {

@@ -28,7 +28,7 @@ import { activeHouseSetForSession } from "@/lib/house-set";
 import { houseGemHuntUiEligible } from "@/lib/gem-monsters";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
-  deviceMayEditHouseLocally,
+  deviceMayEditHouseOnClient,
   forgetPublishedHouse,
   loadCatalogCacheSync,
   localHouseEditCodeFor,
@@ -47,6 +47,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PublicHouse } from "@/lib/types";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
+import { nightPassGrantsHouseEdit } from "@/lib/night-pass-client";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import type { OwnedHouse } from "@/lib/offline-db";
@@ -292,7 +293,11 @@ function MyCollectionsPageContent() {
               handleRestore(id);
             }
           : undefined,
-      canEdit: tab === "mine" ? (id) => deviceMayEditHouseLocally(id) : undefined,
+      canEdit:
+        tab === "mine"
+          ? (id) =>
+              deviceMayEditHouseOnClient(id) || nightPassGrantsHouseEdit(id, nightPass)
+          : undefined,
       editCodeFor: tab === "mine" ? (id) => localHouseEditCodeFor(id) : undefined,
       onEdit: tab === "mine" ? requestEdit : undefined,
       nightPassesEnabled: tab === "mine" && nightPass.enabled,
@@ -355,6 +360,8 @@ function MyCollectionsPageContent() {
     nightPass.enabled,
     nightPass.registered,
     nightPass.houseId,
+    nightPass.ownedHouseIds,
+    nightPass.accessRole,
     openOwnerPasses,
     router,
     filters,

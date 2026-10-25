@@ -358,6 +358,16 @@ export function deviceMayEditHouseLocally(id: string): boolean {
   return Boolean(localHouseEditCodeFor(id));
 }
 
+/** Owned-house bookmark on this device — edit works via hw_owner even without a cached code. */
+export function deviceOwnsHouseBookmark(id: string): boolean {
+  return loadOwnedHouses().some((h) => h.id === id);
+}
+
+/** Map/list ⋮ **ערוך בית** — cached edit code or saved owner bookmark. */
+export function deviceMayEditHouseOnClient(id: string): boolean {
+  return deviceMayEditHouseLocally(id) || deviceOwnsHouseBookmark(id);
+}
+
 export function rememberPublishedHouse(house: PublicHouse) {
   const cached = loadCatalogCacheSync();
   if (!cached?.houses?.length) return;
