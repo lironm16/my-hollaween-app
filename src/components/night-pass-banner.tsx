@@ -90,6 +90,10 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
   const hidden = hiddenHouseCountForSet(catalog, houseSet);
   const owner = clientMayUseOwnerRegister(pass);
   const cta = owner ? NIGHT_PASS_OWNER_BANNER_CTA : NIGHT_PASS_BANNER_CTA;
+  const prefix =
+    hidden > 0
+      ? `עוד ${hidden} בתים פרטיים זמינים למכשיר רשום`
+      : "כתובות בתים פרטיים זמינות למכשיר רשום";
 
   function dismissBanner(event: MouseEvent) {
     event.stopPropagation();
@@ -101,17 +105,19 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
     <div className="relative z-30 flex w-full items-stretch bg-[#2a1638] ring-1 ring-inset ring-orange-500/25">
       <button
         type="button"
-        className="min-w-0 flex-1 px-3 py-2 text-center text-base text-orange-100"
+        className="min-w-0 flex-1 px-3 py-2 text-base text-orange-100"
         onClick={() =>
           owner
             ? passDialog?.openOwnerRegister(preferredOwnerRegisterHouseId(pass))
             : passDialog?.openRegister()
         }
       >
-        {hidden > 0
-          ? `עוד ${hidden} בתים פרטיים זמינים למכשיר רשום · `
-          : "כתובות בתים פרטיים זמינות למכשיר רשום · "}
-        <span className="font-medium text-orange-300 underline underline-offset-2">{cta}</span>
+        <span className="mx-auto inline-flex max-w-full flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-center leading-snug">
+          <span>{prefix}</span>
+          <span className="font-medium whitespace-nowrap text-orange-300 underline underline-offset-2">
+            {cta}
+          </span>
+        </span>
       </button>
       <button
         type="button"
