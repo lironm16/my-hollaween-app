@@ -24,6 +24,16 @@ export type ClusterProgressCounts = {
 };
 
 /** Classify cluster houses for aggregate tour ring (not one slice per unit). */
+/** Multi-unit cluster with some (not all) houses skipped — hide per-dot skip badges. */
+export function clusterHasPartialSkip(
+  houses: PublicHouse[],
+  skippedIds: readonly string[],
+): boolean {
+  if (houses.length <= 1) return false;
+  const counts = clusterProgressCounts(houses, [], skippedIds);
+  return counts.skipped > 0 && counts.skipped < houses.length;
+}
+
 export function clusterProgressCounts(
   houses: PublicHouse[],
   visitedIds: readonly string[],
