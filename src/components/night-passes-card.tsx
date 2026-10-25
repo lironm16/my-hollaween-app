@@ -16,8 +16,6 @@ import {
   nightPassClientSurfaceLabel,
 } from "@/lib/night-pass-client-surface";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
-import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
-import { useNightPass } from "@/hooks/use-night-pass";
 import { shareHouseAccessInvite } from "@/lib/nav-links";
 import {
   HOUSE_ACCESS_ROLE_FIELD_LABEL,
@@ -132,8 +130,6 @@ export function NightPassesCard({
   const [busyShare, setBusyShare] = useState(false);
   const [busyRemoveId, setBusyRemoveId] = useState<string | null>(null);
   const [busyRoleId, setBusyRoleId] = useState<string | null>(null);
-  const passDialog = useNightPassDialogOptional();
-  const nightPass = useNightPass();
 
   const load = useCallback(async () => {
     setError("");
@@ -379,13 +375,6 @@ export function NightPassesCard({
   const devicesHeading = access
     ? `מכשירים מחוברים: ${access.connectedCount}/${access.maxDevices}`
     : "מכשירים מחוברים";
-  const showConnectMe =
-    Boolean(data?.enabled) &&
-    Boolean(access) &&
-    !data.thisDeviceRegistered &&
-    nightPass.enabled &&
-    !nightPass.registered;
-
   return (
     <section className={shellClass}>
       {!embedded ? (
@@ -505,19 +494,7 @@ export function NightPassesCard({
                   <li key={`empty-${i}`} className="px-3 py-3">
                     <div className="flex flex-col items-center gap-2 text-center">
                       <p className="text-base font-medium text-emerald-400/95">פנוי</p>
-                      {showConnectMe ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="h-9 border-emerald-500/35 text-emerald-100 hover:bg-emerald-950/40"
-                          onClick={() => passDialog?.openOwnerRegister(houseId)}
-                        >
-                          חבר אותי
-                        </Button>
-                      ) : (
-                        <p className="text-sm text-violet-500/75">—</p>
-                      )}
+                      <p className="text-sm text-violet-500/75">—</p>
                     </div>
                   </li>
                 ))
