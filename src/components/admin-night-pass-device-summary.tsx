@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { AdminHelpDetails } from "@/components/admin-section";
 import { Button } from "@/components/ui/button";
-import type { AdminNightPassDevicesResponse } from "@/app/api/admin/event/night-passes/devices/route";
+import type { AdminNightPassDevicesResponse } from "@/lib/admin-night-pass-devices";
 import { cn } from "@/lib/utils";
 
 export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: boolean }) {
@@ -19,10 +19,21 @@ export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: b
     try {
       const res = await fetch("/api/admin/event/night-passes/devices", { cache: "no-store" });
       const json = (await res.json().catch(() => null)) as
-        | (AdminNightPassDevicesResponse & { error?: string })
+        | AdminNightPassDevicesResponse
+        | { error?: string }
         | null;
-      if (!res.ok || !json || "error" in json) {
-        setError(json?.error ?? "טעינה נכשלה.");
+      if (!res.ok) {
+        setError(
+          (json && "error" in json && json.error) ||
+            (res.status === 404
+              ? "הנתיב לא נמצא — ודאו שהפריסה האחרונה עלתה (רענון אחרי deploy)."
+              : `טעינה נכשלה (${res.status}).`),
+        );
+        setData(null);
+        return;
+      }
+      if (!json || !("houses" in json) || !Array.isArray(json.houses)) {
+        setError("תשובה לא תקינה מהשרת.");
         setData(null);
         return;
       }
@@ -74,7 +85,7 @@ export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: b
       </div>
       <p className="text-sm text-violet-300">{summaryLine}</p>
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
-      {!data?.enabled ? (
+      {data && !data.enabled ? (
         <p className="text-sm text-amber-200/90">קודי כניסה כבויים — הרשמה חדשה לא פעילה, הספירה היא מכשירים שכבר רשומים.</p>
       ) : null}
       {data && rows.length === 0 && !loading ? (

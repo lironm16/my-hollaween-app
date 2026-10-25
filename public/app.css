@@ -987,6 +987,9 @@
   .max-h-48 {
     max-height: calc(var(--spacing) * 48);
   }
+  .max-h-52 {
+    max-height: calc(var(--spacing) * 52);
+  }
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
   }
@@ -4069,6 +4072,10 @@
   .group-data-vertical\/tabs\:after\:w-0\.5:is(:where(.group\/tabs):where([data-orientation="vertical"]) *)::after {
     content: var(--tw-content);
     width: calc(var(--spacing) * 0.5);
+  }
+  .last\:border-0:last-child {
+    border-style: var(--tw-border-style);
+    border-width: 0px;
   }
   @media (hover: hover) {
     .hover\:border-violet-300\/70:hover {
