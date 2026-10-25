@@ -22,7 +22,7 @@ function rowsFromDb(
   return houses
     .map((house) => ({
       id: house.id,
-      name: house.name.trim() || house.id,
+      name: (house.name ?? "").trim() || house.id,
       connectedCount: connectedByHouse.get(house.id) ?? 0,
       maxDevices: HOUSE_ACCESS_MAX_DEVICES,
     }))
@@ -47,16 +47,17 @@ export async function GET() {
     for (const record of records) {
       const id = canonicalHouseId(record.houseId);
       if (!id) continue;
-      connectedByHouse.set(id, (connectedByHouse.get(id) ?? 0) + record.sessions.length);
+      const sessionCount = Array.isArray(record.sessions) ? record.sessions.length : 0;
+      connectedByHouse.set(id, (connectedByHouse.get(id) ?? 0) + sessionCount);
     }
 
     let houses: AdminNightPassDeviceRow[] = [];
     try {
       const db = await getDbSnapshot();
-      const listed = db.houses.filter((house) => isPubliclyListed(house));
+      const listed = (db.houses ?? []).filter((house) => isPubliclyListed(house));
       houses = rowsFromDb(
         connectedByHouse,
-        listed.map((house) => ({ id: house.id, name: house.name })),
+        listed.map((house) => ({ id: house.id, name: house.name ?? "" })),
       );
     } catch (dbError) {
       console.error("[admin/night-passes/devices] house list fallback", dbError);
