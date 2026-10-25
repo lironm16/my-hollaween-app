@@ -99,7 +99,7 @@ export function countdownBannerFromDb(eventSettings?: DbFile["eventSettings"] | 
 }
 
 export function countdownBannerFromCatalog(
-  eventSettings?: Catalog["eventSettings"] | null,
+  eventSettings?: Pick<NonNullable<Catalog["eventSettings"]>, "countdownBanner"> | null,
 ): boolean {
   return eventSettings?.countdownBanner !== false;
 }
