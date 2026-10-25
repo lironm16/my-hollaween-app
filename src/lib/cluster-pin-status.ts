@@ -28,7 +28,7 @@ export function clusterPinStatus(
   now: Date,
   opts?: { skipped?: boolean; addressReveal?: AddressRevealSchedule },
 ): ClusterPinStatus {
-  if (opts?.skipped) return "skipped";
+  void opts?.skipped;
   const visit = clusterPinVisitKind(house, now, opts?.addressReveal);
   if (visit === "closed") return "closed";
   if (visit === "break") return "break";

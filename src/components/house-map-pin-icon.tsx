@@ -8,6 +8,7 @@ import { effectiveVisit, isDecorated } from "@/lib/house-state";
 import { isClosingSoon, isHoursNightOver, isOpeningSoon } from "@/lib/hours";
 import type { PublicHouse } from "@/lib/types";
 import { isPoiHouse } from "@/lib/house-kind";
+import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 export function HouseMapPinIcon({
@@ -55,10 +56,15 @@ export function HouseMapPinIcon({
     >
       {closingSoon ? <i className="pin-hours-ring is-closing" /> : null}
       {openingSoon ? <i className="pin-hours-ring is-opening" /> : null}
-      {!skipped && status === "closed" ? <b className="pin-status is-closed" /> : null}
-      {!skipped && status === "break" ? <b className="pin-status is-break" /> : null}
-      {!skipped && (status === "plenty" || status === "low" || status === "out") ? (
+      {status === "closed" ? <b className="pin-status is-closed" /> : null}
+      {status === "break" ? <b className="pin-status is-break" /> : null}
+      {status === "plenty" || status === "low" || status === "out" ? (
         <b className={`pin-status is-${status}`} />
+      ) : null}
+      {skipped ? (
+        <b className="pin-status is-skipped" aria-hidden>
+          <SkipIcon className="pin-skip-icon" />
+        </b>
       ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="pin-scare" src={pinScareSrc(house, decorated ? scare : "mild")} alt="" />

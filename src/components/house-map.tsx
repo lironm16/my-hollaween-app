@@ -22,6 +22,7 @@ import {
 } from "@/components/map-gem-anchor-edit-layer";
 import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
+import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import "leaflet/dist/leaflet.css";
 import { config, inNeighborhood } from "@/lib/config";
 import { useMapTiles } from "@/hooks/use-map-tiles";
@@ -189,24 +190,32 @@ function pinFaceKind(house: PublicHouse): "bare" | "scare" {
   return isDecorated(house) ? "scare" : "bare";
 }
 
+function pinSkipStatusBadgeHtml() {
+  return `<b class="pin-status is-skipped" aria-label="דילגתי">${SKIP_ICON_SVG}</b>`;
+}
+
 function pinStatusMark(
   house: PublicHouse,
   now: Date,
   addressReveal: AddressRevealSchedule | undefined,
   skipped = false,
 ) {
-  if (skipped) return "";
+  const parts: string[] = [];
   const visit = pinVisitKind(house, now, addressReveal);
   if (visit === "closed") {
-    return `<b class="pin-status is-closed" aria-label="סגור"></b>`;
+    parts.push(`<b class="pin-status is-closed" aria-label="סגור"></b>`);
+  } else if (visit === "break") {
+    parts.push(`<b class="pin-status is-break" aria-label="הפסקה"></b>`);
+  } else {
+    const dot = candyPinDot(house);
+    if (dot) {
+      const label =
+        dot === "low" ? "מעט ממתקים" : dot === "out" ? "נגמרו הממתקים" : "יש ממתקים";
+      parts.push(`<b class="pin-status is-${dot}" aria-label="${label}"></b>`);
+    }
   }
-  if (visit === "break") {
-    return `<b class="pin-status is-break" aria-label="הפסקה"></b>`;
-  }
-  const dot = candyPinDot(house);
-  if (!dot) return "";
-  const label = dot === "low" ? "מעט ממתקים" : dot === "out" ? "נגמרו הממתקים" : "יש ממתקים";
-  return `<b class="pin-status is-${dot}" aria-label="${label}"></b>`;
+  if (skipped) parts.push(pinSkipStatusBadgeHtml());
+  return parts.join("");
 }
 
 function pinFaceHtml(house: PublicHouse) {
@@ -233,14 +242,14 @@ function clusterAptDotsHtml(
     .map((house) => {
       const filteredClass =
         matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
-      if (skippedIds?.has(house.id)) {
-        return `<i class="pin-apt-dot is-skipped${filteredClass}"></i>`;
-      }
+      const skipped = Boolean(skippedIds?.has(house.id));
       const visit = pinVisitKind(house, now, addressReveal);
-      if (visit === "closed") return `<i class="pin-apt-dot is-closed${filteredClass}"></i>`;
-      if (visit === "break") return `<i class="pin-apt-dot is-break${filteredClass}"></i>`;
-      const dot = candyPinDot(house) ?? "out";
-      return `<i class="pin-apt-dot is-${dot}${filteredClass}"></i>`;
+      let dotClass = "is-out";
+      if (visit === "closed") dotClass = "is-closed";
+      else if (visit === "break") dotClass = "is-break";
+      else dotClass = `is-${candyPinDot(house) ?? "out"}`;
+      const skipMark = skipped ? " has-skip-mark" : "";
+      return `<i class="pin-apt-dot ${dotClass}${skipMark}${filteredClass}"></i>`;
     })
     .join("");
   return `<span class="pin-apt-dots" aria-hidden="true">${dots}</span>`;
@@ -385,7 +394,8 @@ function clusterIcon(
     : ringStyle
       ? ` style="${ringStyle}"`
       : "";
-  const clusterShell = schoolCampus ? "" : " is-cluster-shell";
+  const clusterShell =
+    schoolCampus && routeOrder == null ? "" : " is-cluster-shell";
   const wrapped = wrapRoutePin(
     `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     routeOrder,

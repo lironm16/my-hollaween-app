@@ -16,6 +16,7 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
+import { SkipIcon } from "@/components/skip-icon";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -118,9 +119,14 @@ function SwatchPin({
           />
         </span>
       ) : null}
-      {!skipped && closed ? <b className="pin-status is-closed" /> : null}
-      {!skipped && onBreak ? <b className="pin-status is-break" /> : null}
-      {!skipped && candy ? <b className={`pin-status is-${candy}`} /> : null}
+      {closed ? <b className="pin-status is-closed" /> : null}
+      {onBreak ? <b className="pin-status is-break" /> : null}
+      {candy ? <b className={`pin-status is-${candy}`} /> : null}
+      {skipped ? (
+        <b className="pin-status is-skipped" aria-hidden>
+          <SkipIcon className="pin-skip-icon" />
+        </b>
+      ) : null}
     </div>
   );
 }
@@ -174,7 +180,11 @@ const BASE_GROUPS: { title: string; items: { key: string; label: string; node: R
       { key: "close", label: "נסגר בקרוב", node: <SwatchPin scare="mild" hours="closing" /> },
       { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
       { key: "visited", label: "ביקרתי", node: <SwatchPin scare="mild" visited /> },
-      { key: "skipped", label: "דילגתי", node: <SwatchPin scare="mild" skipped /> },
+      {
+        key: "skipped",
+        label: "דילגתי",
+        node: <SwatchPin scare="mild" candy="plenty" skipped />,
+      },
     ],
   },
 ];

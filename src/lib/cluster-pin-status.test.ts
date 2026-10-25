@@ -16,8 +16,8 @@ function house(overrides: Partial<PublicHouse> = {}): PublicHouse {
   } as PublicHouse;
 }
 
-test("clusterPinStatus marks skipped houses", () => {
-  assert.equal(clusterPinStatus(house(), new Date(), { skipped: true }), "skipped");
+test("clusterPinStatus keeps candy state when skipped", () => {
+  assert.equal(clusterPinStatus(house(), new Date(), { skipped: true }), "plenty");
 });
 
 test("clusterPinStatus uses candy stock when open", () => {
