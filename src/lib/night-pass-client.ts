@@ -92,6 +92,7 @@ export async function disconnectNightPassOnDevice(): Promise<boolean> {
     lastFetchAt = 0;
     suppressNextPassLostEvent = true;
     notifyNightPassSlotsChanged();
+    await restoreOwnerSessionFromOwnedBookmarks();
     await refreshNightPassState({ force: true });
     void repairOwnedPreviewsMissingAddress();
     return true;
@@ -212,8 +213,17 @@ async function fetchNightPassMe(qs: string): Promise<{ json: { lost?: unknown };
   return { json, state: asState(json) };
 }
 
+/** Allow a fresh unlock attempt when the user opens owner reconnect. */
+export function resetOwnerUnlockAttempts(houseId?: string) {
+  if (!houseId) {
+    ownerUnlockAttempted.clear();
+    return;
+  }
+  ownerUnlockAttempted.delete(houseId);
+}
+
 /** Server owner session is the signed hw_owner cookie — restore it from saved edit codes. */
-async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
+export async function restoreOwnerSessionFromOwnedBookmarks(): Promise<boolean> {
   const owned = loadOwnedHouses();
   if (!owned.length) return false;
   let anyOk = false;
@@ -239,6 +249,11 @@ async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
     }
   }
   return anyOk;
+}
+
+/** @deprecated internal alias */
+async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
+  return restoreOwnerSessionFromOwnedBookmarks();
 }
 
 /** Ask the server who this device is. Network failure keeps the last known state. */

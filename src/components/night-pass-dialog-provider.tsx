@@ -34,6 +34,7 @@ import {
   preferredOwnerRegisterHouseId,
   readNightPassState,
   refreshNightPassState,
+  resetOwnerUnlockAttempts,
   setNightPassRefreshPaused,
   type NightPassOwnerRegisterDetail,
 } from "@/lib/night-pass-client";
@@ -92,6 +93,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
 
   const openOwnerRegister = useCallback((houseId = "") => {
     if (readNightPassState().registered) return;
+    resetOwnerUnlockAttempts();
     setOwnerRegisterMode(true);
     setRegisterCode("");
     setRegisterInvite("");

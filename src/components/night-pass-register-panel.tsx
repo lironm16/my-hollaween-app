@@ -13,13 +13,23 @@ import {
   NIGHT_PASS_ALREADY_REGISTERED_TITLE,
   NIGHT_PASS_REGISTER_SUBTITLE,
 } from "@/lib/night-pass-copy";
-import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
+import {
+  notifyNightPassSlotsChanged,
+  refreshNightPassState,
+  restoreOwnerSessionFromOwnedBookmarks,
+} from "@/lib/night-pass-client";
 import {
   detectNightPassClientBrowser,
   detectNightPassClientSurface,
 } from "@/lib/night-pass-client-surface";
 import { clearCatalogRemoved } from "@/lib/catalog-removed";
-import { clearOwnedHouseEditCode, loadOwnedHouses, notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
+import {
+  clearOwnedHouseEditCode,
+  loadOwnedHouses,
+  notifyCatalogChanged,
+  saveOwnedHouse,
+  storedOwnedHouseEditCode,
+} from "@/lib/offline-db";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -125,21 +135,44 @@ export function NightPassRegisterPanel({
     let cancelled = false;
     void (async () => {
       try {
-        const qs = ownerHouseId?.trim()
-          ? `?houseId=${encodeURIComponent(ownerHouseId.trim())}`
-          : "";
-        const res = await fetch(`/api/night-passes/owner-register-prefill${qs}`, {
-          cache: "no-store",
-        });
-        const json = (await res.json()) as {
-          eligible?: boolean;
-          houseId?: string;
-          houseName?: string;
-          name?: string;
-          phone?: string;
+        setError("");
+        await refreshNightPassState({ force: true });
+        await restoreOwnerSessionFromOwnedBookmarks();
+
+        const fetchPrefill = async () => {
+          const qs = ownerHouseId?.trim()
+            ? `?houseId=${encodeURIComponent(ownerHouseId.trim())}`
+            : "";
+          const res = await fetch(`/api/night-passes/owner-register-prefill${qs}`, {
+            cache: "no-store",
+          });
+          return (await res.json()) as {
+            eligible?: boolean;
+            houseId?: string;
+            houseName?: string;
+            name?: string;
+            phone?: string;
+          };
         };
-        if (cancelled || !json.eligible) {
-          if (!cancelled && !json.eligible) {
+
+        let json = await fetchPrefill();
+        if (!json.eligible) {
+          await restoreOwnerSessionFromOwnedBookmarks();
+          json = await fetchPrefill();
+        }
+
+        if (cancelled) return;
+        if (!json.eligible) {
+          const local = loadOwnedHouses();
+          const targetId = ownerHouseId?.trim() || local[0]?.id;
+          const hasLocal = Boolean(targetId && local.some((h) => h.id === targetId));
+          if (hasLocal && targetId && !storedOwnedHouseEditCode(targetId)) {
+            setError(
+              "הבית שמור במכשיר, אבל חסר קוד עריכה. פתחו עריכת בית (שלי או עריכה) והזינו את קוד העריכה פעם אחת, ואז נסו שוב.",
+            );
+          } else if (hasLocal) {
+            setError("לא הצלחנו לאמת בעלות על הבית. נסו שוב בעוד רגע.");
+          } else {
             setError("לא נמצא בית לעריכה במכשיר הזה.");
           }
           return;
