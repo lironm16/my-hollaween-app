@@ -5,6 +5,7 @@ import {
   clearHouseEditAccessRevoked,
   clearOwnedHouseEditCode,
   loadOwnedHouses,
+  notifyCatalogChanged,
   saveOwnedHouse,
   storedOwnedHouseEditCode,
 } from "@/lib/offline-db";
@@ -92,8 +93,10 @@ export async function disconnectNightPassOnDevice(): Promise<boolean> {
     lastFetchAt = 0;
     suppressNextPassLostEvent = true;
     notifyNightPassSlotsChanged();
+    resetOwnerUnlockAttempts();
     await restoreOwnerSessionFromOwnedBookmarks();
     await refreshNightPassState({ force: true });
+    notifyCatalogChanged();
     void repairOwnedPreviewsMissingAddress();
     return true;
   } catch {

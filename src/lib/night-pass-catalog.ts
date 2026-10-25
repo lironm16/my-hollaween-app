@@ -15,7 +15,7 @@ function stamp(value?: string) {
  * Bump whenever {@link scopeHousesForViewer} changes what a viewer receives: devices that synced
  * earlier get one full catalog instead of a delta that would keep their stale rows.
  */
-export const NIGHT_PASS_SCOPE_RULES_AT = "2026-10-21T09:30:00.000Z";
+export const NIGHT_PASS_SCOPE_RULES_AT = "2026-10-25T10:00:00.000Z";
 
 /** Unredacted, publicly listed rows for one viewer. */
 export async function scopedHousesFromDb(ctx: NightPassScopeContext) {

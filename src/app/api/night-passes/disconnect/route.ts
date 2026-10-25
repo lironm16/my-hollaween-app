@@ -6,6 +6,7 @@ import {
   reconcileHouseAccessOwners,
   removeHouseAccessSession,
 } from "@/lib/night-pass-service";
+import { grantOwnerHouse } from "@/lib/owner-session";
 import { clearNightPassCookie, currentNightPass, readNightPassCookie } from "@/lib/night-pass-session";
 
 export const runtime = "nodejs";
@@ -27,6 +28,7 @@ export async function POST() {
     const session = houseAccessSessionForDevice(record, cookie.sessionId, cookie.token);
     role = session ? (sessionIsOwner(session) ? "owner" : "editor") : null;
     if (sessionIsOwner(session)) {
+      await grantOwnerHouse(pass.houseId);
       removedFromList = await removeHouseAccessSession(pass.houseId, cookie.sessionId);
       if (removedFromList) {
         await reconcileHouseAccessOwners(pass.houseId);

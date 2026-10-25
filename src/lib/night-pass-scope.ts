@@ -34,7 +34,7 @@ export const PUBLIC_NIGHT_PASS_SCOPE: NightPassScopeContext = {
 
 export type ScopedHouses<T> = {
   houses: T[];
-  /** Homes the viewer cannot see at all (owners without a pass on other homes). */
+  /** Homes hidden from this viewer (legacy / scoped previews only). */
   hiddenHouseCount: number;
   /** Rehearsal stubs among {@link hiddenHouseCount}. */
   hiddenStubHouseCount: number;
@@ -63,7 +63,10 @@ export function scopeHousesForViewer<T extends ScopeRow>(
   ctx: NightPassScopeContext,
 ): ScopedHouses<T> {
   const seesAllHomes =
-    ctx.viewer === "pass" || ctx.viewer === "admin" || ctx.viewer === "public";
+    ctx.viewer === "pass" ||
+    ctx.viewer === "admin" ||
+    ctx.viewer === "public" ||
+    ctx.viewer === "owner";
   const houses: T[] = [];
   let hiddenHouseCount = 0;
   let hiddenStubHouseCount = 0;

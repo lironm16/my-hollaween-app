@@ -30,7 +30,11 @@ import type { PublicHouse } from "@/lib/types";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { PersistNote } from "@/components/persist-note";
 import { readApiJson } from "@/lib/api-json";
-import { notifyNightPassSlotsChanged, refreshNightPassState } from "@/lib/night-pass-client";
+import {
+  nightPassGrantsHouseEdit,
+  notifyNightPassSlotsChanged,
+  refreshNightPassState,
+} from "@/lib/night-pass-client";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
 import { catalogRemovedViewOnlyEditPage } from "@/lib/labels";
 import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/house-access-code";
@@ -106,6 +110,34 @@ function EditPageContent() {
     }
   }, [focusId, houses, picked]);
 
+  async function loadHouseWithOwnerSession(
+    target: PublicHouse,
+    options?: { quiet?: boolean },
+  ): Promise<boolean> {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/houses/${encodeURIComponent(target.id)}`, {
+        cache: "no-store",
+      });
+      const data = await readApiJson<PublicHouse & { error?: string }>(res);
+      if (pickedIdRef.current !== target.id) return false;
+      if (!res.ok || !data.id) {
+        if (!options?.quiet) {
+          toast.error(data.error ?? "אין הרשאת עריכה — הזינו קוד עריכה.");
+        }
+        return false;
+      }
+      setHouse(data);
+      return true;
+    } catch {
+      if (pickedIdRef.current !== target.id) return false;
+      if (!options?.quiet) toast.error("אין קשר לשרת");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function unlockWith(
     target: PublicHouse,
     code: string,
@@ -173,20 +205,23 @@ function EditPageContent() {
     const target = picked;
     const code = localHouseEditCodeFor(picked.id) ?? storedOwnedHouseEditCode(picked.id) ?? "";
     setEditCode(code || mine.editCode || "");
-    if (!code) {
-      setHouse(null);
-      return;
-    }
     setHouse(null);
     let cancelled = false;
-    void unlockWith(target, code, { quiet: true }).then((ok) => {
-      if (cancelled || !ok) return;
-    });
+    void (async () => {
+      if (cancelled) return;
+      if (code) {
+        await unlockWith(target, code, { quiet: true });
+        return;
+      }
+      if (nightPassGrantsHouseEdit(target.id, nightPass)) {
+        await loadHouseWithOwnerSession(target, { quiet: true });
+      }
+    })();
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [picked?.id, admin]);
+  }, [picked?.id, admin, nightPass.ownedHouseIds, nightPass.registered]);
 
   useEffect(() => {
     if (admin && adminEditCode) setEditCode(adminEditCode);
