@@ -136,16 +136,17 @@ export async function redeemNightPass(input: {
       normalizeIsraeliMobile(session.holderPhone) === input.phone;
     const surface = input.clientSurface;
     const browser = input.clientBrowser;
-    const role = input.role ?? "editor";
     if (priorIdx >= 0) {
       outcome = "reregistered";
+      const priorRole = sessions[priorIdx]!.role;
+      const role = roleWhenNoOwnerOnHouse(sessions, priorRole ?? input.role);
       sessions[priorIdx] = {
         ...sessions[priorIdx]!,
         tokenHash,
         registeredAt: now,
         holderName: input.name,
         holderPhone: input.phone,
-        role: sessions[priorIdx]!.role ?? role,
+        role,
         ...(surface ? { clientSurface: surface } : {}),
         ...(browser ? { clientBrowser: browser } : {}),
       };
@@ -159,6 +160,7 @@ export async function redeemNightPass(input: {
         return null;
       }
       outcome = "registered";
+      const role = roleWhenNoOwnerOnHouse(sessions, input.role);
       sessions.push({
         sessionId,
         tokenHash,
@@ -418,6 +420,35 @@ export type HouseAccessView = {
 
 export function accessRecordLacksOwner(record: Pick<NightPassRecord, "sessions">) {
   return countOwnerSessions(record.sessions) === 0;
+}
+
+/** When no device has owner role, every paired session becomes owner (no manual promote). */
+export async function reconcileHouseAccessOwners(houseId: string): Promise<boolean> {
+  const id = passId(houseId);
+  let changed = false;
+  await updateNightPass(id, (current) => {
+    if (!current || !accessRecordLacksOwner(current) || current.sessions.length === 0) {
+      return null;
+    }
+    changed = true;
+    const now = new Date().toISOString();
+    return {
+      ...current,
+      sessions: current.sessions.map((s) =>
+        sessionIsOwner(s) ? s : { ...s, role: "owner" as const },
+      ),
+      updatedAt: now,
+    };
+  });
+  return changed;
+}
+
+function roleWhenNoOwnerOnHouse(
+  sessions: readonly HouseAccessSession[],
+  requested?: HouseAccessRole,
+): HouseAccessRole {
+  if (accessRecordLacksOwner({ sessions })) return "owner";
+  return requested ?? "editor";
 }
 
 /** Owner session, or recovery when the house has no owner device (edit cookie or any registered device). */

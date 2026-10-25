@@ -5,6 +5,7 @@ import {
   callerMayRemoveHouseAccessSession,
   ensureHouseAccess,
   houseAccessView,
+  reconcileHouseAccessOwners,
   removeHouseAccessSession,
 } from "@/lib/night-pass-service";
 import { readNightPassSettings } from "@/lib/night-pass-store";
@@ -42,6 +43,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!removed) {
     return NextResponse.json({ error: "המכשיר כבר לא מחובר." }, { status: 404, headers: NO_STORE });
   }
+  await reconcileHouseAccessOwners(house.id);
   const record = await ensureHouseAccess(house.id);
   return NextResponse.json(
     {

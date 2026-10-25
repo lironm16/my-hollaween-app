@@ -122,4 +122,54 @@ describe("house access service (file store)", () => {
     assert.equal(await service.validNightPassForToken(redeemed.record.id, redeemed.token), null);
     assert.equal(reset.record.id, access.id);
   });
+
+  it("registers as owner when no owner device exists yet", async () => {
+    const id = "בית-no-owner";
+    const code = newEditCode();
+    seedHouses([testHouse(id, code)]);
+    const redeemed = await service.redeemNightPass({
+      code,
+      name: "עורך",
+      phone: "0541112222",
+      role: "editor",
+    });
+    assert.equal(redeemed.ok, true);
+    if (!redeemed.ok) return;
+    const session = redeemed.record.sessions.find((s) => s.sessionId === redeemed.sessionId);
+    assert.equal(session?.role, "owner");
+  });
+
+  it("reconcile promotes editors when the last owner device is removed", async () => {
+    const id = "בית-reconcile";
+    const code = newEditCode();
+    seedHouses([testHouse(id, code)]);
+    const owner = await service.redeemNightPass({
+      code,
+      name: "בעל",
+      phone: "0543334444",
+      role: "owner",
+    });
+    assert.equal(owner.ok, true);
+    if (!owner.ok) return;
+
+    const editor = await service.redeemNightPass({
+      code,
+      name: "עורך",
+      phone: "0542223333",
+      role: "editor",
+    });
+    assert.equal(editor.ok, true);
+    if (!editor.ok) return;
+    const editorSession = editor.record.sessions.find((s) => s.sessionId === editor.sessionId);
+    assert.equal(editorSession?.role, "editor");
+    store.invalidateNightPassMem();
+
+    await service.removeHouseAccessSession(id, owner.sessionId);
+    const changed = await service.reconcileHouseAccessOwners(id);
+    assert.equal(changed, true);
+    store.invalidateNightPassMem();
+    const record = await service.ensureHouseAccess(id);
+    assert.equal(record.sessions.length, 1);
+    assert.equal(record.sessions[0]?.role, "owner");
+  });
 });

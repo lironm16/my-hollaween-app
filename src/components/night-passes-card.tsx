@@ -365,7 +365,9 @@ export function NightPassesCard({
 
   function canChangeDeviceRole(device: AccessView["devices"][number]) {
     if (!canPromoteOwner) return false;
-    if (device.role === "editor") return true;
+    if (device.role === "editor") {
+      return admin || data.myRole === "owner";
+    }
     return ownerDeviceCount > 1;
   }
 

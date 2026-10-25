@@ -7,6 +7,7 @@ import {
   ensureHouseAccess,
   houseAccessView,
   mayManageHouseDevices,
+  reconcileHouseAccessOwners,
 } from "@/lib/night-pass-service";
 import { currentNightPass, deviceSessionOnHouse, readNightPassCookie } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
@@ -34,6 +35,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   }
   const house = await getHouse(id);
   if (!house) return NextResponse.json({ error: "הבית לא נמצא." }, { status: 404, headers: NO_STORE });
+  await ensureHouseAccess(house.id);
+  await reconcileHouseAccessOwners(house.id);
   const [record, devicePass, canManageDevices] = await Promise.all([
     ensureHouseAccess(house.id),
     currentNightPass(),
@@ -58,12 +61,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const registeredOwner = registeredOnHouse && sessionIsOwner(mySession);
   const houseEditUnlock = await ownerMayEdit(id);
   const editCookieRecovery = noOwners && !registeredOnHouse && houseEditUnlock;
-  const canPromoteOwner =
-    admin ||
-    registeredOwner ||
-    (registeredOnHouse && noOwners) ||
-    (canManageDevices && noOwners) ||
-    houseEditUnlock;
+  const canPromoteOwner = admin || registeredOwner || houseEditUnlock;
   const canRemoveDevices = admin || registeredOnHouse || houseEditUnlock || editCookieRecovery;
   return NextResponse.json(
     {

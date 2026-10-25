@@ -3,12 +3,9 @@ import { isAdmin } from "@/lib/admin";
 import { normalizeHouseAccessRole, type HouseAccessRole } from "@/lib/house-access-role";
 import { canonicalHouseId } from "@/lib/ids";
 import {
-  accessRecordLacksOwner,
   adminSetHouseAccessSessionRole,
-  ensureHouseAccess,
   updateHouseAccessSessionRole,
 } from "@/lib/night-pass-service";
-import { ownerMayEdit } from "@/lib/owner-session";
 import { deviceSessionOnHouse } from "@/lib/night-pass-session";
 import { readNightPassSettings } from "@/lib/night-pass-store";
 import { getHouse } from "@/lib/store";
@@ -56,15 +53,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ ok: true, role }, { headers: NO_STORE });
   }
 
-  const record = await ensureHouseAccess(house.id);
-  const noOwners = accessRecordLacksOwner(record);
   const caller = await deviceSessionOnHouse(id);
   if (!caller) {
-    if (noOwners && role === "owner" && (await ownerMayEdit(id))) {
-      const outcome = await adminSetHouseAccessSessionRole(house.id, targetSessionId, role);
-      if (!outcome.ok) return roleErrorResponse(outcome.error);
-      return NextResponse.json({ ok: true, role }, { headers: NO_STORE });
-    }
     return NextResponse.json({ error: "צריך מכשיר רשום לבית הזה." }, { status: 403, headers: NO_STORE });
   }
 
