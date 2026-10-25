@@ -67,9 +67,9 @@ export function AppHeader({
   const showAdminUserPreview = admin;
   const nightPass = useNightPass();
   const showRegisteredPass =
-    nightPass.enabled && nightPass.registered && nightPass.viewer !== "admin";
+    !admin && nightPass.enabled && nightPass.registered && nightPass.viewer !== "admin";
   const showUnsignedPassLogin =
-    nightPass.enabled && !nightPass.registered && nightPass.viewer !== "admin";
+    !admin && nightPass.enabled && !nightPass.registered && nightPass.viewer !== "admin";
   const { openRegister, openOwnerRegister } = useNightPassDialog();
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);

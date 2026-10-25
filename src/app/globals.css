@@ -769,6 +769,22 @@
   flex-shrink: 0;
 }
 
+.pin-apt-dot.is-skipped {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #64748b;
+  background-image: none;
+}
+
+.pin-apt-dot.is-skipped::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M3.75 3.5 14.25 12 3.75 20.5Z'/%3E%3Crect fill='%23fff' x='15.25' y='3.5' width='5' height='17' rx='2.5'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
 .pin-apt-dot.has-skip-mark::after {
   content: "";
   position: absolute;

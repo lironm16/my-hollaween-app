@@ -4,6 +4,7 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
+import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
 import type { HouseSet } from "@/lib/house-set";
@@ -63,6 +64,7 @@ function lostDescription(detail: NightPassLostDetail): string | undefined {
 
 /** Map strip: register CTA when not registered (dismissible for this tab session). */
 export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
+  const { admin } = useAdminSession();
   const pass = useNightPass();
   const { catalog } = useCatalog();
   const passDialog = useNightPassDialogOptional();
@@ -85,7 +87,7 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
     return () => window.removeEventListener(NIGHT_PASS_LOST_EVENT, onLost);
   }, []);
 
-  if (!pass.enabled || pass.viewer === "admin" || pass.registered || dismissed) return null;
+  if (!pass.enabled || admin || pass.viewer === "admin" || pass.registered || dismissed) return null;
 
   const hidden = hiddenHouseCountForSet(catalog, houseSet);
   const owner = clientMayUseOwnerRegister(pass);
