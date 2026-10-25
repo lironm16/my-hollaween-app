@@ -252,8 +252,7 @@ function clusterAptDotsHtml(
       if (visit === "closed") dotClass = "is-closed";
       else if (visit === "break") dotClass = "is-break";
       else dotClass = `is-${candyPinDot(house) ?? "out"}`;
-      const skipMark = skipped ? " has-skip-mark" : "";
-      return `<i class="pin-apt-dot ${dotClass}${skipMark}${filteredClass}"></i>`;
+      return `<i class="pin-apt-dot ${dotClass}${filteredClass}"></i>`;
     })
     .join("");
   return `<span class="pin-apt-dots" aria-hidden="true">${dots}</span>`;
