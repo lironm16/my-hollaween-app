@@ -166,9 +166,9 @@ async function captureShareEditCode(page) {
   // Dialog only — menu PNG removed from help (showed real addresses).
   const detail = await openHouseByFocus(page, BASE, house.id);
   await detail.getByRole("button", { name: "פעולות" }).click();
-  await page.getByRole("menuitem", { name: "קוד עריכה" }).waitFor();
-  await page.getByRole("menuitem", { name: "קוד עריכה" }).click();
-  await page.getByRole("dialog").getByText("קוד עריכה", { exact: true }).waitFor();
+  await page.getByRole("menuitem", { name: "קוד עריכה ומכשירים" }).waitFor();
+  await page.getByRole("menuitem", { name: "קוד עריכה ומכשירים" }).click();
+  await page.getByRole("dialog").getByText("קוד עריכה ומכשירים", { exact: true }).waitFor();
   await page.waitForTimeout(300);
   await shot(page, "share-edit-code-dialog.png");
   await page.keyboard.press("Escape");
@@ -284,6 +284,222 @@ async function captureRoute(page) {
   }
 }
 
+function mockNightPassAccess(houseId) {
+  return {
+    enabled: true,
+    access: {
+      familyCode: "482-916",
+      connectedCount: 1,
+      maxDevices: 4,
+      devices: [
+        {
+          sessionId: "demo-session",
+          holderName: "דנה",
+          holderPhone: "050-1234567",
+          registeredAt: new Date().toISOString(),
+          role: "editor",
+          isThisDevice: false,
+        },
+      ],
+      resetCount: 0,
+    },
+    thisDeviceRegistered: false,
+    permissions: {
+      canPromoteOwner: true,
+      canRemoveDevices: true,
+      canResetCode: true,
+      canShareInvite: true,
+    },
+  };
+}
+
+async function captureEventDevice(page) {
+  console.log("event-device (night pass / edit code)");
+  await page.route("**/api/night-passes/me", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        enabled: true,
+        registered: false,
+        viewer: "public",
+      }),
+    });
+  });
+
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await waitForMap(page);
+
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "hw-night-pass-state",
+      JSON.stringify({ enabled: true, registered: false, viewer: "public" }),
+    );
+    window.dispatchEvent(new Event("hw-night-pass-changed"));
+  });
+  await page.waitForTimeout(600);
+  const banner = page.getByRole("button", { name: /יש לי קוד כניסה/ });
+  if (await banner.count()) {
+    await banner.scrollIntoViewIfNeeded();
+    await shot(page, "event-device-visitor-banner.png", {
+      clip: { x: 0, y: 0, width: 390, height: 120 },
+    });
+    await banner.click();
+    await page.getByLabel("קוד כניסה (6 ספרות)").waitFor({ timeout: 8000 });
+    await page.waitForTimeout(300);
+    await shot(page, "event-device-visitor-register.png");
+    await page.keyboard.press("Escape");
+  }
+
+  const houseId = await firstRealHouseId(page);
+  if (!houseId) throw new Error("No house for event-device screenshots");
+
+  await page.route(`**/api/houses/${houseId}/night-passes`, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(mockNightPassAccess(houseId)),
+    });
+  });
+
+  await page.evaluate(
+    ({ id }) => {
+      localStorage.setItem(
+        "hw-my-houses",
+        JSON.stringify([{ id, name: "בית לדוגמה", editCode: "482916" }]),
+      );
+      window.dispatchEvent(new Event("hw-owned-changed"));
+    },
+    { id: houseId },
+  );
+
+  let dialogOpened = false;
+  try {
+    const detail = await openHouseByFocus(page, BASE, houseId);
+    await detail.getByRole("button", { name: "פעולות" }).click();
+    await page.getByRole("menuitem", { name: "קוד עריכה ומכשירים" }).waitFor();
+    await page.waitForTimeout(250);
+    const menuClip = await page.evaluate(() => {
+      const menu = document.querySelector('[role="menu"]');
+      if (!menu) return null;
+      const r = menu.getBoundingClientRect();
+      return { x: Math.max(0, r.x - 8), y: r.y - 8, width: r.width + 16, height: r.height + 16 };
+    });
+    if (menuClip) {
+      await shot(page, "event-device-owner-menu.png", { clip: menuClip });
+    }
+    await page.getByRole("menuitem", { name: "קוד עריכה ומכשירים" }).click();
+    const dialog = page.getByRole("dialog").filter({ hasText: "קוד עריכה ומכשירים" });
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
+    await page.waitForTimeout(500);
+    const box = await dialog.boundingBox();
+    if (box) await shot(page, "event-device-owner-dialog.png", { clip: box });
+    dialogOpened = true;
+    await page.keyboard.press("Escape");
+  } catch (error) {
+    console.warn("  (house focus failed — using styled fallback for owner dialog)", error.message);
+  }
+
+  if (!dialogOpened) {
+    await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(400);
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML(
+        "beforeend",
+        `<div class="fixed bottom-24 left-4 z-[200]" dir="rtl">
+          <div role="menu" class="min-w-[12rem] rounded-xl bg-[#1d1028] p-1 ring-1 ring-orange-500/30 shadow-lg">
+            <button type="button" role="menuitem" class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-base text-orange-50">קוד עריכה ומכשירים</button>
+            <button type="button" role="menuitem" class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-base text-orange-50/80">עריכה</button>
+          </div>
+        </div>`,
+      );
+    });
+    await shot(page, "event-device-owner-menu.png", {
+      clip: { x: 0, y: 480, width: 390, height: 160 },
+    });
+    await page.evaluate(() => {
+      document.querySelector('[role="menu"]')?.closest(".fixed")?.remove();
+    });
+
+    await page.goto(`${BASE}/add`, { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(400);
+    await page.evaluate(() => {
+      document.body.insertAdjacentHTML(
+        "beforeend",
+        `<div class="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 p-4 sm:items-center">
+          <div role="dialog" class="house-edit-modal w-full max-w-lg rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/30">
+            <h2 class="text-center text-xl font-semibold text-orange-100">קוד עריכה ומכשירים</h2>
+            <p class="mt-1 text-center text-sm text-violet-300">בית לדוגמה</p>
+            <div class="mt-4 space-y-4">
+              <div class="space-y-2">
+                <label class="text-base text-violet-300">קוד כניסה (6 ספרות)</label>
+                <input readonly value="482 916" dir="ltr" class="w-full rounded-xl border border-orange-500/25 bg-black/35 px-4 py-3 text-center font-mono text-2xl tracking-[0.25em] text-orange-100" />
+                <div class="flex justify-center gap-2">
+                  <button type="button" class="rounded-md border border-orange-500/25 px-3 py-2 text-sm text-orange-100">העתק</button>
+                </div>
+              </div>
+              <h3 class="border-t border-orange-500/20 pt-4 text-center text-base font-medium text-orange-200">מכשירים מחוברים</h3>
+              <ul class="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
+                <li class="px-3 py-3 text-center text-base text-violet-200">דנה · 050-1234567 · <span class="text-violet-100">עורך</span></li>
+              </ul>
+              <button type="button" class="h-11 w-full rounded-md border border-input text-orange-100">סגירה</button>
+            </div>
+          </div>
+        </div>`,
+      );
+    });
+    await page.waitForTimeout(200);
+    const dialog = page.getByRole("dialog");
+    await shot(page, "event-device-owner-dialog.png", { clip: await dialog.boundingBox() });
+    await page.evaluate(() => {
+      document.querySelector(".house-edit-modal")?.closest(".fixed")?.remove();
+    });
+  }
+
+  await page.goto(`${BASE}/add`, { waitUntil: "domcontentloaded" });
+  await page.locator("form").waitFor({ timeout: 15_000 }).catch(() => {});
+  await page.evaluate(() => {
+    const main = document.querySelector("main");
+    if (!main) return;
+    main.innerHTML = `
+      <div class="house-added-success space-y-6 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-400/30">
+        <div class="flex flex-col items-center gap-2 text-center">
+          <h1 class="font-display text-2xl text-orange-300">הבית במפה!</h1>
+          <p class="text-base text-violet-100">בית לדוגמה על המפה.</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button type="button" class="inline-flex h-11 w-full items-center justify-center rounded-md bg-orange-500 text-black">צפו בבית במפה</button>
+          <button type="button" class="inline-flex h-11 w-full items-center justify-center rounded-md border border-input">עריכת מלאי ופרטים</button>
+          <button type="button" class="inline-flex h-11 w-full items-center justify-center rounded-md border border-orange-400/50 bg-orange-500/10 text-orange-100">קוד עריכה ומכשירים</button>
+        </div>
+      </div>
+    `;
+  });
+  await page.waitForTimeout(200);
+  await shot(page, "event-device-owner-success.png");
+
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await waitForMap(page);
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "hw-night-pass-state",
+      JSON.stringify({
+        enabled: true,
+        registered: true,
+        viewer: "pass",
+        holderName: "יוסי",
+        holderPhone: "050-9998877",
+      }),
+    );
+    window.dispatchEvent(new Event("hw-night-pass-changed"));
+  });
+  await page.locator('[aria-label="תפריט"]').click();
+  await page.getByText("מכשיר מחובר").waitFor({ timeout: 8000 });
+  await page.waitForTimeout(300);
+  const strip = page.locator("text=מכשיר מחובר").locator("..").locator("..");
+  await shot(page, "event-device-visitor-menu.png", {
+    clip: await strip.first().boundingBox(),
+  });
+}
+
 async function captureInstall(page) {
   console.log("install (app in mobile browser)");
   await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
@@ -317,11 +533,18 @@ async function main() {
   const page = await context.newPage();
   page.setDefaultTimeout(25_000);
 
-  await captureAddHouse(page);
-  await captureShareEditCode(page);
-  await captureFilter(page);
-  await captureRoute(page);
-  await captureInstall(page);
+  if (process.env.CAPTURE === "event-device") {
+    await captureEventDevice(page);
+  } else {
+    await captureAddHouse(page);
+    await captureShareEditCode(page);
+    await captureFilter(page);
+    await captureRoute(page);
+    await captureInstall(page);
+    if (process.env.CAPTURE !== "skip-event-device") {
+      await captureEventDevice(page);
+    }
+  }
 
   await context.close();
   await browser.close();

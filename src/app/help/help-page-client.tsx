@@ -51,11 +51,11 @@ const QUESTIONS: HelpLink[] = [
 
 const EVENT_DEVICE_QUESTIONS: HelpLink[] = [
   {
-    question: "חיבור מכשירים — בעלי בתים",
+    question: "קוד עריכה ומכשירים — בעלי בתים",
     href: "/help/event-device-owner",
   },
   {
-    question: "יש לי קוד כניסה — אורחים",
+    question: "חיבור מכשיר — קוד עריכה (6 ספרות)",
     href: "/help/event-device-visitor",
   },
 ];
