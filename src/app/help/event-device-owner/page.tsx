@@ -6,7 +6,14 @@ import { helpImage } from "@/lib/help-images";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const STEPS = [
+type DeviceHelpStep = {
+  title: string;
+  body: string;
+  image?: string;
+  imageAlt?: string;
+};
+
+const STEPS: DeviceHelpStep[] = [
   {
     title: "מה זה קוד כניסה?",
     body: "קוד כניסה (8 תווים) מאפשר למכשיר **אחד** לראות כתובות מלאות ופרטי ביקור בבית שלכם. זה לא קוד עריכה — עורכים ממשיכים להשתמש בקוד העריכה (6 ספרות) או בקישור הזמנה.",
@@ -29,7 +36,7 @@ const STEPS = [
     title: "«חבר אותי» על המכשיר שלכם",
     body: "בעל בית יכול ללחוץ «חבר אותי» כדי לרשום את **המכשיר הנוכחי** בלי להקליד קוד. אם כבר יש מכשיר אחר — תופיע אזהרה לפני החלפה.",
   },
-] as const;
+];
 
 export default function EventDeviceOwnerHelpPage() {
   return (

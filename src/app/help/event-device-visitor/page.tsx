@@ -7,7 +7,14 @@ import { NIGHT_PASS_REVEAL_HINT } from "@/lib/night-pass-copy";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const STEPS = [
+type DeviceHelpStep = {
+  title: string;
+  body: string;
+  image?: string;
+  imageAlt?: string;
+};
+
+const STEPS: DeviceHelpStep[] = [
   {
     title: "מקבלים קוד מבעלי בית",
     body: "קוד כניסה בן **8 תווים** (לא קוד עריכה). בעלי הבית מעתיקים אותו מהמסך «חיבור מכשירים» ושולחים אליכם.",
@@ -30,7 +37,7 @@ const STEPS = [
     image: helpImage("event-device-visitor-menu.png"),
     imageAlt: "פס מכשיר מחובר בתפריט",
   },
-] as const;
+];
 
 export default function EventDeviceVisitorHelpPage() {
   return (
