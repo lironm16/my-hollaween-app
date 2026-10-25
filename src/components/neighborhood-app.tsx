@@ -14,7 +14,6 @@ import { flushSync } from "react-dom";
 import { AppHeader } from "@/components/app-header";
 import { useHomeUrlParams } from "@/hooks/use-home-url-params";
 import { CatalogMetaChip } from "@/components/catalog-meta-chip";
-import { GpsDebugChip } from "@/components/gps-debug-chip";
 import { FiltersSheet } from "@/components/filter-menu";
 import { HouseFiltersContent } from "@/components/house-filters-content";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
@@ -54,14 +53,8 @@ import {
   preloadGemHuntChunks,
 } from "@/components/gem-hunt/gem-hunt-lazy";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
-import {
-  isAndroidLike,
-  isIosLike,
-  supportsWebXrHitTestAr,
-  webXrHitTestArCached,
-} from "@/lib/gem-hunt-ar-platform";
+import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
-import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { gemBagCelebrateAfterCollect, gemBagCollectHref, gemBagPlainHref } from "@/lib/gem-bag-celebrate";
 import { isGemTypeInCollection, loadGemCollected, loadGemCollectedIds } from "@/lib/gem-progress";
@@ -222,10 +215,6 @@ export function NeighborhoodApp({
     previewAsUser: gemPreviewAsUser,
   } = useGemHuntAdminUi(admin);
   const gemHuntActive = gemFeatureOn && gemUi;
-  useEffect(() => {
-    if (!gemHuntActive || !isAndroidLike()) return;
-    void supportsWebXrHitTestAr();
-  }, [gemHuntActive]);
   const geo = useUserLocation({ watch: false });
   const { setWatchEnabled } = geo;
   const gps = geo.location;
@@ -234,7 +223,6 @@ export function NeighborhoodApp({
   /** Sorted cluster houses when gem camera runs as one multi-unit session. */
   const [mapGemClusterMembers, setMapGemClusterMembers] = useState<PublicHouse[] | null>(null);
   const [mapGemGps, setMapGemGps] = useState<UserLocation | null>(null);
-  const [mapGemWebXrSession, setMapGemWebXrSession] = useState<XRSession | null>(null);
   const gemBadgePendingRef = useRef(false);
   const mapGemOpenGenRef = useRef(0);
   const [, setMapGemBadgeCount] = useState(() =>
@@ -508,30 +496,17 @@ export function NeighborhoodApp({
       } else if (openedFrom === "map" && clusterMembers) {
         setView("map");
       }
-      setMapGemWebXrSession(null);
       setMapGemGps(gps);
       setMapGemClusterMembers(clusterMembers);
       flushSync(() => {
         setMapGemHouse(house);
       });
 
-      let xrSession: XRSession | null = null;
-      if (isAndroidLike() && webXrHitTestArCached()) {
-        xrSession = await requestGemHuntWebXrSession();
-      }
-      if (gen !== mapGemOpenGenRef.current) {
-        void endGemHuntWebXrSession(xrSession);
-        releaseGemHuntCamera();
-        return;
-      }
-      setMapGemWebXrSession(xrSession);
-
       await prepareGemHuntSensors({
-        requestCamera: false,
+        requestCamera: true,
         requestOrientation: !isGemHuntOrientationGranted(),
       });
       if (gen !== mapGemOpenGenRef.current) {
-        void endGemHuntWebXrSession(xrSession);
         releaseGemHuntCamera();
         stopGemHuntCameraStream();
         return;
@@ -602,8 +577,6 @@ export function NeighborhoodApp({
       mapGemOpenGenRef.current += 1;
       releaseGemHuntCamera();
       stopGemHuntCameraStream();
-      void endGemHuntWebXrSession(mapGemWebXrSession);
-      setMapGemWebXrSession(null);
       setMapGemHouse(null);
       setMapGemClusterMembers(null);
       setMapGemGps(null);
@@ -611,7 +584,7 @@ export function NeighborhoodApp({
       restoreAfterGemHunt(houseForSheet);
       void geo.refresh();
     },
-    [geo, mapGemHouse, mapGemWebXrSession, restoreAfterGemHunt],
+    [geo, mapGemHouse, restoreAfterGemHunt],
   );
 
   const mapGemClusterQueueUi = useMemo(() => {
@@ -1734,7 +1707,6 @@ export function NeighborhoodApp({
                     </div>
                   </div>
                 ) : null}
-                {view === "map" && adminForHouseSet ? <GpsDebugChip location={gps} /> : null}
                 <CatalogMetaChip
                   hidden={view !== "map" || (Boolean(selection.selected) && !originPick.originPickActive)}
                   houseSetLabel={
@@ -1912,7 +1884,6 @@ export function NeighborhoodApp({
             true,
             false,
           )}
-          initialWebXrSession={mapGemWebXrSession}
           tellMeHuntRadiusEnforced={gemTellMeHuntRadiusEnforced(admin, gemPreviewAsUser)}
           encounterMode={!mapGemClusterMembers}
           repeatVisit={!mapGemClusterMembers && gems.collected(mapGemHouse.id)}

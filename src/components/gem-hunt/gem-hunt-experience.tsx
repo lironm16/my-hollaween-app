@@ -1,14 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { GemHuntBootShell } from "@/components/gem-hunt/gem-hunt-boot-shell";
 import { GemHuntOverlayLazy } from "@/components/gem-hunt/gem-hunt-lazy";
-import { GemHuntWebXrArLazy } from "@/components/gem-hunt/gem-hunt-lazy";
-import {
-  isAndroidLike,
-  supportsWebXrHitTestAr,
-  webXrHitTestArCached,
-} from "@/lib/gem-hunt-ar-platform";
 import type { GemCampusQueueUi, GemCollectFinishOptions } from "@/lib/gem-hunt";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
@@ -24,7 +16,7 @@ export type GemHuntExperienceProps = {
   repeatVisit?: boolean;
   /** When true, **גלה לי** only works within hunt radius (visitors + admin **תצוגת משתמש**). */
   tellMeHuntRadiusEnforced?: boolean;
-  /** Android: session started on the same tap as hunt open (avoids second AR button). */
+  /** @deprecated Android immersive WebXR disabled — ignored. */
   initialWebXrSession?: XRSession | null;
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
@@ -42,65 +34,7 @@ export type GemHuntExperienceProps = {
   onBeforeNavigationAssist?: () => void;
 };
 
-/**
- * Android Chrome: immersive WebXR when hit-test AR is available.
- * iOS: camera pseudo-AR overlay (`getUserMedia`).
- */
+/** Camera pseudo-AR overlay (`getUserMedia` + inspect360) on all mobile browsers. */
 export function GemHuntExperience(props: GemHuntExperienceProps) {
-  const [path, setPath] = useState<"pending" | "webxr" | "camera">(() => {
-    if (props.initialWebXrSession) return "webxr";
-    if (!isAndroidLike()) return "camera";
-    if (webXrHitTestArCached()) return "webxr";
-    return "pending";
-  });
-
-  useEffect(() => {
-    if (props.initialWebXrSession) {
-      setPath("webxr");
-      return;
-    }
-    let cancelled = false;
-    if (!isAndroidLike()) {
-      setPath("camera");
-      return;
-    }
-    void supportsWebXrHitTestAr().then((ok) => {
-      if (!cancelled) setPath(ok ? "webxr" : "camera");
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [props.initialWebXrSession]);
-
-  const onWebXrFallback = useCallback(() => setPath("camera"), []);
-
-  if (path === "pending") return <GemHuntBootShell />;
-
-  if (path === "webxr") {
-    return (
-      <GemHuntWebXrArLazy
-        house={props.house}
-        userLocation={props.userLocation}
-        simulateInRange={props.simulateInRange}
-        collectEnabled={props.collectEnabled ?? true}
-        encounterMode={props.encounterMode ?? true}
-        repeatVisit={props.repeatVisit ?? false}
-        tellMeHuntRadiusEnforced={props.tellMeHuntRadiusEnforced ?? true}
-        initialWebXrSession={props.initialWebXrSession ?? null}
-        campusQueue={props.campusQueue}
-        onCollectPersist={props.onCollectPersist}
-        onCampusStepComplete={props.onCampusStepComplete}
-        onClusterFinishSession={props.onClusterFinishSession}
-        onClusterSkipHouse={props.onClusterSkipHouse}
-        clusterSkipAvailable={props.clusterSkipAvailable}
-        clusterFinishAvailable={props.clusterFinishAvailable}
-        onBeforeNavigationAssist={props.onBeforeNavigationAssist}
-        onClose={props.onClose}
-        onCollect={props.onCollect}
-        onFallbackCamera={onWebXrFallback}
-      />
-    );
-  }
-
   return <GemHuntOverlayLazy {...props} />;
 }

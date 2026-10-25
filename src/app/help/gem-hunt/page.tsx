@@ -85,7 +85,7 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "פתחו מצלמה מכרטיס הבית או מכפתור הציד במפה. ב-iPhone — Safari; ב-Android — Chrome עם WebXR כשזמין."
+                  "פתחו מצלמה מכרטיס הבית או מכפתור הציד במפה. ב-iPhone — Safari; ב-Android — Chrome."
                 }
               </HelpText>
             </li>

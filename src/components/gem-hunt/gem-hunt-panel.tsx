@@ -8,8 +8,6 @@ import { GemCheer } from "@/components/gem-cheer";
 import { GemHouseFoundHero } from "@/components/gem-hunt/gem-house-found-hero";
 import type { GemCollectFinishOptions } from "@/lib/gem-hunt";
 import { GemHuntExperienceLazy } from "@/components/gem-hunt/gem-hunt-lazy";
-import { isAndroidLike, supportsWebXrHitTestAr, webXrHitTestArCached } from "@/lib/gem-hunt-ar-platform";
-import { endGemHuntWebXrSession, requestGemHuntWebXrSession } from "@/lib/gem-hunt-webxr-session";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
 import { Button } from "@/components/ui/button";
 import { useGemProgress } from "@/hooks/use-gem-progress";
@@ -85,7 +83,6 @@ export function GemHuntPanel({
   const [huntTargetHouse, setHuntTargetHouse] = useState<PublicHouse | null>(null);
   const [huntClusterMembers, setHuntClusterMembers] = useState<PublicHouse[] | null>(null);
   const [huntLocation, setHuntLocation] = useState<UserLocation | null>(null);
-  const [bootWebXrSession, setBootWebXrSession] = useState<XRSession | null>(null);
   const [simulate, setSimulate] = useState(adminSimulateInRange);
   const [gemCheer, setGemCheer] = useState(false);
   const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
@@ -95,13 +92,6 @@ export function GemHuntPanel({
     null,
   );
   const huntOpenGenRef = useRef(0);
-  const [androidArReady, setAndroidArReady] = useState(false);
-
-  useEffect(() => {
-    if (!isAndroidLike()) return;
-    void supportsWebXrHitTestAr().then(setAndroidArReady);
-  }, []);
-
   useEffect(() => {
     return () => {
       if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
@@ -129,28 +119,15 @@ export function GemHuntPanel({
     setHuntClusterMembers(null);
     setHuntTargetHouse(house);
     setHuntLocation(userLocation);
-    setBootWebXrSession(null);
     flushSync(() => {
       setHuntOpen(true);
     });
 
-    let xrSession: XRSession | null = null;
-    if (isAndroidLike() && webXrHitTestArCached()) {
-      xrSession = await requestGemHuntWebXrSession();
-    }
-    if (gen !== huntOpenGenRef.current) {
-      void endGemHuntWebXrSession(xrSession);
-      releaseGemHuntCamera();
-      return;
-    }
-    setBootWebXrSession(xrSession);
-
     await prepareGemHuntSensors({
-      requestCamera: !xrSession,
+      requestCamera: true,
       requestOrientation: false,
     });
     if (gen !== huntOpenGenRef.current) {
-      void endGemHuntWebXrSession(xrSession);
       releaseGemHuntCamera();
       return;
     }
@@ -195,8 +172,6 @@ export function GemHuntPanel({
   function closeHunt() {
     huntOpenGenRef.current += 1;
     releaseGemHuntCamera();
-    void endGemHuntWebXrSession(bootWebXrSession);
-    setBootWebXrSession(null);
     setHuntOpen(false);
     setHuntTargetHouse(null);
     setHuntClusterMembers(null);
@@ -389,16 +364,10 @@ export function GemHuntPanel({
         >
           <Camera className="size-4" aria-hidden />
           {collected
-            ? androidArReady
-              ? "מפגש AR שוב"
-              : "מפגש במצלמה"
+            ? "מפגש במצלמה שוב"
             : canCollect
-              ? androidArReady
-                ? "התחילו מפגש AR"
-                : "התחילו מפגש"
-              : androidArReady
-                ? "נסו מפגש (רחוק)"
-                : "נסו מפגש (רחוק)"}
+              ? "התחילו מפגש"
+              : "נסו מפגש (רחוק)"}
         </Button>
       </section>
 
@@ -413,7 +382,6 @@ export function GemHuntPanel({
           encounterMode={!huntClusterMembers}
           repeatVisit={!huntClusterMembers && gems.collected(huntTargetHouse.id)}
           tellMeHuntRadiusEnforced={tellMeHuntRadiusEnforced}
-          initialWebXrSession={bootWebXrSession}
           campusQueue={huntClusterQueueUi}
           onCollectPersist={
             huntClusterMembers

@@ -1,5 +1,12 @@
 export type GemSpatialMode = "studio" | "webxr";
 
+/** Immersive Chrome WebXR on Android (disabled — same camera overlay as iOS). */
+export const GEM_ANDROID_IMMERSIVE_WEBXR_ENABLED = false;
+
+export function androidImmersiveWebXrEnabled(): boolean {
+  return GEM_ANDROID_IMMERSIVE_WEBXR_ENABLED && isAndroidLike();
+}
+
 export function isIosLike(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
@@ -14,8 +21,7 @@ export function isAndroidLike(): boolean {
 
 /** Best primary spatial experience for this device. */
 export function gemHuntPreferredSpatialMode(): GemSpatialMode {
-  if (isIosLike()) return "studio";
-  if (isAndroidLike()) return "webxr";
+  if (androidImmersiveWebXrEnabled()) return "webxr";
   return "studio";
 }
 
@@ -32,6 +38,10 @@ export function webXrSessionHasAnchors(session: XRSession): boolean {
 }
 
 export async function supportsWebXrHitTestAr(): Promise<boolean> {
+  if (!androidImmersiveWebXrEnabled()) {
+    webxrArSupport = false;
+    return false;
+  }
   if (typeof navigator === "undefined" || !navigator.xr) return false;
   if (webxrArSupport != null) return webxrArSupport;
   try {
