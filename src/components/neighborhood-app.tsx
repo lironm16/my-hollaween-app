@@ -26,7 +26,7 @@ import { MapStats, StatsSummary } from "@/components/map-stats";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseEditFlowPanels, useHouseEditFlow } from "@/components/house-edit-flow";
 import { NeighborhoodStatusBanners } from "@/components/neighborhood-status-banners";
-import { NightPassLostToastListener } from "@/components/night-pass-lost-toast";
+import { NightPassBanner } from "@/components/night-pass-banner";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { adminSeesAllHouses } from "@/lib/night-pass-client";
@@ -1584,7 +1584,7 @@ export function NeighborhoodApp({
         error={error}
         hasCachedHouses={houses.length > 0}
       />
-      <NightPassLostToastListener />
+      <NightPassBanner houseSet={activeHouseSet} />
       {routeMode &&
       routeAlerts.changes.length > 0 &&
       !routeAlerts.bannerDismissed &&

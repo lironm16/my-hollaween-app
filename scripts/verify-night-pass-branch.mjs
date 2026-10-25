@@ -53,7 +53,7 @@ console.log("\n=== Files (must exist on latest branch) ===");
 const markers = [
   "src/components/admin-style-strip.tsx",
   "src/components/night-pass-device-strip.tsx",
-  "src/components/night-pass-lost-toast.tsx",
+  "src/components/night-pass-banner.tsx",
 ];
 for (const f of markers) {
   const ok = existsSync(join(root, f));
@@ -63,10 +63,18 @@ for (const f of markers) {
 const header = existsSync(join(root, "src/components/app-header.tsx"))
   ? readFileSync(join(root, "src/components/app-header.tsx"), "utf8")
   : "";
+const banner = existsSync(join(root, "src/components/night-pass-banner.tsx"))
+  ? readFileSync(join(root, "src/components/night-pass-banner.tsx"), "utf8")
+  : "";
 if (header.includes("NightPassRegisterPanel") && header.includes("showUnsignedPassLogin")) {
-  console.log("\n✓ Unsigned night-pass login lives in the side menu (no map banner).");
+  console.log("\n✓ Unsigned night-pass login in the side menu.");
 } else {
   console.log("\n✗ app-header missing menu login — pull latest main.");
+}
+if (banner.includes("BANNER_DISMISS_SESSION_KEY") && banner.includes("aria-label=\"סגירת ההודעה\"")) {
+  console.log("✓ Map banner is dismissible (X) for this tab session.");
+} else {
+  console.log("✗ Map banner missing dismiss (X) — pull latest main.");
 }
 
 console.log("\n=== Dev server ===");
