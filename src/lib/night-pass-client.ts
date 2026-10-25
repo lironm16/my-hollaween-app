@@ -80,7 +80,7 @@ export function notifyNightPassSlotsChanged() {
   window.dispatchEvent(new Event(NIGHT_PASSES_SLOTS_CHANGED_EVENT));
 }
 
-/** Clear pass on this device only; owner still sees the slot as paired. */
+/** Remove this device from the approved list and clear the pass cookie on this device. */
 export async function disconnectNightPassOnDevice(): Promise<boolean> {
   try {
     const res = await fetch("/api/night-passes/disconnect", {
@@ -90,6 +90,7 @@ export async function disconnectNightPassOnDevice(): Promise<boolean> {
     if (!res.ok) return false;
     lastFetchAt = 0;
     suppressNextPassLostEvent = true;
+    notifyNightPassSlotsChanged();
     await refreshNightPassState({ force: true });
     return true;
   } catch {

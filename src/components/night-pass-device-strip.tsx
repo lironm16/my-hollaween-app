@@ -24,7 +24,7 @@ export function NightPassDeviceStrip({
   async function disconnect() {
     if (
       !window.confirm(
-        "להתנתק מהמכשיר הזה?\n\nקוד הכניסה נשאר רשום — אפשר להיכנס שוב עם אותו קוד כניסה. מכשיר אחר שכבר רשום לא יושפע.",
+        "להתנתק?\n\nהמכשיר יוסר מרשימת המכשירים המאושרים. אפשר להירשם שוב מאוחר יותר (בעל בית — חיבור לאירוע; אורח — עם קוד כניסה).",
       )
     ) {
       return;
@@ -32,7 +32,7 @@ export function NightPassDeviceStrip({
     setBusy(true);
     const ok = await disconnectNightPassOnDevice();
     setBusy(false);
-    if (ok) toast.success("המכשיר התנתק. קוד הכניסה עדיין תקף לכניסה מחדש.");
+    if (ok) toast.success("המכשיר התנתק והוסר מהרשימה.");
     else toast.error("ההתנתקות נכשלה. נסו שוב.");
   }
 
@@ -57,7 +57,7 @@ export function NightPassDeviceStrip({
           className="shrink-0 border-violet-500/30 text-violet-100 hover:bg-violet-950/40"
           onClick={() => void disconnect()}
         >
-          {busy ? "מתנתק…" : "התנתקות"}
+          {busy ? "מתנתק…" : "התנתק"}
         </Button>
       ) : null}
     </div>
