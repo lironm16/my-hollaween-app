@@ -17,7 +17,10 @@ import {
   Sparkles,
   Save,
   ScanLine,
+  X,
 } from "lucide-react";
+import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
+import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { VisitQrScanDialog } from "@/components/visit-qr-scan-dialog";
 import { AdminHouseDownloadDialog } from "@/components/admin-house-download-dialog";
 import { ImpOutlineIcon } from "@/components/imp-outline-icon";
@@ -61,6 +64,9 @@ export function AppHeader({
   const nightPass = useNightPass();
   const showRegisteredPass =
     nightPass.enabled && nightPass.registered && nightPass.viewer !== "admin";
+  const showUnsignedPassLogin =
+    nightPass.enabled && !nightPass.registered && nightPass.viewer !== "admin";
+  const { openEventRegistered } = useNightPassDialog();
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
   const [adminDownloadOpen, setAdminDownloadOpen] = useState(false);
@@ -135,8 +141,30 @@ export function AppHeader({
           className="w-[min(20rem,88vw)] border-orange-500/25 bg-[#160b1f] p-0"
         >
           <SheetHeader className="border-b border-orange-500/15 px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
-            <SheetTitle className="text-lg font-semibold text-orange-50">תפריט</SheetTitle>
+            <div className="flex items-center justify-between gap-2">
+              <SheetTitle className="text-lg font-semibold text-orange-50">תפריט</SheetTitle>
+              <button
+                type="button"
+                aria-label="סגירת תפריט"
+                onClick={closeMenu}
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-violet-300 hover:bg-orange-500/10 hover:text-orange-100"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
           </SheetHeader>
+          {showUnsignedPassLogin ? (
+            <div className="relative shrink-0 border-b border-orange-500/15 bg-[#1a0f24] px-3 py-3">
+              <NightPassRegisterPanel
+                compact
+                ownerRegister={nightPass.viewer === "owner"}
+                onEventRegistered={(detail) => {
+                  closeMenu();
+                  openEventRegistered(detail);
+                }}
+              />
+            </div>
+          ) : null}
           <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3 pt-2">
             {showAdminUserPreview ? (
               <div className="px-1 pb-1">

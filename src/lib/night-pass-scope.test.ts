@@ -131,30 +131,26 @@ describe("night pass scope", () => {
     assert.equal(before.houses.find((house) => house.id === "בית-1")!.notes, "");
   });
 
-  it("owners without a pass see their own home plus the public set", () => {
+  it("owners without a pass see every home — full address only on their row", () => {
     const scoped = scopeHousesForViewer(
       all,
       ctx({ viewer: "owner", revealed: true, ownedIds: new Set(["בית-2"]) }),
     );
-    assert.deepEqual(
-      scoped.houses.map((house) => house.id).sort(),
-      ["בית-2", "נק-1"].sort(),
-    );
+    assert.equal(scoped.houses.length, 4);
+    assert.equal(scoped.hiddenHouseCount, 0);
     assert.equal(scoped.houses.find((house) => house.id === "בית-2")!.address, "הרצל 3");
-    assert.equal(scoped.hiddenHouseCount, 2);
+    assert.equal(scoped.houses.find((house) => house.id === "בית-1")!.address, "");
   });
 
-  it("splits the hidden-home teaser by the viewer's house set (owner without pass)", () => {
+  it("hidden-home teaser counts stay zero for public and owner map scope", () => {
     const stubHome = row({ id: "סטאב-1", address: "הגפן 4", isStub: true });
-    const scoped = scopeHousesForViewer(
+    const publicScoped = scopeHousesForViewer([...all, stubHome], PUBLIC_NIGHT_PASS_SCOPE);
+    assert.equal(publicScoped.hiddenHouseCount, 0);
+    const ownerScoped = scopeHousesForViewer(
       [...all, stubHome],
       ctx({ viewer: "owner", revealed: false, ownedIds: new Set(["בית-1"]) }),
     );
-    assert.equal(scoped.hiddenHouseCount, 3);
-    assert.equal(scoped.hiddenStubHouseCount, 1);
-    assert.equal(hiddenHouseCountForSet(scoped, "real"), 2);
-    assert.equal(hiddenHouseCountForSet(scoped, "stubs"), 1);
-    assert.equal(hiddenHouseCountForSet(scoped, "all"), 3);
+    assert.equal(ownerScoped.hiddenHouseCount, 0);
     assert.equal(hiddenHouseCountForSet({ hiddenHouseCount: 5 }, "real"), 5);
   });
 

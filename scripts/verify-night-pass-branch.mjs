@@ -53,20 +53,20 @@ console.log("\n=== Files (must exist on latest branch) ===");
 const markers = [
   "src/components/admin-style-strip.tsx",
   "src/components/night-pass-device-strip.tsx",
-  "src/components/night-pass-banner.tsx",
+  "src/components/night-pass-lost-toast.tsx",
 ];
 for (const f of markers) {
   const ok = existsSync(join(root, f));
   console.log(ok ? "✓" : "✗", f);
 }
 
-const banner = existsSync(join(root, "src/components/night-pass-banner.tsx"))
-  ? readFileSync(join(root, "src/components/night-pass-banner.tsx"), "utf8")
+const header = existsSync(join(root, "src/components/app-header.tsx"))
+  ? readFileSync(join(root, "src/components/app-header.tsx"), "utf8")
   : "";
-if (banner.includes("bg-emerald")) {
-  console.log("\n✗ night-pass-banner still has green (emerald) — old code. Pull the branch above.");
-} else if (banner.includes("NightPassDeviceStrip")) {
-  console.log("\n✓ night-pass-banner uses admin-style strip (not green bar).");
+if (header.includes("NightPassRegisterPanel") && header.includes("showUnsignedPassLogin")) {
+  console.log("\n✓ Unsigned night-pass login lives in the side menu (no map banner).");
+} else {
+  console.log("\n✗ app-header missing menu login — pull latest main.");
 }
 
 console.log("\n=== Dev server ===");
