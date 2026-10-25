@@ -94,8 +94,8 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
   const cta = owner ? NIGHT_PASS_OWNER_BANNER_CTA : NIGHT_PASS_BANNER_CTA;
   const prefix =
     hidden > 0
-      ? `עוד ${hidden} בתים פרטיים זמינים למכשיר רשום`
-      : "כתובות בתים פרטיים זמינות למכשיר רשום";
+      ? `עוד ${hidden} בתים זמינים למכשיר רשום`
+      : "כתובות בתים זמינות למכשיר רשום";
 
   function dismissBanner(event: MouseEvent) {
     event.stopPropagation();

@@ -63,7 +63,7 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "בפרטי בית — בלוק שדון נסתר עם מרחק וכפתור פתחו מצלמה בטווח (iPhone ~5 מ׳, Android ~15 מ׳ מהנקודה על המדרכה)."
+                  "בכרטיס בית — בלוק שדון נסתר עם מרחק וכפתור פתחו מצלמה בטווח (iPhone ~5 מ׳, Android ~15 מ׳ מהנקודה על המדרכה)."
                 }
               </HelpText>
             </li>
@@ -85,7 +85,7 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "פתחו פתחו מצלמה מפרטי הבית או מכפתור הציד במפה. ב-iPhone — Safari; ב-Android — Chrome עם WebXR כשזמין."
+                  "פתחו מצלמה מכרטיס הבית או מכפתור הציד במפה. ב-iPhone — Safari; ב-Android — Chrome עם WebXR כשזמין."
                 }
               </HelpText>
             </li>
@@ -183,7 +183,7 @@ export default function GemHuntHelpPage() {
             <li>
               <HelpText>
                 {
-                  "**שדון של שכן** — הנקודה על המדרכה מוגבלת בטווח; אם צריך כיול — כלי מנהל בפרטי הבית."
+                  "**שדון של שכן** — הנקודה על המדרכה מוגבלת בטווח; אם צריך כיול — כלי מנהל בכרטיס הבית."
                 }
               </HelpText>
             </li>

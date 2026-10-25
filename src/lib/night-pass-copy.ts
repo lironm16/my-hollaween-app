@@ -2,7 +2,7 @@
 export const HOUSE_ACCESS_CODE_LENGTH = 6;
 
 export const NIGHT_PASS_REGISTER_SUBTITLE =
-  "קיבלתם קוד כניסה? הירשמו כדי לראות כתובות בתים פרטיים ביום החשיפה";
+  "קיבלתם קוד כניסה? הירשמו כדי לראות כתובות בתים ביום החשיפה";
 
 export const NIGHT_PASS_OWNER_REGISTER_SUBTITLE =
   "בעלי בית — בדקו את הפרטים ולחצו אישור כדי לחבר את המכשיר לאירוע. לא צריך קוד כניסה.";
@@ -17,7 +17,7 @@ export const NIGHT_PASS_BANNER_CTA = "יש לי קוד כניסה";
 export const NIGHT_PASS_OWNER_BANNER_CTA = "חיבור לאירוע (בעלי בית)";
 
 /** No clock/date — private homes unlock on reveal day. */
-export const NIGHT_PASS_REVEAL_HINT = "כתובות בתים פרטיים יוצגו ביום החשיפה.";
+export const NIGHT_PASS_REVEAL_HINT = "כתובות בתים יוצגו ביום החשיפה.";
 
 export const NIGHT_PASS_ALREADY_REGISTERED_TITLE = "כבר נרשמתם!";
 export const NIGHT_PASS_ALREADY_REGISTERED_BODY =
@@ -47,7 +47,7 @@ export function nightPassEventRegisteredBody(
 ) {
   const label = houseName.trim() || "הבית";
   if (kind === "editor") {
-    return `נרשמתם כעורך של ${label}. כתובות פרטיות יוצגו ביום החשיפה במכשיר הזה.`;
+    return `נרשמתם כעורך של ${label}. כתובות בתים יוצגו ביום החשיפה במכשיר הזה.`;
   }
   return `אתם בעלי הבית של ${label} ויכולים לערוך אותו מהטלפון הזה.`;
 }
