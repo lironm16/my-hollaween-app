@@ -8,6 +8,7 @@ import {
   clusterTourRingGradient,
   clusterTourMixedRingGradient,
   clusterIsFinishedVisitSkipMix,
+  clusterHasPartialSkip,
   TOUR_CLUSTER_MIXED,
 } from "@/lib/map-cluster-tour-fill";
 import type { PublicHouse } from "@/lib/types";
@@ -44,6 +45,16 @@ function stub(id: string): PublicHouse {
     updatedAt: "",
   };
 }
+
+describe("clusterHasPartialSkip", () => {
+  it("is true when some but not all units are skipped", () => {
+    const houses = [stub("a"), stub("b"), stub("c")];
+    assert.equal(clusterHasPartialSkip(houses, ["a"]), true);
+    assert.equal(clusterHasPartialSkip(houses, ["a", "b", "c"]), false);
+    assert.equal(clusterHasPartialSkip(houses, []), false);
+    assert.equal(clusterHasPartialSkip([stub("a")], ["a"]), false);
+  });
+});
 
 describe("clusterProgressCounts", () => {
   it("counts visited, skipped, and open units", () => {

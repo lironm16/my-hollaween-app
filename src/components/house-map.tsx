@@ -36,6 +36,7 @@ import {
   type LatLng,
 } from "@/lib/route";
 import {
+  clusterHasPartialSkip,
   clusterRouteStopBadgeProgress,
   pinTourRingDecor,
   type ClusterRouteStopBadgeProgress,
@@ -238,11 +239,14 @@ function clusterAptDotsHtml(
   showWhenSingle = false,
 ) {
   if (houses.length <= 1 && !showWhenSingle) return "";
+  const partialSkip = clusterHasPartialSkip(houses, skippedIds ? [...skippedIds] : []);
   const dots = clusterBadgeHouses(houses)
     .map((house) => {
       const filteredClass =
         matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
-      const skipped = Boolean(skippedIds?.has(house.id));
+      if (skippedIds?.has(house.id) && !partialSkip) {
+        return `<i class="pin-apt-dot is-skipped${filteredClass}"></i>`;
+      }
       const visit = pinVisitKind(house, now, addressReveal);
       let dotClass = "is-out";
       if (visit === "closed") dotClass = "is-closed";

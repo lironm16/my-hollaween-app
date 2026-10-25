@@ -142,15 +142,17 @@ describe("night pass scope", () => {
     assert.equal(scoped.houses.find((house) => house.id === "בית-1")!.address, "");
   });
 
-  it("hidden-home teaser counts stay zero for public and owner map scope", () => {
+  it("splits the hidden-home teaser by the viewer's house set (owner without pass)", () => {
     const stubHome = row({ id: "סטאב-1", address: "הגפן 4", isStub: true });
-    const publicScoped = scopeHousesForViewer([...all, stubHome], PUBLIC_NIGHT_PASS_SCOPE);
-    assert.equal(publicScoped.hiddenHouseCount, 0);
-    const ownerScoped = scopeHousesForViewer(
+    const scoped = scopeHousesForViewer(
       [...all, stubHome],
       ctx({ viewer: "owner", revealed: false, ownedIds: new Set(["בית-1"]) }),
     );
-    assert.equal(ownerScoped.hiddenHouseCount, 0);
+    assert.equal(scoped.hiddenHouseCount, 3);
+    assert.equal(scoped.hiddenStubHouseCount, 1);
+    assert.equal(hiddenHouseCountForSet(scoped, "real"), 2);
+    assert.equal(hiddenHouseCountForSet(scoped, "stubs"), 1);
+    assert.equal(hiddenHouseCountForSet(scoped, "all"), 3);
     assert.equal(hiddenHouseCountForSet({ hiddenHouseCount: 5 }, "real"), 5);
   });
 
