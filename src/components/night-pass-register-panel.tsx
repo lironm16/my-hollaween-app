@@ -135,6 +135,8 @@ export function NightPassRegisterPanel({
           eligible?: boolean;
           houseId?: string;
           houseName?: string;
+          name?: string;
+          phone?: string;
         };
         if (cancelled || !json.eligible) {
           if (!cancelled && !json.eligible) {
@@ -144,6 +146,8 @@ export function NightPassRegisterPanel({
         }
         if (json.houseId) setResolvedOwnerHouseId(json.houseId);
         if (json.houseName) setOwnerHouseName(json.houseName);
+        if (json.name?.trim()) setName((prev) => prev.trim() || json.name!.trim());
+        if (json.phone?.trim()) setPhone((prev) => prev.trim() || json.phone!.trim());
       } catch {
         if (!cancelled) setError("לא הצלחנו לטעון פרטים. נסו שוב.");
       }

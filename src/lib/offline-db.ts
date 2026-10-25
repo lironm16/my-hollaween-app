@@ -347,11 +347,16 @@ export function clearOwnedHouseEditCode(id: string) {
   saveOwnedHouse({ ...row, editCode: "" });
 }
 
+/** Raw edit code on the owned-house bookmark (ignores revoke — for re-unlock after device removal). */
+export function storedOwnedHouseEditCode(id: string): string | undefined {
+  const code = loadOwnedHouses().find((h) => h.id === id)?.editCode?.trim();
+  return code || undefined;
+}
+
 /** Saved unlock on this device — not night-pass-only editors (no code stored). */
 export function localHouseEditCodeFor(id: string): string | undefined {
   if (isHouseEditAccessRevoked(id)) return undefined;
-  const code = loadOwnedHouses().find((h) => h.id === id)?.editCode?.trim();
-  return code || undefined;
+  return storedOwnedHouseEditCode(id);
 }
 
 export function deviceMayEditHouseLocally(id: string): boolean {

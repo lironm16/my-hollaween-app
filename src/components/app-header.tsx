@@ -45,6 +45,10 @@ import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { AdminGemUserPreviewToggle } from "@/components/admin-gem-user-preview-toggle";
 import { NightPassDeviceStrip } from "@/components/night-pass-device-strip";
 import { useNightPass } from "@/hooks/use-night-pass";
+import {
+  clientMayUseOwnerRegister,
+  preferredOwnerRegisterHouseId,
+} from "@/lib/night-pass-client";
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { readHelpInstallCaptureFromLocation } from "@/lib/help-install-capture";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
@@ -168,8 +172,9 @@ export function AppHeader({
                 <NightPassConnectStrip
                   onConnect={() => {
                     closeMenu();
-                    if (nightPass.viewer === "owner") openOwnerRegister();
-                    else openRegister();
+                    if (clientMayUseOwnerRegister(nightPass)) {
+                      openOwnerRegister(preferredOwnerRegisterHouseId(nightPass));
+                    } else openRegister();
                   }}
                 />
               </div>

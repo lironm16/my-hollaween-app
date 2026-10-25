@@ -29,7 +29,9 @@ import {
 } from "@/lib/night-pass-copy";
 import {
   NIGHT_PASS_OWNER_REGISTER_EVENT,
+  clientMayUseOwnerRegister,
   notifyNightPassSlotsChanged,
+  preferredOwnerRegisterHouseId,
   readNightPassState,
   refreshNightPassState,
   setNightPassRefreshPaused,
@@ -148,6 +150,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       <Suspense fallback={null}>
         <PassQueryOpener
           openRegister={openRegister}
+          openOwnerRegister={openOwnerRegister}
           onInviteForRegisteredDevice={() => setAlreadyRegisteredOpen(true)}
         />
       </Suspense>
@@ -261,9 +264,11 @@ export function useNightPassDialogOptional() {
 
 function PassQueryOpener({
   openRegister,
+  openOwnerRegister,
   onInviteForRegisteredDevice,
 }: {
   openRegister: (initialCode?: string, inviteToken?: string) => void;
+  openOwnerRegister: (houseId?: string) => void;
   onInviteForRegisteredDevice: () => void;
 }) {
   const router = useRouter();
@@ -304,13 +309,20 @@ function PassQueryOpener({
     }
     if (searchParams.get("openPass") !== "1") return;
     const code = searchParams.get("c") ?? "";
-    openRegister(code);
     const next = new URLSearchParams(searchParams.toString());
     next.delete("openPass");
     next.delete("c");
     const qs = next.toString();
     router.replace(qs ? `/?${qs}` : "/");
-  }, [openRegister, onInviteForRegisteredDevice, router, searchParams]);
+    void refreshNightPassState({ force: true }).then((state) => {
+      const pass = state ?? readNightPassState();
+      if (clientMayUseOwnerRegister(pass)) {
+        openOwnerRegister(preferredOwnerRegisterHouseId(pass));
+      } else {
+        openRegister(code);
+      }
+    });
+  }, [openRegister, openOwnerRegister, onInviteForRegisteredDevice, router, searchParams]);
 
   return null;
 }

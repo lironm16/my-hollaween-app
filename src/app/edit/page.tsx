@@ -20,6 +20,7 @@ import {
   clearHouseEditAccessRevoked,
   clearOwnedHouseEditCode,
   localHouseEditCodeFor,
+  storedOwnedHouseEditCode,
   saveOwnedHouse,
   removeOwnedHouse,
   forgetPublishedHouse,
@@ -170,8 +171,8 @@ function EditPageContent() {
       return;
     }
     const target = picked;
-    const code = localHouseEditCodeFor(picked.id) ?? "";
-    setEditCode(mine.editCode ?? "");
+    const code = localHouseEditCodeFor(picked.id) ?? storedOwnedHouseEditCode(picked.id) ?? "";
+    setEditCode(code || mine.editCode || "");
     if (!code) {
       setHouse(null);
       return;

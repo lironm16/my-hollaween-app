@@ -1,7 +1,13 @@
 import type { AddressRevealAudience } from "@/lib/address-reveal";
 import { readAdminPreviewAsUser } from "@/lib/admin-preview-as-user";
 import { reconcileCatalogRemovedWithServer } from "@/lib/server-removed-houses";
-import { clearOwnedHouseEditCode, loadOwnedHouses } from "@/lib/offline-db";
+import {
+  clearHouseEditAccessRevoked,
+  clearOwnedHouseEditCode,
+  loadOwnedHouses,
+  saveOwnedHouse,
+  storedOwnedHouseEditCode,
+} from "@/lib/offline-db";
 import type { CatalogDelta, NightPassViewer } from "@/lib/types";
 
 /** Mirror of `GET /api/night-passes/me`. */
@@ -130,6 +136,24 @@ export function nightPassGrantsHouseEdit(
   );
 }
 
+/** Owner reconnect — no entrance code; includes houses still listed under **שלי**. */
+export function clientMayUseOwnerRegister(state: NightPassState = readNightPassState()): boolean {
+  if (state.viewer === "owner") return true;
+  if (state.ownedHouseIds?.length) return true;
+  return loadOwnedHouses().length > 0;
+}
+
+export function preferredOwnerRegisterHouseId(
+  state: NightPassState = readNightPassState(),
+): string {
+  const fromServer = state.ownedHouseIds?.find((id) => id.trim())?.trim();
+  if (fromServer) return fromServer;
+  if (state.houseId?.trim() && loadOwnedHouses().some((h) => h.id === state.houseId)) {
+    return state.houseId.trim();
+  }
+  return loadOwnedHouses()[0]?.id?.trim() ?? "";
+}
+
 export function readNightPassState(): NightPassState {
   if (typeof window === "undefined") return LEGACY_STATE;
   try {
@@ -191,7 +215,7 @@ async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
   if (!owned.length) return false;
   let anyOk = false;
   for (const house of owned.slice(0, 8)) {
-    const code = house.editCode?.trim();
+    const code = storedOwnedHouseEditCode(house.id);
     if (!code || ownerUnlockAttempted.has(house.id)) continue;
     ownerUnlockAttempted.add(house.id);
     try {
@@ -202,8 +226,11 @@ async function restoreOwnerSessionFromLocalHouses(): Promise<boolean> {
         cache: "no-store",
         signal: AbortSignal.timeout(8000),
       });
-      if (res.ok) anyOk = true;
-      else if (res.status === 403) clearOwnedHouseEditCode(house.id);
+      if (res.ok) {
+        clearHouseEditAccessRevoked(house.id);
+        saveOwnedHouse({ ...house, editCode: code });
+        anyOk = true;
+      } else if (res.status === 403) clearOwnedHouseEditCode(house.id);
     } catch {
       /* offline */
     }
@@ -228,7 +255,7 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
       if (!first.state) return null;
       let next = first.state;
       const json = first.json;
-      if (next.enabled && !next.registered && next.viewer === "public" && loadOwnedHouses().length > 0) {
+      if (next.enabled && !next.registered && loadOwnedHouses().length > 0) {
         if (await restoreOwnerSessionFromLocalHouses()) {
           const again = await fetchNightPassMe(qs);
           if (again.state) next = again.state;
@@ -248,6 +275,11 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
             clearOwnedHouseEditCode(lost.houseId);
           } else if (lost?.houseId && lost.reason === "taken") {
             clearOwnedHouseEditCode(lost.houseId);
+          } else if (lost?.reason === "removed") {
+            if (await restoreOwnerSessionFromLocalHouses()) {
+              const again = await fetchNightPassMe(qs);
+              if (again.state) next = again.state;
+            }
           }
           if (suppressNextPassLostEvent) {
             suppressNextPassLostEvent = false;

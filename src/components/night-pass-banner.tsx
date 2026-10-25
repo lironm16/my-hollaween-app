@@ -8,7 +8,12 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
 import type { HouseSet } from "@/lib/house-set";
 import { NIGHT_PASS_BANNER_CTA, NIGHT_PASS_OWNER_BANNER_CTA } from "@/lib/night-pass-copy";
-import { NIGHT_PASS_LOST_EVENT, type NightPassLostDetail } from "@/lib/night-pass-client";
+import {
+  NIGHT_PASS_LOST_EVENT,
+  clientMayUseOwnerRegister,
+  preferredOwnerRegisterHouseId,
+  type NightPassLostDetail,
+} from "@/lib/night-pass-client";
 import { hiddenHouseCountForSet } from "@/lib/night-pass-scope";
 
 const BANNER_DISMISS_SESSION_KEY = "hw_night_pass_map_banner_dismiss";
@@ -83,7 +88,7 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
   if (!pass.enabled || pass.viewer === "admin" || pass.registered || dismissed) return null;
 
   const hidden = hiddenHouseCountForSet(catalog, houseSet);
-  const owner = pass.viewer === "owner";
+  const owner = clientMayUseOwnerRegister(pass);
   const cta = owner ? NIGHT_PASS_OWNER_BANNER_CTA : NIGHT_PASS_BANNER_CTA;
 
   function dismissBanner(event: MouseEvent) {
@@ -97,7 +102,11 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
       <button
         type="button"
         className="min-w-0 flex-1 px-3 py-2 text-center text-base text-orange-100"
-        onClick={() => (owner ? passDialog?.openOwnerRegister() : passDialog?.openRegister())}
+        onClick={() =>
+          owner
+            ? passDialog?.openOwnerRegister(preferredOwnerRegisterHouseId(pass))
+            : passDialog?.openRegister()
+        }
       >
         {hidden > 0
           ? `עוד ${hidden} בתים פרטיים זמינים למכשיר רשום · `
