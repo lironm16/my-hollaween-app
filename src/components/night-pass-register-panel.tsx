@@ -177,7 +177,9 @@ export function NightPassRegisterPanel({
           }
           return;
         }
-        if (json.houseId) setResolvedOwnerHouseId(json.houseId);
+        const requested = ownerHouseId?.trim();
+        if (requested) setResolvedOwnerHouseId(requested);
+        else if (json.houseId) setResolvedOwnerHouseId(json.houseId);
         if (json.houseName) setOwnerHouseName(json.houseName);
         if (json.name?.trim()) setName((prev) => prev.trim() || json.name!.trim());
         if (json.phone?.trim()) setPhone((prev) => prev.trim() || json.phone!.trim());
@@ -209,7 +211,7 @@ export function NightPassRegisterPanel({
       const clientBrowser = rawBrowser === "other" ? undefined : rawBrowser;
       const body = ownerRegister
         ? {
-            houseId: resolvedOwnerHouseId || ownerHouseId?.trim(),
+            houseId: ownerHouseId?.trim() || resolvedOwnerHouseId,
             name,
             phone,
             clientSurface,

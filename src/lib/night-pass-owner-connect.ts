@@ -59,16 +59,12 @@ export async function ownerRegisterPrefill(preferredHouseId?: string): Promise<O
   if (owned.length === 0) return { eligible: false };
 
   const prefer = preferredHouseId ? canonicalHouseId(preferredHouseId) : "";
-  const order =
-    prefer && owned.some((id) => canonicalHouseId(id) === prefer)
-      ? [prefer, ...owned.filter((id) => canonicalHouseId(id) !== prefer)]
-      : owned;
 
-  for (const rawId of order) {
+  async function prefillForHouse(rawId: string): Promise<OwnerRegisterPrefill> {
     const id = canonicalHouseId(rawId);
-    if (!(await ownerMayEdit(id))) continue;
+    if (!id || !(await ownerMayEdit(id))) return { eligible: false };
     const house = await getHouse(id);
-    if (!house) continue;
+    if (!house) return { eligible: false };
     const { name, phone } = contactFromHouse(house);
     return {
       eligible: true,
@@ -78,6 +74,16 @@ export async function ownerRegisterPrefill(preferredHouseId?: string): Promise<O
       phone,
       contactComplete: Boolean(name && phone),
     };
+  }
+
+  /** Device / edit screen picked a house — never substitute another owned home. */
+  if (prefer) {
+    return prefillForHouse(prefer);
+  }
+
+  for (const rawId of owned) {
+    const result = await prefillForHouse(rawId);
+    if (result.eligible) return result;
   }
   return { eligible: false };
 }
