@@ -3,6 +3,7 @@ import {
   addressRevealScheduleFromDb,
   defaultAddHouseCutoffSchedule,
   defaultAddressRevealSchedule,
+  countdownBannerFromDb,
   gemHuntPublicFromDb,
   mergeAddressRevealSchedule,
   normalizeAddHouseCutoffSchedule,
@@ -134,6 +135,36 @@ export async function saveAdminGemHuntPublicSettings(enabled: boolean): Promise<
     db.updatedAt = new Date().toISOString();
   });
   return getAdminGemHuntPublicSettings();
+}
+
+export type AdminCountdownBannerSettings = {
+  enabled: boolean;
+  updatedAt?: string;
+};
+
+export async function getAdminCountdownBannerSettings(): Promise<AdminCountdownBannerSettings> {
+  const db = await loadDb();
+  return {
+    enabled: countdownBannerFromDb(db.eventSettings),
+    updatedAt: db.eventSettings?.updatedAt,
+  };
+}
+
+export async function saveAdminCountdownBannerSettings(
+  enabled: boolean,
+): Promise<AdminCountdownBannerSettings> {
+  await runSyncedWrite((db) => {
+    const prev = db.eventSettings ?? {};
+    const next = { ...prev, updatedAt: new Date().toISOString() };
+    if (enabled) {
+      delete next.countdownBanner;
+    } else {
+      next.countdownBanner = false;
+    }
+    db.eventSettings = next;
+    db.updatedAt = new Date().toISOString();
+  });
+  return getAdminCountdownBannerSettings();
 }
 
 /** Convenience for server routes that redact a single house row. */

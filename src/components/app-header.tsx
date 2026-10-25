@@ -19,7 +19,7 @@ import {
   ScanLine,
   X,
 } from "lucide-react";
-import { NightPassRegisterPanel } from "@/components/night-pass-register-panel";
+import { NightPassConnectStrip } from "@/components/night-pass-connect-strip";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { VisitQrScanDialog } from "@/components/visit-qr-scan-dialog";
 import { AdminHouseDownloadDialog } from "@/components/admin-house-download-dialog";
@@ -66,7 +66,7 @@ export function AppHeader({
     nightPass.enabled && nightPass.registered && nightPass.viewer !== "admin";
   const showUnsignedPassLogin =
     nightPass.enabled && !nightPass.registered && nightPass.viewer !== "admin";
-  const { openEventRegistered } = useNightPassDialog();
+  const { openRegister, openOwnerRegister } = useNightPassDialog();
   const [menuOpen, setMenuOpen] = useState(false);
   const [houseOpen, setHouseOpen] = useState(true);
   const [adminDownloadOpen, setAdminDownloadOpen] = useState(false);
@@ -153,18 +153,6 @@ export function AppHeader({
               </button>
             </div>
           </SheetHeader>
-          {showUnsignedPassLogin ? (
-            <div className="relative shrink-0 border-b border-orange-500/15 bg-[#1a0f24] px-3 py-3">
-              <NightPassRegisterPanel
-                compact
-                ownerRegister={nightPass.viewer === "owner"}
-                onEventRegistered={(detail) => {
-                  closeMenu();
-                  openEventRegistered(detail);
-                }}
-              />
-            </div>
-          ) : null}
           <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3 pt-2">
             {showAdminUserPreview ? (
               <div className="px-1 pb-1">
@@ -174,6 +162,16 @@ export function AppHeader({
             {showRegisteredPass ? (
               <div className="px-1 pb-1">
                 <NightPassDeviceStrip compact pass={nightPass} showDisconnect={false} />
+              </div>
+            ) : showUnsignedPassLogin ? (
+              <div className="px-1 pb-1">
+                <NightPassConnectStrip
+                  onConnect={() => {
+                    closeMenu();
+                    if (nightPass.viewer === "owner") openOwnerRegister();
+                    else openRegister();
+                  }}
+                />
               </div>
             ) : null}
             <Link

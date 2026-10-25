@@ -93,6 +93,17 @@ export function gemHuntPublicFromDb(eventSettings?: DbFile["eventSettings"] | nu
   return eventSettings?.gemHuntPublic === true;
 }
 
+/** Default on — only an explicit `false` in DB/catalog hides the countdown UI. */
+export function countdownBannerFromDb(eventSettings?: DbFile["eventSettings"] | null): boolean {
+  return eventSettings?.countdownBanner !== false;
+}
+
+export function countdownBannerFromCatalog(
+  eventSettings?: Catalog["eventSettings"] | null,
+): boolean {
+  return eventSettings?.countdownBanner !== false;
+}
+
 export function catalogEventSettings(
   eventSettings?: DbFile["eventSettings"] | null,
 ): NonNullable<Catalog["eventSettings"]> {
@@ -100,6 +111,7 @@ export function catalogEventSettings(
     addressReveal: addressRevealScheduleFromDb(eventSettings),
     addHouseCutoff: addHouseCutoffScheduleFromDb(eventSettings),
     gemHuntPublic: gemHuntPublicFromDb(eventSettings),
+    countdownBanner: countdownBannerFromDb(eventSettings),
   };
 }
 

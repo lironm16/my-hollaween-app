@@ -5,6 +5,7 @@ import { AdminAddHouseCutoffSettings } from "@/components/admin-add-house-cutoff
 import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { AdminGemHuntPublicSettings } from "@/components/admin-gem-hunt-public-settings";
+import { AdminCountdownBannerSettings } from "@/components/admin-countdown-banner-settings";
 import { AdminNightPassesSettings } from "@/components/admin-night-passes-settings";
 import { AdminHelpDetails, AdminSection } from "@/components/admin-section";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -121,8 +122,9 @@ export function AdminDryRunPanel() {
         </AdminHelpDetails>
       </AdminSection>
 
-      <AdminSection title="לוח זמנים לאירוע" summary="חיתוך הוספה · חשיפת כתובות · קודי כניסה">
+      <AdminSection title="לוח זמנים לאירוע" summary="ספירה לאחור · חיתוך הוספה · חשיפת כתובות · קודי כניסה">
         <div className="space-y-2">
+          <AdminCountdownBannerSettings embedded />
           <AdminAddHouseCutoffSettings embedded />
           <AdminAddressRevealSettings embedded />
           <AdminNightPassesSettings embedded />

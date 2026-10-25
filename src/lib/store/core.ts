@@ -217,7 +217,8 @@ export function normalizeDb(db: DbFile): DbFile {
       db.eventSettings?.updatedAt ||
       db.eventSettings?.addressReveal ||
       db.eventSettings?.addHouseCutoff ||
-      db.eventSettings?.gemHuntPublic === true
+      db.eventSettings?.gemHuntPublic === true ||
+      db.eventSettings?.countdownBanner === false
         ? {
             ...(db.eventSettings.updatedAt ? { updatedAt: db.eventSettings.updatedAt } : {}),
             ...(db.eventSettings.addressReveal
@@ -233,6 +234,9 @@ export function normalizeDb(db: DbFile): DbFile {
               : {}),
             ...(db.eventSettings.gemHuntPublic === true
               ? { gemHuntPublic: true as const }
+              : {}),
+            ...(db.eventSettings.countdownBanner === false
+              ? { countdownBanner: false as const }
               : {}),
           }
         : undefined,

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   catalogEventSettings,
+  countdownBannerFromCatalog,
+  countdownBannerFromDb,
   mergeAddressRevealSchedule,
   normalizeAddressRevealSchedule,
 } from "@/lib/event-settings";
@@ -20,6 +22,14 @@ describe("event settings", () => {
       hour: 23,
       minute: 0,
     });
+  });
+
+  it("countdown banner defaults on unless explicitly false", () => {
+    assert.equal(countdownBannerFromDb(undefined), true);
+    assert.equal(countdownBannerFromDb({}), true);
+    assert.equal(countdownBannerFromDb({ countdownBanner: false }), false);
+    assert.equal(countdownBannerFromCatalog({ countdownBanner: false }), false);
+    assert.equal(countdownBannerFromCatalog(undefined), true);
   });
 
   it("reads gem hunt public flag from db", () => {
@@ -46,6 +56,7 @@ describe("event settings", () => {
           minute: config.addHouseCutoff.minute,
         },
         gemHuntPublic: false,
+        countdownBanner: true,
       },
     );
   });
