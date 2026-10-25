@@ -9,34 +9,47 @@ import { cn } from "@/lib/utils";
 
 const STEPS = [
   {
+    title: "מקבלים קוד מבעלי בית",
+    body: "קוד כניסה בן **8 תווים** (לא קוד עריכה). בעלי הבית מעתיקים אותו מהמסך «חיבור מכשירים» ושולחים אליכם.",
+  },
+  {
     title: "«יש לי קוד כניסה» במפה",
-    body: "אם עדיין לא רשומים, מופיעה פס כהה בראש המפה. לחצו יש לי קוד כניסה.",
+    body: "אם המכשיר עדיין לא מחובר, יופיע פס בראש המפה. לחצו **«יש לי קוד כניסה»**, הזינו קוד + שם + טלפון, ואז **«הרשמה»**.",
     image: helpImage("event-device-visitor-banner.png"),
     imageAlt: "פס יש לי קוד כניסה בראש המפה",
   },
   {
-    title: "הרשמת המכשיר",
-    body: "הזינו את קוד הכניסה בן 8 התווים (מקבלים מבעלי בית), שם וטלפון נייד. הרשמה — החלון נסגר והמפה מתעדכנת.",
+    title: "טופס ההרשמה",
+    body: "אחרי «הרשמה» החלון נסגר והמפה מתעדכנת. אותו קוד אפשר להשתמש שוב רק **במכשיר אחד** בכל פעם — התנתקות משחררת את המכשיר, לא מוחקת את הקוד.",
     image: helpImage("event-device-visitor-register.png"),
-    imageAlt: "טופס הרשמת מכשיר עם קוד כניסה שם וטלפון",
+    imageAlt: "טופס הרשמת מכשיר עם קוד כניסה",
   },
   {
     title: "אחרי החיבור",
-    body: `בתפריט ☰ תראו מכשיר מחובר ושם. התנתקות משחררת רק את המכשיר הזה — קוד הכניסה נשאר תקף לכניסה מחדש. ${NIGHT_PASS_REVEAL_HINT}`,
+    body: `בתפריט ☰ תראו «מכשיר מחובר» ואת השם שהזנתם. **התנתק** מסיר רק את המכשיר הזה — אפשר להירשם שוב עם אותו קוד. ${NIGHT_PASS_REVEAL_HINT}`,
     image: helpImage("event-device-visitor-menu.png"),
-    imageAlt: "פס מכשיר מחובר בתפריט הצד",
+    imageAlt: "פס מכשיר מחובר בתפריט",
   },
 ] as const;
 
 export default function EventDeviceVisitorHelpPage() {
   return (
-    <HelpShell title="חיבור מכשיר — מבקרים">
-      <p className="mb-4 text-lg leading-relaxed text-violet-100">
-        קוד כניסה מבעלי בית פותח כתובות ופרטי ביקור במפה במכשיר שלכם.
-      </p>
+    <HelpShell title="יש לי קוד כניסה — אורחים">
+      <div className="mb-5 space-y-3 rounded-2xl bg-orange-500/10 p-4 ring-1 ring-orange-400/30">
+        <p className="text-lg leading-relaxed text-orange-50">
+          קוד כניסה פותח **כתובות ופרטי ביקור** של בתים פרטיים **במכשיר שלכם** — לא צריך להוריד אפליקציה מחנות.
+        </p>
+      </div>
       <ol className="space-y-6">
         {STEPS.map((step, i) => (
-          <HelpStep key={step.title} n={i + 1} title={step.title} body={step.body} image={step.image} imageAlt={step.imageAlt} />
+          <HelpStep
+            key={step.title}
+            n={i + 1}
+            title={step.title}
+            body={step.body}
+            image={step.image}
+            imageAlt={step.imageAlt}
+          />
         ))}
       </ol>
       <Link
@@ -46,7 +59,7 @@ export default function EventDeviceVisitorHelpPage() {
           "mt-6 w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
         )}
       >
-        בעלי בתים — חיבור מכשירים
+        בעלי בתים — איך מחלקים קודים?
       </Link>
     </HelpShell>
   );

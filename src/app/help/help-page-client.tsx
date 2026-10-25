@@ -4,9 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { ChevronLeft } from "lucide-react";
 import { HelpShell } from "@/components/help-shell";
-import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminSession } from "@/hooks/use-admin-session";
-import { catalogScopeOf } from "@/lib/catalog-sync";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
 
@@ -63,52 +61,26 @@ const EVENT_DEVICE_QUESTIONS: HelpLink[] = [
 ];
 
 export type HelpPageClientProps = {
-  /** SSR snapshot: show event-device help when night-pass catalog is active. */
   eventDeviceHelpFromServer: boolean;
-  /** SSR snapshot: gem hunt help for visitors (admins always see hunt UI client-side). */
   gemHuntPublicFromServer: boolean;
 };
-
-function showEventDeviceHelp(
-  catalogScope: string | undefined,
-  eventDeviceHelpFromServer: boolean,
-): boolean {
-  if (catalogScope !== undefined) {
-    return catalogScope !== "legacy";
-  }
-  return eventDeviceHelpFromServer;
-}
-
-function gemHuntHelpVisible(
-  isAdmin: boolean,
-  catalogGemPublic: boolean | undefined,
-  gemHuntPublicFromServer: boolean,
-): boolean {
-  const gemPublic =
-    catalogGemPublic === true || (catalogGemPublic === undefined && gemHuntPublicFromServer);
-  return gemHuntVisible(isAdmin, gemPublic);
-}
 
 export function HelpPageClient({
   eventDeviceHelpFromServer,
   gemHuntPublicFromServer,
 }: HelpPageClientProps) {
   const { admin } = useAdminSession();
-  const { catalog } = useCatalog();
 
   const items = useMemo(() => {
     const list = [...QUESTIONS];
-    const scope = catalog?.scope !== undefined ? catalogScopeOf(catalog) : undefined;
-    if (showEventDeviceHelp(scope, eventDeviceHelpFromServer)) {
+    if (eventDeviceHelpFromServer) {
       list.splice(2, 0, ...EVENT_DEVICE_QUESTIONS);
     }
-    if (
-      gemHuntHelpVisible(admin, catalog?.eventSettings?.gemHuntPublic, gemHuntPublicFromServer)
-    ) {
+    if (gemHuntVisible(admin, gemHuntPublicFromServer)) {
       list.push({ question: GEM_GAME_TITLE_HE, href: "/help/gem-hunt" });
     }
     return list;
-  }, [admin, catalog, eventDeviceHelpFromServer, gemHuntPublicFromServer]);
+  }, [admin, eventDeviceHelpFromServer, gemHuntPublicFromServer]);
 
   return (
     <HelpShell title="שאלות ותשובות" backHref="/" backLabel="מפה">
