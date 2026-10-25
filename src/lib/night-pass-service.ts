@@ -426,10 +426,10 @@ export async function mayManageHouseDevices(
   options?: { admin?: boolean },
 ): Promise<boolean> {
   if (options?.admin) return true;
+  if (await ownerMayEdit(houseId)) return true;
   if (await primaryOwnerMayManage(houseId)) return true;
   const record = await ensureHouseAccess(houseId);
   if (!accessRecordLacksOwner(record)) return false;
-  if (await ownerMayEdit(houseId)) return true;
   return Boolean(await deviceSessionOnHouse(houseId));
 }
 

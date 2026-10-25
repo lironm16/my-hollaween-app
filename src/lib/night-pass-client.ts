@@ -219,9 +219,10 @@ export function refreshNightPassState(options?: { force?: boolean }): Promise<Ni
         if (registrationLost) {
           void fetch("/api/night-passes/disconnect", { method: "POST", cache: "no-store" });
           reconcileCatalogRemovedWithServer();
+          // Reset / taken invalidate the family code on this device — not owner-initiated slot removal.
           if (lost?.houseId && lost.reason === "reset") {
             clearOwnedHouseEditCode(lost.houseId);
-          } else if (lost?.houseId && (lost.reason === "removed" || lost.reason === "taken")) {
+          } else if (lost?.houseId && lost.reason === "taken") {
             clearOwnedHouseEditCode(lost.houseId);
           }
           if (suppressNextPassLostEvent) {

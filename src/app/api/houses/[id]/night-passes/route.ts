@@ -56,10 +56,15 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       : ("owner" as const);
   const registeredOnHouse = Boolean(mySession);
   const registeredOwner = registeredOnHouse && sessionIsOwner(mySession);
-  const editCookieRecovery = noOwners && !registeredOnHouse && (await ownerMayEdit(id));
+  const houseEditUnlock = await ownerMayEdit(id);
+  const editCookieRecovery = noOwners && !registeredOnHouse && houseEditUnlock;
   const canPromoteOwner =
-    admin || registeredOwner || (registeredOnHouse && noOwners) || (canManageDevices && noOwners);
-  const canRemoveDevices = admin || registeredOnHouse || editCookieRecovery;
+    admin ||
+    registeredOwner ||
+    (registeredOnHouse && noOwners) ||
+    (canManageDevices && noOwners) ||
+    houseEditUnlock;
+  const canRemoveDevices = admin || registeredOnHouse || houseEditUnlock || editCookieRecovery;
   return NextResponse.json(
     {
       enabled: settings.enabled,
@@ -71,8 +76,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         canRemoveDevices,
         canRemoveEditorDevicesOnly: admin
           ? false
-          : registeredOnHouse && !registeredOwner && !noOwners,
-        canResetCode: canManageDevices && (registeredOwner || noOwners),
+          : registeredOnHouse && !registeredOwner && !noOwners && !houseEditUnlock,
+        canResetCode: houseEditUnlock || (canManageDevices && (registeredOwner || noOwners)),
         canShareInvite: true,
       },
     },

@@ -119,14 +119,13 @@ export async function ownerMayEdit(id: string) {
   return cookieEntryValid(entry);
 }
 
-/** Reset codes, remove devices, promote to owner — session role owner on this house. */
+/** Reset codes, remove devices, promote to owner — edit unlock or owner role on this device. */
 export async function primaryOwnerMayManage(id: string): Promise<boolean> {
   const needle = canonicalHouseId(id);
   if (!needle) return false;
   if (!(await getHouse(needle))) return false;
+  if (await ownerMayEdit(needle)) return true;
   const settings = await readNightPassSettings();
-  if (!settings.enabled) {
-    return ownerMayEdit(needle);
-  }
+  if (!settings.enabled) return false;
   return deviceHasOwnerRoleOnHouse(needle);
 }
