@@ -14,7 +14,7 @@ export function NightPassDeviceStrip({
   className,
   showDisconnect = true,
 }: {
-  pass: Pick<NightPassState, "holderName" | "holderPhone" | "houseName">;
+  pass: Pick<NightPassState, "holderName" | "holderPhone" | "houseName" | "accessRole">;
   compact?: boolean;
   className?: string;
   showDisconnect?: boolean;
@@ -22,9 +22,12 @@ export function NightPassDeviceStrip({
   const [busy, setBusy] = useState(false);
 
   async function disconnect() {
+    const ownerRole = pass.accessRole !== "editor";
     if (
       !window.confirm(
-        "להתנתק?\n\nהמכשיר יוסר מרשימת המכשירים המאושרים. אפשר להירשם שוב מאוחר יותר (בעל בית — חיבור לאירוע; אורח — עם קוד כניסה).",
+        ownerRole
+          ? "להתנתק?\n\nהמכשיר יוסר מרשימת המכשירים המאושרים. אפשר להירשם שוב מאוחר יותר (בעל בית — חיבור לאירוע; אורח — עם קוד כניסה)."
+          : "להתנתק מהמכשיר הזה?\n\nקוד הכניסה נשאר רשום — אפשר להיכנס שוב עם אותו קוד. מכשיר אחר לא יושפע.",
       )
     ) {
       return;
@@ -32,8 +35,13 @@ export function NightPassDeviceStrip({
     setBusy(true);
     const ok = await disconnectNightPassOnDevice();
     setBusy(false);
-    if (ok) toast.success("המכשיר התנתק והוסר מהרשימה.");
-    else toast.error("ההתנתקות נכשלה. נסו שוב.");
+    if (ok) {
+      toast.success(
+        ownerRole
+          ? "המכשיר התנתק והוסר מהרשימה."
+          : "המכשיר התנתק. קוד הכניסה עדיין תקף לכניסה מחדש.",
+      );
+    } else toast.error("ההתנתקות נכשלה. נסו שוב.");
   }
 
   const subtitle = compact

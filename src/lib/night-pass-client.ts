@@ -81,7 +81,7 @@ export function notifyNightPassSlotsChanged() {
   window.dispatchEvent(new Event(NIGHT_PASSES_SLOTS_CHANGED_EVENT));
 }
 
-/** Remove this device from the approved list and clear the pass cookie on this device. */
+/** Drop pass cookie; owners also leave the device list, editors stay paired on the server. */
 export async function disconnectNightPassOnDevice(): Promise<boolean> {
   try {
     const res = await fetch("/api/night-passes/disconnect", {
