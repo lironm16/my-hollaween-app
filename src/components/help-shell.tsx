@@ -6,8 +6,6 @@ import { ChevronDown } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { buttonVariants } from "@/components/ui/button";
 import { renderHelpText } from "@/lib/render-help-text";
-import { appVersion } from "@/lib/app-version";
-import { fetchPublishedAppVersion, versionsDiffer } from "@/lib/sw-update";
 import { cn } from "@/lib/utils";
 import type { HelpShotHighlight } from "@/lib/help-shot-highlight";
 
@@ -22,18 +20,6 @@ export function HelpShell({
   backHref?: string;
   backLabel?: string;
 }) {
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const published = await fetchPublishedAppVersion();
-      if (cancelled || !published || !versionsDiffer(appVersion(), published)) return;
-      window.location.reload();
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
