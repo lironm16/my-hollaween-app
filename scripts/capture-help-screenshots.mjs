@@ -417,7 +417,7 @@ async function adminLoginForCapture(page) {
 }
 
 async function captureGemGuides(page) {
-  console.log("gem guides");
+  console.log("gem place guide (owners)");
   mkdirSync(join(outDir, "gem"), { recursive: true });
 
   await adminLoginForCapture(page);
@@ -434,65 +434,6 @@ async function captureGemGuides(page) {
     }, houseId)) ?? "בית לדוגמה";
 
   const housePath = housePagePathFromId(houseId);
-
-  await enableGemGuideContext(page, {});
-  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
-  await waitForMap(page);
-  await resetFilters(page);
-  try {
-    await openHouseByFocus(page, BASE, houseId);
-    const sheet = page.locator(".map-house-sheet[role='dialog']");
-    await sheet.waitFor({ state: "visible", timeout: 12_000 });
-    await page.waitForTimeout(600);
-    await clipShotLocator(page, "gem/gem-find-1-map-sheet.png", sheet);
-  } catch (error) {
-    console.warn("  map sheet capture skipped — using house page header", error.message);
-  }
-
-  await page.evaluate(() => {
-    localStorage.setItem("hw-admin-preview-as-user", "1");
-    window.dispatchEvent(new Event("hw-admin-preview-as-user-changed"));
-  });
-
-  await page.goto(`${BASE}${housePath}?rehearsal=open`, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(1500);
-  await enableGemGuideContext(page, {});
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(2000);
-
-  const panel = page.locator(".gem-hunt-panel");
-  await panel.waitFor({ state: "visible", timeout: 45_000 });
-  await panel.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(300);
-  await clipShotLocator(page, "gem/gem-find-2-house-panel.png", panel);
-
-  try {
-    const houseTop = page.locator("main").first();
-    await clipShotLocator(page, "gem/gem-find-1-map-sheet.png", houseTop);
-  } catch {
-    await shot(page, "gem/gem-find-1-map-sheet.png");
-  }
-
-  const camBtn = panel.getByRole("button", { name: /מפגש|מצלמה/ });
-  await camBtn.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(200);
-  await clipShotLocator(page, "gem/gem-find-3-camera-btn.png", camBtn);
-
-  await camBtn.click();
-  const overlay = page.locator(".gem-hunt-overlay");
-  try {
-    await overlay.waitFor({ state: "visible", timeout: 12_000 });
-    await page.waitForTimeout(1200);
-    await shot(page, "gem/gem-find-4-camera-hunt.png");
-    await page.locator(".gem-hunt-overlay__close").first().click({ timeout: 5000 });
-  } catch {
-    await shot(page, "gem/gem-find-4-camera-hunt.png");
-  }
-
-  await page.evaluate(() => {
-    localStorage.removeItem("hw-admin-preview-as-user");
-    window.dispatchEvent(new Event("hw-admin-preview-as-user-changed"));
-  });
 
   await enableGemGuideContext(page, { ownedHouseId: houseId, houseName });
   await page.goto(`${BASE}${housePath}?rehearsal=open`, { waitUntil: "domcontentloaded" });

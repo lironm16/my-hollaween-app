@@ -191,16 +191,7 @@ export default function GemHuntHelpPage() {
         </HelpExpandable>
       </div>
 
-      <div className="mt-6 flex flex-col gap-2">
-        <Link
-          href="/help/gem-find-at-house"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "lg" }),
-            "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
-          )}
-        >
-          מדריך צילומי: מציאת שדון בבית
-        </Link>
+      <div className="mt-6">
         <Link
           href="/help/gem-place-demon"
           className={cn(
@@ -208,7 +199,7 @@ export default function GemHuntHelpPage() {
             "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
           )}
         >
-          מדריך צילומי: מיקום השדון (בעלים)
+          מיקום השדון — בעלי בתים (מדריך צילומי)
         </Link>
       </div>
     </HelpShell>

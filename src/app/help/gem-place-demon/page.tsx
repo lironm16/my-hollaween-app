@@ -51,16 +51,7 @@ export default function GemPlaceDemonHelpPage() {
           />
         ))}
       </ol>
-      <div className="mt-6 flex flex-col gap-2">
-        <Link
-          href="/help/gem-find-at-house"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "lg" }),
-            "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
-          )}
-        >
-          איך מבקרים מוצאים שדון בבית?
-        </Link>
+      <div className="mt-6">
         <Link
           href="/help/event-device-owner"
           className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
