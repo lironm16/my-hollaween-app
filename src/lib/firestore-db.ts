@@ -1,3 +1,4 @@
+import { FieldValue } from "firebase-admin/firestore";
 import {
   firestoreConfigured,
   housesCollection,
@@ -341,10 +342,11 @@ export async function readFirestoreCatalog(): Promise<Omit<DbFile, "pushSubscrip
   if (!firestoreConfigured()) return null;
   try {
     await resolveAdminFirestore();
-    const [housesSnap, pushSettingsSnap, catalogMetaSnap] = await Promise.all([
+    const [housesSnap, pushSettingsSnap, catalogMetaSnap, eventSettingsSnap] = await Promise.all([
       housesCollection().get(),
       pushAlertsEnabled() ? metaDoc("pushSettings").get() : Promise.resolve(null),
       metaDoc("catalog").get(),
+      metaDoc("eventSettings").get(),
     ]);
 
     const houses: House[] = [];
@@ -372,10 +374,15 @@ export async function readFirestoreCatalog(): Promise<Omit<DbFile, "pushSubscrip
 
     if (!updatedAt) updatedAt = new Date().toISOString();
 
+    const eventSettings = eventSettingsSnap?.exists
+      ? (eventSettingsSnap.data() as DbFile["eventSettings"])
+      : undefined;
+
     return {
       updatedAt,
       houses,
       ...(pushSettings?.templates ? { pushSettings } : {}),
+      ...(eventSettings ? { eventSettings } : {}),
     };
   } catch (error) {
     console.error("[firestore] catalog read failed", error);
@@ -621,7 +628,16 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
 
   const eventChanged = eventSettingsChanged(prev?.eventSettings, db.eventSettings);
   if (eventChanged && db.eventSettings) {
-    await metaDoc("eventSettings").set(db.eventSettings, { merge: true });
+    const payload = { ...db.eventSettings };
+    const clearGemHuntPublic =
+      prev?.eventSettings?.gemHuntPublic === true && payload.gemHuntPublic !== true;
+    if (clearGemHuntPublic) {
+      delete payload.gemHuntPublic;
+    }
+    await metaDoc("eventSettings").set(payload, { merge: true });
+    if (clearGemHuntPublic) {
+      await metaDoc("eventSettings").update({ gemHuntPublic: FieldValue.delete() });
+    }
     const eventUpdatedAt = db.eventSettings.updatedAt ?? db.updatedAt;
     eventSettingsMetaMem = { updatedAt: eventUpdatedAt };
     eventSettingsMetaMemAt = Date.now();

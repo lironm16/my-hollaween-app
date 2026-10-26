@@ -431,6 +431,21 @@ function isStaleSnapshot(db: DbFile) {
   return Boolean(live && stamp(live) > stamp(db));
 }
 
+function pickNewestEventSettings(...candidates: Array<DbFile | null | undefined>) {
+  let best: DbFile["eventSettings"] | undefined;
+  let bestStamp = 0;
+  for (const candidate of candidates) {
+    const settings = candidate?.eventSettings;
+    if (!settings) continue;
+    const at = stamp({ updatedAt: settings.updatedAt ?? "" });
+    if (at >= bestStamp) {
+      bestStamp = at;
+      best = settings;
+    }
+  }
+  return best;
+}
+
 function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | null {
   let best: DbFile | null = null;
   const present: DbFile[] = [];
@@ -449,6 +464,7 @@ function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | n
   }
   if (!best) return null;
   const pushSettings = pickPushSettings(...candidates) ?? best.pushSettings;
+  const eventSettings = pickNewestEventSettings(...present);
   // Keep every subscription across overlapping writes — a newer house save must not
   // drop push subscribers that lived in an older snapshot.
   const pushSubscriptions = mergePushSubscriptions(
@@ -458,6 +474,7 @@ function pickNewest(...candidates: Array<DbFile | null | undefined>): DbFile | n
     ...best,
     pushSubscriptions,
     ...(pushSettings ? { pushSettings } : {}),
+    ...(eventSettings ? { eventSettings } : {}),
   };
 }
 

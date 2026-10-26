@@ -14,7 +14,12 @@ import {
 } from "@/lib/event-settings";
 import { parseClockMinutes } from "@/lib/hours";
 import { firestoreConfigured, readFirestoreEventSettings } from "@/lib/firestore-db";
-import type { AddHouseCutoffSchedule, AddressRevealSchedule, EventOpenHoursSchedule } from "@/lib/types";
+import type {
+  AddHouseCutoffSchedule,
+  AddressRevealSchedule,
+  DbFile,
+  EventOpenHoursSchedule,
+} from "@/lib/types";
 import { getGlobalDb, getMem, loadDb, runSyncedWrite } from "./core";
 
 export type AdminAddressRevealSettings = {
@@ -131,12 +136,18 @@ export async function getAdminGemHuntPublicSettings(): Promise<AdminGemHuntPubli
 
 export async function saveAdminGemHuntPublicSettings(enabled: boolean): Promise<AdminGemHuntPublicSettings> {
   await runSyncedWrite((db) => {
-    db.eventSettings = {
-      ...(db.eventSettings ?? {}),
+    const prev = db.eventSettings ?? {};
+    const next: NonNullable<DbFile["eventSettings"]> = {
+      ...prev,
       updatedAt: new Date().toISOString(),
-      gemHuntPublic: enabled,
     };
-    db.updatedAt = new Date().toISOString();
+    if (enabled) {
+      next.gemHuntPublic = true;
+    } else {
+      delete next.gemHuntPublic;
+    }
+    db.eventSettings = next;
+    db.updatedAt = next.updatedAt!;
   });
   return getAdminGemHuntPublicSettings();
 }
