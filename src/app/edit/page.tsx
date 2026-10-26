@@ -99,7 +99,8 @@ function EditPageContent() {
   const localEditCode = picked ? localHouseEditCodeFor(picked.id) : undefined;
   const pickedRemovedFromCatalog = useCatalogRemoved(picked?.id);
   const adminEditCode = picked && admin ? adminHouses.find((item) => item.id === picked.id)?.editCode : undefined;
-  const needsCode = Boolean(picked) && !admin && !localEditCode && !house;
+  /** Show code field whenever this device has no valid saved code (even if owner session loaded preview). */
+  const needsCode = Boolean(picked) && !admin && !localEditCode;
 
   useEffect(() => {
     if (!focusId || picked) return;
@@ -295,6 +296,11 @@ function EditPageContent() {
           </div>
           {needsCode ? (
             <div className="space-y-1.5 border-t border-orange-500/15 pt-3">
+              {ownedMatch ? (
+                <p className="text-base text-amber-200/95">
+                  הקוד שמור במכשיר אינו תקף — הזינו קוד עריכה חדש מבעל הבית.
+                </p>
+              ) : null}
               <Label htmlFor="edit-code">קוד עריכה</Label>
               <Input
                 id="edit-code"
@@ -325,10 +331,6 @@ function EditPageContent() {
           ) : picked && ownedMatch && localEditCode ? (
             <p className="border-t border-orange-500/15 pt-3 text-base text-emerald-300">
               הבית שמור במכשיר הזה — נפתח לעריכה.
-            </p>
-          ) : picked && ownedMatch ? (
-            <p className="border-t border-orange-500/15 pt-3 text-base text-amber-200/95">
-              הקוד שמור במכשיר אינו תקף — הזינו קוד עריכה חדש מבעל הבית.
             </p>
           ) : null}
         </section>
