@@ -252,8 +252,6 @@ describe("catalogDeltaSince", () => {
   it("uses the older of catalog and event settings stamps", () => {
     const since = catalogDeltaSince({
       updatedAt: "2026-10-31T18:00:00.000Z",
-      neighborhood: "שכונה",
-      houses: [],
       eventSettings: {
         updatedAt: "2026-10-31T12:00:00.000Z",
         addressReveal: { hour: 12, minute: 0 },
