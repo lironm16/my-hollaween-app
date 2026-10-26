@@ -9,6 +9,7 @@ import {
   catalogEventSettings,
   eventSettingsStamp,
 } from "@/lib/event-settings";
+import { needsEventSettingsCatchUpDelta } from "@/lib/catalog-sync";
 import {
   CATALOG_META_POLL_TTL_MS,
   firestoreConfigured,
@@ -75,14 +76,39 @@ export async function getCatalog(): Promise<Catalog> {
   return catalogMem;
 }
 
-function emptyCatalogDelta(updatedAt: string, houseCount: number): CatalogDelta {
+function emptyCatalogDelta(
+  updatedAt: string,
+  houseCount: number,
+  extras?: Pick<CatalogDelta, "eventSettings">,
+): CatalogDelta {
   return {
     updatedAt,
     neighborhood: config.neighborhood,
     houses: [],
     removed: [],
     houseCount,
+    ...extras,
   };
+}
+
+async function emptyDeltaEventSettingsCatchUp(
+  sinceMs: number,
+  catalogUpdatedAt: string,
+  eventSettingsUpdatedAt: string | undefined,
+): Promise<Pick<CatalogDelta, "eventSettings">> {
+  if (
+    !needsEventSettingsCatchUpDelta({ sinceMs, catalogUpdatedAt, eventSettingsUpdatedAt })
+  ) {
+    return {};
+  }
+  const mem = getMem();
+  const global = getGlobalDb();
+  let raw = mem?.eventSettings ?? global?.eventSettings ?? null;
+  if (!raw?.updatedAt && firestoreConfigured()) {
+    raw = (await readFirestoreEventSettings()) ?? raw;
+  }
+  if (!raw) return {};
+  return { eventSettings: catalogEventSettings(raw) };
 }
 
 /** Pure gate check for tests — true when client `since` is already up to date. */
@@ -258,9 +284,15 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
         removedIds: [],
       })
     ) {
+      const catchUp = await emptyDeltaEventSettingsCatchUp(
+        sinceMs,
+        mem.updatedAt,
+        eventSettingsUpdatedAt,
+      );
       return emptyCatalogDelta(
         mem.updatedAt,
         catalogMem?.houseCount ?? countPublishedHouses(mem.houses),
+        catchUp,
       );
     }
   }
@@ -283,7 +315,12 @@ async function tryCatalogDeltaGate(since: string, sinceMs: number): Promise<Cata
           removedIds: removedForSince,
         })
       ) {
-        return emptyCatalogDelta(meta.updatedAt, await resolveAuthoritativeHouseCount());
+        const catchUp = await emptyDeltaEventSettingsCatchUp(
+          sinceMs,
+          meta.updatedAt,
+          eventSettingsUpdatedAt,
+        );
+        return emptyCatalogDelta(meta.updatedAt, await resolveAuthoritativeHouseCount(), catchUp);
       }
     }
   }

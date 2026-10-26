@@ -72,6 +72,37 @@ function stamp(value: { updatedAt: string }) {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * Cursor for `GET /api/catalog?since=` — must not advance past {@link Catalog.eventSettings}
+ * when only house rows bumped `catalog.updatedAt` (otherwise gemHuntPublic deltas are skipped).
+ */
+export function catalogDeltaSince(
+  catalog: Pick<Catalog, "updatedAt" | "eventSettings"> | null | undefined,
+): string | undefined {
+  if (!catalog?.updatedAt) return undefined;
+  const stamps = [stamp({ updatedAt: catalog.updatedAt })];
+  const eventAt = catalog.eventSettings?.updatedAt;
+  if (typeof eventAt === "string" && eventAt.trim()) {
+    const eventMs = stamp({ updatedAt: eventAt });
+    if (eventMs > 0) stamps.push(eventMs);
+  }
+  const minMs = Math.min(...stamps);
+  return new Date(minMs).toISOString();
+}
+
+/** Empty delta must still ship event settings when catalog meta moved after event settings. */
+export function needsEventSettingsCatchUpDelta(input: {
+  sinceMs: number;
+  catalogUpdatedAt: string;
+  eventSettingsUpdatedAt?: string;
+}): boolean {
+  const catMs = Date.parse(input.catalogUpdatedAt);
+  const evMs = Date.parse(input.eventSettingsUpdatedAt ?? "");
+  if (!Number.isFinite(catMs) || !Number.isFinite(evMs)) return false;
+  if (catMs <= evMs) return false;
+  return input.sinceMs >= catMs;
+}
+
 /** Keep every house across overlapping writes. Newer `updatedAt` wins per id. */
 export function mergeHouses<T extends { id: string; updatedAt: string }>(
   latest: T[],

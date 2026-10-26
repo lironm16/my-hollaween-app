@@ -258,6 +258,8 @@ export type Catalog = {
   pushTemplates?: Partial<Record<string, CatalogPushTemplate>>;
   /** Effective reveal schedule for clients (defaults merged with admin override). */
   eventSettings?: {
+    /** When event settings last changed — used for catalog `?since=` (can lag catalog.updatedAt). */
+    updatedAt?: string;
     addressReveal: AddressRevealSchedule;
     addHouseCutoff: AddHouseCutoffSchedule;
     /** When true, non-admin users see gem hunt UI (default false). */

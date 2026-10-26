@@ -15,6 +15,7 @@ import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
 import {
   catalogScopeOf,
   hiddenCountFields,
+  catalogDeltaSince,
   mergeCatalogDelta,
   normalizeCatalogDelta,
   syncCatalog,
@@ -546,7 +547,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         cacheMeta,
         resolveServerHouseCount(catalogRef.current),
       );
-    const since = needsFullRefresh ? undefined : catalogRef.current?.updatedAt;
+    const since = needsFullRefresh ? undefined : catalogDeltaSince(catalogRef.current);
     const expectedServerCount =
       resolveServerHouseCount(catalogRef.current) ?? cacheMeta?.houseCount ?? null;
     const localCount = localCatalogHouseCount(catalogRef.current);

@@ -172,6 +172,7 @@ export function catalogEventSettings(
   eventSettings?: DbFile["eventSettings"] | null,
 ): NonNullable<Catalog["eventSettings"]> {
   return {
+    ...(eventSettings?.updatedAt ? { updatedAt: eventSettings.updatedAt } : {}),
     addressReveal: addressRevealScheduleFromDb(eventSettings),
     addHouseCutoff: addHouseCutoffScheduleFromDb(eventSettings),
     gemHuntPublic: gemHuntPublicFromDb(eventSettings),

@@ -47,6 +47,7 @@ describe("event settings", () => {
         addressReveal: { hour: 18, minute: 30 },
       }),
       {
+        updatedAt: "2026-10-01T00:00:00.000Z",
         addressReveal: { hour: 18, minute: 30 },
         addHouseCutoff: {
           year: config.addHouseCutoff.year,
@@ -57,6 +58,7 @@ describe("event settings", () => {
         },
         gemHuntPublic: false,
         countdownBanner: true,
+        eventOpenHours: catalogEventSettings({}).eventOpenHours,
       },
     );
   });

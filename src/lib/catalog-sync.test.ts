@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  catalogDeltaSince,
   mergeCatalogDelta,
   mergeHouses,
   mergePushSubscriptions,
+  needsEventSettingsCatchUpDelta,
   normalizeCatalogDelta,
   syncCatalog,
 } from "@/lib/catalog-sync";
@@ -243,5 +245,46 @@ describe("night-pass scope boundaries", () => {
   it("same-scope merges keep their additive behaviour", () => {
     const next = syncCatalog({ ...full, scope: "public" }, publicOnly);
     assert.equal(next.houses.length, 3);
+  });
+});
+
+describe("catalogDeltaSince", () => {
+  it("uses the older of catalog and event settings stamps", () => {
+    const since = catalogDeltaSince({
+      updatedAt: "2026-10-31T18:00:00.000Z",
+      neighborhood: "שכונה",
+      houses: [],
+      eventSettings: {
+        updatedAt: "2026-10-31T12:00:00.000Z",
+        addressReveal: { hour: 12, minute: 0 },
+        addHouseCutoff: { year: 2026, month: 10, day: 30, hour: 23, minute: 59 },
+        gemHuntPublic: true,
+      },
+    });
+    assert.equal(since, "2026-10-31T12:00:00.000Z");
+  });
+});
+
+describe("needsEventSettingsCatchUpDelta", () => {
+  it("is true when the client cursor jumped past a missed event-settings write", () => {
+    assert.equal(
+      needsEventSettingsCatchUpDelta({
+        sinceMs: Date.parse("2026-10-31T18:00:00.000Z"),
+        catalogUpdatedAt: "2026-10-31T18:00:00.000Z",
+        eventSettingsUpdatedAt: "2026-10-31T12:00:00.000Z",
+      }),
+      true,
+    );
+  });
+
+  it("is false when event settings are newer than catalog", () => {
+    assert.equal(
+      needsEventSettingsCatchUpDelta({
+        sinceMs: Date.parse("2026-10-31T18:00:00.000Z"),
+        catalogUpdatedAt: "2026-10-31T12:00:00.000Z",
+        eventSettingsUpdatedAt: "2026-10-31T18:00:00.000Z",
+      }),
+      false,
+    );
   });
 });
