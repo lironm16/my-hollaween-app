@@ -57,7 +57,7 @@ export default function GemHuntHelpPage() {
           </div>
         </HelpExpandable>
 
-        <HelpExpandable title="איפה רואים שדונים?" defaultOpen>
+        <HelpExpandable title="איפה רואים שדונים?">
           <ul className="list-disc space-y-2 pr-5 text-lg leading-relaxed text-orange-50">
             <li>
               <HelpText>
