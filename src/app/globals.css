@@ -2115,6 +2115,38 @@
   100% { inset-inline-start: 110%; transform: translateY(-8px) rotate(-8deg); }
 }
 
+/* Add-house hours: always open (start) left, close (end) right — page is RTL. */
+.hours-range-row {
+  direction: ltr;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.hours-range-row__label {
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: rgb(196 181 253);
+  text-align: start;
+}
+
+.hours-range-row__sep {
+  align-self: center;
+  padding-bottom: 0.625rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  color: rgb(196 181 253);
+}
+
+.hours-range-row__remove {
+  align-self: center;
+  padding-bottom: 0.375rem;
+}
+
 /* Shared time fields — visible native input (Safari-friendly). */
 .time-field-wrap {
   width: 100%;
@@ -2149,6 +2181,8 @@ input[type="time"].filter-time-input {
 input[type="time"].filter-time-input::-webkit-datetime-edit,
 input[type="time"].filter-time-input::-webkit-datetime-edit-fields-wrapper {
   display: flex;
+  flex-direction: row;
+  direction: ltr;
   align-items: center;
   justify-content: center;
   width: 100%;

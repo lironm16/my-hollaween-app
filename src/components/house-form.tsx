@@ -710,8 +710,9 @@ export function HouseForm({
       <FormSection title="שעות ב־31 באוקטובר">
         <div className="space-y-2">
           {hourWindows.map((window, index) => (
-            <div key={`hours-${index}`} className="flex min-w-0 items-center gap-2">
-              <div className="min-w-0 flex-1">
+            <div key={`hours-${index}`} className="hours-range-row" dir="ltr">
+              <div className="min-w-0">
+                <p className="hours-range-row__label">פתיחה</p>
                 <TimeField
                   required
                   ariaLabel={`פתיחה ${index + 1}`}
@@ -719,8 +720,11 @@ export function HouseForm({
                   onChange={(from) => updateHourWindow(index, { from })}
                 />
               </div>
-              <span className="text-lg text-violet-300">–</span>
-              <div className="min-w-0 flex-1">
+              <span className="hours-range-row__sep" aria-hidden>
+                –
+              </span>
+              <div className="min-w-0">
+                <p className="hours-range-row__label">סגירה</p>
                 <TimeField
                   required
                   ariaLabel={`סגירה ${index + 1}`}
@@ -732,12 +736,14 @@ export function HouseForm({
                 <button
                   type="button"
                   aria-label="הסרת חלון שעות"
-                  className="px-1 text-xl text-violet-300 hover:text-orange-200"
+                  className="hours-range-row__remove px-1 text-xl text-violet-300 hover:text-orange-200"
                   onClick={() => removeHourWindow(index)}
                 >
                   ×
                 </button>
-              ) : null}
+              ) : (
+                <span className="hours-range-row__remove" aria-hidden />
+              )}
             </div>
           ))}
           {hourWindows.length < MAX_HOUR_WINDOWS ? (
