@@ -6216,6 +6216,27 @@ svg.leaflet-zoom-animated {
   background: rgba(18, 8, 26, 0.75) !important;
   color: #c4b5d6 !important;
 }
+.map-geo-cluster-icon {
+  background: transparent !important;
+  border: none !important;
+}
+.map-geo-cluster-bubble {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: #6d28d9;
+  border: 3px solid #fff7ed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  color: #fff7ed;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1;
+}
+.map-geo-cluster-bubble span {
+  pointer-events: none;
+}
 .pumpkin-pin-icon {
   background: transparent !important;
   border: none !important;
