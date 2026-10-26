@@ -87,6 +87,8 @@ export function HelpPageClient({
     }
     if (gemHuntVisible(admin, gemHuntPublicFromServer)) {
       list.push({ question: GEM_GAME_TITLE_HE, href: "/help/gem-hunt" });
+      list.push({ question: "איך מוצאים שדון בבית?", href: "/help/gem-find-at-house" });
+      list.push({ question: "מיקום השדון — בעלי בתים", href: "/help/gem-place-demon" });
     }
     return list;
   }, [admin, eventDeviceHelp, gemHuntPublicFromServer]);

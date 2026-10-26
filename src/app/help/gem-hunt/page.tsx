@@ -190,6 +190,27 @@ export default function GemHuntHelpPage() {
           </ul>
         </HelpExpandable>
       </div>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <Link
+          href="/help/gem-find-at-house"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+          )}
+        >
+          מדריך צילומי: מציאת שדון בבית
+        </Link>
+        <Link
+          href="/help/gem-place-demon"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
+          )}
+        >
+          מדריך צילומי: מיקום השדון (בעלים)
+        </Link>
+      </div>
     </HelpShell>
   );
 }

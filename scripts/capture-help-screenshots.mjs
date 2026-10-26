@@ -14,6 +14,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public", "images", "help");
 const BASE = process.env.BASE_URL ?? "https://my-hollaween-app.vercel.app";
 const HEADED = process.env.HEADED === "1";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "pumpkin2026";
 
 mkdirSync(join(outDir, "install"), { recursive: true });
 
@@ -370,6 +371,153 @@ async function openMyHousePassDialog(page, houseId, houseName) {
   return dialog;
 }
 
+function housePagePathFromId(houseId) {
+  const match = String(houseId).match(/^(?:בית|נק)-(\d{4,6})$/);
+  if (match) return `/house/${match[1]}`;
+  return `/house/${encodeURIComponent(houseId)}`;
+}
+
+async function enableGemGuideContext(page, { ownedHouseId, houseName } = {}) {
+  await page.evaluate(
+    ({ ownedHouseId, houseName }) => {
+      const key = "hw-catalog-cache";
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const cat = JSON.parse(raw);
+        cat.eventSettings = { ...(cat.eventSettings ?? {}), gemHuntPublic: true };
+        localStorage.setItem(key, JSON.stringify(cat));
+      }
+      localStorage.setItem(
+        "hw-night-pass-state",
+        JSON.stringify({ enabled: false, registered: false, viewer: "legacy" }),
+      );
+      if (ownedHouseId) {
+        localStorage.setItem(
+          "hw-my-houses",
+          JSON.stringify([
+            { id: ownedHouseId, name: houseName ?? "הבית שלי", editCode: "482916" },
+          ]),
+        );
+      }
+      window.dispatchEvent(new Event("hw-catalog-changed"));
+      window.dispatchEvent(new Event("hw-night-pass-changed"));
+      window.dispatchEvent(new Event("hw-owned-changed"));
+    },
+    { ownedHouseId, houseName },
+  );
+  await page.waitForTimeout(400);
+}
+
+async function adminLoginForCapture(page) {
+  await page.goto(`${BASE}/admin`, { waitUntil: "domcontentloaded" });
+  await page.getByRole("heading", { name: "כניסת מנהל" }).waitFor({ timeout: 15_000 });
+  await page.locator('input[type="password"]').fill(ADMIN_PASSWORD);
+  await page.getByRole("button", { name: "כניסה למפה" }).click();
+  await page.getByText("נכנסתם כמנהלים").waitFor({ timeout: 15_000 });
+}
+
+async function captureGemGuides(page) {
+  console.log("gem guides");
+  mkdirSync(join(outDir, "gem"), { recursive: true });
+
+  await adminLoginForCapture(page);
+
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await waitForMap(page);
+  const houseId = await firstRealHouseId(page);
+  if (!houseId) throw new Error("No house for gem guide screenshots");
+
+  const houseName =
+    (await page.evaluate((id) => {
+      const houses = JSON.parse(localStorage.getItem("hw-catalog-cache") ?? "{}").houses ?? [];
+      return houses.find((h) => h.id === id)?.name ?? "בית לדוגמה";
+    }, houseId)) ?? "בית לדוגמה";
+
+  const housePath = housePagePathFromId(houseId);
+
+  await enableGemGuideContext(page, {});
+  await page.goto(`${BASE}/?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await waitForMap(page);
+  await resetFilters(page);
+  try {
+    await openHouseByFocus(page, BASE, houseId);
+    const sheet = page.locator(".map-house-sheet[role='dialog']");
+    await sheet.waitFor({ state: "visible", timeout: 12_000 });
+    await page.waitForTimeout(600);
+    await clipShotLocator(page, "gem/gem-find-1-map-sheet.png", sheet);
+  } catch (error) {
+    console.warn("  map sheet capture skipped — using house page header", error.message);
+  }
+
+  await page.evaluate(() => {
+    localStorage.setItem("hw-admin-preview-as-user", "1");
+    window.dispatchEvent(new Event("hw-admin-preview-as-user-changed"));
+  });
+
+  await page.goto(`${BASE}${housePath}?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1500);
+  await enableGemGuideContext(page, {});
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(2000);
+
+  const panel = page.locator(".gem-hunt-panel");
+  await panel.waitFor({ state: "visible", timeout: 45_000 });
+  await panel.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await clipShotLocator(page, "gem/gem-find-2-house-panel.png", panel);
+
+  try {
+    const houseTop = page.locator("main").first();
+    await clipShotLocator(page, "gem/gem-find-1-map-sheet.png", houseTop);
+  } catch {
+    await shot(page, "gem/gem-find-1-map-sheet.png");
+  }
+
+  const camBtn = panel.getByRole("button", { name: /מפגש|מצלמה/ });
+  await camBtn.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(200);
+  await clipShotLocator(page, "gem/gem-find-3-camera-btn.png", camBtn);
+
+  await camBtn.click();
+  const overlay = page.locator(".gem-hunt-overlay");
+  try {
+    await overlay.waitFor({ state: "visible", timeout: 12_000 });
+    await page.waitForTimeout(1200);
+    await shot(page, "gem/gem-find-4-camera-hunt.png");
+    await page.locator(".gem-hunt-overlay__close").first().click({ timeout: 5000 });
+  } catch {
+    await shot(page, "gem/gem-find-4-camera-hunt.png");
+  }
+
+  await page.evaluate(() => {
+    localStorage.removeItem("hw-admin-preview-as-user");
+    window.dispatchEvent(new Event("hw-admin-preview-as-user-changed"));
+  });
+
+  await enableGemGuideContext(page, { ownedHouseId: houseId, houseName });
+  await page.goto(`${BASE}${housePath}?rehearsal=open`, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1500);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(2000);
+
+  await page.getByRole("button", { name: "פעולות" }).click();
+  const menu = page.locator('[role="menu"]');
+  await menu.getByRole("menuitem", { name: "מיקום השדון" }).waitFor({ timeout: 10_000 });
+  await page.waitForTimeout(250);
+  await clipShotLocator(page, "gem/gem-place-1-menu.png", menu);
+
+  await menu.getByRole("menuitem", { name: "מיקום השדון" }).click();
+  const dialog = page.getByRole("dialog").filter({ hasText: "מיקום השדון" });
+  await dialog.waitFor({ state: "visible", timeout: 12_000 });
+  await page.waitForTimeout(900);
+  await clipShotLocator(page, "gem/gem-place-2-editor.png", dialog);
+
+  const footer = dialog.locator("button", { hasText: "שמירת מיקום" }).locator("..");
+  await footer.first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(200);
+  await clipShotLocator(page, "gem/gem-place-3-footer.png", footer.first());
+}
+
 async function captureEventDevice(page) {
   console.log("event-device (night pass / edit code)");
   const houseId = await (async () => {
@@ -577,6 +725,8 @@ async function main() {
 
   if (process.env.CAPTURE === "event-device") {
     await captureEventDevice(page);
+  } else if (process.env.CAPTURE === "gem") {
+    await captureGemGuides(page);
   } else {
     await captureAddHouse(page);
     await captureShareEditCode(page);
@@ -585,6 +735,9 @@ async function main() {
     await captureInstall(page);
     if (process.env.CAPTURE !== "skip-event-device") {
       await captureEventDevice(page);
+    }
+    if (process.env.CAPTURE !== "skip-gem") {
+      await captureGemGuides(page);
     }
   }
 
