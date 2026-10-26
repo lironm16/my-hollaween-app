@@ -11,6 +11,8 @@ import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import {
   GEM_FOUND_CHEER_HE,
   GEM_FOUND_I_HE,
+  GEM_GAME_ABOUT_BODY_HE,
+  GEM_GAME_ABOUT_SECTION_HE,
   GEM_GAME_TITLE_HE,
   GEM_NOT_FOUND_I_HE,
 } from "@/lib/gem-hunt-copy";
@@ -44,13 +46,17 @@ export default function GemHuntHelpPage() {
 
   return (
     <HelpShell title={GEM_GAME_TITLE_HE}>
-      <p className="mb-5 text-lg leading-relaxed text-violet-100">
-        ליד בתים נבחרים מסתתר שדון — חיה קטנה שאפשר למצוא במצלמה ולהוסיף ל
-        <strong className="font-semibold text-orange-100">{GEM_ALBUM_TITLE_HE}</strong>. המדריך הזה מיועד
-        לבדיקות לפני פתיחה לציבור.
-      </p>
-
       <div className="space-y-3">
+        <HelpExpandable title={GEM_GAME_ABOUT_SECTION_HE} defaultOpen>
+          <div className="space-y-3 text-lg leading-relaxed text-orange-50">
+            {GEM_GAME_ABOUT_BODY_HE.map((paragraph) => (
+              <p key={paragraph.slice(0, 24)}>
+                <HelpText>{paragraph}</HelpText>
+              </p>
+            ))}
+          </div>
+        </HelpExpandable>
+
         <HelpExpandable title="איפה רואים שדונים?" defaultOpen>
           <ul className="list-disc space-y-2 pr-5 text-lg leading-relaxed text-orange-50">
             <li>
