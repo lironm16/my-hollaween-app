@@ -5,6 +5,7 @@ import { useEffect, useMemo } from "react";
 import { ChevronLeft } from "lucide-react";
 import { HelpShell } from "@/components/help-shell";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useCatalog } from "@/hooks/use-catalog";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
@@ -72,6 +73,7 @@ export function HelpPageClient({
   gemHuntPublicFromServer,
 }: HelpPageClientProps) {
   const { admin } = useAdminSession();
+  const { catalog } = useCatalog();
   const nightPass = useNightPass();
 
   useEffect(() => {
@@ -79,18 +81,20 @@ export function HelpPageClient({
   }, []);
 
   const eventDeviceHelp = eventDeviceHelpFromServer || nightPass.enabled;
+  const gemHuntPublic =
+    catalog?.eventSettings?.gemHuntPublic === true || gemHuntPublicFromServer;
 
   const items = useMemo(() => {
     const list = [...QUESTIONS];
     if (eventDeviceHelp) {
       list.splice(2, 0, ...EVENT_DEVICE_QUESTIONS);
     }
-    if (gemHuntVisible(admin, gemHuntPublicFromServer)) {
+    if (gemHuntVisible(admin, gemHuntPublic)) {
       list.push({ question: GEM_GAME_TITLE_HE, href: "/help/gem-hunt" });
       list.push({ question: "מיקום השדון — בעלי בתים", href: "/help/gem-place-demon" });
     }
     return list;
-  }, [admin, eventDeviceHelp, gemHuntPublicFromServer]);
+  }, [admin, eventDeviceHelp, gemHuntPublic]);
 
   return (
     <HelpShell title="שאלות ותשובות" backHref="/" backLabel="מפה">
