@@ -44,7 +44,9 @@ import {
   type SensitivityId,
   type TreatId,
   type VisitState,
+  type DwellingKind,
 } from "@/lib/types";
+import { DWELLING_KIND_LABELS, normalizeDwellingKind } from "@/lib/dwelling-kind";
 import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/candy-glyphs";
 import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
@@ -92,6 +94,7 @@ const empty: HouseInput = {
   openTo2: "",
   notes: "",
   accessible: false,
+  dwellingKind: "private",
   visit: "come",
   treatStock: { candy: "plenty" },
   decorLevel: "mild",
@@ -197,6 +200,8 @@ export function HouseForm({
   }, [catalogDefaultHours, initial?.openFrom, initial?.openHours?.length, isNewHouse]);
   const isPracticePlace = placeKind === "practice";
   const isPoi = placeKind === "poi" && isPoiHouse({ ...form, kind: "poi" });
+  const dwellingKind: DwellingKind = normalizeDwellingKind(form.dwellingKind);
+  const showApartmentArrival = !isPoi && dwellingKind === "apartment";
   const scareGlyph = isPoi ? ScarePumpkin : undefined;
   const scareGlyphScale = isPoi ? PIN_GLYPH_SCALE.poi : PIN_GLYPH_SCALE.house;
 
@@ -647,16 +652,42 @@ export function HouseForm({
             onFocusChange={setAddressFieldActive}
           />
         </Field>
+        {!isPoi ? (
+          <Field label="סוג מקום" hint="עוזר לזהות מתי חובה למלא הוראות הגעה">
+            <div className="flex flex-wrap gap-2">
+              {(["private", "apartment"] as const).map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  disabled={blocked}
+                  onClick={() => setForm({ ...form, dwellingKind: kind })}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-sm ring-1 transition",
+                    dwellingKind === kind
+                      ? "bg-orange-500/20 text-orange-50 ring-orange-400/40"
+                      : "bg-[#1d1028] text-violet-300 ring-orange-500/15 hover:text-orange-100",
+                  )}
+                >
+                  {DWELLING_KIND_LABELS[kind]}
+                </button>
+              ))}
+            </div>
+          </Field>
+        ) : null}
         <Field
           label="איפה הדלת"
-          hint={HIDDEN_UNTIL_EVENT}
+          hint={
+            showApartmentArrival
+              ? `${HIDDEN_UNTIL_EVENT} · חובה לדירה בבניין`
+              : HIDDEN_UNTIL_EVENT
+          }
           charCount={{ length: form.arrival.length, max: HOUSE_FIELD_LIMITS.arrival.max }}
         >
           <Input
             value={form.arrival}
             maxLength={HOUSE_FIELD_LIMITS.arrival.max}
             onChange={(e) => setForm({ ...form, arrival: e.target.value })}
-            placeholder="קומה 2, דירה 5"
+            placeholder={showApartmentArrival ? "קומה 2, דירה 5" : "כניסה מהרחוב (אופציונלי)"}
           />
         </Field>
         <Field
