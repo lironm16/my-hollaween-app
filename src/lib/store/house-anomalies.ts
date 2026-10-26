@@ -20,7 +20,7 @@ export type AdminAnomaliesResponse = {
 };
 
 export async function listAdminHouseAnomalies(houseSet: HouseSet = "real"): Promise<AdminAnomaliesResponse> {
-  const db = await loadDb();
+  const db = await loadDb(true);
   const ctx = anomalyDetectionContextFromDb(db);
   const active = db.houses.filter((h) => !isHouseDeleted(h) && !h.isPractice);
   return {
@@ -44,20 +44,26 @@ export async function saveHouseAnomalyReview(input: {
   const active = dbBefore.houses.filter((h) => !isHouseDeleted(h) && !h.isPractice);
   const targetIds = clusterMembersForAnomalyReview(active, docId, input.kind);
 
+  const reviewedAt = new Date().toISOString();
   const updated = await runSyncedWrite((db) => {
     const touched: House[] = [];
     for (const id of targetIds) {
       const house = findHouseInDb(db, id);
       if (!house || isHouseDeleted(house)) continue;
+      const rowUpdatedAt = new Date().toISOString();
+      house.updatedAt = rowUpdatedAt;
       const reviews = { ...(house.adminAnomalyReviews ?? {}) };
       reviews[input.kind] = {
         status: input.status,
-        reviewedAt: new Date().toISOString(),
-        houseUpdatedAt: house.updatedAt,
+        reviewedAt,
+        houseUpdatedAt: rowUpdatedAt,
         ...(input.note?.trim() ? { note: input.note.trim() } : {}),
       };
       house.adminAnomalyReviews = reviews;
       touched.push(house);
+    }
+    if (touched.length) {
+      db.updatedAt = reviewedAt;
     }
     return touched.length ? touched : null;
   });

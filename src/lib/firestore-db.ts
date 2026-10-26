@@ -18,6 +18,7 @@ import {
   houseNeedsExistingMerge,
   preserveStoredHouseFields,
 } from "@/lib/firestore-address-preserve";
+import { housesChangedForFirestorePersist } from "@/lib/firestore-changed-houses";
 import type { DbFile, House, PublicHouse, PushSubscriptionRecord, VapidKeys } from "@/lib/types";
 
 export { firestoreConfigured };
@@ -509,13 +510,7 @@ export async function writeFirestoreVapid(vapid: VapidKeys) {
 }
 
 function changedHouses(prev: House[], next: House[]) {
-  const before = new Map(prev.map((house) => [canonicalHouseId(house.id), house.updatedAt]));
-  const out: House[] = [];
-  for (const house of next) {
-    const id = canonicalHouseId(house.id);
-    if (before.get(id) !== house.updatedAt) out.push(house);
-  }
-  return out;
+  return housesChangedForFirestorePersist(prev, next);
 }
 
 function removedHouseIds(prev: House[], next: House[]) {

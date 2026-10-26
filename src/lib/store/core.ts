@@ -95,14 +95,22 @@ function catalogHousesChanged(prev: House[], next: House[]) {
   const before = stripStubHouses(prev);
   const after = stripStubHouses(next);
   if (before.length !== after.length) return true;
-  const map = new Map(before.map((house) => [canonicalHouseId(house.id), house.updatedAt]));
+  const map = new Map(before.map((house) => [canonicalHouseId(house.id), house]));
   const nextIds = new Set(after.map((house) => canonicalHouseId(house.id)));
   for (const id of map.keys()) {
     if (!nextIds.has(id)) return true;
   }
   for (const house of after) {
     const id = canonicalHouseId(house.id);
-    if (map.get(id) !== house.updatedAt) return true;
+    const prevHouse = map.get(id);
+    if (!prevHouse) return true;
+    if (prevHouse.updatedAt !== house.updatedAt) return true;
+    if (
+      JSON.stringify(prevHouse.adminAnomalyReviews ?? null) !==
+      JSON.stringify(house.adminAnomalyReviews ?? null)
+    ) {
+      return true;
+    }
   }
   return false;
 }

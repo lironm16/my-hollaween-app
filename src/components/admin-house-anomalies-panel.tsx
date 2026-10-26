@@ -79,20 +79,7 @@ export function AdminHouseAnomaliesPanel() {
         setError(json?.error ?? "עדכון נכשל.");
         return;
       }
-      setData((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: prev.items.filter(
-                (item) =>
-                  !(
-                    item.kind === kind &&
-                    (item.houseId === houseId || item.affectedHouseIds?.includes(houseId))
-                  ),
-              ),
-            }
-          : prev,
-      );
+      await load();
     } catch {
       setError("עדכון נכשל.");
     } finally {
