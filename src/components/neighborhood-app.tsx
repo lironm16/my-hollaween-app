@@ -477,6 +477,7 @@ export function NeighborhoodApp({
       gemUi
         ? mapGemNearHouseIds(gps, gemMapRingHousesVisible, matchedIds, gems.collected)
         : new Set<string>(),
+    // When MAP_GEM_NEAR_GPS_HIGHLIGHT_ENABLED is false, mapGemNearHouseIds is O(1); gps still listed for easy re-enable.
     [gemUi, gps, gemMapRingHousesVisible, matchedIds, gems.collected],
   );
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
