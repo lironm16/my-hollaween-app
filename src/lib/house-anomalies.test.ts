@@ -77,23 +77,6 @@ describe("house-anomalies", () => {
     assert.equal(isAnomalyActionable(newer, anomaly), true);
   });
 
-  it("missing arrival only for apartments in a building", () => {
-    const privateHome = house({ dwellingKind: "private", arrival: "" });
-    const apartment = house({
-      id: "בית-1002",
-      dwellingKind: "apartment",
-      arrival: "",
-    });
-    assert.equal(
-      detectHouseAnomalies(privateHome, [privateHome], ctx).some((a) => a.kind === "missing_arrival"),
-      false,
-    );
-    assert.equal(
-      detectHouseAnomalies(apartment, [apartment], ctx).some((a) => a.kind === "missing_arrival"),
-      true,
-    );
-  });
-
   it("dedupes building accessibility to one row per cluster", () => {
     const shared = { lat: 32.0919, lng: 34.8112, address: "חרוזים 8" };
     const a = house({

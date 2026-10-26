@@ -2,7 +2,6 @@ import { parseStreetAndNumber } from "@/lib/address-text";
 import { inNeighborhood } from "@/lib/config";
 import { eventOpenHoursScheduleFromDb } from "@/lib/event-settings";
 import { clusterAddressKey, clusterAddressKeyForHouse, clusterMembersForHouse } from "@/lib/house-clusters";
-import { houseNeedsArrivalInstructions } from "@/lib/dwelling-kind";
 import { isHouseDeleted } from "@/lib/house-state";
 import { isPoiHouse } from "@/lib/house-kind";
 import { isStubHouse, type HouseSet } from "@/lib/house-set";
@@ -165,14 +164,6 @@ export function detectHouseAnomalies(
       severity: "info",
       messageHe: "שם הבית נראה כמו כתובת",
       detailHe: house.name.trim(),
-    });
-  }
-
-  if (houseNeedsArrivalInstructions(house) && !house.arrival?.trim()) {
-    out.push({
-      kind: "missing_arrival",
-      severity: "info",
-      messageHe: "חסרות הוראות הגעה (דירה בבניין)",
     });
   }
 
