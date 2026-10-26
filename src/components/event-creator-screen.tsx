@@ -362,7 +362,6 @@ export function EventCreatorScreen() {
               features={mapFeatures}
               selectedIds={selectedIds}
               focusedId={mapFocusId}
-              focusedLabel={mapFocusZone?.label ?? null}
               onAreaClick={onMapAreaClick}
             />
             {loadingMap ? (
@@ -371,7 +370,14 @@ export function EventCreatorScreen() {
               </div>
             ) : null}
             {mapFocusZone ? (
-              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center justify-end gap-2 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
+              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center gap-3 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
+                <EventBoundaryKindBadge kind={mapFocusZone.kind} size="lg" />
+                <div className="min-w-0 flex-1 text-right">
+                  <p className="truncate text-lg text-white/90">{mapFocusZone.label}</p>
+                  {mapFocusZone.city && mapFocusZone.kind !== "city" ? (
+                    <p className="truncate text-base text-white/45">{mapFocusZone.city}</p>
+                  ) : null}
+                </div>
                 <button
                   type="button"
                   onClick={() => removeZone(mapFocusZone.id)}
