@@ -38,6 +38,7 @@ describe("map-geo-cluster", () => {
     assert.equal(high.length, addressClusters.length);
     const leaf = high[0]!;
     assert.equal(isGeoClusterFeature(leaf), false);
-    assert.equal(addressClusterKeyFromFeature(leaf as never), addressClusters[0]!.key);
+    if (isGeoClusterFeature(leaf)) throw new Error("expected leaf");
+    assert.equal(addressClusterKeyFromFeature(leaf), addressClusters[0]!.key);
   });
 });

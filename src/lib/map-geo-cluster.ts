@@ -1,3 +1,4 @@
+import type { Feature, Point } from "geojson";
 import Supercluster from "supercluster";
 import type { HouseCluster } from "@/lib/house-clusters";
 
@@ -18,23 +19,36 @@ export type AddressClusterFeatureProps = {
   clusterKey: string;
 };
 
+export type GeoAggregateClusterProperties = {
+  cluster: true;
+  cluster_id: number;
+  point_count: number;
+  point_count_abbreviated?: string | number;
+};
+
+export type AddressClusterPointFeature = Feature<Point, AddressClusterFeatureProps>;
+export type GeoAggregateClusterFeature = Feature<Point, GeoAggregateClusterProperties>;
+export type GeoClusterViewFeature = AddressClusterPointFeature | GeoAggregateClusterFeature;
+
+export type AddressClusterGeoIndex = Supercluster<AddressClusterFeatureProps>;
+
 export type MapGeoClusterBBox = [west: number, south: number, east: number, north: number];
 
-export function buildAddressClusterGeoIndex(clusters: readonly HouseCluster[]) {
+export function buildAddressClusterGeoIndex(clusters: readonly HouseCluster[]): AddressClusterGeoIndex {
   const index = new Supercluster<AddressClusterFeatureProps>({
     radius: GEO_CLUSTER_RADIUS_PX,
     maxZoom: MAP_GEO_CLUSTER_MAX_ZOOM,
     minPoints: GEO_CLUSTER_MIN_POINTS,
   });
-  const features = clusters.map((cluster) => ({
-    type: "Feature" as const,
+  const features: AddressClusterPointFeature[] = clusters.map((cluster) => ({
+    type: "Feature",
     properties: {
-      kind: "address" as const,
+      kind: "address",
       clusterKey: cluster.key,
     },
     geometry: {
-      type: "Point" as const,
-      coordinates: [cluster.lng, cluster.lat] as [number, number],
+      type: "Point",
+      coordinates: [cluster.lng, cluster.lat],
     },
   }));
   index.load(features);
@@ -56,30 +70,26 @@ export function mapZoomForGeoCluster(zoom: number) {
 }
 
 export function geoClustersInView(
-  index: Supercluster<AddressClusterFeatureProps>,
+  index: AddressClusterGeoIndex,
   bbox: MapGeoClusterBBox,
   zoom: number,
-) {
-  return index.getClusters(bbox, mapZoomForGeoCluster(zoom));
+): GeoClusterViewFeature[] {
+  return index.getClusters(bbox, mapZoomForGeoCluster(zoom)) as GeoClusterViewFeature[];
 }
 
 export function geoClusterExpansionZoom(
-  index: Supercluster<AddressClusterFeatureProps>,
+  index: AddressClusterGeoIndex,
   clusterId: number,
   mapMaxZoom: number,
 ) {
   return Math.min(index.getClusterExpansionZoom(clusterId), mapMaxZoom);
 }
 
-export function isGeoClusterFeature(
-  feature: Supercluster.ClusterFeature<Supercluster.AnyProps> | Supercluster.PointFeature<AddressClusterFeatureProps>,
-): feature is Supercluster.ClusterFeature<Supercluster.AnyProps> {
-  return "cluster" in feature.properties && feature.properties.cluster === true;
+export function isGeoClusterFeature(feature: GeoClusterViewFeature): feature is GeoAggregateClusterFeature {
+  const props = feature.properties;
+  return props != null && "cluster" in props && props.cluster === true;
 }
 
-export function addressClusterKeyFromFeature(
-  feature: Supercluster.PointFeature<AddressClusterFeatureProps>,
-): string | null {
-  if (feature.properties.kind !== "address") return null;
+export function addressClusterKeyFromFeature(feature: AddressClusterPointFeature): string {
   return feature.properties.clusterKey;
 }

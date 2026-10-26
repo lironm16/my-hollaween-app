@@ -150,8 +150,8 @@ export function MapGeoClusterMarkers({
       {features.map((feature) => {
         const [lng, lat] = feature.geometry.coordinates;
         if (isGeoClusterFeature(feature)) {
-          const clusterId = feature.properties.cluster_id as number;
-          const count = feature.properties.point_count as number;
+          const clusterId = feature.properties.cluster_id;
+          const count = feature.properties.point_count;
           return (
             <GeoClusterBubbleMarker
               key={`geo-${clusterId}`}
@@ -164,7 +164,7 @@ export function MapGeoClusterMarkers({
           );
         }
         const key = addressClusterKeyFromFeature(feature);
-        const addressCluster = key ? clusterByKey.get(key) : null;
+        const addressCluster = clusterByKey.get(key);
         if (!addressCluster) return null;
         return <Fragment key={addressCluster.key}>{renderAddressCluster(addressCluster)}</Fragment>;
       })}
