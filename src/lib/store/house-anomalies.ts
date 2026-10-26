@@ -1,9 +1,11 @@
 import {
   anomalyDetectionContextFromDb,
+  clusterMembersForAnomalyReview,
   listAllActionableAnomalies,
   reconcileHouseAnomalyReviews,
   type AnomalyListItem,
 } from "@/lib/house-anomalies";
+import type { HouseSet } from "@/lib/house-set";
 import { canonicalHouseId, sameHouseId } from "@/lib/ids";
 import { isHouseDeleted } from "@/lib/house-state";
 import type { House, HouseAnomalyKind, HouseAnomalyReviewStatus } from "@/lib/types";
@@ -17,12 +19,12 @@ export type AdminAnomaliesResponse = {
   houseCount: number;
 };
 
-export async function listAdminHouseAnomalies(): Promise<AdminAnomaliesResponse> {
+export async function listAdminHouseAnomalies(houseSet: HouseSet = "real"): Promise<AdminAnomaliesResponse> {
   const db = await loadDb();
   const ctx = anomalyDetectionContextFromDb(db);
   const active = db.houses.filter((h) => !isHouseDeleted(h) && !h.isPractice);
   return {
-    items: listAllActionableAnomalies(active, ctx),
+    items: listAllActionableAnomalies(active, ctx, { houseSet }),
     eventOpenHours: ctx.eventOpenHours,
     scannedAt: new Date().toISOString(),
     houseCount: active.length,
@@ -38,24 +40,34 @@ export async function saveHouseAnomalyReview(input: {
   const docId = canonicalHouseId(input.houseId);
   if (!docId) return { error: "missing" };
 
+  const dbBefore = await loadDb();
+  const active = dbBefore.houses.filter((h) => !isHouseDeleted(h) && !h.isPractice);
+  const targetIds = clusterMembersForAnomalyReview(active, docId, input.kind);
+
   const updated = await runSyncedWrite((db) => {
-    const house = findHouseInDb(db, docId);
-    if (!house || isHouseDeleted(house)) return null;
-    const reviews = { ...(house.adminAnomalyReviews ?? {}) };
-    reviews[input.kind] = {
-      status: input.status,
-      reviewedAt: new Date().toISOString(),
-      houseUpdatedAt: house.updatedAt,
-      ...(input.note?.trim() ? { note: input.note.trim() } : {}),
-    };
-    house.adminAnomalyReviews = reviews;
-    return house;
+    const touched: House[] = [];
+    for (const id of targetIds) {
+      const house = findHouseInDb(db, id);
+      if (!house || isHouseDeleted(house)) continue;
+      const reviews = { ...(house.adminAnomalyReviews ?? {}) };
+      reviews[input.kind] = {
+        status: input.status,
+        reviewedAt: new Date().toISOString(),
+        houseUpdatedAt: house.updatedAt,
+        ...(input.note?.trim() ? { note: input.note.trim() } : {}),
+      };
+      house.adminAnomalyReviews = reviews;
+      touched.push(house);
+    }
+    return touched.length ? touched : null;
   });
 
   if (!updated) return { error: "missing" };
 
   if (firestoreConfigured()) {
-    await writeFirestoreHouse(updated);
+    for (const house of updated) {
+      await writeFirestoreHouse(house);
+    }
   }
   return { ok: true };
 }

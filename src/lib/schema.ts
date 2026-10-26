@@ -9,6 +9,7 @@ import {
   STOCK_LEVELS,
   TREAT_OPTIONS,
   VISIT_STATES,
+  DWELLING_KINDS,
 } from "@/lib/types";
 import { hoursWindowsOverlap, isValidHoursWindow } from "@/lib/hours";
 import { parsePhotoUrl } from "@/lib/photos";
@@ -76,6 +77,7 @@ const houseFields = z.object({
     .min(HOUSE_FIELD_LIMITS.address.min)
     .max(HOUSE_FIELD_LIMITS.address.max),
   arrival: z.string().trim().max(HOUSE_FIELD_LIMITS.arrival.max),
+  dwellingKind: z.enum(DWELLING_KINDS).optional(),
   boothNumber: z.number().int().min(1).optional().nullable(),
   description: z.string().trim().max(HOUSE_FIELD_LIMITS.description.max),
   lat: z.number().min(-90).max(90),

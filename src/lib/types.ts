@@ -4,6 +4,9 @@ export type ScareLevel = (typeof SCARE_LEVELS)[number];
 export const HOUSE_KINDS = ["house", "poi"] as const;
 export type HouseKind = (typeof HOUSE_KINDS)[number];
 
+export const DWELLING_KINDS = ["private", "apartment"] as const;
+export type DwellingKind = (typeof DWELLING_KINDS)[number];
+
 export const POI_CATEGORIES = ["coffee", "museum", "shop", "food", "services", "info", "other"] as const;
 export type PoiCategory = (typeof POI_CATEGORIES)[number];
 
@@ -76,6 +79,8 @@ export type House = {
   arrival: string;
   /** Stable serial at a shared address (school booth / apartment). Never renumbered when others are removed. */
   boothNumber?: number | null;
+  /** Private home vs apartment in a shared building — drives arrival expectations. */
+  dwellingKind?: DwellingKind;
   description: string;
   lat: number;
   lng: number;
@@ -137,6 +142,7 @@ export type HouseInput = {
   address: string;
   neighborhood?: NeighborhoodId | null;
   arrival: string;
+  dwellingKind?: DwellingKind;
   description: string;
   lat: number;
   lng: number;

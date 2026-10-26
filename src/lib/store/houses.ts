@@ -29,6 +29,7 @@ import {
   normalizeOwnerPhone,
   ownerPhoneAfterPatch,
 } from "@/lib/owner-phone";
+import { defaultDwellingKindForInput, normalizeDwellingKind } from "@/lib/dwelling-kind";
 import type { House, HouseInput, NightPatch, TreatStock, VisitState } from "@/lib/types";
 import { payloadForKind } from "@/lib/push";
 import { neighborhoodPushBroadcastAllowed } from "@/lib/push-policy";
@@ -209,6 +210,7 @@ export async function submitHouse(
       lng: positioned.lng,
       kind,
       poiCategory,
+      dwellingKind: kind === "poi" ? undefined : defaultDwellingKindForInput(submitInput),
       boothNumber,
       address: addressFields.address,
       neighborhood: addressFields.neighborhood,
@@ -266,6 +268,7 @@ function sanitizeOwnerPatch(
   if (patch.address !== undefined) next.address = patch.address;
   if (patch.neighborhood !== undefined) next.neighborhood = patch.neighborhood;
   if (patch.arrival !== undefined) next.arrival = patch.arrival;
+  if (patch.dwellingKind !== undefined) next.dwellingKind = normalizeDwellingKind(patch.dwellingKind);
   if (patch.description !== undefined) next.description = patch.description;
   if (patch.lat !== undefined) next.lat = patch.lat;
   if (patch.lng !== undefined) next.lng = patch.lng;
@@ -507,6 +510,10 @@ export async function adminUpdate(
     if (patch.address !== undefined) house.address = patch.address;
     if (patch.neighborhood !== undefined) house.neighborhood = patch.neighborhood;
     if (patch.arrival !== undefined) house.arrival = patch.arrival;
+    if (patch.dwellingKind !== undefined) {
+      house.dwellingKind =
+        house.kind === "poi" ? undefined : normalizeDwellingKind(patch.dwellingKind);
+    }
     if (patch.description !== undefined) house.description = patch.description;
     if (patch.lat !== undefined) house.lat = patch.lat;
     if (patch.lng !== undefined) house.lng = patch.lng;

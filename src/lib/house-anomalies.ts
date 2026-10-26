@@ -1,9 +1,12 @@
 import { parseStreetAndNumber } from "@/lib/address-text";
 import { inNeighborhood } from "@/lib/config";
 import { eventOpenHoursScheduleFromDb } from "@/lib/event-settings";
-import { clusterAddressKey, clusterMembersForHouse } from "@/lib/house-clusters";
+import { clusterAddressKey, clusterAddressKeyForHouse, clusterMembersForHouse } from "@/lib/house-clusters";
+import { houseNeedsArrivalInstructions } from "@/lib/dwelling-kind";
 import { isHouseDeleted } from "@/lib/house-state";
 import { isPoiHouse } from "@/lib/house-kind";
+import { isStubHouse, type HouseSet } from "@/lib/house-set";
+import { boothNumberForHouse } from "@/lib/cluster-booth";
 import {
   houseHoursWindows,
   hoursWindowsIssue,
@@ -31,7 +34,22 @@ export type AnomalyListItem = DetectedHouseAnomaly & {
   address: string;
   updatedAt: string;
   reviewed?: HouseAnomalyReview;
+  /** One row per building for shared-pin issues. */
+  clusterKey?: string;
+  affectedHouseIds?: string[];
+  isStub?: boolean;
 };
+
+const CLUSTER_DEDUPE_KINDS = new Set<HouseAnomalyKind>([
+  "building_accessible_mismatch",
+  "building_address_mismatch",
+]);
+
+export function anomalyHouseSetFilter(set: HouseSet): (house: House) => boolean {
+  if (set === "all") return () => true;
+  if (set === "stubs") return (house) => isStubHouse(house);
+  return (house) => !isStubHouse(house);
+}
 
 const VERY_SHORT_MINUTES = 30;
 const EARLY_MORNING_BEFORE = 12 * 60;
@@ -150,11 +168,11 @@ export function detectHouseAnomalies(
     });
   }
 
-  if (!isPoiHouse(house) && !house.arrival?.trim()) {
+  if (houseNeedsArrivalInstructions(house) && !house.arrival?.trim()) {
     out.push({
       kind: "missing_arrival",
       severity: "info",
-      messageHe: "חסרות הוראות הגעה",
+      messageHe: "חסרות הוראות הגעה (דירה בבניין)",
     });
   }
 
@@ -250,22 +268,100 @@ export function listActionableAnomaliesForHouse(
     }));
 }
 
+function pickClusterRepresentative(members: House[]): House {
+  return [...members].sort((a, b) => {
+    const an = boothNumberForHouse(a);
+    const bn = boothNumberForHouse(b);
+    if (an != null && bn != null && an !== bn) return an - bn;
+    if (an != null && bn == null) return -1;
+    if (an == null && bn != null) return 1;
+    return a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id, "he");
+  })[0]!;
+}
+
+function dedupeClusterAnomalies(items: AnomalyListItem[], houses: House[]): AnomalyListItem[] {
+  const houseById = new Map(houses.map((h) => [h.id, h]));
+  const clusterRows = new Map<string, AnomalyListItem>();
+  const rest: AnomalyListItem[] = [];
+
+  for (const item of items) {
+    if (!CLUSTER_DEDUPE_KINDS.has(item.kind)) {
+      rest.push(item);
+      continue;
+    }
+    const source = houseById.get(item.houseId);
+    if (!source) {
+      rest.push(item);
+      continue;
+    }
+    const members = clusterMembersForHouse(houses, source.id)
+      .map((m) => houseById.get(m.id))
+      .filter((h): h is House => Boolean(h));
+    const clusterKey = clusterAddressKeyForHouse(source);
+    const rowKey = `${item.kind}:${clusterKey}`;
+    const representative = pickClusterRepresentative(members);
+    const affectedHouseIds = members.map((m) => m.id);
+    let detailHe = item.detailHe;
+    if (item.kind === "building_accessible_mismatch" && members.length > 1) {
+      const accessibleCount = members.filter((m) => m.accessible).length;
+      const notCount = members.length - accessibleCount;
+      detailHe = `${accessibleCount} נגיש · ${notCount} לא נגיש · ${members.length} בתים בבניין`;
+    } else if (affectedHouseIds.length > 1) {
+      detailHe = detailHe
+        ? `${detailHe} · ${affectedHouseIds.length} בתים בבניין`
+        : `${affectedHouseIds.length} בתים בבניין`;
+    }
+    const merged: AnomalyListItem = {
+      ...item,
+      houseId: representative.id,
+      houseName: representative.name,
+      address: representative.address,
+      updatedAt: representative.updatedAt,
+      clusterKey,
+      affectedHouseIds,
+      isStub: isStubHouse(representative),
+      detailHe,
+    };
+    if (!clusterRows.has(rowKey)) clusterRows.set(rowKey, merged);
+  }
+
+  return [...rest, ...clusterRows.values()];
+}
+
+export function clusterMembersForAnomalyReview(
+  houses: House[],
+  houseId: string,
+  kind: HouseAnomalyKind,
+): string[] {
+  if (!CLUSTER_DEDUPE_KINDS.has(kind)) return [houseId];
+  const members = clusterMembersForHouse(houses, houseId);
+  return members.map((m) => m.id);
+}
+
 export function listAllActionableAnomalies(
   houses: House[],
   ctx: AnomalyDetectionContext,
+  options?: { houseSet?: HouseSet },
 ): AnomalyListItem[] {
-  const active = houses.filter(isActiveHouse);
+  const setFilter = anomalyHouseSetFilter(options?.houseSet ?? "real");
+  const active = houses.filter((h) => isActiveHouse(h) && setFilter(h));
   const items: AnomalyListItem[] = [];
   for (const house of active) {
-    items.push(...listActionableAnomaliesForHouse(house, active, ctx));
+    items.push(
+      ...listActionableAnomaliesForHouse(house, active, ctx).map((item) => ({
+        ...item,
+        isStub: isStubHouse(house),
+      })),
+    );
   }
-  items.sort((a, b) => {
+  const deduped = dedupeClusterAnomalies(items, active);
+  deduped.sort((a, b) => {
     const severity = (s: AnomalyListItem["severity"]) => (s === "warning" ? 0 : 1);
     const bySeverity = severity(a.severity) - severity(b.severity);
     if (bySeverity !== 0) return bySeverity;
     return b.updatedAt.localeCompare(a.updatedAt);
   });
-  return items;
+  return deduped;
 }
 
 /** Drop reviews for issues that no longer apply; returns updated house if changed. */

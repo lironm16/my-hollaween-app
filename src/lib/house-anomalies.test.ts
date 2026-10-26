@@ -6,6 +6,7 @@ import {
   isAnomalyActionable,
   reconcileHouseAnomalyReviews,
 } from "@/lib/house-anomalies";
+import { listAllActionableAnomalies } from "@/lib/house-anomalies";
 import type { House } from "@/lib/types";
 
 function house(overrides: Partial<House> = {}): House {
@@ -74,6 +75,43 @@ describe("house-anomalies", () => {
     assert.equal(isAnomalyActionable(h, anomaly), false);
     const newer = { ...h, updatedAt: "2026-10-03T00:00:00.000Z" };
     assert.equal(isAnomalyActionable(newer, anomaly), true);
+  });
+
+  it("missing arrival only for apartments in a building", () => {
+    const privateHome = house({ dwellingKind: "private", arrival: "" });
+    const apartment = house({
+      id: "בית-1002",
+      dwellingKind: "apartment",
+      arrival: "",
+    });
+    assert.equal(
+      detectHouseAnomalies(privateHome, [privateHome], ctx).some((a) => a.kind === "missing_arrival"),
+      false,
+    );
+    assert.equal(
+      detectHouseAnomalies(apartment, [apartment], ctx).some((a) => a.kind === "missing_arrival"),
+      true,
+    );
+  });
+
+  it("dedupes building accessibility to one row per cluster", () => {
+    const shared = { lat: 32.0919, lng: 34.8112, address: "חרוזים 8" };
+    const a = house({
+      id: "בית-2001",
+      ...shared,
+      accessible: true,
+      name: "א",
+    });
+    const b = house({
+      id: "בית-2002",
+      ...shared,
+      accessible: false,
+      name: "ב",
+    });
+    const items = listAllActionableAnomalies([a, b], ctx, { houseSet: "all" });
+    const mismatches = items.filter((i) => i.kind === "building_accessible_mismatch");
+    assert.equal(mismatches.length, 1);
+    assert.equal(mismatches[0]?.affectedHouseIds?.length, 2);
   });
 
   it("clears stale reviews when issue is fixed", () => {

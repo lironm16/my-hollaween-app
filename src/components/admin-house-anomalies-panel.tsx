@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ANOMALY_KIND_LABELS, type AnomalyListItem } from "@/lib/house-anomalies";
+import { HOUSE_SET_LABELS, HOUSE_SETS, type HouseSet } from "@/lib/house-set";
+import { useHouseSet } from "@/hooks/use-house-set";
 import type { EventOpenHoursSchedule, HouseAnomalyKind } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -13,13 +15,15 @@ type AnomaliesResponse = {
   eventOpenHours: EventOpenHoursSchedule;
   scannedAt: string;
   houseCount: number;
+  houseSet?: HouseSet;
 };
 
 function itemKey(item: AnomalyListItem) {
-  return `${item.houseId}:${item.kind}`;
+  return item.clusterKey ? `${item.kind}:${item.clusterKey}` : `${item.houseId}:${item.kind}`;
 }
 
 export function AdminHouseAnomaliesPanel() {
+  const { houseSet, setHouseSet } = useHouseSet();
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -30,7 +34,9 @@ export function AdminHouseAnomaliesPanel() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/anomalies", { cache: "no-store" });
+      const res = await fetch(`/api/admin/anomalies?houseSet=${encodeURIComponent(houseSet)}`, {
+        cache: "no-store",
+      });
       const json = (await res.json().catch(() => null)) as AnomaliesResponse & { error?: string };
       if (!res.ok) {
         setError(json?.error ?? "טעינה נכשלה.");
@@ -42,7 +48,7 @@ export function AdminHouseAnomaliesPanel() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [houseSet]);
 
   useEffect(() => {
     void load();
@@ -77,7 +83,13 @@ export function AdminHouseAnomaliesPanel() {
         prev
           ? {
               ...prev,
-              items: prev.items.filter((item) => !(item.houseId === houseId && item.kind === kind)),
+              items: prev.items.filter(
+                (item) =>
+                  !(
+                    item.kind === kind &&
+                    (item.houseId === houseId || item.affectedHouseIds?.includes(houseId))
+                  ),
+              ),
             }
           : prev,
       );
@@ -107,6 +119,22 @@ export function AdminHouseAnomaliesPanel() {
           <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
           רענון
         </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {HOUSE_SETS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setHouseSet(id)}
+            className={cn(
+              "rounded-md px-2 py-1 text-sm",
+              houseSet === id ? "bg-orange-500/20 text-orange-100" : "text-violet-400",
+            )}
+          >
+            {HOUSE_SET_LABELS[id]}
+          </button>
+        ))}
       </div>
 
       <div className="flex gap-2">

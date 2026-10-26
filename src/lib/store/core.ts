@@ -21,6 +21,7 @@ import {
   loadStaticRehearsalStubRows,
   stripStubHouses,
 } from "@/lib/rehearsal-stubs";
+import { normalizeDwellingKind } from "@/lib/dwelling-kind";
 import {
   HOUSE_THEMES,
   POI_CATEGORIES,
@@ -197,6 +198,7 @@ export function normalizeHouse(house: House & { status?: string; rejectionReason
     ownerPhone: base.ownerPhone?.trim() ? base.ownerPhone.trim() : null,
     isStub: Boolean(base.isStub),
     isPractice: Boolean(base.isPractice),
+    dwellingKind: kind === "poi" ? undefined : normalizeDwellingKind(base.dwellingKind),
   };
 }
 
