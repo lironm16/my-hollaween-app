@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  geometriesFromMapFeatures,
+  pruneZonesContainedInParents,
+} from "@/lib/event-boundary-zone-prune";
 import { ChevronRight, List, Map as MapIcon, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
@@ -214,6 +218,8 @@ export function EventCreatorScreen() {
   const [mapFeatures, setMapFeatures] = useState<EventBoundaryMapFeature[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [mapFocusId, setMapFocusId] = useState<string | null>(null);
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
 
   const persist = useCallback((next: CustomEventDraft) => {
     setDraft(next);
@@ -319,7 +325,19 @@ export function EventCreatorScreen() {
           features?: EventBoundaryMapFeature[];
         };
         if (cancelled) return;
-        setMapFeatures(body.features ?? []);
+        const features = body.features ?? [];
+        setMapFeatures(features);
+
+        const geoms = geometriesFromMapFeatures(features);
+        const current = draftRef.current;
+        const pruned = pruneZonesContainedInParents(current.zones, geoms);
+        if (pruned.length < current.zones.length) {
+          const removed = current.zones.filter((z) => !pruned.some((p) => p.id === z.id));
+          persist({ ...current, zones: pruned });
+          setMapFocusId((focus) => (focus && removed.some((z) => z.id === focus) ? null : focus));
+          const names = removed.map((z) => z.label).join(", ");
+          toast.message(`הוסר ${names} — כבר כלול באזור גדול יותר`);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingMap(false);
