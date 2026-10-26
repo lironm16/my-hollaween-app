@@ -30,7 +30,6 @@ import {
   type GemAnchorEditState,
 } from "@/components/map-gem-anchor-edit-layer";
 import { MapAddHouseFab } from "@/components/map-add-house-fab";
-import { MapGeoClusterMarkers } from "@/components/map-geo-cluster-markers";
 import { MapLegend } from "@/components/map-legend";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import "leaflet/dist/leaflet.css";
@@ -1250,33 +1249,30 @@ export function HouseMap({
             onSelectHouse={onGemAnchorSelect}
           />
         ) : null}
-        {!pickMode && !gemAnchorEdit ? (
-          <MapGeoClusterMarkers
-            gate={{ enabled: true, routeModeActive: Boolean(routeModeActive), pickMode, embed }}
-            addressClusters={clusters}
-            renderAddressCluster={(cluster) => (
-              <ClusterMarker
-                cluster={cluster}
-                selectedId={selectedId}
-                clusterOverview={clusterOverview}
-                onSelect={onSelect}
-                onClose={onClose}
-                visitedIds={visitedIds}
-                skippedIds={skippedIdSet}
-                gemPinRingCtx={gemPinRingCtx}
-                routeOrder={cluster.houses.reduce<number | undefined>(
-                  (found, house) => found ?? routeOrderById.get(house.id),
-                  undefined,
-                )}
-                routeHouseId={cluster.houses.find((house) => routeOrderById.has(house.id))?.id}
-                routeModeActive={
-                  routeModeActive &&
-                  cluster.houses.some((house) => routeOrderById.has(house.id))
-                }
-              />
-            )}
-          />
-        ) : null}
+        {!pickMode &&
+          !gemAnchorEdit &&
+          clusters.map((cluster) => (
+            <ClusterMarker
+              key={cluster.key}
+              cluster={cluster}
+              selectedId={selectedId}
+              clusterOverview={clusterOverview}
+              onSelect={onSelect}
+              onClose={onClose}
+              visitedIds={visitedIds}
+              skippedIds={skippedIdSet}
+              gemPinRingCtx={gemPinRingCtx}
+              routeOrder={cluster.houses.reduce<number | undefined>(
+                (found, house) => found ?? routeOrderById.get(house.id),
+                undefined,
+              )}
+              routeHouseId={cluster.houses.find((house) => routeOrderById.has(house.id))?.id}
+              routeModeActive={
+                routeModeActive &&
+                cluster.houses.some((house) => routeOrderById.has(house.id))
+              }
+            />
+          ))}
         {!pickMode && userLocation ? <MapUserLocationOverlay location={userLocation} /> : null}
       </MapContainer>
       {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
