@@ -1,4 +1,5 @@
 import { config } from "@/lib/config";
+import { pickStreetCenterlines } from "@/lib/event-boundary-street-geom";
 import { bufferPolylineLngLat } from "@/lib/line-buffer";
 
 const USER_AGENT = "HalloweenNeighborhood/1.0 (event-boundary; https://cursor.com)";
@@ -64,28 +65,19 @@ export async function cityBoundaryPolygon(city: string): Promise<GeoJSON.Polygon
   return null;
 }
 
-function lineFromGeometry(g: GeoJSON.Geometry): [number, number][] | null {
-  if (g.type === "LineString") return g.coordinates as [number, number][];
-  if (g.type === "MultiLineString") {
-    let best: [number, number][] | null = null;
-    for (const line of g.coordinates) {
-      const ls = line as [number, number][];
-      if (!best || ls.length > best.length) best = ls;
-    }
-    return best;
-  }
-  if (g.type === "Polygon") {
-    return g.coordinates[0] as [number, number][];
-  }
-  return null;
-}
+export type StreetBoundaryOptions = {
+  halfWidthM?: number;
+  cityClip?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
+  zoneClips?: (GeoJSON.Polygon | GeoJSON.MultiPolygon)[];
+};
 
-/** Street corridor polygon (~70 m wide) from OSM geometry. */
+/** Street corridor polygon (~70 m wide) from OSM centerlines. */
 export async function streetBoundaryPolygon(
   city: string,
   street: string,
-  halfWidthM = 35,
-): Promise<GeoJSON.Polygon | null> {
+  options: StreetBoundaryOptions = {},
+): Promise<GeoJSON.Polygon | GeoJSON.MultiPolygon | null> {
+  const halfWidthM = options.halfWidthM ?? 35;
   const hits = await nominatimSearch({
     street,
     city,
@@ -93,20 +85,30 @@ export async function streetBoundaryPolygon(
     format: "json",
     polygon_geojson: "1",
     countrycodes: "il",
-    limit: "8",
+    limit: "12",
     viewbox: viewbox(),
     bounded: "1",
   });
-  const hit =
-    hits.find((h) => h.geojson && /road|street|residential|pedestrian/i.test(h.class ?? h.type ?? "")) ??
-    hits.find((h) => h.geojson) ??
-    null;
-  if (!hit?.geojson) return null;
-  const line = lineFromGeometry(hit.geojson);
-  if (!line || line.length < 2) return null;
-  const ring = bufferPolylineLngLat(line, halfWidthM);
-  if (!ring) return null;
-  return { type: "Polygon", coordinates: [ring] };
+
+  let cityClip = options.cityClip ?? null;
+  if (!cityClip && city.trim()) {
+    cityClip = await cityBoundaryPolygon(city);
+  }
+
+  const centerlines = pickStreetCenterlines(hits, city, {
+    cityClip,
+    zoneClips: options.zoneClips,
+  });
+  if (centerlines.length === 0) return null;
+
+  const rings: [number, number][][] = [];
+  for (const line of centerlines) {
+    const ring = bufferPolylineLngLat(line, halfWidthM);
+    if (ring) rings.push(ring);
+  }
+  if (rings.length === 0) return null;
+  if (rings.length === 1) return { type: "Polygon", coordinates: [rings[0]] };
+  return { type: "MultiPolygon", coordinates: rings.map((ring) => [ring]) };
 }
 
 type StreetHit = { street: string; city: string; label: string };

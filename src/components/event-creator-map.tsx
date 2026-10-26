@@ -15,6 +15,12 @@ const KIND_COLORS: Record<EventBoundaryKind, string> = {
   street: "#fb923c",
 };
 
+const KIND_DRAW_ORDER: Record<EventBoundaryKind, number> = {
+  city: 0,
+  neighborhood: 1,
+  street: 2,
+};
+
 export const EVENT_CREATOR_ISRAEL_BOUNDS: L.LatLngBoundsExpression = [
   [29.48, 34.17],
   [33.35, 35.92],
@@ -111,7 +117,17 @@ export function EventCreatorMap({
           />
         ) : null}
         <FitBounds bounds={bounds} showCountry={showCountry} />
-        {features.map((feature, idx) => {
+        {[...features]
+          .map((feature, idx) => ({ feature, idx }))
+          .sort((a, b) => {
+            const ka = a.feature.properties?.kind ?? "neighborhood";
+            const kb = b.feature.properties?.kind ?? "neighborhood";
+            return (
+              (KIND_DRAW_ORDER[ka as EventBoundaryKind] ?? 1) -
+              (KIND_DRAW_ORDER[kb as EventBoundaryKind] ?? 1)
+            );
+          })
+          .map(({ feature, idx }) => {
           const id = feature.properties?.id ?? String(idx);
           if (!selected.has(id)) return null;
           const kind = feature.properties?.kind ?? "neighborhood";
@@ -126,10 +142,10 @@ export function EventCreatorMap({
                   positions={positions}
                   pathOptions={{
                     color: isFocused ? "#fbbf24" : color,
-                    weight: isFocused ? 4 : 3,
+                    weight: kind === "street" ? (isFocused ? 5 : 4) : isFocused ? 4 : 3,
                     opacity: 1,
                     fillColor: color,
-                    fillOpacity: kind === "city" ? 0.12 : kind === "street" ? 0.26 : 0.32,
+                    fillOpacity: kind === "city" ? 0.12 : kind === "street" ? 0.38 : 0.28,
                     dashArray: kind === "city" ? "8 4" : undefined,
                   }}
                   eventHandlers={
