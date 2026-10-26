@@ -26,6 +26,7 @@ function stub(partial: Partial<House> & Pick<House, "id">): House {
     adminFrozen: false,
     ownerFrozenUntil: null,
     photoUrl: "",
+    editCode: "000000",
     createdAt: "2026-10-01T00:00:00.000Z",
     updatedAt: "2026-10-01T00:00:00.000Z",
     ...partial,
