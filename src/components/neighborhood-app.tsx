@@ -455,6 +455,11 @@ export function NeighborhoodApp({
     displayHouses.length === 0 && !catalogHasRealHouses(catalog) && loading && !catalogReady;
   const matchedIds = useMemo(() => new Set(visible.map((house) => house.id)), [visible]);
   const filterDimActive = matchedIds.size < mapHouses.length;
+  const mapHousesForMap = useMemo(
+    () =>
+      filterDimActive ? mapHouses.filter((house) => matchedIds.has(house.id)) : mapHouses,
+    [mapHouses, filterDimActive, matchedIds],
+  );
   const gemMapRingHousesVisible = useMemo(
     () => gemMapRingHouses.filter((house) => matchedIds.has(house.id)),
     [gemMapRingHouses, matchedIds],
@@ -473,10 +478,6 @@ export function NeighborhoodApp({
         ? mapGemNearHouseIds(gps, gemMapRingHousesVisible, matchedIds, gems.collected)
         : new Set<string>(),
     [gemUi, gps, gemMapRingHousesVisible, matchedIds, gems.collected],
-  );
-  const matchedIdsKey = useMemo(
-    () => (filterDimActive ? visible.map((house) => house.id).join("\0") : ""),
-    [filterDimActive, visible],
   );
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
@@ -1612,10 +1613,8 @@ export function NeighborhoodApp({
             aria-hidden={view !== "map"}
           >
                 <HouseMapDynamic
-                  houses={mapHouses}
+                  houses={mapHousesForMap}
                   matchedIds={matchedIds}
-                  matchedIdsKey={matchedIdsKey}
-                  filterDimActive={filterDimActive}
                   selectedId={originPick.originPickActive ? null : selection.selected?.id}
                   clusterOverview={selection.clusterOverview}
                   onSelect={(house, opts) => {

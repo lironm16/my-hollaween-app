@@ -1175,6 +1175,17 @@
   filter: none;
 }
 
+/* Pause pin motion while panning/zooming — smoother map gestures with many markers. */
+.is-map-gesture-active .house-pin .pin-hours-ring,
+.is-map-gesture-active .pumpkin-pin .pin-hours-ring,
+.is-map-gesture-active .house-pin .pin-gem-ring.is-sparkle,
+.is-map-gesture-active .pumpkin-pin .pin-gem-ring.is-sparkle,
+.is-map-gesture-active .house-pin .pin-gem-ring.is-diamond,
+.is-map-gesture-active .pumpkin-pin .pin-gem-ring.is-diamond,
+.is-map-gesture-active .pin-gem-sparkle-twinkle {
+  animation: none !important;
+}
+
 .house-skipped-banner {
   margin-bottom: 0.35rem;
 }

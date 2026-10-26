@@ -113,16 +113,12 @@ function GemMapZoomGate({ minZoom, children }: { minZoom: number; children: Reac
 export function MapGemAnchorLayer({
   houses,
   isCollected,
-  matchedIds,
-  filterDimActive = false,
   visual = "admin",
   userLocation = null,
   onSelectHouse,
 }: {
   houses: PublicHouse[];
   isCollected: (houseId: string) => boolean;
-  matchedIds?: ReadonlySet<string>;
-  filterDimActive?: boolean;
   visual?: GemMapAnchorVisual;
   userLocation?: UserLocation | null;
   /** Admin gem map — tap poster/diamond opens house sheet without panning. */
@@ -138,8 +134,6 @@ export function MapGemAnchorLayer({
       .map((house) => {
         const anchor = gemAnchorForHouse(house);
         const collected = isCollected(house.id);
-        const dimmed =
-          filterDimActive && matchedIds != null && !matchedIds.has(house.id);
         const inRange =
           userLocation != null &&
           !collected &&
@@ -148,7 +142,6 @@ export function MapGemAnchorLayer({
           house,
           anchor,
           collected,
-          dimmed,
           calibrated: anchor.calibrated === true || Boolean(overrides[house.id]),
           inRange,
         };
@@ -157,15 +150,14 @@ export function MapGemAnchorLayer({
       house: PublicHouse;
       anchor: ReturnType<typeof gemAnchorForHouse>;
       collected: boolean;
-      dimmed: boolean;
       calibrated: boolean;
       inRange: boolean;
     }>;
-  }, [houses, isCollected, matchedIds, filterDimActive, overrides, compact, osmEpoch, characters, userLocation]);
+  }, [houses, isCollected, overrides, compact, osmEpoch, characters, userLocation]);
 
   const layer = (
     <>
-      {markers.map(({ house, anchor, collected, dimmed, calibrated, inRange }) => (
+      {markers.map(({ house, anchor, collected, calibrated, inRange }) => (
         <Fragment key={`gem-anchor-${house.id}`}>
           {!compact && !collected ? (
             <Polyline
@@ -176,7 +168,7 @@ export function MapGemAnchorLayer({
               pathOptions={{
                 color: calibrated ? "#34d399" : characters ? "#fb923c" : "#fbbf24",
                 weight: 2,
-                opacity: dimmed ? 0.25 : 0.55,
+                opacity: 0.55,
                 dashArray: "4 6",
                 lineCap: "round",
               }}
@@ -187,8 +179,8 @@ export function MapGemAnchorLayer({
             position={[anchor.lat, anchor.lng]}
             icon={
               characters
-                ? gemCharacterIcon(house, collected, dimmed, calibrated)
-                : gemDiamondIcon(collected, dimmed, calibrated, compact, inRange)
+                ? gemCharacterIcon(house, collected, false, calibrated)
+                : gemDiamondIcon(collected, false, calibrated, compact, inRange)
             }
             zIndexOffset={collected ? 420 : compact ? 380 : 520}
             interactive={Boolean(onSelectHouse)}

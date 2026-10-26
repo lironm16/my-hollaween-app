@@ -1,7 +1,16 @@
 "use client";
 
 import { useAppNow } from "@/hooks/use-app-clock";
-import { Fragment, memo, useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
+import {
+  Fragment,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Circle,
   MapContainer,
@@ -80,9 +89,23 @@ import {
   type MapGemPinRingContext,
 } from "@/lib/map-gem-pin-ring";
 import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
-function useMinuteTick() {
+
+/** Pin hours/opening state refresh — one bucket per minute (not app-wide 15s clock). */
+const MAP_PIN_TIME_BUCKET_MS = 60_000;
+
+function useMapPinTimeBucket() {
   const now = useAppNow();
-  return Math.floor(now.getTime() / 15_000);
+  return Math.floor(now.getTime() / MAP_PIN_TIME_BUCKET_MS);
+}
+
+function MapDragAnimationPause({ onDraggingChange }: { onDraggingChange: (dragging: boolean) => void }) {
+  useMapEvents({
+    movestart: () => onDraggingChange(true),
+    moveend: () => onDraggingChange(false),
+    zoomstart: () => onDraggingChange(true),
+    zoomend: () => onDraggingChange(false),
+  });
+  return null;
 }
 
 /** CARTO Voyager only — one tile set per view (no dark/light double fetch). */
@@ -704,9 +727,6 @@ const ClusterMarker = memo(function ClusterMarker({
   routeHouseId,
   visitedIds,
   skippedIds,
-  filteredOut,
-  matchedIds,
-  matchedIdsKey,
   gemPinRingCtx,
   routeModeActive,
 }: {
@@ -719,15 +739,12 @@ const ClusterMarker = memo(function ClusterMarker({
   routeHouseId?: string;
   visitedIds: string[];
   skippedIds?: ReadonlySet<string>;
-  filteredOut?: boolean;
-  matchedIds?: ReadonlySet<string>;
-  matchedIdsKey?: string;
   gemPinRingCtx: MapGemPinRingContext;
   routeModeActive?: boolean;
 }) {
-  const tick = useMinuteTick();
+  const tick = useMapPinTimeBucket();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
-  const now = new Date(tick * 15_000);
+  const now = new Date(tick * MAP_PIN_TIME_BUCKET_MS);
   const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
   const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
   const visitedKey = useMemo(
@@ -752,8 +769,6 @@ const ClusterMarker = memo(function ClusterMarker({
       visitedKey,
       skippedKey,
       routeModeActive ? "1" : "0",
-      filteredOut ? "1" : "0",
-      matchedIdsKey ?? "",
       gemRingKey,
     ].join("|");
     return cachedDivIcon(cacheKey, () =>
@@ -764,8 +779,8 @@ const ClusterMarker = memo(function ClusterMarker({
         gemPinRingCtx,
         routeOrder,
         visitedIds,
-        filteredOut,
-        matchedIds,
+        false,
+        undefined,
         skippedIds,
         routeModeActive,
         routeHouseId,
@@ -780,9 +795,6 @@ const ClusterMarker = memo(function ClusterMarker({
     visitedKey,
     skippedKey,
     routeModeActive,
-    filteredOut,
-    matchedIdsKey,
-    matchedIds,
     visitedIds,
     skippedIds,
     now,
@@ -892,11 +904,8 @@ type Props = {
   panTo?: LatLng | null;
   panTick?: number;
   statsFab?: ReactNode;
-  /** House ids that pass the current filter — others render faded on the map. */
+  /** When set with {@link gemAnchorRespectFilters}, gem anchor markers omit non-matching houses. */
   matchedIds?: ReadonlySet<string>;
-  /** Stable serialization of matched ids for pin icon memoization. */
-  matchedIdsKey?: string;
-  filterDimActive?: boolean;
   /** Compact embed on house link pages — center on the house, theme toggle only. */
   embed?: boolean;
   /** Show **המיקום שלי** on embed maps (admin gem manager). */
@@ -960,8 +969,6 @@ export function HouseMap({
   panTick = 0,
   statsFab = null,
   matchedIds,
-  matchedIdsKey = "",
-  filterDimActive = false,
   embed = false,
   showLocateButton = false,
   embedCenterOnSelect = true,
@@ -997,7 +1004,11 @@ export function HouseMap({
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
-  const dimActive = filterDimActive && Boolean(matchedIds);
+  const [mapGestureActive, setMapGestureActive] = useState(false);
+  const gemAnchorHousesVisible = useMemo(() => {
+    if (!gemAnchorRespectFilters || !matchedIds) return gemAnchorHouses;
+    return gemAnchorHouses.filter((house) => matchedIds.has(house.id));
+  }, [gemAnchorHouses, gemAnchorRespectFilters, matchedIds]);
   const routeOrderById = useMemo(() => {
     const map = new Map<string, number>();
     if (routeSessionDisplayOrders) {
@@ -1067,7 +1078,7 @@ export function HouseMap({
       className={cn(
         "relative z-0 isolate overflow-hidden",
         originPickActive && "is-origin-pick",
-        dimActive && "is-filter-dim",
+        mapGestureActive && "is-map-gesture-active",
         embed ? "bg-[#14091c]" : "bg-[#d6d3d1]",
         className ?? "h-full min-h-[280px] w-full",
       )}
@@ -1109,6 +1120,7 @@ export function HouseMap({
           />
         ) : null}
         <SizeSync />
+        <MapDragAnimationPause onDraggingChange={setMapGestureActive} />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
         {embed && embedCenterOnSelect && focus && !gemAnchorEdit ? (
           <CenterOnHouse lat={focus.lat} lng={focus.lng} zoom={config.map.maxZoom - 1} />
@@ -1228,12 +1240,10 @@ export function HouseMap({
         ) : null}
         {showEventZoneOutlines || pickMode ? <MapEventZoneLayer /> : null}
         {!pickMode && gemAnchorEdit ? <MapGemAnchorEditLayer {...gemAnchorEdit} /> : null}
-        {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHouses.length > 0 ? (
+        {!pickMode && !gemAnchorEdit && showGemAnchors && gemAnchorHousesVisible.length > 0 ? (
           <MapGemAnchorLayer
-            houses={gemAnchorHouses}
+            houses={gemAnchorHousesVisible}
             isCollected={isGemCollected ?? (() => false)}
-            matchedIds={matchedIds}
-            filterDimActive={gemAnchorRespectFilters ? dimActive : false}
             visual={gemAnchorVisual}
             userLocation={userLocation}
             onSelectHouse={onGemAnchorSelect}
@@ -1242,14 +1252,9 @@ export function HouseMap({
         {!pickMode &&
           !gemAnchorEdit &&
           clusters.map((cluster) => {
-            const clusterFilteredOut =
-              dimActive &&
-              (cluster.houses.length > 1
-                ? cluster.houses.every((house) => !matchedIds?.has(house.id))
-                : !matchedIds?.has(cluster.houses[0]!.id));
             return (
               <ClusterMarker
-                key={`${cluster.key}|gem-rings:${showGemPinRings ? 1 : 0}|near:${gemNearHouseIds?.size ?? 0}`}
+                key={cluster.key}
                 cluster={cluster}
                 selectedId={selectedId}
                 clusterOverview={clusterOverview}
@@ -1257,9 +1262,6 @@ export function HouseMap({
                 onClose={onClose}
                 visitedIds={visitedIds}
                 skippedIds={skippedIdSet}
-                filteredOut={clusterFilteredOut}
-                matchedIds={matchedIds}
-                matchedIdsKey={matchedIdsKey}
                 gemPinRingCtx={gemPinRingCtx}
                 routeOrder={cluster.houses.reduce<number | undefined>(
                   (found, house) => found ?? routeOrderById.get(house.id),
