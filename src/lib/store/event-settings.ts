@@ -8,9 +8,13 @@ import {
   mergeAddressRevealSchedule,
   normalizeAddHouseCutoffSchedule,
   normalizeAddressRevealSchedule,
+  defaultEventOpenHoursSchedule,
+  eventOpenHoursScheduleFromDb,
+  normalizeEventOpenHoursSchedule,
 } from "@/lib/event-settings";
+import { parseClockMinutes } from "@/lib/hours";
 import { firestoreConfigured, readFirestoreEventSettings } from "@/lib/firestore-db";
-import type { AddHouseCutoffSchedule, AddressRevealSchedule } from "@/lib/types";
+import type { AddHouseCutoffSchedule, AddressRevealSchedule, EventOpenHoursSchedule } from "@/lib/types";
 import { getGlobalDb, getMem, loadDb, runSyncedWrite } from "./core";
 
 export type AdminAddressRevealSettings = {
@@ -168,6 +172,66 @@ export async function saveAdminCountdownBannerSettings(
 }
 
 /** Convenience for server routes that redact a single house row. */
+export type AdminEventOpenHoursSettings = {
+  eventOpenHours: EventOpenHoursSchedule;
+  customized: boolean;
+  defaults: EventOpenHoursSchedule;
+  updatedAt?: string;
+};
+
+export async function getAdminEventOpenHoursSettings(): Promise<AdminEventOpenHoursSettings> {
+  const db = await loadDb();
+  const defaults = defaultEventOpenHoursSchedule();
+  const override = db.eventSettings?.eventOpenHours;
+  return {
+    eventOpenHours: eventOpenHoursScheduleFromDb(db.eventSettings),
+    customized: Boolean(override),
+    defaults,
+    updatedAt: db.eventSettings?.updatedAt,
+  };
+}
+
+export async function saveAdminEventOpenHoursSchedule(input: {
+  year: number;
+  month: number;
+  day: number;
+  openFrom: string;
+  openTo: string;
+}): Promise<AdminEventOpenHoursSettings> {
+  const eventOpenHours = normalizeEventOpenHoursSchedule(input);
+  const fromMin = parseClockMinutes(eventOpenHours.openFrom);
+  const toMin = parseClockMinutes(eventOpenHours.openTo);
+  if (fromMin === null || toMin === null || toMin <= fromMin) {
+    throw new Error("שעת הסיום חייבת להיות אחרי שעת ההתחלה.");
+  }
+  await runSyncedWrite((db) => {
+    db.eventSettings = {
+      ...(db.eventSettings ?? {}),
+      updatedAt: new Date().toISOString(),
+      eventOpenHours,
+    };
+    db.updatedAt = new Date().toISOString();
+  });
+  return getAdminEventOpenHoursSettings();
+}
+
+export async function clearAdminEventOpenHoursSchedule(): Promise<AdminEventOpenHoursSettings> {
+  await runSyncedWrite((db) => {
+    const prev = db.eventSettings ?? {};
+    const { eventOpenHours: _drop, ...keep } = prev;
+    db.eventSettings =
+      keep.addressReveal ||
+      keep.addHouseCutoff ||
+      keep.gemHuntPublic === true ||
+      keep.countdownBanner === false ||
+      Object.keys(keep).length > 1
+        ? { ...keep, updatedAt: new Date().toISOString() }
+        : { updatedAt: new Date().toISOString() };
+    db.updatedAt = new Date().toISOString();
+  });
+  return getAdminEventOpenHoursSettings();
+}
+
 export async function loadAddressRevealSchedule(): Promise<AddressRevealSchedule> {
   const mem = getMem();
   if (mem?.eventSettings?.addressReveal) {

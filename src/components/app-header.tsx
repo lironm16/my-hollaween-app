@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
+  AlertTriangle,
   Bell,
   ChevronDown,
   Home,
@@ -317,6 +318,17 @@ export function AppHeader({
                     התראות לשכונה
                   </Link>
                 ) : null}
+                <Link
+                  href="/admin/anomalies"
+                  onClick={closeMenu}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+                  )}
+                >
+                  <AlertTriangle className="size-4" />
+                  חריגות בתים
+                </Link>
                 <Link
                   href="/admin/rehearsal"
                   onClick={closeMenu}

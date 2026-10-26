@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AdminAddHouseCutoffSettings } from "@/components/admin-add-house-cutoff-settings";
+import { AdminEventOpenHoursSettings } from "@/components/admin-event-open-hours-settings";
 import { AdminAddressRevealSettings } from "@/components/admin-address-reveal-settings";
 import { AdminGemOpsPanel } from "@/components/admin-gem-ops-panel";
 import { AdminGemHuntPublicSettings } from "@/components/admin-gem-hunt-public-settings";
@@ -126,6 +127,7 @@ export function AdminDryRunPanel() {
       <AdminSection title="לוח זמנים לאירוע" summary="ספירה לאחור · חיתוך הוספה · חשיפת כתובות · קודי כניסה">
         <div className="space-y-2">
           <AdminCountdownBannerSettings embedded />
+          <AdminEventOpenHoursSettings embedded />
           <AdminAddHouseCutoffSettings embedded />
           <AdminAddressRevealSettings embedded />
           <AdminNightPassesSettings embedded />
