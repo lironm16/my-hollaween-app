@@ -63,6 +63,8 @@ import {
 } from "@/lib/hours";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useCatalog } from "@/hooks/use-catalog";
+import { defaultAddHouseOpenHours } from "@/lib/event-settings";
 import type { HoursWindow } from "@/lib/types";
 import {
   normalizeOwnerPhone,
@@ -141,7 +143,17 @@ export function HouseForm({
   busy?: boolean;
   extraActions?: ReactNode;
 }) {
-  const [form, setForm] = useState<HouseInput>({ ...empty, ...initial });
+  const { catalog } = useCatalog();
+  const catalogDefaultHours = useMemo(
+    () =>
+      defaultAddHouseOpenHours(
+        catalog?.eventSettings?.eventOpenHours
+          ? { eventOpenHours: catalog.eventSettings.eventOpenHours }
+          : undefined,
+      ),
+    [catalog?.eventSettings?.eventOpenHours],
+  );
+  const [form, setForm] = useState<HouseInput>({ ...empty, ...catalogDefaultHours, ...initial });
   const [placeKind, setPlaceKind] = useState<"house" | "poi" | "practice">(() => {
     if (initial?.isPractice) return "practice";
     return initial?.kind === "poi" ? "poi" : "house";
@@ -152,8 +164,8 @@ export function HouseForm({
   const [decorLevel, setDecorLevel] = useState<DecorLevel>(() => initialDecorLevel(initial));
   const [candy, setCandy] = useState<CandyTone>(() => initialCandyTone(initial));
   const [hourWindows, setHourWindows] = useState<HoursWindow[]>(() => {
-    const windows = houseHoursWindows({ ...empty, ...initial });
-    return windows.length ? windows : [{ from: "17:00", to: "20:00" }];
+    const windows = houseHoursWindows({ ...empty, ...catalogDefaultHours, ...initial });
+    return windows.length ? windows : catalogDefaultHours.openHours;
   });
   const [nightStatus, setNightStatus] = useState<"open" | "pause" | "stop">(() => {
     if (initial?.visit === "closed") return "stop";
@@ -177,6 +189,12 @@ export function HouseForm({
   const now = useAppNow();
   const { admin } = useAdminSession();
   const blocked = Boolean(busy || saving);
+
+  useEffect(() => {
+    if (!isNewHouse || initial?.openHours?.length || initial?.openFrom) return;
+    setForm((prev) => ({ ...prev, ...catalogDefaultHours }));
+    setHourWindows(catalogDefaultHours.openHours);
+  }, [catalogDefaultHours, initial?.openFrom, initial?.openHours?.length, isNewHouse]);
   const isPracticePlace = placeKind === "practice";
   const isPoi = placeKind === "poi" && isPoiHouse({ ...form, kind: "poi" });
   const scareGlyph = isPoi ? ScarePumpkin : undefined;

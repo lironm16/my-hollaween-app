@@ -118,6 +118,8 @@ export type House = {
   isPractice?: boolean;
   /** Gem hiding spot placed by the owner or an admin; null/absent = automatic sidewalk anchor. */
   gemAnchor?: GemAnchorPlacement | null;
+  /** Admin-only — dismissals for house data anomalies (never in public catalog). */
+  adminAnomalyReviews?: Partial<Record<HouseAnomalyKind, HouseAnomalyReview>>;
 };
 
 export type GemAnchorPlacement = {
@@ -210,6 +212,42 @@ export type AddHouseCutoffSchedule = {
   minute: number;
 };
 
+/** Calendar night and typical open hours for trick-or-treat (anomaly checks + add-house defaults). */
+export type EventOpenHoursSchedule = {
+  year: number;
+  month: number;
+  day: number;
+  openFrom: string;
+  openTo: string;
+};
+
+export const HOUSE_ANOMALY_KINDS = [
+  "hours_invalid",
+  "hours_very_short",
+  "hours_outside_event",
+  "hours_early_morning",
+  "name_looks_like_address",
+  "building_accessible_mismatch",
+  "building_address_mismatch",
+  "visit_closed_with_hours",
+  "missing_arrival",
+  "pin_outside_bounds",
+  "empty_display_name",
+] as const;
+
+export type HouseAnomalyKind = (typeof HOUSE_ANOMALY_KINDS)[number];
+
+export type HouseAnomalyReviewStatus = "fixed" | "not_an_issue";
+
+/** Admin triage for a detected data-quality issue on one house. */
+export type HouseAnomalyReview = {
+  status: HouseAnomalyReviewStatus;
+  reviewedAt: string;
+  /** Re-open if the house row changes after this review. */
+  houseUpdatedAt: string;
+  note?: string;
+};
+
 export type Catalog = {
   updatedAt: string;
   neighborhood: string;
@@ -226,6 +264,8 @@ export type Catalog = {
     gemHuntPublic?: boolean;
     /** When false, hide countdown bar/screen before event night (default shown). */
     countdownBanner?: boolean;
+    /** Event night date and default open window (add-house form + anomaly bounds). */
+    eventOpenHours?: EventOpenHoursSchedule;
   };
   /** Night passes on — which audience this payload was built for (absent = legacy full list). */
   scope?: NightPassViewer;
@@ -291,6 +331,7 @@ export type DbFile = {
     addHouseCutoff?: AddHouseCutoffSchedule;
     gemHuntPublic?: boolean;
     countdownBanner?: boolean;
+    eventOpenHours?: EventOpenHoursSchedule;
   };
   pushSettings?: {
     updatedAt?: string;

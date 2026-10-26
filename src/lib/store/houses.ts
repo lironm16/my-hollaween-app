@@ -57,6 +57,15 @@ import {
   withLock,
 } from "./core";
 import { broadcastPush } from "./push";
+import { refreshHouseAnomalyState } from "./house-anomalies";
+
+async function finalizeHouseRow(house: House): Promise<House> {
+  try {
+    return await refreshHouseAnomalyState(house);
+  } catch {
+    return house;
+  }
+}
 
 function findHouseIn(houses: House[], id: string): House | undefined {
   const needle = canonicalHouseId(id);
@@ -226,8 +235,9 @@ export async function submitHouse(
     db.updatedAt = now;
     return house;
   });
-  const push = await dispatchHousePush(null, house, "houseAdded", undefined, options?.includeEndpoint);
-  return { house, push };
+  const finalized = await finalizeHouseRow(house);
+  const push = await dispatchHousePush(null, finalized, "houseAdded", undefined, options?.includeEndpoint);
+  return { house: finalized, push };
 }
 
 function ownerAddressChanged(current: House, patch: Partial<HouseInput> & NightPatch) {
@@ -371,9 +381,11 @@ async function patchHouseDoc(
   const house = normalizeHouse({ ...existing });
   applyOwnerPatch(house, patch);
 
+  let saved = house;
   if (firestoreConfigured()) {
-    await writeFirestoreHouse(house);
-    upsertMemHouse(house, house.updatedAt);
+    saved = await finalizeHouseRow(house);
+    await writeFirestoreHouse(saved);
+    upsertMemHouse(saved, saved.updatedAt);
   } else {
     const updated = await runSyncedWrite((db) => {
       const row = findHouseIn(db.houses, docId);
@@ -383,10 +395,11 @@ async function patchHouseDoc(
       return row;
     });
     if (!updated) return { error: "missing" as const };
+    saved = await finalizeHouseRow(updated);
   }
 
-  const push = await dispatchHousePush(prev, house, undefined, patch, options?.includeEndpoint);
-  return { house, push };
+  const push = await dispatchHousePush(prev, saved, undefined, patch, options?.includeEndpoint);
+  return { house: saved, push };
 }
 
 /**
@@ -575,8 +588,9 @@ export async function adminUpdate(
     return house;
   });
   if (!updated) return null;
-  const push = await dispatchHousePush(prev, updated, undefined, patch, options?.includeEndpoint);
-  return { house: updated, push };
+  const finalized = await finalizeHouseRow(updated);
+  const push = await dispatchHousePush(prev, finalized, undefined, patch, options?.includeEndpoint);
+  return { house: finalized, push };
 }
 
 /** Owner/admin gem hiding spot — `null` returns the gem to its automatic sidewalk anchor. */

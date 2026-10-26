@@ -1,5 +1,12 @@
 import { config } from "@/lib/config";
-import type { AddHouseCutoffSchedule, AddressRevealSchedule, Catalog, DbFile } from "@/lib/types";
+import { parseClockMinutes } from "@/lib/hours";
+import type {
+  AddHouseCutoffSchedule,
+  AddressRevealSchedule,
+  Catalog,
+  DbFile,
+  EventOpenHoursSchedule,
+} from "@/lib/types";
 
 export function defaultAddressRevealSchedule(): AddressRevealSchedule {
   return {
@@ -104,6 +111,63 @@ export function countdownBannerFromCatalog(
   return eventSettings?.countdownBanner !== false;
 }
 
+export function defaultEventOpenHoursSchedule(): EventOpenHoursSchedule {
+  const d = config.eventNight;
+  return {
+    year: d.year,
+    month: d.month,
+    day: d.day,
+    openFrom: "17:00",
+    openTo: "20:00",
+  };
+}
+
+export function normalizeEventOpenHoursSchedule(input: {
+  year?: unknown;
+  month?: unknown;
+  day?: unknown;
+  openFrom?: unknown;
+  openTo?: unknown;
+}): EventOpenHoursSchedule {
+  const defaults = defaultEventOpenHoursSchedule();
+  const yearRaw = Number(input.year);
+  const monthRaw = Number(input.month);
+  const dayRaw = Number(input.day);
+  const year = Number.isFinite(yearRaw) ? Math.trunc(yearRaw) : defaults.year;
+  const month = Number.isFinite(monthRaw)
+    ? Math.min(12, Math.max(1, Math.trunc(monthRaw)))
+    : defaults.month;
+  const day = Number.isFinite(dayRaw) ? Math.min(31, Math.max(1, Math.trunc(dayRaw))) : defaults.day;
+  const fromRaw = typeof input.openFrom === "string" ? input.openFrom.trim().slice(0, 5) : defaults.openFrom;
+  const toRaw = typeof input.openTo === "string" ? input.openTo.trim().slice(0, 5) : defaults.openTo;
+  const openFrom = parseClockMinutes(fromRaw) !== null ? fromRaw : defaults.openFrom;
+  const openTo = parseClockMinutes(toRaw) !== null ? toRaw : defaults.openTo;
+  return { year, month, day, openFrom, openTo };
+}
+
+export function mergeEventOpenHoursSchedule(
+  override?: EventOpenHoursSchedule | null,
+): EventOpenHoursSchedule {
+  if (!override) return defaultEventOpenHoursSchedule();
+  return normalizeEventOpenHoursSchedule(override);
+}
+
+export function eventOpenHoursScheduleFromDb(
+  eventSettings?: DbFile["eventSettings"] | null,
+): EventOpenHoursSchedule {
+  return mergeEventOpenHoursSchedule(eventSettings?.eventOpenHours);
+}
+
+/** Default open windows for the add-house form (from admin event settings or config). */
+export function defaultAddHouseOpenHours(eventSettings?: DbFile["eventSettings"] | null) {
+  const schedule = eventOpenHoursScheduleFromDb(eventSettings);
+  return {
+    openFrom: schedule.openFrom,
+    openTo: schedule.openTo,
+    openHours: [{ from: schedule.openFrom, to: schedule.openTo }],
+  };
+}
+
 export function catalogEventSettings(
   eventSettings?: DbFile["eventSettings"] | null,
 ): NonNullable<Catalog["eventSettings"]> {
@@ -112,6 +176,7 @@ export function catalogEventSettings(
     addHouseCutoff: addHouseCutoffScheduleFromDb(eventSettings),
     gemHuntPublic: gemHuntPublicFromDb(eventSettings),
     countdownBanner: countdownBannerFromDb(eventSettings),
+    eventOpenHours: eventOpenHoursScheduleFromDb(eventSettings),
   };
 }
 

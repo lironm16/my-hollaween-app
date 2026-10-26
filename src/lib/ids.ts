@@ -78,6 +78,7 @@ export function toPublicHouse<
   delete rest.storeId;
   delete rest.ownerPhone;
   delete rest.addedBy;
+  delete (rest as { adminAnomalyReviews?: unknown }).adminAnomalyReviews;
   if (
     typeof rest.address === "string" &&
     typeof rest.lat === "number" &&
