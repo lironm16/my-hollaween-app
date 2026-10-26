@@ -362,6 +362,7 @@ export function EventCreatorScreen() {
               features={mapFeatures}
               selectedIds={selectedIds}
               focusedId={mapFocusId}
+              focusedLabel={mapFocusZone?.label ?? null}
               onAreaClick={onMapAreaClick}
             />
             {loadingMap ? (

@@ -12,6 +12,10 @@ export const CARTO_VOYAGER_TEMPLATE =
 export const CARTO_VOYAGER_NOLABELS_TEMPLATE =
   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
 
+/** Label-only overlay — stack on voyager_nolabels for street names without house numbers. */
+export const CARTO_VOYAGER_ONLY_LABELS_TEMPLATE =
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png";
+
 /** CARTO Dark Matter — night theme, clear lines without CSS invert. */
 export const CARTO_DARK_TEMPLATE =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";

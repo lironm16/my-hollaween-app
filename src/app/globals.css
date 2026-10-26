@@ -249,9 +249,25 @@
   display: none !important;
 }
 
-/** Event creator — hood name pops on first map tap (focused polygon only). */
-.leaflet-tooltip.event-creator-zone-label {
-  margin-top: -6px;
+/** Event creator — hood name pops on map tap (divIcon marker, reliable on mobile Safari). */
+.leaflet-marker-icon.event-creator-zone-label-marker {
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.event-creator-zone-label-text {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  max-width: min(92vw, 280px);
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 0.35rem 0.65rem;
   border: 1px solid rgba(251, 191, 36, 0.55);
   border-radius: 0.65rem;
@@ -265,18 +281,14 @@
   pointer-events: none;
 }
 
-.leaflet-tooltip.event-creator-zone-label::before {
-  border-top-color: rgba(20, 10, 28, 0.96);
-}
-
 @keyframes event-creator-zone-label-pop {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.88);
+    transform: translateX(-50%) translateY(6px) scale(0.88);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 }
 

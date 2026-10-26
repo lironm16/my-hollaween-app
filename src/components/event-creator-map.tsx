@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo } from "react";
-import { MapContainer, Polygon, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polygon, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
@@ -36,6 +36,30 @@ function ringsFromGeometry(geometry: GeoJSON.Geometry): [number, number][][] {
   return [];
 }
 
+function ringCentroid(positions: [number, number][]): [number, number] {
+  const bounds = L.latLngBounds(positions);
+  const c = bounds.getCenter();
+  return [c.lat, c.lng];
+}
+
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function zoneLabelIcon(label: string) {
+  const safe = escapeHtml(label);
+  return L.divIcon({
+    className: "event-creator-zone-label-marker",
+    html: `<span class="event-creator-zone-label-text">${safe}</span>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+}
+
 function FitBounds({
   bounds,
   showCountry,
@@ -59,6 +83,8 @@ type Props = {
   features: EventBoundaryMapFeature[];
   selectedIds: string[];
   focusedId?: string | null;
+  /** Draft label when geometry properties lag or omit label. */
+  focusedLabel?: string | null;
   onAreaClick?: (featureId: string) => void;
   className?: string;
 };
@@ -67,6 +93,7 @@ export function EventCreatorMap({
   features,
   selectedIds,
   focusedId = null,
+  focusedLabel = null,
   onAreaClick,
   className,
 }: Props) {
@@ -86,6 +113,18 @@ export function EventCreatorMap({
     return b.isValid() ? b : null;
   }, [features]);
 
+  const focusLabelOverlay = useMemo(() => {
+    if (!focusedId) return null;
+    const feature = features.find((f, idx) => (f.properties?.id ?? String(idx)) === focusedId);
+    if (!feature) return null;
+    const label =
+      (focusedLabel?.trim() || feature.properties?.label?.trim() || focusedId).trim() || focusedId;
+    const rings = ringsFromGeometry(feature.geometry);
+    const positions = rings[0];
+    if (!positions?.length) return null;
+    return { label, position: ringCentroid(positions) as [number, number] };
+  }, [features, focusedId, focusedLabel]);
+
   return (
     <div className={className ?? "h-full w-full"}>
       <MapContainer
@@ -102,13 +141,20 @@ export function EventCreatorMap({
           subdomains={tiles.subdomains}
           maxNativeZoom={tiles.maxNativeZoom}
         />
+        {tiles.labelsUrl ? (
+          <TileLayer
+            url={tiles.labelsUrl}
+            subdomains={tiles.subdomains}
+            maxNativeZoom={tiles.maxNativeZoom}
+            zIndex={450}
+          />
+        ) : null}
         <FitBounds bounds={bounds} showCountry={showCountry} />
         {features.map((feature, idx) => {
           const id = feature.properties?.id ?? String(idx);
           if (!selected.has(id)) return null;
           const kind = feature.properties?.kind ?? "neighborhood";
           const color = KIND_COLORS[kind];
-          const label = feature.properties?.label ?? id;
           const isFocused = focusedId === id;
           const rings = ringsFromGeometry(feature.geometry);
           return (
@@ -132,17 +178,20 @@ export function EventCreatorMap({
                         }
                       : undefined
                   }
-                >
-                  {isFocused && ringIdx === 0 ? (
-                    <Tooltip permanent direction="top" className="event-creator-zone-label">
-                      {label}
-                    </Tooltip>
-                  ) : null}
-                </Polygon>
+                />
               ))}
             </Fragment>
           );
         })}
+        {focusLabelOverlay ? (
+          <Marker
+            key={`label-${focusedId}-${focusLabelOverlay.label}`}
+            position={focusLabelOverlay.position}
+            icon={zoneLabelIcon(focusLabelOverlay.label)}
+            interactive={false}
+            zIndexOffset={1200}
+          />
+        ) : null}
       </MapContainer>
     </div>
   );
