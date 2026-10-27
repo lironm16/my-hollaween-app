@@ -24,7 +24,7 @@ export function GemResetConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const { dir, t } = useLocale();
+  const { dir, locale, t } = useLocale();
   if (!house) return null;
 
   const clusterMode = cluster && clusterHouses != null && clusterHouses.length >= 2;
@@ -46,7 +46,7 @@ export function GemResetConfirmDialog({
               dir={dir}
             >
               {clusterHouses.map((row) => {
-                const booth = clusterBoothLabel(row, clusterHouses);
+                const booth = clusterBoothLabel(row, clusterHouses, locale);
                 return (
                   <li key={row.id} className="[overflow-wrap:anywhere]">
                     {houseHeadline(row)}

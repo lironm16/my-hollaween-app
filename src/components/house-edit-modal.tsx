@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 /** Centered house-owner modal above the map sheet and other UI. */
@@ -26,11 +27,12 @@ export function HouseEditModal({
   closeBarClassName?: string;
   placement?: "center" | "top-safe";
 }) {
+  const { dir } = useLocale();
   const topSafe = placement === "top-safe";
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
-        dir="rtl"
+        dir={dir}
         showCloseButton={false}
         className={cn(
           "house-edit-modal grid w-[min(100%-2rem,26rem)] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden border-orange-500/30 bg-[#1d1028] p-0 text-orange-50 ring-orange-500/25",

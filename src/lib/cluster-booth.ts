@@ -1,4 +1,7 @@
 import { clusterAddressKey } from "@/lib/house-clusters";
+import { formatMessage } from "@/lib/i18n/format";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { translate } from "@/lib/i18n/translate";
 import { isPracticeHouse } from "@/lib/practice-house";
 import { isStubHouse } from "@/lib/house-set";
 import { clusterIsSchoolCampus } from "@/lib/school-campus";
@@ -40,10 +43,14 @@ export function nextBoothNumberForAddress(
 export function clusterBoothLabel(
   house: Pick<PublicHouse, "boothNumber" | "address" | "isStub" | "isPractice">,
   cluster: readonly Pick<PublicHouse, "address">[],
+  locale: AppLocale = "he",
 ): string | null {
   const n = boothNumberForHouse(house);
   if (n == null) return null;
   if (!clusterIsSchoolCampus(cluster)) return null;
-  if (isStubHouse(house)) return `דוכן חזרה ${n}`;
-  return `דוכן ${n}`;
+  const nStr = String(n);
+  if (isStubHouse(house)) {
+    return formatMessage(translate(locale, "cluster.returnBooth"), { n: nStr });
+  }
+  return formatMessage(translate(locale, "cluster.booth"), { n: nStr });
 }

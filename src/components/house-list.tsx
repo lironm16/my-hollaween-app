@@ -49,7 +49,7 @@ export function HouseList({
   /** `flush` — horizontal padding comes from the page (e.g. /my tabs). */
   insetX?: "default" | "flush";
 }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
   const focusRef = useRef<HTMLDivElement | null>(null);
   const addressReveal = useAddressReveal();
   const sort = useSyncExternalStore(
@@ -179,7 +179,11 @@ export function HouseList({
               {...houseCardPropsFor(h, actionContext, {
                 index: i + 1,
                 distanceM: addressReveal.distanceAllowed(h.id) ? d : undefined,
-                clusterBoothTag: clusterBoothLabel(h, clusterMembersForHouse(houses, h.id)),
+                clusterBoothTag: clusterBoothLabel(
+                  h,
+                  clusterMembersForHouse(houses, h.id),
+                  locale,
+                ),
               })}
             />
             {showPerCardRemove ? (

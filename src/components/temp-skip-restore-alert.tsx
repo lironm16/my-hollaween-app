@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useLocale } from "@/hooks/use-locale";
 import type { TempSkipRestoreAlert } from "@/lib/temp-skip-restore-alerts";
+import { cn } from "@/lib/utils";
 
 export function TempSkipRestoreAlerts({
   alerts,
@@ -14,7 +16,9 @@ export function TempSkipRestoreAlerts({
   onFocusHouse: (houseId: string) => void;
   onDismiss: (id: string) => void;
 }) {
+  const { dir, t } = useLocale();
   const [mounted, setMounted] = useState(false);
+  const TrailChevron = dir === "ltr" ? ChevronRight : ChevronLeft;
 
   useEffect(() => {
     setMounted(true);
@@ -25,7 +29,7 @@ export function TempSkipRestoreAlerts({
   return createPortal(
     <div
       className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top,0px)+7.25rem)] z-[55] space-y-1 px-3"
-      dir="rtl"
+      dir={dir}
     >
       {alerts.map((alert) => (
         <div
@@ -35,16 +39,19 @@ export function TempSkipRestoreAlerts({
         >
           <button
             type="button"
-            className="flex min-w-0 flex-1 items-center gap-2 text-right leading-snug"
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-2 leading-snug",
+              dir === "ltr" ? "text-left" : "text-right",
+            )}
             onClick={() => onFocusHouse(alert.id)}
           >
             <span className="min-w-0 flex-1">{alert.message}</span>
-            <ChevronLeft className="size-4 shrink-0 opacity-80" aria-hidden />
+            <TrailChevron className="size-4 shrink-0 opacity-80" aria-hidden />
           </button>
           <button
             type="button"
             className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-emerald-100/90 hover:bg-emerald-900/60"
-            aria-label="סגירת ההודעה"
+            aria-label={t("skipAlert.dismissAria")}
             onClick={() => onDismiss(alert.id)}
           >
             <X className="size-4" aria-hidden />

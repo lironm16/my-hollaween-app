@@ -1,7 +1,8 @@
 "use client";
 
 import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
-import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { AdminStyleStrip } from "@/components/admin-style-strip";
 import { cn } from "@/lib/utils";
 
@@ -33,17 +34,19 @@ export function AdminGemUserPreviewToggle({
   className?: string;
 }) {
   const { previewAsUser, setPreviewAsUser } = useAdminPreviewAsUser();
+  const { t } = useLocale();
+  const toggleLabel = t("adminPreview.toggleAria");
 
   return (
     <AdminStyleStrip
       className={className}
-      title="תצוגת משתמש"
+      title={t("adminPreview.title")}
       subtitle={
         compact ? (
-          previewAsUser ? "פועל" : "כבוי"
+          previewAsUser ? t("adminPreview.on") : t("adminPreview.off")
         ) : (
           <span className="text-base text-violet-300">
-            כמו משתמש בלילה — משחק השדונים ו{GEM_ALBUM_TITLE_HE}, בלי כלי בדיקה במפה.
+            {formatMessage(t("adminPreview.subtitle"), { album: t("menu.gemAlbum") })}
           </span>
         )
       }
@@ -51,7 +54,7 @@ export function AdminGemUserPreviewToggle({
         <Toggle
           on={previewAsUser}
           onClick={() => setPreviewAsUser(!previewAsUser)}
-          label="תצוגת משתמש"
+          label={toggleLabel}
         />
       }
     />

@@ -14,6 +14,7 @@ import {
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useLocale } from "@/hooks/use-locale";
 import { houseHeadline } from "@/lib/labels";
 import { clusterBoothLabel } from "@/lib/cluster-booth";
 import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
@@ -67,6 +68,7 @@ export function HouseDetailOverlay({
   gemCollected?: (id: string) => boolean;
   index?: number;
 }) {
+  const { dir, locale } = useLocale();
   const labelId = useId();
   const multi = !openedFromList && (clusterHouses?.length ?? 0) > 1;
   const clusterShell =
@@ -92,7 +94,7 @@ export function HouseDetailOverlay({
     };
   }, [house.id]);
 
-  const clusterBoothTag = clusterShell ? clusterBoothLabel(house, clusterHouses!) : null;
+  const clusterBoothTag = clusterShell ? clusterBoothLabel(house, clusterHouses!, locale) : null;
 
   const sheetBody = (
     <HouseSheetBody
@@ -114,7 +116,7 @@ export function HouseDetailOverlay({
       role="dialog"
       aria-labelledby={labelId}
       tabIndex={-1}
-      dir="rtl"
+      dir={dir}
     >
       <div className="house-detail-overlay-top shrink-0">
         <OverlayCloseBar onClose={onClose} className="pb-1" />
@@ -183,7 +185,7 @@ export function HouseDetailOverlay({
               <p className="map-house-sheet-kicker">
                 {addressReveal.formatClusterAddress(clusterHouses!, house)}
               </p>
-              <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses!)}</p>
+              <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses!, locale)}</p>
             </div>
             <div className="max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-contain pe-0.5">
               <ClusterHouseList

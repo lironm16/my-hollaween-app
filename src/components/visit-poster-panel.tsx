@@ -5,7 +5,9 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { HelpCircle, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HelpText } from "@/components/help-text";
 import { HouseEditModal } from "@/components/house-edit-modal";
+import { useLocale } from "@/hooks/use-locale";
 import { VISIT_POSTER_CSS, VisitPoster } from "@/components/visit-poster";
 import type { PublicHouse } from "@/lib/types";
 
@@ -73,6 +75,7 @@ function VisitPosterPrintRoot({ house }: { house: PublicHouse }) {
 }
 
 function VisitPosterActions({ actions }: { actions?: ReactNode }) {
+  const { t } = useLocale();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button
@@ -81,7 +84,7 @@ function VisitPosterActions({ actions }: { actions?: ReactNode }) {
         onClick={() => window.print()}
       >
         <Printer className="size-5" />
-        הדפסה
+        {t("visitPoster.print")}
       </Button>
       {actions}
     </div>
@@ -89,6 +92,7 @@ function VisitPosterActions({ actions }: { actions?: ReactNode }) {
 }
 
 export function VisitPosterPanel({ house, actions }: { house: PublicHouse; actions?: ReactNode }) {
+  const { t } = useLocale();
   return (
     <div className="space-y-4">
       <style dangerouslySetInnerHTML={{ __html: VISIT_POSTER_CSS + VISIT_POSTER_PRINT_CSS }} />
@@ -101,12 +105,11 @@ export function VisitPosterPanel({ house, actions }: { house: PublicHouse; actio
 
       <VisitPosterActions actions={actions} />
 
-      <p className="text-base leading-relaxed text-violet-100">
-        תלו את הדף ליד הדלת. אורחים סורקים את הקוד במצלמת הטלפון ולוחצים על הקישור — האפליקציה
-        נפתחת על הבית והוא מסומן **ביקרתי**.{" "}
+      <p className="text-start text-base leading-relaxed text-violet-100">
+        <HelpText>{t("visitPoster.footer")}</HelpText>{" "}
         <Link href="/help/scan-visit" className="inline-flex items-center gap-1 text-orange-300 underline">
           <HelpCircle className="size-4" aria-hidden />
-          איך סורקים ומדפיסים?
+          {t("visitPoster.helpLink")}
         </Link>
       </p>
     </div>
@@ -122,12 +125,13 @@ export function VisitPosterDialog({
   house: PublicHouse;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <HouseEditModal
       open={open}
       onClose={onClose}
       placement="top-safe"
-      title="דף ביקור"
+      title={t("visitPoster.title")}
       closeBarClassName="hw-overlay-close-bar--minimal-top-safe"
       className="w-[min(100%-1rem,34rem)] max-w-[calc(100vw-1rem)]"
     >

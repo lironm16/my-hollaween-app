@@ -578,6 +578,12 @@
   .z-\[2100\] {
     z-index: 2100;
   }
+  .order-1 {
+    order: 1;
+  }
+  .order-2 {
+    order: 2;
+  }
   .col-span-2 {
     grid-column: span 2 / span 2;
   }
@@ -1339,6 +1345,9 @@
   }
   .flex-row {
     flex-direction: row;
+  }
+  .flex-row-reverse {
+    flex-direction: row-reverse;
   }
   .flex-wrap {
     flex-wrap: wrap;
@@ -2638,6 +2647,9 @@
   .ps-5 {
     padding-inline-start: calc(var(--spacing) * 5);
   }
+  .ps-6 {
+    padding-inline-start: calc(var(--spacing) * 6);
+  }
   .ps-10 {
     padding-inline-start: calc(var(--spacing) * 10);
   }
@@ -2676,12 +2688,6 @@
   }
   .pt-\[max\(0\.5rem\,env\(safe-area-inset-top\,0px\)\)\] {
     padding-top: max(0.5rem, env(safe-area-inset-top,0px));
-  }
-  .pr-5 {
-    padding-right: calc(var(--spacing) * 5);
-  }
-  .pr-6 {
-    padding-right: calc(var(--spacing) * 6);
   }
   .pr-9 {
     padding-right: calc(var(--spacing) * 9);
@@ -2730,6 +2736,9 @@
   }
   .text-center {
     text-align: center;
+  }
+  .text-end {
+    text-align: end;
   }
   .text-left {
     text-align: left;
@@ -3921,6 +3930,9 @@
   }
   .\[--card-spacing\:--spacing\(4\)\] {
     --card-spacing: calc(var(--spacing) * 4);
+  }
+  .\[direction\:ltr\] {
+    direction: ltr;
   }
   .\[text-shadow\:0_0_10px_rgba\(251\,146\,60\,0\.35\)\] {
     text-shadow: 0 0 10px rgba(251,146,60,0.35);

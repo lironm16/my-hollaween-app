@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useMergedHouses } from "@/hooks/use-merged-houses";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
+import { HelpText } from "@/components/help-text";
 import { HousePicker } from "@/components/house-picker";
 import { Button } from "@/components/ui/button";
 import { NightPassesCard } from "@/components/night-passes-card";
@@ -344,7 +345,7 @@ function EditPageContent() {
         {house && !editFlow.flow ? (
           pickedRemovedFromCatalog && !admin ? (
             <p className="rounded-xl bg-zinc-900/90 px-3 py-3 text-center text-base text-zinc-100 ring-1 ring-white/10">
-              {t("edit.removedViewOnly")}
+              <HelpText>{t("edit.removedViewOnly")}</HelpText>
             </p>
           ) : (
             <Button

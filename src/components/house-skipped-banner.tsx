@@ -1,7 +1,10 @@
+"use client";
+
 import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterSign, SkipSign, VisitedSign } from "@/components/visit-marks";
-import { skipMetaSummary } from "@/lib/skip-reasons";
+import { useLocale } from "@/hooks/use-locale";
+import { localizedSkipMetaSummary } from "@/lib/i18n/skip-copy";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 
 export function HouseSkippedBanner({
@@ -15,7 +18,8 @@ export function HouseSkippedBanner({
   onMainClick?: () => void;
   mainAriaLabel?: string;
 }) {
-  const summary = meta ? skipMetaSummary(meta) : "דילגתם";
+  const { locale, t } = useLocale();
+  const summary = meta ? localizedSkipMetaSummary(locale, meta) : t("skipRestore.metaSkipped");
   const mainContent = (
     <>
       <SkipSign />
@@ -45,7 +49,7 @@ export function HouseSkippedBanner({
           onClick={onRestore}
         >
           <Undo2 className="size-3.5" />
-          החזרה
+          {t("common.restore")}
         </Button>
       ) : null}
     </div>
@@ -79,11 +83,12 @@ export function HouseVisitedBanner({
 }: {
   onRestore?: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <div className="route-skipped-row house-skipped-banner" role="status">
       <div className="route-skipped-main">
         <VisitedSign />
-        <span className="route-skipped-name">ביקרתם</span>
+        <span className="route-skipped-name">{t("visitMarks.visited")}</span>
       </div>
       {onRestore ? (
         <Button
@@ -97,7 +102,7 @@ export function HouseVisitedBanner({
           }}
         >
           <Undo2 className="size-3.5" />
-          החזרה
+          {t("common.restore")}
         </Button>
       ) : null}
     </div>

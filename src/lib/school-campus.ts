@@ -1,5 +1,10 @@
 import { streetFromLegacyAddress } from "@/lib/address-fields";
 import {
+  localizedClusterOverviewSubtitle,
+  localizedClusterPinAriaLabel,
+} from "@/lib/i18n/cluster-copy";
+import type { AppLocale } from "@/lib/i18n/locale";
+import {
   NAMED_ADDRESS_PLACES,
   namedPlaceForCampusAddress,
   schoolCampusNeighborhoodForAddress,
@@ -38,12 +43,11 @@ export function clusterIsSchoolCampus(houses: readonly Pick<PublicHouse, "addres
 }
 
 /** Cluster sheet subtitle under the address line. */
-export function clusterOverviewSubtitle(houses: readonly Pick<PublicHouse, "address">[]): string {
-  const count = houses.length;
-  if (clusterIsSchoolCampus(houses)) {
-    return count === 1 ? "דוכן אחד בבית הספר" : `${count} דוכנים בבית הספר`;
-  }
-  return count === 1 ? "בית בכתובת זו" : `${count} בתים בכתובת זו`;
+export function clusterOverviewSubtitle(
+  houses: readonly Pick<PublicHouse, "address">[],
+  locale: AppLocale = "he",
+): string {
+  return localizedClusterOverviewSubtitle(locale, houses);
 }
 
 /** Pin aria-label for multi-unit clusters. */
@@ -66,10 +70,9 @@ export function clusterBulkActionSubtitle(
   return street || first.address?.trim() || "";
 }
 
-export function clusterPinAriaLabel(houses: readonly Pick<PublicHouse, "address">[]): string {
-  const count = houses.length;
-  if (clusterIsSchoolCampus(houses)) {
-    return count === 1 ? "דוכן בבית הספר" : `${count} דוכנים בבית הספר`;
-  }
-  return count === 1 ? "בית" : `${count} דירות`;
+export function clusterPinAriaLabel(
+  houses: readonly Pick<PublicHouse, "address">[],
+  locale: AppLocale = "he",
+): string {
+  return localizedClusterPinAriaLabel(locale, houses);
 }

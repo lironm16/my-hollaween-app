@@ -13,6 +13,7 @@ import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
 import { boothNumberForHouse, clusterBoothLabel } from "@/lib/cluster-booth";
 import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useLocale } from "@/hooks/use-locale";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
 import { houseHeadline } from "@/lib/labels";
@@ -75,6 +76,7 @@ export function MapHouseSheet({
   filterMismatchReasons?: string[];
   hideHoursBanner?: boolean;
 }) {
+  const { dir, locale } = useLocale();
   const labelId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -364,7 +366,7 @@ export function MapHouseSheet({
       style={{
         height: overview ? (displayH ?? "var(--map-cluster-sheet-h, 70%)") : (displayH ?? 0),
       }}
-      dir="rtl"
+      dir={dir}
       onPointerDown={onSheetPointerDown}
       onPointerMove={onSheetPointerMove}
       onPointerUp={onSheetPointerUp}
@@ -445,7 +447,7 @@ export function MapHouseSheet({
                 <p className="map-house-sheet-kicker">
                   {addressReveal.formatClusterAddress(clusterHouses, sheetHouse)}
                 </p>
-                <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses)}</p>
+                <p className="map-house-sheet-sub">{clusterOverviewSubtitle(clusterHouses, locale)}</p>
               </div>
             </div>
             <div className="map-house-sheet-cluster-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -516,7 +518,7 @@ export function MapHouseSheet({
                       }
                       hideHoursBanner={hideHoursBanner}
                       clusterBoothTag={
-                        clusterShell ? clusterBoothLabel(sheetHouse, clusterHouses) : undefined
+                        clusterShell ? clusterBoothLabel(sheetHouse, clusterHouses, locale) : undefined
                       }
                     />
                   </section>

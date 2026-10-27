@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
+import { useLocale } from "@/hooks/use-locale";
+import { localizedSkipReturnOfferLabel } from "@/lib/i18n/skip-copy";
 import {
   metaRestoreTriggers,
   primaryRestoreTriggerFromSnapshot,
   skipReturnOfferEligible,
-  skipReturnOfferLabel,
   skipReturnRuleActive,
 } from "@/lib/skip-reasons";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
@@ -52,6 +53,7 @@ export function SkipReturnSection({
   onApprove: () => void;
   onRevokeRule: () => void;
 }) {
+  const { locale } = useLocale();
   const active = skipReturnRuleActive(meta);
   const offerTrigger = useMemo(
     () => primaryRestoreTriggerFromSnapshot(meta.statusKey),
@@ -62,7 +64,7 @@ export function SkipReturnSection({
 
   if (!skipReturnOfferEligible(meta) || !displayTrigger) return null;
 
-  const label = skipReturnOfferLabel(displayTrigger);
+  const label = localizedSkipReturnOfferLabel(locale, displayTrigger);
 
   return (
     <div

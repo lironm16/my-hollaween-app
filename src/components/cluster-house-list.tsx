@@ -6,7 +6,8 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocale } from "@/hooks/use-locale";
 import { HouseMapPinIcon } from "@/components/house-map-pin-icon";
 import { HouseTitleMarkers } from "@/components/house-title-markers";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
@@ -41,7 +42,7 @@ export function ClusterHouseNav({
   onPrev,
   onNext,
   onBack,
-  backLabel = "חזרה לרשימה",
+  backLabel,
 }: {
   houses: PublicHouse[];
   selectedId: string;
@@ -50,31 +51,32 @@ export function ClusterHouseNav({
   onBack: () => void;
   backLabel?: string;
 }) {
+  const { dir, t } = useLocale();
   const index = clusterHouseIndex(houses, selectedId) ?? 1;
   const total = houses.length;
   const canPrev = index > 1;
   const canNext = index < total;
+  const BackArrow = dir === "ltr" ? ArrowLeft : ArrowRight;
+  const PrevChevron = dir === "ltr" ? ChevronLeft : ChevronRight;
+  const NextChevron = dir === "ltr" ? ChevronRight : ChevronLeft;
+  const swipeHint = dir === "ltr" ? t("cluster.swipeHintLtr") : t("cluster.swipeHintRtl");
 
   return (
-    <div className="cluster-house-nav">
+    <div className="cluster-house-nav" dir={dir}>
       <div className="cluster-house-nav-row">
-        <button
-          type="button"
-          className="cluster-house-nav-back"
-          onClick={onBack}
-        >
-          <ArrowRight className="size-4 shrink-0" aria-hidden />
-          {backLabel}
+        <button type="button" className="cluster-house-nav-back" onClick={onBack}>
+          <BackArrow className="size-4 shrink-0" aria-hidden />
+          {backLabel ?? t("cluster.backToList")}
         </button>
         <div className="cluster-house-nav-pager">
           <button
             type="button"
             className="cluster-house-nav-step"
             disabled={!canPrev}
-            aria-label="בית קודם"
+            aria-label={t("cluster.prevHouse")}
             onClick={onPrev}
           >
-            <ChevronRight className="size-4" aria-hidden />
+            <PrevChevron className="size-4 shrink-0" aria-hidden />
           </button>
           <span className="cluster-house-nav-count tabular-nums" aria-live="polite">
             {index} / {total}
@@ -83,14 +85,14 @@ export function ClusterHouseNav({
             type="button"
             className="cluster-house-nav-step"
             disabled={!canNext}
-            aria-label="בית הבא"
+            aria-label={t("cluster.nextHouse")}
             onClick={onNext}
           >
-            <ChevronLeft className="size-4" aria-hidden />
+            <NextChevron className="size-4 shrink-0" aria-hidden />
           </button>
         </div>
       </div>
-      <p className="cluster-house-nav-hint">החלקה שמאלה לבית הבא, ימינה לקודם</p>
+      <p className="cluster-house-nav-hint">{swipeHint}</p>
     </div>
   );
 }
@@ -219,6 +221,7 @@ export function ClusterHouseList({
 }) {
   const clusterNow = now ?? new Date();
   const addressReveal = useAddressReveal();
+  const { dir } = useLocale();
   return (
     <ul className="cluster-house-list space-y-2">
       {houses.map((item, index) => {
@@ -267,7 +270,7 @@ export function ClusterHouseList({
               {skipLine ? (
                 <span
                   className="cluster-house-list-skip mt-1 flex min-w-0 items-center gap-2"
-                  dir="rtl"
+                  dir={dir}
                 >
                   <SkipSign className="cluster-house-list-skip-icon shrink-0" />
                   <span className="cluster-house-list-skip-text min-w-0 flex-1 [overflow-wrap:anywhere]">

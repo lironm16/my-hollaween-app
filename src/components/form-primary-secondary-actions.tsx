@@ -2,11 +2,10 @@
 
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
-/**
- * Primary action on the visual right, secondary (cancel/close) on the left — matches app `dir="rtl"`.
- */
+/** Primary on the trailing side (right in RTL, right in LTR). */
 export function FormPrimarySecondaryActions({
   primaryLabel,
   secondaryLabel,
@@ -30,8 +29,9 @@ export function FormPrimarySecondaryActions({
   className?: string;
   buttonClassName?: string;
 }) {
+  const { dir } = useLocale();
   return (
-    <div className={cn("flex gap-2", className)}>
+    <div className={cn("flex gap-2", dir === "ltr" && "flex-row-reverse", className)}>
       <Button
         type={primaryType}
         disabled={primaryDisabled}

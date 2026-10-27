@@ -33,6 +33,8 @@ import { MapAddHouseFab } from "@/components/map-add-house-fab";
 import { MapLegend } from "@/components/map-legend";
 import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import "leaflet/dist/leaflet.css";
+import { useLocale } from "@/hooks/use-locale";
+import type { AppLocale } from "@/lib/i18n/locale";
 import { config, inNeighborhood } from "@/lib/config";
 import { useMapTiles } from "@/hooks/use-map-tiles";
 import { postMapTileCacheConfig } from "@/lib/map-tile-cache";
@@ -355,6 +357,7 @@ function clusterIcon(
   skippedIds?: ReadonlySet<string>,
   routeModeActive = false,
   routeHouseId?: string,
+  locale: AppLocale = "he",
 ) {
   const houses = cluster.houses;
   const onTourRoute = routeOrder != null;
@@ -403,7 +406,7 @@ function clusterIcon(
   const clusterIconHtml = schoolCampus ? pinSchoolClusterIconHtml() : pinClusterIconHtml(houses);
   const campusClass = schoolCampus ? " is-school-campus" : "";
   const clusterKindClass = clusterKind ? ` ${buildingClusterPinClass(clusterKind)}` : "";
-  const clusterLabel = attr(clusterPinAriaLabel(houses));
+  const clusterLabel = attr(clusterPinAriaLabel(houses, locale));
   const pinFill = "#6d28d9";
   const clusterRing = mapPinRingDecorForCluster(houses, now, gemCtx);
   const tourRing = pinTourRingDecor(
@@ -742,6 +745,7 @@ const ClusterMarker = memo(function ClusterMarker({
   gemPinRingCtx: MapGemPinRingContext;
   routeModeActive?: boolean;
 }) {
+  const { locale } = useLocale();
   const tick = useMapPinTimeBucket();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
   const now = new Date(tick * MAP_PIN_TIME_BUCKET_MS);
@@ -770,6 +774,7 @@ const ClusterMarker = memo(function ClusterMarker({
       skippedKey,
       routeModeActive ? "1" : "0",
       gemRingKey,
+      locale,
     ].join("|");
     return cachedDivIcon(cacheKey, () =>
       clusterIcon(
@@ -784,6 +789,7 @@ const ClusterMarker = memo(function ClusterMarker({
         skippedIds,
         routeModeActive,
         routeHouseId,
+        locale,
       ),
     );
   }, [
@@ -797,6 +803,7 @@ const ClusterMarker = memo(function ClusterMarker({
     routeModeActive,
     visitedIds,
     skippedIds,
+    locale,
     now,
     gemPinRingCtx,
     gemRingKey,
