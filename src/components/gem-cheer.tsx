@@ -2,7 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
-import { GEM_FOUND_CHEER_HE } from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 export function GemCheer({
@@ -13,6 +13,7 @@ export function GemCheer({
   house?: unknown;
   monsterId?: unknown;
 }) {
+  const { t } = useLocale();
   if (!show) return null;
   const cheer = (
     <div className="gem-cheer" role="status" aria-live="polite">
@@ -23,7 +24,7 @@ export function GemCheer({
         <span className="gem-cheer-gem" aria-hidden="true">
           <ImpMenuActiveGlyph className="size-10" />
         </span>
-        {GEM_FOUND_CHEER_HE}
+        {t("help.product.gemFoundCheer")}
       </div>
     </div>
   );

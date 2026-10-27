@@ -221,12 +221,12 @@ export function ClusterHouseList({
 }) {
   const clusterNow = now ?? new Date();
   const addressReveal = useAddressReveal();
-  const { dir } = useLocale();
+  const { dir, locale } = useLocale();
   return (
     <ul className="cluster-house-list space-y-2">
       {houses.map((item, index) => {
         const slot = boothNumberForHouse(item) ?? index + 1;
-        const skipLine = skipReturnActivePreviewLine(skipMetaFor?.(item.id));
+        const skipLine = skipReturnActivePreviewLine(locale, skipMetaFor?.(item.id));
         return (
         <li key={item.id}>
           <button

@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { VisitPosterPanel } from "@/components/visit-poster-panel";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
+import { useLocale } from "@/hooks/use-locale";
 import { resolveHouseIdFromPath } from "@/lib/ids";
 
 export default function VisitPosterPage() {
+  const { t } = useLocale();
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = resolveHouseIdFromPath(params.id);
@@ -36,12 +38,14 @@ export default function VisitPosterPage() {
               actions={
                 <Button type="button" variant="outline" className="gap-1.5 text-lg" onClick={handleBack}>
                   <ArrowRight className="size-5 shrink-0" aria-hidden />
-                  חזרה
+                  {t("housePage.posterBack")}
                 </Button>
               }
             />
           ) : (
-            <p className="text-orange-200">{loading ? "טוענים…" : "הבית לא נמצא."}</p>
+            <p className="text-orange-200">
+              {loading ? t("housePage.posterLoading") : t("housePage.posterNotFound")}
+            </p>
           )}
         </div>
       </main>

@@ -5,6 +5,7 @@ import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { GEM_CLUSTER_FIND_ALL_HE, GEM_CLUSTER_FOUND_ALL_HE } from "@/lib/gem-hunt-copy";
 import { clusterIsSchoolCampus } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 /** Icon-only cluster actions — same controls as a house card, applied to every unit at the address. */
@@ -40,6 +41,7 @@ export function ClusterHouseActionMenu({
   menuPlacement?: "top" | "bottom";
   className?: string;
 }) {
+  const { t } = useLocale();
   const addressReveal = useAddressReveal();
   const readGemCollected = gemCollected ?? (() => false);
   const allVisited = houses.length > 0 && houses.every((house) => visited(house.id));
@@ -58,7 +60,7 @@ export function ClusterHouseActionMenu({
   return (
     <HouseCardQuickActions
       className={cn("shrink-0", className)}
-      toolbarAriaLabel="פעולות על כל הבתים בכתובת"
+      toolbarAriaLabel={t("clusterActions.toolbarAria")}
       visited={allVisited}
       liked={allLiked}
       skipped={allSkipped}
@@ -80,9 +82,9 @@ export function ClusterHouseActionMenu({
           ? () => (allGemsCollected ? onResetAllGems?.() : onFindAllGems?.())
           : undefined
       }
-      visitedAriaLabel={allVisited ? "ביטול ביקור לכל הבתים" : "ביקרתי בכל הבתים"}
-      likeAriaLabel={allLiked ? "הסירו אהבתי מכל הבתים" : "אהבתי את כל הבתים"}
-      skipAriaLabel={allSkipped ? "החזרה — ביטול דילוג על הכל" : "דילוג על כל הבתים"}
+      visitedAriaLabel={allVisited ? t("clusterActions.unvisitAll") : t("clusterActions.visitAll")}
+      likeAriaLabel={allLiked ? t("clusterActions.unlikeAll") : t("clusterActions.likeAll")}
+      skipAriaLabel={allSkipped ? t("clusterActions.unskipAll") : t("clusterActions.skipAll")}
       gemAriaLabel={
         allGemsCollected ? GEM_CLUSTER_FOUND_ALL_HE : GEM_CLUSTER_FIND_ALL_HE
       }

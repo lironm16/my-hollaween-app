@@ -5,6 +5,9 @@ import {
   type HouseCluster,
 } from "@/lib/house-clusters";
 import { distanceMeters, formatDistance } from "@/lib/geo";
+import { formatMessage } from "@/lib/i18n/format";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { translate } from "@/lib/i18n/translate";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
@@ -416,9 +419,15 @@ function summarizeRoute(
   };
 }
 
-export function formatRouteSummary(route: WalkingRoute) {
-  const base = `${route.stops.length} עצירות · ${formatDistance(route.totalMeters)} · כ־${route.totalMinutes} דק׳`;
-  return route.accessible ? `מסלול נגיש · ${base}` : base;
+export function formatRouteSummary(route: WalkingRoute, locale: AppLocale = "he") {
+  const base = formatMessage(translate(locale, "routeSummary.line"), {
+    stops: String(route.stops.length),
+    distance: formatDistance(route.totalMeters, locale),
+    minutes: String(route.totalMinutes),
+  });
+  return route.accessible
+    ? translate(locale, "routeSummary.accessiblePrefix") + base
+    : base;
 }
 
 function fmtLatLng(point: LatLng) {

@@ -16,7 +16,7 @@ export function GemStickerSpotlight({
   monsterId: GemMonsterId;
   onClose: () => void;
 }) {
-  const { t } = useLocale();
+  const { dir, t } = useLocale();
   const gemCopy = useGemCopy();
   const meta = gemMonsterMeta(monsterId);
   const label = gemCopy.petLabel(monsterId);
@@ -54,7 +54,7 @@ export function GemStickerSpotlight({
       className="gem-sticker-spotlight fixed inset-0 z-[220] flex flex-col"
       role="dialog"
       aria-label={label}
-      dir="rtl"
+      dir={dir}
     >
       <div className="gem-sticker-spotlight__backdrop" aria-hidden onClick={onClose} />
       <OverlayCloseButton

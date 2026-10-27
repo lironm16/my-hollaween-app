@@ -9,6 +9,7 @@ import {
 import type { HouseFiltersState } from "@/lib/offline-db";
 import type { HouseSet } from "@/lib/house-set";
 import type { PublicHouse } from "@/lib/types";
+import type { AppLocale } from "@/lib/i18n/locale";
 import type { WalkingRoute } from "@/lib/route";
 
 const BACKGROUND_AWAY_MS = 3_000;
@@ -20,6 +21,7 @@ export function useRouteStatusAlerts({
   filters,
   filterContext,
   catalogUpdatedAt,
+  locale,
 }: {
   routeMode: boolean;
   activeRoute: WalkingRoute | null;
@@ -33,6 +35,7 @@ export function useRouteStatusAlerts({
     now: Date;
   };
   catalogUpdatedAt?: string;
+  locale: AppLocale;
 }) {
   const [changes, setChanges] = useState<RouteStatusChangeEntry[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -84,6 +87,7 @@ export function useRouteStatusAlerts({
       filters,
       filterContext,
       snapshotRef.current,
+      locale,
     );
     snapshotRef.current = nextSnapshot;
     mergeChanges(incoming);
@@ -92,6 +96,7 @@ export function useRouteStatusAlerts({
     displayHouses,
     filterContext,
     filters,
+    locale,
     mergeChanges,
     reset,
     routeMode,

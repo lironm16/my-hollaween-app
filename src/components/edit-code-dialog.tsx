@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { copyText } from "@/lib/copy-text";
 import { editCodeSpecForDisplay, formatEditCodeDisplay } from "@/lib/house-access-code";
 import { houseHeadline } from "@/lib/labels";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import type { PublicHouse } from "@/lib/types";
 
 export function EditCodeDialog({
@@ -26,6 +28,7 @@ export function EditCodeDialog({
   nightPassesEnabled?: boolean;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const code = editCode?.trim() ?? "";
   const showCode = code.length > 0;
   const codeSpec = showCode ? editCodeSpecForDisplay(code) : null;
@@ -36,19 +39,19 @@ export function EditCodeDialog({
     <HouseEditModal
       open={open}
       onClose={onClose}
-      title="קוד עריכה ומכשירים"
+      title={t("editCodeDialog.title")}
       subtitle={houseHeadline(house)}
     >
       <div className="space-y-4">
         {!showDevices && showCode ? (
           <p className="text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">
-            שתפו את הקוד עם מי שצריך לערוך את הבית. אחרי הזנה פעם אחת הקוד נשמר במכשיר שלהם.
+            {t("editCodeDialog.intro")}
           </p>
         ) : null}
         {showCode ? (
           <div className="space-y-2">
             <label htmlFor="edit-code-field" className="text-base text-violet-300">
-              קוד כניסה ({codeSpec!.labelSuffix})
+              {formatMessage(t("editCodeDialog.accessCode"), { suffix: codeSpec!.labelSuffix })}
             </label>
             <input
               id="edit-code-field"
@@ -65,10 +68,10 @@ export function EditCodeDialog({
                   variant="outline"
                   size="sm"
                   className="h-9 w-auto max-w-full shrink-0 gap-1.5 whitespace-nowrap border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15"
-                  onClick={() => void copyText(code.replace(/\s/g, ""), "קוד הכניסה הועתק")}
+                  onClick={() => void copyText(code.replace(/\s/g, ""), t("editCodeDialog.copied"))}
                 >
                   <Copy className="size-4 shrink-0" strokeWidth={2.2} />
-                  <span className="text-sm">העתק</span>
+                  <span className="text-sm">{t("editCodeDialog.copy")}</span>
                 </Button>
                 <NightPassesCard
                   houseId={house.id}
@@ -84,10 +87,10 @@ export function EditCodeDialog({
                 type="button"
                 variant="outline"
                 className="h-11 w-full justify-center text-base"
-                onClick={() => void copyText(code.replace(/\s/g, ""), "קוד הכניסה הועתק")}
+                onClick={() => void copyText(code.replace(/\s/g, ""), t("editCodeDialog.copied"))}
               >
                 <Copy className="size-5" />
-                העתק
+                {t("editCodeDialog.copy")}
               </Button>
             )}
           </div>
@@ -108,7 +111,7 @@ export function EditCodeDialog({
           className="h-11 w-full justify-center text-base"
           onClick={onClose}
         >
-          סגירה
+          {t("common.close")}
         </Button>
       </div>
     </HouseEditModal>

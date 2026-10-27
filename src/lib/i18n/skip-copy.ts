@@ -2,9 +2,11 @@ import { formatMessage } from "@/lib/i18n/format";
 import type { AppLocale } from "@/lib/i18n/locale";
 import { translate } from "@/lib/i18n/translate";
 import { houseHeadline } from "@/lib/labels";
-import type { SkippedHouseMeta } from "@/lib/offline-db";
+import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import {
   metaRestoreTriggers,
+  suggestedSkipReasons,
+  type SkipReasonId,
   type TemporaryRestoreTriggerId,
 } from "@/lib/skip-reasons";
 import type { PublicHouse } from "@/lib/types";
@@ -56,6 +58,48 @@ export function localizedSkipRestoreUndoPromptMessage(
     return formatMessage(t(locale, "skipRestore.promptCandy"), { name });
   }
   return formatMessage(t(locale, "skipRestore.promptGeneric"), { name });
+}
+
+const SKIP_REASON_LABEL_KEYS: Record<SkipReasonId, string> = {
+  closed: "skipReason.labelClosed",
+  break: "skipReason.labelBreak",
+  "candy-out": "skipReason.labelCandyOut",
+  "candy-low": "skipReason.labelCandyLow",
+  "not-open": "skipReason.labelNotOpen",
+  scary: "skipReason.labelScary",
+  "decor-only": "skipReason.labelDecorOnly",
+  other: "skipReason.labelOther",
+};
+
+const SUGGESTED_SKIP_KEYS: Record<SkipReasonId, string> = {
+  closed: "skipReason.suggestedClosed",
+  break: "skipReason.suggestedBreak",
+  "candy-out": "skipReason.suggestedCandyOut",
+  "candy-low": "skipReason.suggestedCandyLow",
+  "not-open": "skipReason.suggestedNotOpen",
+  scary: "skipReason.suggestedScary",
+  "decor-only": "skipReason.suggestedDecorOnly",
+  other: "skipReason.suggestedOther",
+};
+
+export function localizedSkipReasonLabel(locale: AppLocale, reason: SkipReasonId): string {
+  return t(locale, SKIP_REASON_LABEL_KEYS[reason]);
+}
+
+export function localizedSuggestedSkipReasons(
+  locale: AppLocale,
+  house: PublicHouse,
+  now: Date,
+  filters: HouseFiltersState,
+) {
+  const options = suggestedSkipReasons(house, now, filters);
+  return options.map((option) => ({
+    ...option,
+    label:
+      option.id === "other" && options.length > 1
+        ? t(locale, "skipReason.suggestedOtherAlt")
+        : t(locale, SUGGESTED_SKIP_KEYS[option.id]),
+  }));
 }
 
 export function localizedTemporaryRestoreAlertText(

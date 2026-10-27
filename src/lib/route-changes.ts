@@ -4,6 +4,12 @@ import {
   isHouseOwnerClosed,
   routeHouseIds,
 } from "@/lib/filter-houses";
+import type { AppLocale } from "@/lib/i18n/locale";
+import {
+  localizedWhyAddedToRoute,
+  localizedWhyRemovedFromRoute,
+} from "@/lib/i18n/route-change-copy";
+import { translate } from "@/lib/i18n/translate";
 import { effectiveVisit } from "@/lib/house-state";
 import {
   hoursStatus,
@@ -57,23 +63,32 @@ export function whyRemovedFromRoute(
   house: PublicHouse,
   filters: HouseFiltersState,
   context: RouteChangeContext,
+  locale: AppLocale = "he",
 ): string {
-  if (context.skippedIds.includes(house.id)) return "דילגתם על הבית";
-  if (context.visitedIds.includes(house.id)) return "כבר ביקרתם";
-  const filterReasons = houseFilterMismatchReasons(house, filters, context);
-  if (filterReasons.length > 0) return filterReasons.join(" · ");
-  if (isHouseOwnerClosed(house)) return "נסגר";
-  if (isOnBreak(house, context.now)) return "בהפסקה";
+  if (context.skippedIds.includes(house.id)) {
+    return localizedWhyRemovedFromRoute(locale, "skipped");
+  }
+  if (context.visitedIds.includes(house.id)) {
+    return localizedWhyRemovedFromRoute(locale, "visited");
+  }
+  const filterReasons = houseFilterMismatchReasons(house, filters, context, locale);
+  if (filterReasons.length > 0) {
+    return localizedWhyRemovedFromRoute(locale, "filterMismatch", filterReasons.join(" · "));
+  }
+  if (isHouseOwnerClosed(house)) return localizedWhyRemovedFromRoute(locale, "closed");
+  if (isOnBreak(house, context.now)) return localizedWhyRemovedFromRoute(locale, "onBreak");
   const { from, to } = resolveVisitWindow(filters, context.now);
   if (!isOpenNowForFilter(house, from, to, context.now)) {
     const status = hoursStatus(house, context.now);
-    if (status.kind === "before" || status.kind === "beforeEvent") return "עדיין לא פתוח";
-    if (status.kind === "between") return "בין חלונות שעות";
-    if (status.kind === "after") return "אחרי שעות הפתיחה";
-    if (status.kind === "closedVisit") return "סגור הלילה";
-    return "לא פתוח עכשיו";
+    if (status.kind === "before" || status.kind === "beforeEvent") {
+      return localizedWhyRemovedFromRoute(locale, "notYetOpen");
+    }
+    if (status.kind === "between") return localizedWhyRemovedFromRoute(locale, "betweenWindows");
+    if (status.kind === "after") return localizedWhyRemovedFromRoute(locale, "afterHours");
+    if (status.kind === "closedVisit") return localizedWhyRemovedFromRoute(locale, "closedTonight");
+    return localizedWhyRemovedFromRoute(locale, "notOpenNow");
   }
-  return "לא מתאים למסלול";
+  return localizedWhyRemovedFromRoute(locale, "notFitRoute");
 }
 
 export function whyAddedToRoute(
@@ -81,20 +96,25 @@ export function whyAddedToRoute(
   filters: HouseFiltersState,
   context: RouteChangeContext,
   previous?: PublicHouse,
+  locale: AppLocale = "he",
 ): string | undefined {
   if (previous) {
     const wasClosed = isHouseOwnerClosed(previous);
     const nowOpen = !isHouseOwnerClosed(house);
-    if (wasClosed && nowOpen) return "חזר לפתוח";
+    if (wasClosed && nowOpen) return localizedWhyAddedToRoute(locale, "reopened");
     const wasBreak = isOnBreak(previous, context.now);
     const nowActive = !isOnBreak(house, context.now);
-    if (wasBreak && nowActive) return "חזר מהפסקה";
+    if (wasBreak && nowActive) return localizedWhyAddedToRoute(locale, "backFromBreak");
     const prevVisit = effectiveVisit(previous);
     const nextVisit = effectiveVisit(house);
-    if (prevVisit === "closed" && nextVisit === "come") return "חזר לפעילות";
+    if (prevVisit === "closed" && nextVisit === "come") {
+      return localizedWhyAddedToRoute(locale, "backActive");
+    }
   }
   const { from, to } = resolveVisitWindow(filters, context.now);
-  if (isOpenNowForFilter(house, from, to, context.now)) return "פתוח עכשיו";
+  if (isOpenNowForFilter(house, from, to, context.now)) {
+    return localizedWhyAddedToRoute(locale, "openNow");
+  }
   return undefined;
 }
 
@@ -282,6 +302,7 @@ export function diffRouteByFilters(
   houses: PublicHouse[],
   nextFilters: HouseFiltersState,
   context: RouteChangeContext,
+  locale: AppLocale = "he",
 ): { removed: RouteChangeEntry[]; added: RouteChangeEntry[] } {
   const currentIds = routeHouseIds(route);
   const nextVisible = filterHouses(houses, nextFilters, context);
@@ -292,14 +313,16 @@ export function diffRouteByFilters(
       const house = houses.find((item) => item.id === id);
       return {
         name: houseLabel(house, id),
-        reason: house ? whyRemovedFromRoute(house, nextFilters, context) : "לא בסינון",
+        reason: house
+          ? whyRemovedFromRoute(house, nextFilters, context, locale)
+          : localizedWhyRemovedFromRoute(locale, "notInFilter"),
       };
     });
   const added = nextVisible
     .filter((house) => !currentIds.has(house.id))
     .map((house) => ({
       name: house.name,
-      reason: whyAddedToRoute(house, nextFilters, context),
+      reason: whyAddedToRoute(house, nextFilters, context, undefined, locale),
     }));
   return { removed, added };
 }
@@ -310,12 +333,13 @@ export function describeRouteStatusChange(
   house: PublicHouse,
   filters: HouseFiltersState,
   context: RouteChangeContext,
+  locale: AppLocale = "he",
 ): string {
-  const added = whyAddedToRoute(house, filters, context, previous);
+  const added = whyAddedToRoute(house, filters, context, previous, locale);
   if (added) return added;
-  const removed = whyRemovedFromRoute(house, filters, context);
-  if (removed !== "לא מתאים למסלול") return removed;
-  return "הסטטוס השתנה";
+  const removed = whyRemovedFromRoute(house, filters, context, locale);
+  if (removed !== localizedWhyRemovedFromRoute(locale, "notFitRoute")) return removed;
+  return translate(locale, "routeChange.statusChanged");
 }
 
 /** Status-only diffs for houses still on the route (not skipped / visited). */
@@ -325,6 +349,7 @@ export function diffActiveRouteStatusChanges(
   filters: HouseFiltersState,
   context: RouteChangeContext,
   previousById: Map<string, PublicHouse>,
+  locale: AppLocale = "he",
 ): RouteStatusChangeEntry[] {
   if (!route || previousById.size === 0) return [];
   const candidateIds = new Set(
@@ -343,7 +368,7 @@ export function diffActiveRouteStatusChanges(
     changes.push({
       houseId: id,
       name: houseLabel(house, id),
-      reason: describeRouteStatusChange(previous, house, filters, context),
+      reason: describeRouteStatusChange(previous, house, filters, context, locale),
       house,
     });
   }
@@ -371,6 +396,7 @@ export function diffRouteByStatus(
   filters: HouseFiltersState,
   context: RouteChangeContext,
   previousById: Map<string, PublicHouse>,
+  locale: AppLocale = "he",
 ): { removed: RouteChangeEntry[]; added: RouteChangeEntry[] } | null {
   if (!route) return null;
   const currentIds = routeHouseIds(route);
@@ -393,7 +419,7 @@ export function diffRouteByStatus(
     if (!wasCandidate || isCandidate) continue;
     removed.push({
       name: houseLabel(house, id),
-      reason: whyRemovedFromRoute(house, filters, context),
+      reason: whyRemovedFromRoute(house, filters, context, locale),
     });
   }
 
@@ -401,14 +427,17 @@ export function diffRouteByStatus(
     if (currentIds.has(house.id)) continue;
     const previous = previousById.get(house.id) ?? houses.find((item) => item.id === house.id);
     if (!previous) {
-      added.push({ name: house.name, reason: whyAddedToRoute(house, filters, context) });
+      added.push({
+        name: house.name,
+        reason: whyAddedToRoute(house, filters, context, undefined, locale),
+      });
       continue;
     }
     const wasCandidate = routeCandidateHouses([previous], filters, context).length > 0;
     if (wasCandidate) continue;
     added.push({
       name: house.name,
-      reason: whyAddedToRoute(house, filters, context, previous),
+      reason: whyAddedToRoute(house, filters, context, previous, locale),
     });
   }
 

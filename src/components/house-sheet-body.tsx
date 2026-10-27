@@ -9,6 +9,7 @@ import { FilterMismatchNotice } from "@/components/house-skipped-banner";
 import { CodesCopy } from "@/components/codes-copy";
 import { houseHeadline } from "@/lib/labels";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { useLocale } from "@/hooks/use-locale";
 import type { PublicHouse } from "@/lib/types";
 
 /** Shared map/list sheet house body — same card + ⋮ menu as the main list view. */
@@ -40,6 +41,7 @@ export function HouseSheetBody({
   hideHoursBanner?: boolean;
   clusterBoothTag?: string | null;
 }) {
+  const { t } = useLocale();
   const editCode = actionContext.editCodeFor?.(house.id);
   const skipFetch = detailLoading !== undefined || detailUnavailable !== undefined || houseServerDetailReady(house);
   const fetched = useServerHouseDetail(skipFetch ? null : house);
@@ -50,12 +52,12 @@ export function HouseSheetBody({
     <>
       {loading ? (
         <p className="mb-2 text-sm text-violet-300" role="status">
-          טוען פרטי בית מהשרת…
+          {t("houseCard.loadingDetail")}
         </p>
       ) : null}
       {unavailable ? (
         <p className="mb-2 text-sm text-orange-200" role="alert">
-          הבית לא זמין במפה הציבורית.
+          {t("houseCard.notPublic")}
         </p>
       ) : null}
       <FilterMismatchNotice

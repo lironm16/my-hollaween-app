@@ -4,6 +4,11 @@ import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterSign, SkipSign, VisitedSign } from "@/components/visit-marks";
 import { useLocale } from "@/hooks/use-locale";
+import {
+  filterMismatchIncludesSkipped,
+  type FilterMismatchReason,
+  localizeFilterMismatchReasons,
+} from "@/lib/i18n/filter-mismatch-copy";
 import { localizedSkipMetaSummary } from "@/lib/i18n/skip-copy";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 
@@ -111,19 +116,34 @@ export function HouseVisitedBanner({
 
 export function FilterMismatchNotice({
   reasons,
+  filterMismatchEntries,
   skipMeta,
   onRestoreRoute,
   hideSkipBanner = false,
 }: {
   reasons?: string[];
+  filterMismatchEntries?: FilterMismatchReason[];
   skipMeta?: SkippedHouseMeta;
   onRestoreRoute?: () => void;
   /** When house skip/visit banners render separately via HouseCardBanners. */
   hideSkipBanner?: boolean;
 }) {
-  if (!reasons?.length && !skipMeta) return null;
-  const skipped = reasons?.includes("דילגתם על הבית") || Boolean(skipMeta);
-  const other = (reasons ?? []).filter((reason) => reason !== "דילגתם על הבית");
+  const { locale, t } = useLocale();
+  const localized =
+    filterMismatchEntries && filterMismatchEntries.length > 0
+      ? localizeFilterMismatchReasons(locale, filterMismatchEntries)
+      : reasons;
+  if (!localized?.length && !skipMeta) return null;
+  const skipped =
+    (filterMismatchEntries && filterMismatchIncludesSkipped(filterMismatchEntries)) ||
+    Boolean(skipMeta);
+  const other =
+    filterMismatchEntries && filterMismatchEntries.length > 0
+      ? localizeFilterMismatchReasons(
+          locale,
+          filterMismatchEntries.filter((entry) => entry.kind !== "skipped"),
+        )
+      : (localized ?? []).filter((reason) => reason !== t("filterMismatch.skipped"));
   return (
     <>
       {skipped && !hideSkipBanner ? (
@@ -133,7 +153,7 @@ export function FilterMismatchNotice({
         <p className="filter-mismatch-banner" role="status">
           <FilterSign />
           <span className="filter-mismatch-banner-text">
-            מסונן: {other.join(" · ")}
+            {t("filterMismatch.bannerPrefix")} {other.join(" · ")}
           </span>
         </p>
       ) : null}

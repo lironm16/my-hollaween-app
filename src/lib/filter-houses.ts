@@ -1,11 +1,14 @@
-import { candyToneLabel } from "@/components/candy-glyphs";
 import {
   houseInNeighborhoods,
   NEIGHBORHOOD_FILTER_OPTIONS,
   resolveNeighborhood,
 } from "@/lib/config";
 import { isStubHouse } from "@/lib/house-set";
-import { houseKindLabels, scareShort, treatLabels } from "@/lib/labels";
+import type { FilterMismatchReason } from "@/lib/i18n/filter-mismatch-copy";
+import {
+  localizeFilterMismatchReasons,
+} from "@/lib/i18n/filter-mismatch-copy";
+import type { AppLocale } from "@/lib/i18n/locale";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import {
   hasValidVisitWindow,
@@ -66,8 +69,8 @@ function neighborhoodFilterActive(filters: HouseFiltersState) {
   return filters.neighborhoodFilters.length !== NEIGHBORHOOD_FILTER_OPTIONS.length;
 }
 
-/** Short Hebrew labels for why a house is faded on the map (not in the active filter). */
-export function houseFilterMismatchReasons(
+/** Why a house is faded on the map (not in the active filter). */
+export function houseFilterMismatchReasonEntries(
   house: PublicHouse,
   filters: HouseFiltersState,
   options: {
@@ -78,8 +81,8 @@ export function houseFilterMismatchReasons(
     gemCollectedIds?: string[];
     now: Date;
   },
-): string[] {
-  const reasons: string[] = [];
+): FilterMismatchReason[] {
+  const reasons: FilterMismatchReason[] = [];
   const { houseSet, likedIds, visitedIds, skippedIds = [], gemCollectedIds = [], now } = options;
   const {
     accessibleOnly,
@@ -110,26 +113,28 @@ export function houseFilterMismatchReasons(
   } = resolveVisitWindow(filters, now);
 
   if (!houseMatchesSet(house, houseSet)) {
-    reasons.push(isStubHouse(house) ? "סטאב" : "בית אמיתי");
+    reasons.push(isStubHouse(house) ? { kind: "stub" } : { kind: "realHouse" });
   }
   const kindFilter = locationKindFilter ?? "all";
   if (!houseMatchesLocationKind(house, kindFilter)) {
-    reasons.push(kindFilter === "house" ? houseKindLabels.poi : houseKindLabels.house);
+    reasons.push(kindFilter === "house" ? { kind: "poi" } : { kind: "house" });
   }
-  if (accessibleOnly && !house.accessible) reasons.push("לא נגיש");
+  if (accessibleOnly && !house.accessible) reasons.push({ kind: "notAccessible" });
   if (candyFilterActive(filters)) {
-    if (candyFilters.length === 0) reasons.push("ממתקים");
-    else if (!candyFilters.includes(candyTone(house))) reasons.push(candyToneLabel(candyTone(house)));
+    if (candyFilters.length === 0) reasons.push({ kind: "candyFilter" });
+    else if (!candyFilters.includes(candyTone(house))) {
+      reasons.push({ kind: "candyTone", tone: candyTone(house) });
+    }
   }
-  if (!includeUndecorated && !isDecorated(house)) reasons.push("לא מקושט");
+  if (!includeUndecorated && !isDecorated(house)) reasons.push({ kind: "notDecorated" });
   if (visitWindowMode === "now" && !isOpenNowForFilter(house, "", "", now)) {
-    reasons.push("לא פתוח עכשיו");
+    reasons.push({ kind: "notOpenNow" });
   } else if (
     visitWindowMode === "custom" &&
     hasValidVisitWindow(visitWindowFrom, visitWindowTo) &&
     !isOpenDuringCustomVisitForFilter(house, visitWindowFrom, visitWindowTo, now)
   ) {
-    reasons.push("מחוץ לשעות");
+    reasons.push({ kind: "outsideHours" });
   }
   if (
     openNowOnly ||
@@ -147,37 +152,61 @@ export function houseFilterMismatchReasons(
       (onBreakOnly && isOnBreakForFilter(house, visitWindowFrom, visitWindowTo, now)) ||
       (afterHoursOnly && isAfterHoursForFilter(house, visitWindowFrom, visitWindowTo, now));
     if (!hoursHit) {
-      if (closingSoonOnly) reasons.push("לא נסגר בקרוב");
-      else if (openingSoonOnly) reasons.push("לא נפתח בקרוב");
-      else if (notYetOpenOnly) reasons.push("כבר פתוח");
-      else if (onBreakOnly) reasons.push("לא בהפסקה");
-      else if (afterHoursOnly) reasons.push("לא אחרי שעות");
-      else reasons.push("לא פתוח עכשיו");
+      if (closingSoonOnly) reasons.push({ kind: "notClosingSoon" });
+      else if (openingSoonOnly) reasons.push({ kind: "notOpeningSoon" });
+      else if (notYetOpenOnly) reasons.push({ kind: "alreadyOpen" });
+      else if (onBreakOnly) reasons.push({ kind: "notOnBreak" });
+      else if (afterHoursOnly) reasons.push({ kind: "notAfterHours" });
+      else reasons.push({ kind: "notOpenNow" });
     }
   }
-  if (closedOnly && !isHouseOwnerClosed(house)) reasons.push("לא סגור");
-  if (decorOnlyOnly && !isHouseDecorOnly(house)) reasons.push("לא קישוט בלבד");
+  if (closedOnly && !isHouseOwnerClosed(house)) reasons.push({ kind: "notClosed" });
+  if (decorOnlyOnly && !isHouseDecorOnly(house)) reasons.push({ kind: "notDecorOnly" });
   for (const sensitivity of sensitivityFilters) {
     if (!offersSensitivity(house, sensitivity)) {
-      reasons.push(treatLabels[sensitivity]);
+      reasons.push({ kind: "sensitivity", id: sensitivity });
     }
   }
   if (scareFilterActive(filters) && isDecorated(house)) {
-    if (scareFilters.length === 0) reasons.push("רמת פחד");
-    else if (!scareFilters.includes(house.scareLevel)) reasons.push(scareShort[house.scareLevel]);
+    if (scareFilters.length === 0) reasons.push({ kind: "scareFilter" });
+    else if (!scareFilters.includes(house.scareLevel)) {
+      reasons.push({ kind: "scareLevel", level: house.scareLevel });
+    }
   }
   if (neighborhoodFilterActive(filters) && !houseInNeighborhoods(house, neighborhoodFilters)) {
     const area = resolveNeighborhood(house);
-    reasons.push(area ?? "שכונה אחרת");
+    reasons.push({ kind: "neighborhood", name: area ?? "" });
   }
-  if (likedOnly && !likedIds.includes(house.id)) reasons.push("לא באהבתי");
-  if (unvisitedOnly && visitedIds.includes(house.id)) reasons.push("כבר ביקרת");
-  if (visitedOnly && !visitedIds.includes(house.id)) reasons.push("לא ביקרת");
-  if (skippedIds.includes(house.id)) reasons.push("דילגתם על הבית");
-  if (skippedOnly && !skippedIds.includes(house.id)) reasons.push("לא דילגתם");
-  if (uncollectedGemOnly && gemCollectedIds.includes(house.id)) reasons.push("כבר מצאתם שדון");
+  if (likedOnly && !likedIds.includes(house.id)) reasons.push({ kind: "notLiked" });
+  if (unvisitedOnly && visitedIds.includes(house.id)) reasons.push({ kind: "alreadyVisited" });
+  if (visitedOnly && !visitedIds.includes(house.id)) reasons.push({ kind: "notVisited" });
+  if (skippedIds.includes(house.id)) reasons.push({ kind: "skipped" });
+  if (skippedOnly && !skippedIds.includes(house.id)) reasons.push({ kind: "notSkipped" });
+  if (uncollectedGemOnly && gemCollectedIds.includes(house.id)) {
+    reasons.push({ kind: "gemAlreadyCollected" });
+  }
 
   return reasons;
+}
+
+/** Localized short labels for filter mismatch (map fade, house cards). */
+export function houseFilterMismatchReasons(
+  house: PublicHouse,
+  filters: HouseFiltersState,
+  options: {
+    houseSet: HouseSet;
+    likedIds: string[];
+    visitedIds: string[];
+    skippedIds?: string[];
+    gemCollectedIds?: string[];
+    now: Date;
+  },
+  locale: AppLocale = "he",
+): string[] {
+  return localizeFilterMismatchReasons(
+    locale,
+    houseFilterMismatchReasonEntries(house, filters, options),
+  );
 }
 
 export function filterHouses(

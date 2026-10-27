@@ -13,6 +13,7 @@ import { clusterMembersForHouse } from "@/lib/house-clusters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 
 export function HouseList({
   houses,
@@ -124,15 +125,19 @@ export function HouseList({
       )}
     >
       {selection ? (
-        <div className="house-list-bulk flex w-full flex-wrap items-center gap-2 py-1" dir="rtl">
+        <div className="house-list-bulk flex w-full flex-wrap items-center gap-2 py-1" dir={dir}>
           <div className="house-list-select-check-col">
             <ListSelectCheck
               selected={selection.allSelected}
-              aria-label={selection.allSelected ? "בטל סימון הכל" : "סמן הכל"}
+              aria-label={
+                selection.allSelected ? t("houseListBulk.deselectAllAria") : t("houseListBulk.selectAllAria")
+              }
               onClick={selection.onToggleAll}
             />
           </div>
-          <span className="pointer-events-none text-sm font-medium text-violet-200">סמן הכל</span>
+          <span className="pointer-events-none text-sm font-medium text-violet-200">
+            {t("houseListBulk.selectAll")}
+          </span>
           <span className="min-w-2 flex-1" aria-hidden />
           <Button
             type="button"
@@ -143,11 +148,11 @@ export function HouseList({
             onClick={selection.onRemoveSelected}
           >
             {selection.someSelected
-              ? (selection.removeLabel ?? "הסר מהרשימה").replace(
-                  /^(הסר|אפס) /,
+              ? (selection.removeLabel ?? t("houseListBulk.removeFromList")).replace(
+                  /^(הסר|אפס|Remove|Clear) /,
                   `$1 ${selection.selectedIds.size} `,
                 )
-              : (selection.removeLabel ?? "הסר מהרשימה")}
+              : (selection.removeLabel ?? t("houseListBulk.removeFromList"))}
           </Button>
         </div>
       ) : null}
@@ -157,7 +162,7 @@ export function HouseList({
           key={h.id}
           data-list-house-id={h.id}
           ref={h.id === focusId ? focusRef : undefined}
-          dir={selection ? "rtl" : undefined}
+          dir={selection ? dir : undefined}
           className={cn(
             h.id === focusId && "house-list-focus",
             selection ? "house-list-row-select flex w-full flex-col gap-1.5" : "flex items-start gap-2",
@@ -168,7 +173,9 @@ export function HouseList({
               <ListSelectCheck
                 selected={selection.selectedIds.has(h.id)}
                 aria-label={
-                  selection.selectedIds.has(h.id) ? `בטל בחירה — ${h.name}` : `בחר — ${h.name}`
+                  selection.selectedIds.has(h.id)
+                    ? formatMessage(t("houseListBulk.deselectHouse"), { name: h.name })
+                    : formatMessage(t("houseListBulk.selectHouse"), { name: h.name })
                 }
                 onClick={() => selection.onToggleId(h.id)}
               />
@@ -195,7 +202,7 @@ export function HouseList({
                   className="h-10 w-full border-violet-500/35 bg-[#1d1028]/80 text-base text-violet-100 hover:bg-violet-500/10"
                   onClick={() => onRemoveFromDevice!(h.id)}
                 >
-                  הסר מהמכשיר
+                  {t("my.removeFromDevice")}
                 </Button>
               </div>
             ) : null}

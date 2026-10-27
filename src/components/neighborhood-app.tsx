@@ -90,6 +90,7 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAdminHouses } from "@/hooks/use-admin-houses";
 import { useFilterDraft } from "@/hooks/use-filter-draft";
+import { useLocale } from "@/hooks/use-locale";
 import { useHouseActions } from "@/hooks/use-house-actions";
 import { useHouseFilters, countActiveFilters } from "@/hooks/use-house-filters";
 import { useHouseSelection } from "@/hooks/use-house-selection";
@@ -143,6 +144,7 @@ import {
 import { stripPracticeHouses } from "@/lib/practice-house";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
+import { formatMessage } from "@/lib/i18n/format";
 import { formatDistance } from "@/lib/geo";
 import { geoCanPromptLocation, geoLocationHintHe } from "@/lib/geo-location-access";
 import { buildWalkingRouteOrdered } from "@/lib/route";
@@ -191,6 +193,7 @@ export function NeighborhoodApp({
   /** Server admin cookie — avoids a flash of visitor gem rings before /api/admin/session. */
   initialAdmin?: boolean;
 }) {
+  const { locale, t } = useLocale();
   const { focusId, routeShareParam, gemHuntFromUrl, visitFromUrl } = useHomeUrlParams({
     focusId: focusIdFromServer,
     routeShareParam: routeShareParamFromServer,
@@ -205,8 +208,8 @@ export function NeighborhoodApp({
   const addressReveal = useAddressReveal();
   const distanceLabel = useCallback(
     (houseId: string, meters: number) =>
-      addressReveal.distanceAllowed(houseId) ? formatDistance(meters) : "",
-    [addressReveal],
+      addressReveal.distanceAllowed(houseId) ? formatDistance(meters, locale) : "",
+    [addressReveal, locale],
   );
   const {
     gemHuntVisible: gemFeatureOn,
@@ -766,6 +769,7 @@ export function NeighborhoodApp({
     origin,
     skippedIds: skips.skippedIds,
     now,
+    locale,
   });
 
   const originPick = useOriginPick({
@@ -842,11 +846,13 @@ export function NeighborhoodApp({
       },
     );
     if (!route) {
-      toast.error("לא נמצאו בתים מהמסלול המשותף במפה שלכם");
+      toast.error(t("routeChanges.shareNotFound"));
     } else {
       setPinnedRoute(route);
       commitSessionPlan(route);
-      toast.success(`המסלול הוחלף · ${route.stops.length} עצירות`);
+      toast.success(
+        formatMessage(t("routeChanges.shareApplied"), { stops: String(route.stops.length) }),
+      );
     }
     writePendingRouteShare(null);
     setRouteSharePrompt(null);
@@ -863,6 +869,7 @@ export function NeighborhoodApp({
     setPinnedRoute,
     commitSessionPlan,
     startRouteMode,
+    t,
   ]);
 
   const declineSharedRoute = useCallback(() => {
@@ -877,6 +884,7 @@ export function NeighborhoodApp({
     filters,
     filterContext,
     catalogUpdatedAt,
+    locale,
   });
   const visitCelebration = useCallback(
     (_id: string, nextVisitedIds: string[]) => {
@@ -1322,7 +1330,7 @@ export function NeighborhoodApp({
 
   const selectedFilterReasons = selected
     ? (() => {
-        const reasons = houseFilterMismatchReasons(selected, filters, filterContext);
+        const reasons = houseFilterMismatchReasons(selected, filters, filterContext, locale);
         return reasons.length > 0 ? reasons : undefined;
       })()
     : undefined;
@@ -1525,7 +1533,7 @@ export function NeighborhoodApp({
             routeUpdateCount={routeMode ? routeAlerts.changes.length : 0}
             routeUpdateTicker={
               routeMode && routeAlerts.changes.length > 0
-                ? routeChangeBannerMessage(routeAlerts.changes, routeAlerts.fromBackground)
+                ? routeChangeBannerMessage(locale, routeAlerts.changes, routeAlerts.fromBackground)
                 : null
             }
             onOpenRouteUpdates={

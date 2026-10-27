@@ -10,6 +10,7 @@ import { eventCountdownDateBadgeLabel } from "@/lib/event-countdown-display";
 import { config } from "@/lib/config";
 import { isStandaloneDisplay } from "@/lib/push-client";
 import { subscribeAppViewport, syncAppViewportVars } from "@/lib/viewport";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 export function EventCountdownScreen({
@@ -19,6 +20,7 @@ export function EventCountdownScreen({
   parts: EventCountdownParts;
   onClose: () => void;
 }) {
+  const { dir, locale, t } = useLocale();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const sceneBodyRef = useRef<HTMLDivElement>(null);
@@ -39,9 +41,9 @@ export function EventCountdownScreen({
   }, []);
 
   useEffect(() => {
-    const dayLabel = parts.days === 1 ? "יום" : "ימים";
+    const dayLabel = parts.days === 1 ? t("countdown.dayOne") : t("countdown.daysMany");
     setScreenReaderHint(`${parts.days} ${dayLabel}, ${parts.time}`);
-  }, [parts.days, parts.time]);
+  }, [parts.days, parts.time, t]);
 
   useLayoutEffect(() => {
     const body = sceneBodyRef.current;
@@ -95,7 +97,7 @@ export function EventCountdownScreen({
 
   if (!mounted) return null;
 
-  const dayLabel = parts.days === 1 ? "Day" : "Days";
+  const dayLabelEn = parts.days === 1 ? "Day" : "Days";
 
   return createPortal(
     <div
@@ -110,7 +112,8 @@ export function EventCountdownScreen({
       }}
       role="dialog"
       aria-modal="true"
-      aria-label="ספירה לאחור לליל האלווין"
+      aria-label={t("countdown.screenAria")}
+      dir={dir}
       tabIndex={-1}
     >
       {screenReaderHint ? (
@@ -127,7 +130,7 @@ export function EventCountdownScreen({
           ref={closeRef}
           type="button"
           onClick={onClose}
-          aria-label="סגירה"
+          aria-label={t("countdown.closeAria")}
           className="countdown-scene-close absolute end-3 top-[max(0.5rem,env(safe-area-inset-top,0px))] z-50 inline-flex size-10 touch-manipulation items-center justify-center rounded-full bg-black/45 text-orange-100 ring-1 ring-orange-400/35 backdrop-blur-sm"
         >
           <X className="size-5" />
@@ -140,7 +143,7 @@ export function EventCountdownScreen({
           <div ref={sceneFitRef} className="countdown-scene-fit">
             <div ref={sceneStackRef} className="countdown-scene-stack flex w-full max-w-lg flex-col items-center">
             <div className="countdown-scene-header flex w-full flex-col items-center">
-              <p className="countdown-hebrew-line countdown-welcome-line">ברוכים הבאים ל</p>
+              <p className="countdown-hebrew-line countdown-welcome-line">{t("countdown.welcome")}</p>
               <p className="countdown-plain-title countdown-brand-en">{config.brandEn}</p>
             </div>
 
@@ -152,17 +155,19 @@ export function EventCountdownScreen({
 
               <div dir="ltr" className="relative z-[1]" aria-hidden="true">
                 <p className="countdown-plain-number countdown-days-number tabular-nums leading-[0.88]">
-                  {parts.days} {dayLabel}
+                  {parts.days} {dayLabelEn}
                 </p>
                 <p className="countdown-plain-number countdown-time-number tabular-nums leading-none tracking-[0.14em]">
                   {parts.time}
                 </p>
               </div>
 
-              <div className="countdown-sign-copy relative z-[1]" dir="rtl">
-                <p className="countdown-brand-he countdown-brand-he-size leading-tight">{config.brandHe}</p>
+              <div className="countdown-sign-copy relative z-[1]" dir={dir}>
+                <p className="countdown-brand-he countdown-brand-he-size leading-tight">
+                  {locale === "en" ? config.brandEn : config.brandHe}
+                </p>
                 <p className="countdown-neighborhood-line font-medium text-orange-100/90">{config.neighborhood}</p>
-                <p className="countdown-event-line font-medium text-violet-200/85">תחילת הערב בשכונה</p>
+                <p className="countdown-event-line font-medium text-violet-200/85">{t("countdown.eveningStart")}</p>
               </div>
             </div>
 
@@ -177,7 +182,9 @@ export function EventCountdownScreen({
                   "text-orange-300 transition active:scale-95",
                 )}
               >
-                <span className="countdown-close-label font-semibold text-orange-100/90">סגירה · חזרה למפה</span>
+                <span className="countdown-close-label font-semibold text-orange-100/90">
+                  {t("countdown.closeBack")}
+                </span>
                 <ChevronDown className="countdown-close-chevron animate-bounce" strokeWidth={2.5} aria-hidden />
               </button>
             </div>

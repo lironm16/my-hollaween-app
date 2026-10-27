@@ -5,10 +5,15 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
+import { HelpText } from "@/components/help-text";
+import { useLocale } from "@/hooks/use-locale";
+import {
+  localizedExportHouseCountMessage,
+  exportFormatLabel,
+} from "@/lib/i18n/export-copy";
 import {
   downloadHouseExport,
   downloadOrShareHouseExport,
-  exportHouseCountMessage,
   HOUSE_EXPORT_FORMAT_OPTIONS,
   type HouseExportFormat,
 } from "@/lib/house-csv";
@@ -36,17 +41,23 @@ export function HouseExportDialog({
   activeFilterCount?: number;
   kind?: "liked" | "list" | "all";
 }) {
+  const { dir, locale, t } = useLocale();
   const [format, setFormat] = useState<HouseExportFormat>("xlsx");
   const groupId = useId();
-  const countMessage = exportHouseCountMessage(houses.length, totalInSet, activeFilterCount);
+  const countMessage = localizedExportHouseCountMessage(
+    locale,
+    houses.length,
+    totalInSet,
+    activeFilterCount,
+  );
 
   async function runExport(selected: HouseExportFormat) {
     if (houses.length === 0) {
-      toast.error("אין בתים לשמירה — המפה ריקה");
+      toast.error(t("houseExport.emptyExport"));
       return;
     }
     if (selected === "txt") {
-      await downloadOrShareHouseExport(houses, kind, selected, { preferShare: true });
+      await downloadOrShareHouseExport(houses, kind, selected, { preferShare: true, locale });
     } else {
       downloadHouseExport(houses, kind, selected);
     }
@@ -56,21 +67,23 @@ export function HouseExportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        dir="rtl"
+        dir={dir}
         showCloseButton={false}
         className="gap-0 overflow-hidden border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
       >
         <OverlayCloseBar
           compact
-          title="הורד מסלול"
+          title={t("houseExport.downloadTitle")}
           onClose={() => onOpenChange(false)}
           className="border-b border-orange-500/15 pb-2"
         />
         <div className="space-y-3 px-4 py-3">
           <p className="text-base leading-snug text-violet-200/90">{countMessage}</p>
           <fieldset className="border-0 p-0">
-            <legend className="mb-2 text-sm font-semibold text-violet-200/90">פורמט</legend>
-            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="פורמט קובץ">
+            <legend className="mb-2 text-sm font-semibold text-violet-200/90">
+              {t("houseExport.formatLegend")}
+            </legend>
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("houseExport.formatAria")}>
               {HOUSE_EXPORT_FORMAT_OPTIONS.map((option) => {
                 const checked = format === option.id;
                 return (
@@ -91,7 +104,9 @@ export function HouseExportDialog({
                       onChange={() => setFormat(option.id)}
                       className="sr-only"
                     />
-                    <span className="text-base font-medium text-orange-50">{option.labelHe}</span>
+                    <span className="text-base font-medium text-orange-50">
+                      {exportFormatLabel(locale, option.id)}
+                    </span>
                   </label>
                 );
               })}
@@ -105,7 +120,7 @@ export function HouseExportDialog({
             disabled={houses.length === 0}
             onClick={() => void runExport(format)}
           >
-            שמירה לקובץ
+            {t("houseExport.saveToFile")}
           </Button>
           <Button
             type="button"
@@ -113,7 +128,7 @@ export function HouseExportDialog({
             className="h-11 border-violet-500/40 px-5 text-base text-violet-100"
             onClick={() => onOpenChange(false)}
           >
-            ביטול
+            {t("common.cancel")}
           </Button>
         </div>
       </DialogContent>
@@ -136,9 +151,15 @@ export function RouteShareDialog({
   totalInSet: number;
   activeFilterCount?: number;
 }) {
+  const { dir, locale, t } = useLocale();
   const stopCount =
     route && route.stops.length > 0 ? route.stops.length : houses.length;
-  const countMessage = exportHouseCountMessage(stopCount, totalInSet, activeFilterCount);
+  const countMessage = localizedExportHouseCountMessage(
+    locale,
+    stopCount,
+    totalInSet,
+    activeFilterCount,
+  );
 
   function runShare() {
     const stopIds =
@@ -146,7 +167,7 @@ export function RouteShareDialog({
         ? route.stops.map((stop) => stop.house.id)
         : houses.map((house) => house.id);
     if (stopIds.length === 0) {
-      toast.error("אין בתים לשתף — הוסיפו בתים למסלול ונסו שוב");
+      toast.error(t("houseExport.shareEmpty"));
       return;
     }
     const payload = { v: 1 as const, stopIds };
@@ -155,17 +176,17 @@ export function RouteShareDialog({
 
     const finish = (outcome: ShareUrlOutcome) => {
       if (outcome === "shared") {
-        toast.success("שיתוף המסלול נשלח");
+        toast.success(t("houseExport.shareSent"));
         onOpenChange(false);
         return;
       }
       if (outcome === "copied") {
-        toast.success("הקישור הועתק — הדביקו בוואטסאפ / הודעה");
+        toast.success(t("houseExport.shareCopied"));
         onOpenChange(false);
         return;
       }
       if (outcome === "cancelled") return;
-      toast.error("לא הצלחנו לשתף — נסו שוב");
+      toast.error(t("houseExport.shareFailed"));
       toast.message(url, { closeButton: true, duration: 20_000 });
       onOpenChange(false);
     };
@@ -176,21 +197,20 @@ export function RouteShareDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        dir="rtl"
+        dir={dir}
         showCloseButton={false}
         className="gap-0 overflow-hidden border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
       >
         <OverlayCloseBar
           compact
-          title="שתף מסלול"
+          title={t("houseExport.shareTitle")}
           onClose={() => onOpenChange(false)}
           className="border-b border-orange-500/15 pb-2"
         />
         <div className="space-y-3 px-4 py-3">
           <p className="text-base leading-snug text-violet-200/90">{countMessage}</p>
           <p className="text-sm leading-relaxed text-violet-300/85">
-            נשלח קישור לפתיחת המסלול באפליקציה (סדר העצירות נשמר). אפשר לשלוח בוואטסאפ, הודעה או
-            לשמור לקובץ.
+            <HelpText>{t("houseExport.shareBody")}</HelpText>
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 border-t border-orange-500/15 bg-[#14091c]/80 px-4 py-3">
@@ -200,7 +220,7 @@ export function RouteShareDialog({
             disabled={stopCount === 0}
             onClick={runShare}
           >
-            שתף
+            {t("houseExport.shareAction")}
           </Button>
           <Button
             type="button"
@@ -208,7 +228,7 @@ export function RouteShareDialog({
             className="h-11 border-violet-500/40 px-5 text-base text-violet-100"
             onClick={() => onOpenChange(false)}
           >
-            ביטול
+            {t("common.cancel")}
           </Button>
         </div>
       </DialogContent>

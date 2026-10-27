@@ -13,6 +13,8 @@ import {
 import { houseHeadline } from "@/lib/labels";
 import type { RouteStatusChangeEntry } from "@/lib/route-changes";
 import type { PublicHouse } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 export function RouteChangesSheet({
@@ -28,6 +30,7 @@ export function RouteChangesSheet({
   onFocusHouse?: (house: PublicHouse) => void;
   actionContext: HouseCardActionContext;
 }) {
+  const { t } = useLocale();
   const [detailId, setDetailId] = useState<string | null>(null);
   const [viewedIds, setViewedIds] = useState<string[]>([]);
 
@@ -68,12 +71,14 @@ export function RouteChangesSheet({
     <HouseEditModal
       open={open}
       onClose={closeSheet}
-      title={listMode ? "עדכונים במסלול" : houseHeadline(selected!)}
+      title={listMode ? t("routeChanges.sheetTitle") : houseHeadline(selected!)}
       subtitle={
         listMode
           ? changes.length === 1
-            ? "שינוי אחד במסלול הפעיל"
-            : `${changes.length} שינויים במסלול הפעיל`
+            ? t("routeChanges.sheetSubtitleOne")
+            : formatMessage(t("routeChanges.sheetSubtitleMany"), {
+                count: String(changes.length),
+              })
           : reasonById.get(selected!.id)
       }
       className="route-changes-sheet"
@@ -113,7 +118,7 @@ export function RouteChangesSheet({
           <ClusterHouseNav
             houses={houses}
             selectedId={selected!.id}
-            backLabel="חזרה לעדכונים"
+            backLabel={t("routeChanges.backToUpdates")}
             onBack={() => setDetailId(null)}
             onPrev={() => {
               const id = adjacentClusterHouseId(houses, selected!.id, -1);

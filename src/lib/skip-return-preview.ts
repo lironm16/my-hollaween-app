@@ -1,17 +1,28 @@
+import { localizedSkipReturnOfferLabel } from "@/lib/i18n/skip-copy";
+import type { AppLocale } from "@/lib/i18n/locale";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
 import {
-  skipReturnAutoDisplayLabel,
+  metaRestoreTriggers,
+  primaryRestoreTriggerFromSnapshot,
   skipReturnOfferEligible,
-  skipReturnOfferLabelFromSnapshot,
+  skipReturnRuleActive,
 } from "@/lib/skip-reasons";
 
-export function skipReturnPreviewLine(meta: SkippedHouseMeta | undefined): string | null {
+export function skipReturnPreviewLine(
+  locale: AppLocale,
+  meta: SkippedHouseMeta | undefined,
+): string | null {
   if (!meta || !skipReturnOfferEligible(meta)) return null;
-  return skipReturnOfferLabelFromSnapshot(meta.statusKey);
+  const trigger = primaryRestoreTriggerFromSnapshot(meta.statusKey);
+  return trigger ? localizedSkipReturnOfferLabel(locale, trigger) : null;
 }
 
 /** List/map preview — only when the user turned the return switch on. */
-export function skipReturnActivePreviewLine(meta: SkippedHouseMeta | undefined): string | null {
-  if (!meta) return null;
-  return skipReturnAutoDisplayLabel(meta);
+export function skipReturnActivePreviewLine(
+  locale: AppLocale,
+  meta: SkippedHouseMeta | undefined,
+): string | null {
+  if (!meta || !skipReturnRuleActive(meta)) return null;
+  const trigger = metaRestoreTriggers(meta)[0];
+  return trigger ? localizedSkipReturnOfferLabel(locale, trigger) : null;
 }

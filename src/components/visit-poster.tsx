@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { houseVisitQrUrl } from "@/lib/house-visit-qr";
+import { useLocale } from "@/hooks/use-locale";
 import type { PublicHouse } from "@/lib/types";
 import {
   fitFontSize,
@@ -104,6 +105,7 @@ function useVisitQrDataUrl(house: PublicHouse) {
 }
 
 export function VisitPoster({ house, aspectRatio }: { house: PublicHouse; aspectRatio?: string }) {
+  const { dir, t } = useLocale();
   const name = visitPosterHouseName(house);
   const { posterRef, boxRef, textRef, fontSizePx } = useFittedNameSize(name);
   const qrDataUrl = useVisitQrDataUrl(house);
@@ -113,7 +115,7 @@ export function VisitPoster({ house, aspectRatio }: { house: PublicHouse; aspect
       ref={posterRef}
       className="visit-poster"
       style={{ aspectRatio: aspectRatio ?? `${VISIT_POSTER_TEMPLATE_WIDTH} / ${VISIT_POSTER_TEMPLATE_HEIGHT}` }}
-      dir="rtl"
+      dir={dir}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -127,9 +129,9 @@ export function VisitPoster({ house, aspectRatio }: { house: PublicHouse; aspect
       <div
         className="visit-poster-title"
         style={{ ...boxStyle(VISIT_POSTER_LAYOUT.title), background: VISIT_POSTER_PAPER }}
-        aria-label="בשכונה Halloween"
+        aria-label={t("visitPosterExtra.brandAria")}
       >
-        <span className="visit-poster-drip">בשכונה</span>
+        <span className="visit-poster-drip">{t("visitPosterExtra.brandLine")}</span>
         <span className="visit-poster-drip">Halloween</span>
       </div>
 
@@ -147,7 +149,7 @@ export function VisitPoster({ house, aspectRatio }: { house: PublicHouse; aspect
       <div className="visit-poster-qr" style={boxStyle(VISIT_POSTER_LAYOUT.qr)}>
         {qrDataUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={qrDataUrl} alt="קוד QR לסימון ביקור" />
+          <img src={qrDataUrl} alt={t("visitPosterExtra.qrAlt")} />
         ) : null}
       </div>
     </div>

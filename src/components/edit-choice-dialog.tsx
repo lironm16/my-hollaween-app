@@ -3,6 +3,7 @@
 import { Pencil, Zap } from "lucide-react";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/hooks/use-locale";
 
 export function EditChoiceDialog({
   open,
@@ -19,8 +20,9 @@ export function EditChoiceDialog({
   onFull: () => void;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   return (
-    <HouseEditModal open={open} onClose={onClose} title="עדכון הבית" subtitle={houseName}>
+    <HouseEditModal open={open} onClose={onClose} title={t("editChoice.title")} subtitle={houseName}>
       <div className="space-y-2">
         {quickAvailable ? (
           <Button
@@ -29,7 +31,7 @@ export function EditChoiceDialog({
             onClick={onQuick}
           >
             <Zap className="size-4" />
-            עדכון מהיר
+            {t("editChoice.quick")}
           </Button>
         ) : null}
         <Button
@@ -39,10 +41,10 @@ export function EditChoiceDialog({
           onClick={onFull}
         >
           <Pencil className="size-4" />
-          עריכה מלאה
+          {t("editChoice.full")}
         </Button>
         <Button type="button" variant="ghost" className="h-10 w-full text-violet-300" onClick={onClose}>
-          ביטול
+          {t("common.cancel")}
         </Button>
       </div>
     </HouseEditModal>

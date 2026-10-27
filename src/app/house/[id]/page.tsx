@@ -34,9 +34,11 @@ import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import { parseVisitFromSearchParams } from "@/lib/house-visit-qr";
 import { resolveHouseIdFromPath, toPublicHouse } from "@/lib/ids";
 import type { House, PublicHouse } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 export default function HousePage() {
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
@@ -195,17 +197,14 @@ export default function HousePage() {
             />
           </div>
         ) : loading ? (
-          <p className="text-orange-200">טוענים בית…</p>
+          <p className="text-orange-200">{t("housePage.loading")}</p>
         ) : (
           <div className="space-y-3">
             <p className="text-violet-100">
-              {error ??
-                (missing
-                  ? "הבית לא במפה הציבורית. אולי נגמר הערב, או שהקישור ישן."
-                  : "לא נמצא.")}
+              {error ?? (missing ? t("housePage.notPublic") : t("housePage.notFound"))}
             </p>
             <Link href="/" className={cn(buttonVariants())}>
-              חזרה למפה
+              {t("housePage.backToMap")}
             </Link>
           </div>
         )}

@@ -3,6 +3,8 @@ import { formatHoursLabel } from "@/lib/hours";
 import { candyLevel, offersSensitivity, resolveDecorLevel } from "@/lib/house-state";
 import { formatHouseAddedAt } from "@/lib/house-meta";
 import { decorShort, scareShort, houseHeadline } from "@/lib/labels";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { translate } from "@/lib/i18n/translate";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 
@@ -438,24 +440,37 @@ export async function downloadOrShareHouseExport(
   houses: PublicHouse[],
   kind: "liked" | "list" | "all",
   format: HouseExportFormat,
-  options?: { preferShare?: boolean },
+  options?: { preferShare?: boolean; locale?: AppLocale },
 ) {
   if (format !== "txt" || !options?.preferShare) {
     downloadHouseExport(houses, kind, format);
     return;
   }
+  const locale = options.locale ?? "he";
   const text = housesToExportTxt(houses);
   const filename = exportFilename(kind, "txt");
-  const shared = await sharePlainTextFile(filename, text, "רשימת בתים");
+  const shared = await sharePlainTextFile(
+    filename,
+    text,
+    translate(locale, "houseExport.listFileTitle"),
+  );
   if (!shared) downloadTxt(filename, text);
 }
 
-export async function downloadOrShareRouteTxt(route: WalkingRoute, preferShare: boolean) {
+export async function downloadOrShareRouteTxt(
+  route: WalkingRoute,
+  preferShare: boolean,
+  locale: AppLocale = "he",
+) {
   const text = routeToExportTxt(route);
   const day = new Date().toISOString().slice(0, 10);
   const filename = `hallowhood-route-${day}.txt`;
   if (preferShare) {
-    const shared = await sharePlainTextFile(filename, text, "מסלול HallowHood");
+    const shared = await sharePlainTextFile(
+      filename,
+      text,
+      translate(locale, "houseExport.shareFileTitle"),
+    );
     if (shared) return;
   }
   downloadTxt(filename, text);

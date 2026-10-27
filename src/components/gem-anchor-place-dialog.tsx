@@ -24,14 +24,9 @@ import {
   gemAnchorForHouse,
   placedGemAnchorForHouse,
 } from "@/lib/gem-hunt";
-import {
-  GEM_PLACE_ACTION_HE,
-  GEM_PLACE_HINT_HE,
-  GEM_PLACE_MY_LOCATION_HE,
-  GEM_PLACE_RESET_HE,
-  GEM_PLACE_SAVE_HE,
-  GEM_PLACE_SAVED_HE,
-} from "@/lib/gem-hunt-copy";
+import { HelpText } from "@/components/help-text";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { notePlacedGemAnchor } from "@/lib/gem-placed-anchors";
 import { distanceMeters } from "@/lib/geo";
 import { houseHeadline } from "@/lib/labels";
@@ -74,24 +69,10 @@ export function useGemAnchorPlacer(options: GemAnchorPlacerOptions = {}) {
 }
 
 function GemAnchorPlaceHint() {
+  const { t } = useLocale();
   return (
-    <p className="text-base leading-relaxed text-violet-100" aria-label={GEM_PLACE_HINT_HE}>
-      מקמו את{" "}
-      <span className="inline-flex items-center gap-1.5 align-middle">
-        <ImpDemonFilledIcon className="size-5 shrink-0 text-emerald-400" aria-hidden />
-        <span className="font-medium text-violet-50">השדון</span>
-      </span>{" "}
-      בחוץ, במקום{" "}
-      <span className="font-medium text-violet-50">ציבורי ונגיש לכולם</span>
-      , בקרבת{" "}
-      <span className="inline-flex items-center gap-1.5 align-middle">
-        <span
-          className="inline-block size-2.5 shrink-0 rounded-full bg-orange-500 ring-2 ring-[#fff7ed]"
-          aria-hidden
-        />
-        <span className="font-medium text-violet-50">הבית</span>
-      </span>
-      — לא בפנים בבניין.
+    <p className="text-base leading-relaxed text-violet-100">
+      <HelpText>{t("help.product.gemPlaceHint")}</HelpText>
     </p>
   );
 }
@@ -112,6 +93,7 @@ export function GemAnchorPlaceDialog({
   refreshLocation?: () => Promise<UserLocation | null>;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const { overrides } = useGemAnchorOverrides();
   const deviceOverride = Boolean(overrides[house.id]);
   void overrides;
@@ -160,10 +142,16 @@ export function GemAnchorPlaceDialog({
   const dirty = !samePoint(point, resolvedCurrent);
   const atAuto = samePoint(point, auto);
   const mapDistanceLine = useMemo(() => {
-    const parts = [`${distanceM} מ׳ מהבית`];
-    if (accuracyM != null) parts.push(`דיוק GPS ~${accuracyM} מ׳`);
+    const parts = [
+      formatMessage(t("gemAnchor.distanceFromHouse"), { distanceM: String(distanceM) }),
+    ];
+    if (accuracyM != null) {
+      parts.push(
+        formatMessage(t("gemAnchor.gpsAccuracy"), { accuracyM: String(Math.round(accuracyM)) }),
+      );
+    }
     return parts.join(" · ");
-  }, [distanceM, accuracyM]);
+  }, [distanceM, accuracyM, t]);
 
   async function send(method: "PUT" | "DELETE", body: Record<string, unknown>) {
     setSaving(true);
@@ -175,14 +163,14 @@ export function GemAnchorPlaceDialog({
       });
       const json = (await res.json().catch(() => null)) as SaveResponse | null;
       if (!res.ok) {
-        toast.error(json?.error ?? "השמירה נכשלה.");
+        toast.error(json?.error ?? t("gemAnchor.saveFailed"));
         return false;
       }
       notePlacedGemAnchor(house.id, json?.gemAnchor ?? null, json?.house?.updatedAt ?? new Date().toISOString());
       notifyCatalogChanged();
       return true;
     } catch {
-      toast.error("אין חיבור לשרת. נסו שוב.");
+      toast.error(t("gemAnchor.noServer"));
       return false;
     } finally {
       setSaving(false);
@@ -199,13 +187,13 @@ export function GemAnchorPlaceDialog({
         return;
       }
       if (await send("DELETE", {})) {
-        toast.success(GEM_PLACE_SAVED_HE);
+        toast.success(t("gemAnchor.saved"));
         onClose();
       }
       return;
     }
     if (await send("PUT", { lat: clamped.lat, lng: clamped.lng })) {
-      toast.success(GEM_PLACE_SAVED_HE);
+      toast.success(t("gemAnchor.saved"));
       onClose();
     }
   }
@@ -219,7 +207,7 @@ export function GemAnchorPlaceDialog({
 
   async function applyMyLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      toast.error("המכשיר לא תומך במיקום.");
+      toast.error(t("gemAnchor.noLocation"));
       return;
     }
     setLocating(true);
@@ -229,7 +217,7 @@ export function GemAnchorPlaceDialog({
         refresh: refreshLocation,
       });
       if (!fix) {
-        toast.error("לא הצלחנו לקבל מיקום. בדקו שהרשאת מיקום פתוחה.");
+        toast.error(t("gemAnchor.locationFailed"));
         return;
       }
       applyGpsFix(fix);
@@ -245,7 +233,12 @@ export function GemAnchorPlaceDialog({
   }
 
   return (
-    <HouseEditModal open={open} onClose={onClose} title={GEM_PLACE_ACTION_HE} subtitle={houseHeadline(house)}>
+    <HouseEditModal
+      open={open}
+      onClose={onClose}
+      title={t("help.product.gemPlaceAction")}
+      subtitle={houseHeadline(house)}
+    >
       <div className="space-y-3">
         <GemAnchorPlaceHint />
         <div>
@@ -285,7 +278,7 @@ export function GemAnchorPlaceDialog({
               dir="rtl"
               className="gem-anchor-place-map__footer absolute inset-x-2 bottom-2 z-[510] flex max-w-[calc(100%-1rem)] flex-col items-start gap-0.5 rounded-lg bg-black/65 px-2.5 py-1.5 text-start ring-1 ring-orange-500/30 backdrop-blur-sm"
               title={`${mapDistanceLine} · ${coordsText}`}
-              onClick={() => void copyText(coordsText, "הקואורדינטות הועתקו")}
+              onClick={() => void copyText(coordsText, t("gemAnchor.coordsCopied"))}
             >
               <span className="w-full text-sm leading-snug text-violet-100">{mapDistanceLine}</span>
               <span dir="ltr" className="font-mono text-xs tabular-nums text-orange-100">
@@ -302,7 +295,7 @@ export function GemAnchorPlaceDialog({
               onClick={applyMyLocation}
             >
               <LocateFixed className="size-4 shrink-0" />
-              {locating ? "מאתרים…" : GEM_PLACE_MY_LOCATION_HE}
+              {locating ? t("gemAnchor.locating") : t("gemAnchor.myLocation")}
             </Button>
             {(
               [
@@ -333,19 +326,19 @@ export function GemAnchorPlaceDialog({
               onClick={() => void reset()}
             >
               <RotateCcw className="size-4 shrink-0" />
-              {GEM_PLACE_RESET_HE}
+              {t("gemAnchor.resetPlacement")}
             </Button>
           </div>
         </div>
         {deviceOverride ? (
           <p className="text-sm text-amber-200">
-            בטלפון הזה יש כיול GPS מקומי שדורס את המיקום.{" "}
+            <HelpText>{t("gemAnchor.gpsOverride")}</HelpText>{" "}
             <button
               type="button"
               className="underline underline-offset-2"
               onClick={() => clearGemAnchorOverride(house.id)}
             >
-              ביטול הכיול המקומי
+              {t("gemAnchor.clearOverride")}
             </button>
           </p>
         ) : null}
@@ -356,7 +349,7 @@ export function GemAnchorPlaceDialog({
             disabled={!dirty || saving}
             onClick={() => void save()}
           >
-            {GEM_PLACE_SAVE_HE}
+            {t("gemAnchor.save")}
           </Button>
           <Button
             type="button"
@@ -364,7 +357,7 @@ export function GemAnchorPlaceDialog({
             className="h-11 min-w-0 flex-1 justify-center text-base"
             onClick={onClose}
           >
-            ביטול
+            {t("common.cancel")}
           </Button>
         </div>
       </div>

@@ -43,6 +43,8 @@ import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
 import { catalogRemovedEditBlockedToast } from "@/lib/labels";
 import { useCatalog } from "@/hooks/use-catalog";
 import type { PublicHouse } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 export function QuickUpdateOverlay({
@@ -62,6 +64,7 @@ export function QuickUpdateOverlay({
   onOpenFull?: () => void;
   onUpdated: (house: PublicHouse) => void;
 }) {
+  const { dir, t } = useLocale();
   useEffect(() => {
     if (open && !deviceHouseEditAllowed(house.id)) {
       toast.message(catalogRemovedEditBlockedToast);
@@ -96,7 +99,7 @@ export function QuickUpdateOverlay({
     candyPick === "out" &&
     housePick === "open" &&
     isDecorated(house)
-      ? "הממתקים נגמרו — הבית עדיין פתוח לביקורים."
+      ? t("quickUpdate.candyOutHint")
       : null;
 
   async function save() {
@@ -121,7 +124,7 @@ export function QuickUpdateOverlay({
         onUpdated(next);
         rememberSessionHouseDetail(next);
         notifyCatalogChanged();
-        toast.success("נשמר במכשיר · יישלח כשיש רשת");
+        toast.success(t("quickUpdate.savedOffline"));
         onClose();
         return;
       }
@@ -149,7 +152,7 @@ export function QuickUpdateOverlay({
         };
       }>(res);
       if (!res.ok || !data.house) {
-        toast.error(data.error ?? "העדכון נכשל");
+        toast.error(data.error ?? t("quickUpdate.saveFailed"));
         return;
       }
 
@@ -172,7 +175,7 @@ export function QuickUpdateOverlay({
           data.push.body ?? preview.payload.body,
           preview.payload.url,
         );
-        toast.success("נשמר · התראה נשלחה לשכונה");
+        toast.success(t("quickUpdate.savedNotifyAll"));
       } else if (sendPush && preview && data.push?.offer) {
         const notifyRes = await fetch(`/api/houses/${encodeURIComponent(house.id)}/notify`, {
           method: "POST",
@@ -185,17 +188,21 @@ export function QuickUpdateOverlay({
         });
         const notifyData = await readApiJson<{ error?: string; sent?: number }>(notifyRes);
         if (!notifyRes.ok) {
-          toast.error(notifyData.error ?? "נשמר, אבל שליחת ההתראה נכשלה");
+          toast.error(notifyData.error ?? t("quickUpdate.savedNotifyFailed"));
         } else {
           void showLocalPush(data.push.offer.title, data.push.offer.body, preview.payload.url);
-          toast.success(`נשמר · התראה נשלחה ל־${notifyData.sent ?? 0} מכשירים`);
+          toast.success(
+            formatMessage(t("quickUpdate.savedNotifyCount"), {
+              count: String(notifyData.sent ?? 0),
+            }),
+          );
         }
       } else {
-        toast.success("נשמר");
+        toast.success(t("quickUpdate.saved"));
       }
       onClose();
     } catch {
-      toast.error("אין קשר לשרת");
+      toast.error(t("quickUpdate.noServer"));
     } finally {
       setBusy(false);
     }
@@ -205,13 +212,13 @@ export function QuickUpdateOverlay({
     <HouseEditModal
       open={open}
       onClose={onClose}
-      title="עדכון מהיר"
+      title={t("quickUpdate.title")}
       subtitle={house.name}
       className="w-[min(100%-2rem,26rem)]"
     >
       <div className="space-y-5">
         <QuickSelectField
-          label="ממתקים"
+          label={t("quickUpdate.candyLabel")}
           value={candyPick}
           onChange={setCandyPick}
           options={QUICK_CANDY_OPTIONS.map((option) => ({
@@ -222,7 +229,7 @@ export function QuickUpdateOverlay({
           }))}
         />
         <QuickSelectField
-          label="סטטוס הבית"
+          label={t("quickUpdate.statusLabel")}
           value={housePick}
           onChange={setHousePick}
           options={QUICK_HOUSE_OPTIONS.map((option) => ({
@@ -241,11 +248,12 @@ export function QuickUpdateOverlay({
                 checked={sendPush}
                 onChange={(event) => setSendPush(event.target.checked)}
               />
-              <span className="text-lg text-orange-100">שלחו התראה לשכונה</span>
+              <span className="text-lg text-orange-100">{t("quickUpdate.notifyNeighborhood")}</span>
             </label>
             <PushNotice
               payload={preview.payload}
-              time=""
+              dir={dir}
+              time={t("pushAlerts.noticeNow")}
               className={cn(
                 "transition-opacity",
                 !sendPush && "pointer-events-none opacity-40 saturate-[0.65]",
@@ -263,7 +271,7 @@ export function QuickUpdateOverlay({
           className="h-12 w-full bg-orange-500 text-lg text-black hover:bg-orange-400"
           onClick={() => void save()}
         >
-          {busy ? "שומרים…" : "שמירה"}
+          {busy ? t("quickUpdate.saving") : t("quickUpdate.save")}
         </Button>
         {onOpenFull ? (
           <Button
@@ -273,7 +281,7 @@ export function QuickUpdateOverlay({
             onClick={onOpenFull}
           >
             <Pencil className="size-4" />
-            עריכה מלאה
+            {t("quickUpdate.fullEdit")}
           </Button>
         ) : null}
       </div>

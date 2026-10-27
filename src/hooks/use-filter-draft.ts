@@ -17,6 +17,7 @@ import { diffRouteByFilters, rebuildRouteAfterFilterChange } from "@/lib/route-c
 import type { WalkingRoute } from "@/lib/route";
 import type { ResolvedOrigin } from "@/lib/distance-origin";
 import type { HouseSet } from "@/lib/house-set";
+import type { AppLocale } from "@/lib/i18n/locale";
 import type { PublicHouse } from "@/lib/types";
 
 export function useFilterDraft({
@@ -31,6 +32,7 @@ export function useFilterDraft({
   origin,
   skippedIds,
   now,
+  locale,
 }: {
   filters: HouseFiltersState;
   updateFilters: (
@@ -50,6 +52,7 @@ export function useFilterDraft({
   origin: ResolvedOrigin;
   skippedIds: string[];
   now: Date;
+  locale: AppLocale;
 }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterDraft, setFilterDraft] = useState<HouseFiltersState | null>(null);
@@ -72,10 +75,16 @@ export function useFilterDraft({
   const visitWindowInvalid = houseFiltersDraftInvalid(sheetFilters, now);
 
   function previewRouteDiff(nextFilters: HouseFiltersState) {
-    return diffRouteByFilters(pinnedRoute, houses, nextFilters, {
-      ...filterContext,
-      skippedIds,
-    });
+    return diffRouteByFilters(
+      pinnedRoute,
+      houses,
+      nextFilters,
+      {
+        ...filterContext,
+        skippedIds,
+      },
+      locale,
+    );
   }
 
   function applyFiltersWithRoute(nextFilters: HouseFiltersState, includeNew: boolean) {

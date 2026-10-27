@@ -35,6 +35,8 @@ import { SKIP_ICON_SVG } from "@/components/skip-icon";
 import "leaflet/dist/leaflet.css";
 import { useLocale } from "@/hooks/use-locale";
 import type { AppLocale } from "@/lib/i18n/locale";
+import { formatMessage } from "@/lib/i18n/format";
+import { translate } from "@/lib/i18n/translate";
 import { config, inNeighborhood } from "@/lib/config";
 import { useMapTiles } from "@/hooks/use-map-tiles";
 import { postMapTileCacheConfig } from "@/lib/map-tile-cache";
@@ -121,7 +123,11 @@ function mapTileUrl(tiles: MapTilesConfig): string {
 
 type RouteStopBadgeProgress = ClusterRouteStopBadgeProgress;
 
-function routeBadgeHtml(order: number, progress: RouteStopBadgeProgress = "open") {
+function routeBadgeHtml(
+  order: number,
+  progress: RouteStopBadgeProgress,
+  locale: AppLocale,
+) {
   const progressClass =
     progress === "visited"
       ? " is-visited"
@@ -130,7 +136,8 @@ function routeBadgeHtml(order: number, progress: RouteStopBadgeProgress = "open"
         : progress === "mixed"
           ? " is-mixed-done"
           : "";
-  return `<span class="route-stop-pin${progressClass}" aria-label="עצירה ${order}"><b class="route-stop-num">${order}</b></span>`;
+  const stopLabel = attr(formatMessage(translate(locale, "mapPin.routeStop"), { order: String(order) }));
+  return `<span class="route-stop-pin${progressClass}" aria-label="${stopLabel}"><b class="route-stop-num">${order}</b></span>`;
 }
 
 function routeBadgeProgressForCluster(
@@ -147,11 +154,12 @@ function routeBadgeProgressForCluster(
 
 function wrapRoutePin(
   html: string,
+  locale: AppLocale,
   routeOrder?: number,
   shellClass = "",
   badgeProgress: RouteStopBadgeProgress = "open",
 ) {
-  const badge = routeOrder ? routeBadgeHtml(routeOrder, badgeProgress) : "";
+  const badge = routeOrder ? routeBadgeHtml(routeOrder, badgeProgress, locale) : "";
   return {
     extraH: 0,
     html: `<div class="house-pin-route${shellClass}">${html}${badge}</div>`,
@@ -215,31 +223,37 @@ function pinFaceKind(house: PublicHouse): "bare" | "scare" {
   return isDecorated(house) ? "scare" : "bare";
 }
 
-function pinSkipStatusBadgeHtml() {
-  return `<b class="pin-status is-skipped" aria-label="דילגתי">${SKIP_ICON_SVG}</b>`;
+function pinSkipStatusBadgeHtml(locale: AppLocale) {
+  const label = attr(translate(locale, "mapPin.skipped"));
+  return `<b class="pin-status is-skipped" aria-label="${label}">${SKIP_ICON_SVG}</b>`;
 }
 
 function pinStatusMark(
   house: PublicHouse,
   now: Date,
   addressReveal: AddressRevealSchedule | undefined,
+  locale: AppLocale,
   skipped = false,
 ) {
   const parts: string[] = [];
   const visit = pinVisitKind(house, now, addressReveal);
   if (visit === "closed") {
-    parts.push(`<b class="pin-status is-closed" aria-label="סגור"></b>`);
+    parts.push(`<b class="pin-status is-closed" aria-label="${attr(translate(locale, "mapPin.closed"))}"></b>`);
   } else if (visit === "break") {
-    parts.push(`<b class="pin-status is-break" aria-label="הפסקה"></b>`);
+    parts.push(`<b class="pin-status is-break" aria-label="${attr(translate(locale, "mapPin.onBreak"))}"></b>`);
   } else {
     const dot = candyPinDot(house);
     if (dot) {
       const label =
-        dot === "low" ? "מעט ממתקים" : dot === "out" ? "נגמרו הממתקים" : "יש ממתקים";
-      parts.push(`<b class="pin-status is-${dot}" aria-label="${label}"></b>`);
+        dot === "low"
+          ? translate(locale, "mapPin.candyLow")
+          : dot === "out"
+            ? translate(locale, "mapPin.candyOut")
+            : translate(locale, "mapPin.candyPlenty");
+      parts.push(`<b class="pin-status is-${dot}" aria-label="${attr(label)}"></b>`);
     }
   }
-  if (skipped) parts.push(pinSkipStatusBadgeHtml());
+  if (skipped) parts.push(pinSkipStatusBadgeHtml(locale));
   return parts.join("");
 }
 
@@ -285,6 +299,7 @@ function housePinHtml(
   house: PublicHouse,
   now: Date,
   gemCtx: MapGemPinRingContext,
+  locale: AppLocale,
   extras?: {
     selected?: boolean;
     houseId?: string;
@@ -318,20 +333,21 @@ function housePinHtml(
     tourRingActive ? "" : houseSkipped ? " is-skipped" : houseVisited ? " is-visited" : "";
   const ringStyle = tourRing.styleAttr.match(/style="([^"]*)"/)?.[1] ?? "";
   const styleAttr = ` style="background:${fill}${extras?.extraStyle ? `;${extras.extraStyle}` : ""}${ringStyle ? `;${ringStyle}` : ""}"`;
-  const label =
+  const aria =
     visit === "closed"
-      ? 'aria-label="סגור"'
+      ? translate(locale, "mapPin.closed")
       : visit === "break"
-        ? 'aria-label="הפסקה"'
+        ? translate(locale, "mapPin.onBreak")
         : isClosingSoon(house, now)
-          ? 'aria-label="נסגר בקרוב"'
+          ? translate(locale, "mapPin.closingSoon")
           : isOpeningSoon(house, now)
-            ? 'aria-label="נפתח בקרוב"'
+            ? translate(locale, "mapPin.openingSoon")
             : face === "scare"
-              ? 'aria-label="מקושט"'
-              : 'aria-label="לא מקושט"';
+              ? translate(locale, "mapPin.decorated")
+              : translate(locale, "mapPin.undecorated");
+  const label = `aria-label="${attr(aria)}"`;
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
-  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${progressClass}${tourRing.classSuffix}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal, houseSkipped)}${pinFaceHtml(house)}</div>`;
+  return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${progressClass}${tourRing.classSuffix}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal, locale, houseSkipped)}${pinFaceHtml(house)}</div>`;
 }
 
 const DIV_ICON_CACHE = new Map<string, L.DivIcon>();
@@ -368,7 +384,7 @@ function clusterIcon(
   const selectedClass = selectedHere ? " is-selected" : "";
   const filterClass = filteredOut ? " is-filtered-out" : "";
   if (!only) {
-    const wrapped = wrapRoutePin("", routeOrder, "", badgeProgress);
+    const wrapped = wrapRoutePin("", locale, routeOrder, "", badgeProgress);
     const layout = leafletPinLayout({ routeOrder });
     return L.divIcon({
       className: `pumpkin-pin-icon${selectedClass}${filterClass}`,
@@ -382,13 +398,14 @@ function clusterIcon(
   if (houses.length <= 1 && !schoolCampus) {
     const { hoursSoonClass: hoursClass } = mapPinRingDecorForHouse(only, now, gemCtx);
     const wrapped = wrapRoutePin(
-      housePinHtml(only, now, gemCtx, {
+      housePinHtml(only, now, gemCtx, locale, {
         selected: selectedHere,
         filteredOut: matchedIds ? !matchedIds.has(only.id) : false,
         visitedIds,
         skippedIds: skippedIds ? [...skippedIds] : [],
         routeModeActive: decorRouteMode,
       }),
+      locale,
       routeOrder,
       "",
       routeBadgeProgressForCluster([only], visitedIds, skippedIds),
@@ -425,6 +442,7 @@ function clusterIcon(
     schoolCampus && routeOrder == null ? "" : " is-cluster-shell";
   const wrapped = wrapRoutePin(
     `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
+    locale,
     routeOrder,
     clusterShell,
     badgeProgress,
@@ -454,23 +472,36 @@ const pickIcon = L.divIcon({
 });
 
 const originLayout = leafletPinLayout({ aptDots: false });
-const originIcon = L.divIcon({
-  className: "pumpkin-pin-icon is-origin-pin",
-  html: `<div class="house-pin-route"><div class="house-pin is-origin" aria-label="נקודת התחלה"><span>📍</span></div></div>`,
-  iconSize: originLayout.iconSize,
-  iconAnchor: originLayout.iconAnchor,
-});
 
-const youAreHereIcon = L.divIcon({
-  className: "you-are-here-wrap",
-  html: `<div class="you-are-here" role="img" aria-label="אתם כאן"><span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
-  iconSize: [22, 22],
-  iconAnchor: [11, 11],
-  popupAnchor: [0, -12],
-});
+function originIconFor(locale: AppLocale) {
+  const label = attr(translate(locale, "mapPin.routeOrigin"));
+  return L.divIcon({
+    className: "pumpkin-pin-icon is-origin-pin",
+    html: `<div class="house-pin-route"><div class="house-pin is-origin" aria-label="${label}"><span>📍</span></div></div>`,
+    iconSize: originLayout.iconSize,
+    iconAnchor: originLayout.iconAnchor,
+  });
+}
+
+function youAreHereIconFor(locale: AppLocale) {
+  const label = attr(translate(locale, "mapPin.youAreHere"));
+  return L.divIcon({
+    className: "you-are-here-wrap",
+    html: `<div class="you-are-here" role="img" aria-label="${label}"><span class="you-are-here-pulse" aria-hidden="true"></span><span class="you-are-here-dot" aria-hidden="true"></span></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -12],
+  });
+}
 
 /** Imperative Leaflet layers — react-leaflet Marker often misses Android GPS updates. */
-function MapUserLocationOverlay({ location }: { location: UserLocation }) {
+function MapUserLocationOverlay({
+  location,
+  youAreHereIcon,
+}: {
+  location: UserLocation;
+  youAreHereIcon: L.DivIcon;
+}) {
   const map = useMap();
   const markerRef = useRef<L.Marker | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
@@ -488,7 +519,11 @@ function MapUserLocationOverlay({ location }: { location: UserLocation }) {
       circleRef.current?.remove();
       circleRef.current = null;
     };
-  }, [map]);
+  }, [map, youAreHereIcon]);
+
+  useEffect(() => {
+    markerRef.current?.setIcon(youAreHereIcon);
+  }, [youAreHereIcon]);
 
   useEffect(() => {
     const { lat, lng, accuracy } = location;
@@ -993,6 +1028,9 @@ export function HouseMap({
   routeModeActive = false,
   showEventZoneOutlines = false,
 }: Props) {
+  const { locale, t } = useLocale();
+  const originIcon = useMemo(() => originIconFor(locale), [locale]);
+  const youAreHereIcon = useMemo(() => youAreHereIconFor(locale), [locale]);
   const { catalog } = useCatalog();
   const addressRevealSchedule = catalog?.eventSettings?.addressReveal;
   const pinRingHouses = gemPinRingHouses ?? gemAnchorHouses;
@@ -1081,7 +1119,7 @@ export function HouseMap({
   return (
     <div
       role="region"
-      aria-label="מפת השכונה"
+      aria-label={t("mapPin.mapRegion")}
       className={cn(
         "relative z-0 isolate overflow-hidden",
         originPickActive && "is-origin-pick",
@@ -1280,7 +1318,9 @@ export function HouseMap({
               }
             />
           ))}
-        {!pickMode && userLocation ? <MapUserLocationOverlay location={userLocation} /> : null}
+        {!pickMode && userLocation ? (
+          <MapUserLocationOverlay location={userLocation} youAreHereIcon={youAreHereIcon} />
+        ) : null}
       </MapContainer>
       {!pickMode && !originPickActive && !embed ? <MapAddHouseFab /> : null}
       <div className="map-fab-stack">
@@ -1288,8 +1328,8 @@ export function HouseMap({
             <button
               type="button"
               className="locate-me flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-sky-300 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-sky-400/40"
-              aria-label="המיקום שלי"
-              title="המיקום שלי"
+              aria-label={t("mapPin.myLocation")}
+              title={t("mapPin.myLocation")}
               onClick={onLocate}
             >
               <LocateFixed className={cn("size-5", locating && "animate-pulse")} />

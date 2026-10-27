@@ -57,6 +57,7 @@ function RouteListCollapsedHouse({
   skipPreview,
   expanded,
   onToggle,
+  dir,
 }: {
   house: PublicHouse;
   order: number;
@@ -65,6 +66,7 @@ function RouteListCollapsedHouse({
   skipPreview?: string;
   expanded: boolean;
   onToggle: () => void;
+  dir: "rtl" | "ltr";
 }) {
   const barProps = houseCardPropsFor(house, actionContext, { index: order > 0 ? order : undefined });
   return (
@@ -89,7 +91,7 @@ function RouteListCollapsedHouse({
         <span className="min-w-0 flex-1 text-right">
           <span className="route-list-collapsed-title block">{houseHeadline(house)}</span>
           {!expanded && skipped && skipPreview ? (
-            <span className="route-list-collapsed-skip-note flex min-w-0 items-center gap-2" dir="rtl">
+            <span className="route-list-collapsed-skip-note flex min-w-0 items-center gap-2" dir={dir}>
               <SkipSign className="route-list-collapsed-skip-icon shrink-0" />
               <span className="route-list-collapsed-skip-text min-w-0 flex-1 truncate">
                 {skipPreview}
@@ -127,7 +129,7 @@ export function RouteList({
   onChangeOrigin?: () => void;
   focusId?: string | null;
 }) {
-  const { t } = useLocale();
+  const { dir, locale, t } = useLocale();
   const focusRef = useRef<HTMLLIElement | null>(null);
   const addressReveal = useAddressReveal();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
@@ -196,7 +198,7 @@ export function RouteList({
               )}
             >
               {showSkippedHeading && !doneCollapsed ? (
-                <p className="route-list-skipped-heading">דילגתם</p>
+                <p className="route-list-skipped-heading">{t("routeList.skippedHeading")}</p>
               ) : null}
               <RouteLeg label={hop || undefined} />
               {doneCollapsed ? (
@@ -205,9 +207,10 @@ export function RouteList({
                   order={order}
                   actionContext={actionContext}
                   skipped={skipped}
+                  dir={dir}
                   skipPreview={
                     skipped
-                      ? skipReturnActivePreviewLine(actionContext.skipMetaFor?.(house.id)) ??
+                      ? skipReturnActivePreviewLine(locale, actionContext.skipMetaFor?.(house.id)) ??
                         undefined
                       : undefined
                   }

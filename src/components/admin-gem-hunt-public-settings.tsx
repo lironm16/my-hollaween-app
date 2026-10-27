@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminHelpDetails } from "@/components/admin-section";
-import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { notifyCatalogChanged } from "@/lib/offline-db";
 import { cn } from "@/lib/utils";
 
 /** Feature switch — gem hunt for all users (still gated by address reveal per house). */
 export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useLocale();
+  const gameTitle = t("help.product.gemGameTitle");
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -28,8 +31,8 @@ export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: bo
     if (enabled === null) return;
     const next = !enabled;
     const question = next
-      ? `להפעיל את ${GEM_GAME_TITLE_HE} באפליקציה? כל המשתמשים יראו את המשחק, ויוכלו לחפש שדון בכל מקום שהכתובת שלו גלויה להם.`
-      : `לכבות את ${GEM_GAME_TITLE_HE}? המשחק ייעלם לכל המשתמשים (מנהלים עדיין יראו אותו).`;
+      ? formatMessage(t("adminGemPublic.enableConfirm"), { game: gameTitle })
+      : formatMessage(t("adminGemPublic.disableConfirm"), { game: gameTitle });
     if (!window.confirm(question)) return;
     setSaving(true);
     try {
@@ -40,7 +43,7 @@ export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: bo
       });
       const json = (await res.json().catch(() => null)) as { enabled?: boolean; error?: string } | null;
       if (!res.ok) {
-        toast.error(json?.error ?? "השמירה נכשלה.");
+        toast.error(json?.error ?? t("adminGemPublic.saveFailed"));
         return;
       }
       setEnabled(Boolean(json?.enabled));
@@ -58,17 +61,21 @@ export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: bo
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-orange-100">{GEM_GAME_TITLE_HE}</p>
+        <p className="text-sm font-medium text-orange-100">{gameTitle}</p>
         <span className="flex shrink-0 items-center gap-1.5">
           <span className={cn("text-base", enabled ? "text-orange-200" : "text-violet-400")}>
-            {enabled === null ? "…" : enabled ? "פועל" : "כבוי"}
+            {enabled === null
+              ? "…"
+              : enabled
+                ? t("adminDryRun.toggleOn")
+                : t("adminDryRun.toggleOff")}
           </span>
           <button
             type="button"
             dir="ltr"
             role="switch"
             aria-checked={Boolean(enabled)}
-            aria-label={GEM_GAME_TITLE_HE}
+            aria-label={gameTitle}
             disabled={enabled === null || saving}
             onClick={() => void toggle()}
             className={cn(
@@ -81,15 +88,9 @@ export function AdminGemHuntPublicSettings({ embedded = false }: { embedded?: bo
         </span>
       </div>
       {embedded ? (
-        <AdminHelpDetails label="מה זה?">
-          מפעיל או מכבה את המשחק באפליקציה לכל המשתמשים. כבוי — רק מנהלים רואים אותו. דלוק — כולם
-          רואים אותו, וכל אחד יכול לחפש שדון בבית שהכתובת שלו גלויה לו: הבית שלו, עסקים ובתי ספר,
-          ואחרי שעת חשיפת הכתובות — כל הבתים.
-        </AdminHelpDetails>
+        <AdminHelpDetails label={t("adminGemPublic.what")}>{t("adminGemPublic.helpBody")}</AdminHelpDetails>
       ) : (
-        <p className="text-sm text-violet-300">
-          כבוי כברירת מחדל. ההגדרה נשמרת בשרת ומגיעה לכל המכשירים בעדכון הבתים הבא.
-        </p>
+        <p className="text-sm text-violet-300">{t("adminGemPublic.helpFoot")}</p>
       )}
     </div>
   );

@@ -25,12 +25,12 @@ import { anyPushTopicOn, PUSH_TOPIC_ROWS, PUSH_TOPICS } from "@/lib/push-topics"
 import { Button } from "@/components/ui/button";
 import { OverlayCloseBar, OverlayCloseButton } from "@/components/overlay-close-button";
 import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
+import { HelpText } from "@/components/help-text";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 type Status = "loading" | PushEnableResult;
-
-const ANDROID_ALERTS_HELP =
-  "באנדרואיד: השתמשו ב-Chrome, אפשרו התראות לאתר, וודאו ש-Chrome לא מוגבל בסוללה (הגדרות → אפליקציות → Chrome → סוללה → ללא הגבלה).";
 
 function skipPromptThisSession() {
   try {
@@ -108,6 +108,7 @@ function TopicSwitch({
 }
 
 function PushAlertsButtonInner() {
+  const { dir, t } = useLocale();
   const [status, setStatus] = useState<Status>("loading");
   const [busy, setBusy] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
@@ -195,16 +196,16 @@ function PushAlertsButtonInner() {
         setStatus(result);
         if (result !== "on") {
           skipPromptThisSession();
-          toast.message("התראות כבויות במכשיר הזה.");
+          toast.message(t("pushAlerts.disabledOnDevice"));
           setAskOpen(false);
           return;
         }
         writePushTopicPrefs(topics);
         setSavedTopics(topics);
         setAskOpen(false);
-        toast.success("ההעדפות נשמרו.", { closeButton: true });
+        toast.success(t("pushAlerts.prefsSaved"), { closeButton: true });
       } catch {
-        toast.error("לא הצלחנו לשמור את ההעדפה.");
+        toast.error(t("pushAlerts.prefsSaveFailed"));
         setTopics(savedTopics);
       } finally {
         setBusy(false);
@@ -218,21 +219,21 @@ function PushAlertsButtonInner() {
       setStatus(result);
       if (result === "on") {
         setAskOpen(false);
-        toast.success("נרשמתם! אפשר לערוך בכל עת דרך סמל הפעמון.", { closeButton: true });
+        toast.success(t("pushAlerts.subscribed"), { closeButton: true });
         return;
       }
       if (result === "denied") {
         setAskOpen(false);
-        toast.message("בלי הרשאה לא נשלח התראות לטלפון.");
+        toast.message(t("pushAlerts.noPermission"));
         return;
       }
       if (result === "ios-install") {
-        toast.message("באייפון ההתראות עובדות אחרי **הוספה למסך הבית**.");
+        toast.message(t("pushAlerts.iosToast"));
         return;
       }
-      toast.message("בלי הרשאה לא נשלח התראות לטלפון.");
+      toast.message(t("pushAlerts.noPermission"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "הדפדפן חסם התראות.");
+      toast.error(error instanceof Error ? error.message : t("pushAlerts.blocked"));
     } finally {
       setBusy(false);
     }
@@ -243,24 +244,24 @@ function PushAlertsButtonInner() {
     try {
       const result = await sendSelfPushTest();
       if (result.ok) {
-        toast.success(`התראה מהשרת הגיעה! (${result.total ?? 1} מכשירים רשומים)`);
+        toast.success(
+          formatMessage(t("pushAlerts.testOk"), { count: String(result.total ?? 1) }),
+        );
         return;
       }
       if (result.local) {
         toast.message(
-          result.registered
-            ? "הראינו התראה מקומית. הרישום בשרת קיים — נסו שוב בעוד כמה שניות."
-            : "הראינו התראה מקומית. מסנכרנים רישום לשרת — נסו שוב.",
+          result.registered ? t("pushAlerts.testLocalRegistered") : t("pushAlerts.testLocalSync"),
         );
         return;
       }
       if (!result.registered) {
-        toast.error(result.error ?? "המכשיר לא רשום בשרת. כבו והפעילו התראות שוב.");
+        toast.error(result.error ?? t("pushAlerts.testNotRegistered"));
         return;
       }
-      toast.error(result.error ?? "השליחה נכשלה. כבו והפעילו התראות שוב.");
+      toast.error(result.error ?? t("pushAlerts.testFailed"));
     } catch {
-      toast.error("לא הצלחנו לשלוח בדיקה.");
+      toast.error(t("pushAlerts.testError"));
     } finally {
       setBusy(false);
     }
@@ -282,9 +283,9 @@ function PushAlertsButtonInner() {
       setStatus("off");
       writePushTopicPrefs(off);
       setAskOpen(false);
-      toast.message("התראות כבויות במכשיר הזה.", { closeButton: true });
+      toast.message(t("pushAlerts.disabledOnDevice"), { closeButton: true });
     } catch {
-      toast.error("לא הצלחנו לכבות את ההתראות.");
+      toast.error(t("pushAlerts.disableFailed"));
       const stored = readPushTopicPrefs();
       setTopics(stored);
       setSavedTopics(stored);
@@ -304,39 +305,39 @@ function PushAlertsButtonInner() {
 
   const title =
     status === "on"
-      ? "התראות פועלות"
+      ? t("pushAlerts.bellOn")
       : status === "denied"
-        ? "התראות חסומות בהגדרות הדפדפן"
+        ? t("pushAlerts.bellDenied")
         : status === "ios-install"
-          ? "באייפון: הוסיפו למסך הבית ואז הפעל"
+          ? t("pushAlerts.bellIos")
           : status === "unsupported"
-            ? "הדפדפן לא תומך בהתראות"
-            : "הפעל התראות מהשכונה";
+            ? t("pushAlerts.bellUnsupported")
+            : t("pushAlerts.bellOff");
 
-  const helpDescription = ios
-    ? "באייפון צריך קודם **הוספה למסך הבית**, ואז נפתח חלון ההרשאה."
+  const helpDescriptionKey = ios
+    ? "pushAlerts.helpIos"
     : denied
       ? android
-        ? "באנדרואיד: הגדרות → אפליקציות → Chrome → התראות → אפשר. ואז ב-Chrome: סמל המנעול ליד הכתובת → התראות → אפשר."
-        : "כדי לקבל התראות: לחצו על סמל המנעול או **i** ליד הכתובת, בחרו **התראות** → **אפשר**, ואז חזרו לכאן ולחצו **הפעל**."
+        ? "pushAlerts.helpDeniedAndroid"
+        : "pushAlerts.helpDeniedGeneric"
       : unsupported
-        ? "דפדפן זה לא תומך בהתראות דחיפה. נסו Chrome, Firefox, או Safari אחרי **הוספה למסך הבית**."
+        ? "pushAlerts.helpUnsupported"
         : null;
 
   const showAndroidHelp = android && !ios && !unsupported && !subscribed && !denied;
 
-  const primaryLabel = subscribed ? "שמירה" : "הפעל";
+  const primaryLabel = subscribed ? t("pushAlerts.save") : t("pushAlerts.enable");
   const primaryDisabled = busy || (subscribed ? !hasTopicChanges : !canEnable);
   const titleId = useId();
   const dialogTitle = ios
-    ? "התראות באייפון"
+    ? t("pushAlerts.dialogIos")
     : denied
-      ? "התראות חסומות בדפדפן"
+      ? t("pushAlerts.dialogDenied")
       : unsupported
-        ? "הדפדפן לא תומך בהתראות"
+        ? t("pushAlerts.dialogUnsupported")
         : subscribed
-          ? "התראות פועלות"
-          : "קבלו התראות מהשכונה";
+          ? t("pushAlerts.dialogOn")
+          : t("pushAlerts.dialogOff");
 
   return (
     <>
@@ -355,7 +356,7 @@ function PushAlertsButtonInner() {
           onClick={() => {
             if (ios) {
               setAskOpen(true);
-              toast.message("באייפון ההתראות עובדות אחרי **הוספה למסך הבית**.");
+              toast.message(t("pushAlerts.iosToast"));
               return;
             }
             if (denied || unsupported) {
@@ -379,7 +380,7 @@ function PushAlertsButtonInner() {
         <DialogContent
           showCloseButton={false}
           initialFocus={false}
-          dir="rtl"
+          dir={dir}
           aria-labelledby={titleId}
           className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-md"
         >
@@ -399,7 +400,7 @@ function PushAlertsButtonInner() {
               <button
                 type="button"
                 className="hw-overlay-close text-violet-200 hover:text-orange-200"
-                aria-label="עזרה להפעלת התראות באנדרואיד"
+                aria-label={t("pushAlerts.androidHelpAria")}
                 onClick={() => setAndroidHelpOpen(true)}
               >
                 <Info className="size-5" />
@@ -408,16 +409,26 @@ function PushAlertsButtonInner() {
               <div className="hw-overlay-close-bar-spacer" aria-hidden />
             )}
           </div>
-          {helpDescription ? (
-            <DialogDescription className="px-4 pt-3 text-violet-200/90">{helpDescription}</DialogDescription>
+          {helpDescriptionKey ? (
+            <DialogDescription className="px-4 pt-3 text-violet-200/90">
+              <HelpText>{t(helpDescriptionKey)}</HelpText>
+            </DialogDescription>
           ) : null}
           {ios || locked ? null : (
             <div className="grid gap-2 px-4 pt-3">
               {PUSH_TOPIC_ROWS.map((row) => (
                 <TopicSwitch
                   key={row.id}
-                  title={row.title}
-                  hint={row.hint}
+                  title={
+                    row.id === "newHouse"
+                      ? t("settings.pushTopicNewHouse")
+                      : t("settings.pushTopicAdmin")
+                  }
+                  hint={
+                    row.id === "newHouse"
+                      ? t("settings.pushTopicNewHouseHint")
+                      : t("settings.pushTopicAdminHint")
+                  }
                   on={topics[row.id]}
                   disabled={busy || locked}
                   onChange={(next) => void toggleTopic(row.id, next)}
@@ -431,10 +442,12 @@ function PushAlertsButtonInner() {
                   disabled={busy}
                   onClick={() => void runSelfTest()}
                 >
-                  שלחו לי התראת בדיקה
+                  {t("pushAlerts.selfTest")}
                 </Button>
               ) : !canEnable ? (
-                <p className="px-1 text-base text-amber-200/90">סמנו לפחות סוג אחד, ואז **הפעל**.</p>
+                <p className="px-1 text-base text-amber-200/90">
+                  <HelpText>{t("pushAlerts.pickOne")}</HelpText>
+                </p>
               ) : null}
             </div>
           )}
@@ -445,7 +458,7 @@ function PushAlertsButtonInner() {
                 className="h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
                 onClick={closeDialog}
               >
-                הבנתי
+                {t("pushAlerts.understood")}
               </Button>
             ) : (
               <>
@@ -458,7 +471,7 @@ function PushAlertsButtonInner() {
                     disabled={busy}
                     onClick={() => void disableAll()}
                   >
-                    כבו התראות
+                    {t("pushAlerts.disableAll")}
                   </Button>
                 ) : null}
                 <div className="grid grid-cols-2 gap-2">
@@ -479,7 +492,7 @@ function PushAlertsButtonInner() {
                     disabled={busy}
                     onClick={closeDialog}
                   >
-                    סגור
+                    {t("pushAlerts.close")}
                   </Button>
                 </div>
               </>
@@ -491,23 +504,25 @@ function PushAlertsButtonInner() {
       <Dialog open={androidHelpOpen} onOpenChange={setAndroidHelpOpen}>
         <DialogContent
           showCloseButton={false}
-          dir="rtl"
+          dir={dir}
           className="gap-0 border border-orange-500/30 bg-[#1a0d24] p-0 text-orange-50 sm:max-w-sm"
         >
           <OverlayCloseBar
             compact
             onClose={() => setAndroidHelpOpen(false)}
-            title="התראות באנדרואיד"
+            title={t("pushAlerts.androidHelpTitle")}
             className="border-b border-orange-500/15 pb-2"
           />
-          <p className="px-4 py-4 text-base leading-relaxed text-violet-200">{ANDROID_ALERTS_HELP}</p>
+          <p className="px-4 py-4 text-base leading-relaxed text-violet-200">
+            {t("pushAlerts.androidHelp")}
+          </p>
           <div className="border-t border-orange-500/15 px-4 py-3">
             <Button
               type="button"
               className="h-10 w-full bg-orange-500 text-black hover:bg-orange-400"
               onClick={() => setAndroidHelpOpen(false)}
             >
-              הבנתי
+              {t("pushAlerts.understood")}
             </Button>
           </div>
         </DialogContent>

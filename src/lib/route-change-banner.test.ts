@@ -11,17 +11,17 @@ function entry(id: string, reason: string): RouteStatusChangeEntry {
 
 describe("routeChangeBannerMessage", () => {
   it("summarizes a single change", () => {
-    assert.equal(routeChangeBannerMessage([entry("a", "חזר לפתוח")]), "a — חזר לפתוח");
+    assert.equal(routeChangeBannerMessage("he", [entry("a", "חזר לפתוח")]), "a — חזר לפתוח");
   });
 
   it("summarizes multiple changes", () => {
     assert.equal(
-      routeChangeBannerMessage([entry("a", "חזר לפתוח"), entry("b", "נסגר")]),
+      routeChangeBannerMessage("he", [entry("a", "חזר לפתוח"), entry("b", "נסגר")]),
       "2 בתים במסלול השתנו · הקישו לפרטים",
     );
   });
 
   it("prefixes return-from-background copy", () => {
-    assert.match(routeChangeBannerMessage([entry("a", "חזר לפתוח")], true), /^בחזרה לאפליקציה:/);
+    assert.match(routeChangeBannerMessage("he", [entry("a", "חזר לפתוח")], true), /^בחזרה לאפליקציה:/);
   });
 });

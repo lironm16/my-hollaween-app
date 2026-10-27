@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useLocale } from "@/hooks/use-locale";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,12 +18,13 @@ export function AdminSection({
   children: ReactNode;
   className?: string;
 }) {
+  const { dir } = useLocale();
   const [open, setOpen] = useState(defaultOpen);
 
   return (
     <section
       className={cn("overflow-hidden rounded-xl bg-[#12081a]/90 ring-1 ring-orange-500/15", className)}
-      dir="rtl"
+      dir={dir}
     >
       <button
         type="button"

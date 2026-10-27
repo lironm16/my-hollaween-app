@@ -38,6 +38,7 @@ import {
   setNightPassRefreshPaused,
   type NightPassOwnerRegisterDetail,
 } from "@/lib/night-pass-client";
+import { useLocale } from "@/hooks/use-locale";
 import type { PublicHouse } from "@/lib/types";
 
 type NightPassDialogContextValue = {
@@ -60,6 +61,7 @@ export type EventRegisteredOptions = {
 const NightPassDialogContext = createContext<NightPassDialogContextValue | null>(null);
 
 export function NightPassDialogProvider({ children }: { children: ReactNode }) {
+  const { t } = useLocale();
   const router = useRouter();
   const { admin } = useAdminSession();
   const nightPass = useNightPass();
@@ -160,7 +162,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       <HouseEditModal
         open={alreadyRegisteredOpen}
         onClose={() => setAlreadyRegisteredOpen(false)}
-        title="מכשיר מחובר"
+        title={t("nightPassDialog.deviceConnected")}
       >
         <div className="space-y-4">
           <div className="rounded-xl bg-emerald-950/70 px-4 py-5 text-center ring-2 ring-emerald-400/40">
@@ -174,7 +176,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
             className="h-11 w-full bg-emerald-500 text-black hover:bg-emerald-400"
             onClick={() => setAlreadyRegisteredOpen(false)}
           >
-            סגירה
+            {t("common.close")}
           </Button>
         </div>
       </HouseEditModal>
@@ -206,7 +208,9 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
           setOwnerRegisterMode(false);
           setOwnerRegisterHouseId("");
         }}
-        title={ownerRegisterMode ? "חיבור לאירוע" : "מכשיר מחובר"}
+        title={
+          ownerRegisterMode ? t("nightPassDialog.eventConnect") : t("nightPassDialog.deviceConnected")
+        }
       >
         <NightPassRegisterPanel
           key={
@@ -273,6 +277,7 @@ function PassQueryOpener({
   openOwnerRegister: (houseId?: string) => void;
   onInviteForRegisteredDevice: () => void;
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -292,11 +297,11 @@ function PassQueryOpener({
           );
           const json = (await prefill.json()) as { ok?: boolean };
           if (!json.ok) {
-            toast.error("הבית הוסר מהאירוע — לא ניתן להירשם מהזמנה הזו.");
+            toast.error(t("nightPassDialog.removedFromEvent"));
             return;
           }
         } catch {
-          toast.error("לא הצלחנו לבדוק את ההזמנה. נסו שוב.");
+          toast.error(t("nightPassDialog.checkFailed"));
           return;
         }
 

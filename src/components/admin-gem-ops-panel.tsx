@@ -23,6 +23,8 @@ import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 function GemPickerRow({
@@ -36,6 +38,7 @@ function GemPickerRow({
   selected?: boolean;
   labelHe?: string;
 }) {
+  const { t } = useLocale();
   const meta = monsterId ? gemMonsterMeta(monsterId) : null;
   return (
     <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -49,14 +52,16 @@ function GemPickerRow({
         />
       ) : (
         <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-violet-950/80 text-sm font-bold text-orange-100 ring-1 ring-violet-500/25">
-          הכל
+          {t("adminGemOps.all")}
         </span>
       )}
       <span className="min-w-0 flex-1 text-start">
         <span className="block truncate text-base font-semibold text-orange-50">
-          {labelHe ?? meta?.petNameHe ?? "כל השדונים"}
+          {labelHe ?? meta?.petNameHe ?? t("adminGemOps.allImps")}
         </span>
-        <span className="block text-sm text-violet-400">{count} בתים</span>
+        <span className="block text-sm text-violet-400">
+          {formatMessage(t("adminGemOps.housesCount"), { count: String(count) })}
+        </span>
       </span>
       {selected ? (
         <span className="shrink-0 text-sm tabular-nums text-orange-300">{count}</span>
@@ -66,6 +71,7 @@ function GemPickerRow({
 }
 
 export function AdminGemOpsPanel({ houses: housesProp }: { houses: PublicHouse[] }) {
+  const { t } = useLocale();
   const { admin } = useAdminSession();
   const { catalog, source } = useCatalog();
   const now = useAppNow();
@@ -159,7 +165,7 @@ export function AdminGemOpsPanel({ houses: housesProp }: { houses: PublicHouse[]
         >
           <GemPickerRow
             monsterId={monsterId === "all" ? undefined : monsterId}
-            labelHe={monsterId === "all" ? "כל השדונים" : undefined}
+            labelHe={monsterId === "all" ? t("adminGemOps.allImps") : undefined}
             count={selectedMonsterCount}
             selected
           />
@@ -188,7 +194,7 @@ export function AdminGemOpsPanel({ houses: housesProp }: { houses: PublicHouse[]
                   monsterId === "all" && "bg-orange-500/15",
                 )}
               >
-                <GemPickerRow labelHe="כל השדונים" count={rows.length} />
+                <GemPickerRow labelHe={t("adminGemOps.allImps")} count={rows.length} />
               </button>
             </li>
             {pool.map((monster) => {

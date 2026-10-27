@@ -1,6 +1,8 @@
 "use client";
 
 import type { EventCountdownParts } from "@/lib/event-countdown";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 export function EventCountdownBar({
@@ -12,13 +14,14 @@ export function EventCountdownBar({
   onClick: () => void;
   className?: string;
 }) {
+  const { t } = useLocale();
   const dayLabel = parts.days === 1 ? "Day" : "Days";
 
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={`${parts.label} — פתיחת מסך ספירה`}
+      aria-label={formatMessage(t("countdown.barOpenAria"), { label: parts.label })}
       className={cn(
         "event-countdown-bar flex w-full min-w-0 items-center justify-center border-0 bg-transparent px-3 transition-colors hover:bg-orange-950/25",
         className,

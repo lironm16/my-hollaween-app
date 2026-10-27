@@ -3,15 +3,7 @@
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-
-async function copyText(text: string, ok: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast.success(ok);
-  } catch {
-    toast.error("לא הצלחנו להעתיק. אפשר לסמן את הטקסט ידנית.");
-  }
-}
+import { useLocale } from "@/hooks/use-locale";
 
 /** Share the family edit code — house id is not needed for in-card editing. */
 export function CodesCopy({
@@ -21,6 +13,17 @@ export function CodesCopy({
   editCode?: string;
   hideLabel?: boolean;
 }) {
+  const { t } = useLocale();
+
+  async function copyText(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(t("editCodeDialog.editCopied"));
+    } catch {
+      toast.error(t("codesCopy.copyFailed"));
+    }
+  }
+
   if (!editCode) return null;
   return (
     <div
@@ -32,19 +35,14 @@ export function CodesCopy({
     >
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
-          {!hideLabel ? <p className="text-base text-violet-300">קוד עריכה</p> : null}
+          {!hideLabel ? <p className="text-base text-violet-300">{t("codesCopy.label")}</p> : null}
           <p className="truncate text-center font-mono text-xl tracking-wide text-orange-200">
             {editCode}
           </p>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => void copyText(editCode, "קוד העריכה הועתק")}
-        >
+        <Button type="button" size="sm" variant="outline" onClick={() => void copyText(editCode)}>
           <Copy className="size-3.5" />
-          העתיקו
+          {t("codesCopy.copy")}
         </Button>
       </div>
     </div>

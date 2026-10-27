@@ -2,12 +2,14 @@
 
 import { useEffect, type CSSProperties } from "react";
 import { X } from "lucide-react";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 const FINALE_MS = 3200;
 
 /** Short “we’re live” dock — static, dismissible, then fully unmounts. */
 export function EventCountdownFinale({ onDone }: { onDone: () => void }) {
+  const { t } = useLocale();
   useEffect(() => {
     const id = window.setTimeout(onDone, FINALE_MS);
     return () => window.clearTimeout(id);
@@ -19,7 +21,7 @@ export function EventCountdownFinale({ onDone }: { onDone: () => void }) {
         <button
           type="button"
           onClick={onDone}
-          aria-label="סגירה"
+          aria-label={t("countdown.closeAria")}
           className={cn(
             "absolute end-2 top-2 z-10 inline-flex size-8 touch-manipulation items-center justify-center rounded-full",
             "bg-black/40 text-orange-100/90 ring-1 ring-orange-400/30 backdrop-blur-sm",
@@ -34,7 +36,7 @@ export function EventCountdownFinale({ onDone }: { onDone: () => void }) {
             🎃
           </p>
           <p className="font-display text-lg leading-tight text-orange-300 sm:text-xl">
-            הנה אנחנו מתחילים!!!
+            {t("countdown.finaleStart")}
           </p>
         </div>
 

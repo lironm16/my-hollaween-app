@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import jsQR from "jsqr";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { houseVisitPathFromQrPayload } from "@/lib/parse-house-visit-qr";
+import { HelpText } from "@/components/help-text";
+import { useLocale } from "@/hooks/use-locale";
 import { toast } from "sonner";
 
 type ScanPhase = "idle" | "starting" | "scanning" | "denied" | "unsupported";
@@ -57,6 +59,7 @@ async function detectQrFromVideo(
 }
 
 export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useLocale();
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,7 +87,7 @@ export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: (
           ? houseVisitPathFromQrPayload(raw, window.location.origin)
           : houseVisitPathFromQrPayload(raw);
       if (!path) {
-        toast.error("זה לא QR ביקור של HallowHood");
+        toast.error(t("visitQr.invalid"));
         return;
       }
       handledRef.current = true;
@@ -92,7 +95,7 @@ export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: (
       onClose();
       router.push(path);
     },
-    [finish, onClose, router],
+    [finish, onClose, router, t],
   );
 
   const startCamera = useCallback(async () => {
@@ -178,14 +181,14 @@ export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: (
         finish();
         onClose();
       }}
-      title="סרוק QR לביקור"
+      title={t("visitQr.title")}
       placement="top-safe"
       closeBarClassName="hw-overlay-close-bar--minimal-top-safe"
       className="w-[min(100%-1rem,26rem)] max-w-[calc(100vw-1rem)]"
     >
       <div className="space-y-4">
         <p className="text-base leading-relaxed text-violet-100">
-          כוונו את המצלמה אל קוד ה-QR על דף הביקור ליד הדלת. הביקור יירשם כ**ביקרתי**.
+          <HelpText>{t("visitQr.body")}</HelpText>
         </p>
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-black ring-1 ring-orange-500/30">
           <video
@@ -198,11 +201,11 @@ export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: (
           {phase !== "scanning" ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#12081a]/90 px-4 text-center">
               {phase === "denied" ? (
-                <p className="text-base text-orange-100">אין גישה למצלמה. אפשרו מצלמה בהגדרות הדפדפן ונסו שוב.</p>
+                <p className="text-base text-orange-100">{t("visitQr.noCamera")}</p>
               ) : phase === "unsupported" ? (
-                <p className="text-base text-orange-100">המכשיר לא תומך בסריקה מתוך האפליקציה. השתמשו במצלמת הטלפון.</p>
+                <p className="text-base text-orange-100">{t("visitQr.unsupported")}</p>
               ) : (
-                <p className="text-base text-violet-100">לחצו להפעלת המצלמה וסרקו את הקוד.</p>
+                <p className="text-base text-violet-100">{t("visitQr.tapToStart")}</p>
               )}
               {phase !== "unsupported" ? (
                 <button
@@ -211,7 +214,7 @@ export function VisitQrScanDialog({ open, onClose }: { open: boolean; onClose: (
                   disabled={phase === "starting"}
                   onClick={() => void startCamera()}
                 >
-                  {phase === "starting" ? "פותחים מצלמה…" : "הפעל מצלמה"}
+                  {phase === "starting" ? t("visitQr.starting") : t("visitQr.start")}
                 </button>
               ) : null}
             </div>
