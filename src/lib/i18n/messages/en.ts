@@ -49,7 +49,7 @@ export const enMessages: AppMessages = {
     sheetTitle: "Menu",
   },
   brand: {
-    tagline: "Your neighborhood spooky house map",
+    tagline: "Your neighborhood map",
     tabTitle: "HallowHood — Halloween in the Hood",
   },
   common: {
@@ -306,6 +306,9 @@ export const enMessages: AppMessages = {
     redirectMap: "Opening map…",
     wrongPassword: "Wrong password",
     loginFailed: "Could not sign in. Try again.",
+    notConfigured: "Admin login is not configured on the server.",
+    rateLimited: "Too many attempts. Try again later.",
+    serverError: "Server error while signing in. Try again.",
     loginSuccess: "Signed in as admin",
   },
   filters: {

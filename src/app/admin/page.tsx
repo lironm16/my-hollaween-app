@@ -12,7 +12,7 @@ import { useLocale } from "@/hooks/use-locale";
 
 export default function AdminPage() {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, dir } = useLocale();
   const { ready, admin, refresh } = useAdminSession();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,9 +31,18 @@ export default function AdminPage() {
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        toast.error(
-          data?.error || (res.status === 401 ? t("adminPage.wrongPassword") : t("adminPage.loginFailed")),
-        );
+        const code = data?.error;
+        const message =
+          code === "wrong_password" || res.status === 401
+            ? t("adminPage.wrongPassword")
+            : code === "not_configured" || res.status === 503
+              ? t("adminPage.notConfigured")
+              : code === "rate_limited" || res.status === 429
+                ? t("adminPage.rateLimited")
+                : code === "server_error"
+                  ? t("adminPage.serverError")
+                  : t("adminPage.loginFailed");
+        toast.error(message);
         return;
       }
       setPassword("");
@@ -56,7 +65,7 @@ export default function AdminPage() {
   return (
     <div className="relative flex min-h-dvh flex-col">
       <AppHeader />
-      <main className="relative z-10 mx-auto w-full max-w-sm flex-1 px-4 py-8">
+      <main className="relative z-10 mx-auto w-full max-w-sm flex-1 px-4 py-8" dir={dir}>
         <h1 className="font-display text-2xl text-orange-300">{t("adminPage.title")}</h1>
         <form
           className="mt-6 space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/25"

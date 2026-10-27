@@ -305,6 +305,9 @@ export const heMessages = {
     redirectMap: "עוברים למפה…",
     wrongPassword: "סיסמה שגויה",
     loginFailed: "לא הצלחנו להיכנס. נסו שוב.",
+    notConfigured: "כניסת מנהל לא מוגדרת בשרת.",
+    rateLimited: "יותר מדי ניסיונות. נסו שוב מאוחר יותר.",
+    serverError: "שגיאת שרת בכניסה. נסו שוב.",
     loginSuccess: "נכנסתם כמנהלים",
   },
   filters: {

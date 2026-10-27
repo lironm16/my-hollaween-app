@@ -4,21 +4,28 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
+/** Machine-readable codes — UI maps these with {@link adminPage} messages. */
+export type AdminLoginErrorCode =
+  | "not_configured"
+  | "rate_limited"
+  | "wrong_password"
+  | "server_error";
+
 export async function POST(request: Request) {
   try {
     if (!adminLoginEnabled()) {
-      return NextResponse.json({ error: "כניסת מנהל לא מוגדרת בשרת." }, { status: 503 });
+      return NextResponse.json({ error: "not_configured" satisfies AdminLoginErrorCode }, { status: 503 });
     }
     if (!rateLimit(`admin:${clientKey(request.headers)}`, 12, 15 * 60 * 1000)) {
-      return NextResponse.json({ error: "יותר מדי ניסיונות." }, { status: 429 });
+      return NextResponse.json({ error: "rate_limited" satisfies AdminLoginErrorCode }, { status: 429 });
     }
     const body = (await request.json().catch(() => null)) as { password?: string } | null;
     if (!body?.password || !passwordMatches(body.password)) {
-      return NextResponse.json({ error: "סיסמה שגויה." }, { status: 401 });
+      return NextResponse.json({ error: "wrong_password" satisfies AdminLoginErrorCode }, { status: 401 });
     }
     await setAdminCookie();
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: "שגיאת שרת בכניסה. נסו שוב." }, { status: 500 });
+    return NextResponse.json({ error: "server_error" satisfies AdminLoginErrorCode }, { status: 500 });
   }
 }
