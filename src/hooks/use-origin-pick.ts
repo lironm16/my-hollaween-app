@@ -8,6 +8,7 @@ import { geoLocationFailureToastHe } from "@/lib/geo-location-access";
 import { isStandaloneDisplay } from "@/lib/push-client";
 import { writeHomeView, type HomeView } from "@/lib/home-view";
 import type { DistanceOriginChoice, ResolvedOrigin } from "@/lib/distance-origin";
+import { useLocale } from "@/hooks/use-locale";
 
 type GeoState = {
   status: string;
@@ -63,7 +64,8 @@ export function useOriginPick({
     gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
   );
 
-  const routeTicker = originPickActive ? "לחצו על המפה כדי לקבוע נקודת התחלה" : null;
+  const { t } = useLocale();
+  const routeTicker = originPickActive ? t("originPicker.pickOnMapHint") : null;
 
   useEffect(
     () => () => {

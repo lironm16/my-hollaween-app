@@ -162,19 +162,30 @@ export function hasVisitWindow(visitWindowFrom?: string, visitWindowTo?: string)
   return from !== null || to !== null;
 }
 
-export function visitWindowIssue(visitWindowFrom = "", visitWindowTo = ""): string | null {
+export type VisitWindowIssueId = "invalidFrom" | "invalidTo" | "endBeforeStart";
+
+export function visitWindowIssueId(visitWindowFrom = "", visitWindowTo = ""): VisitWindowIssueId | null {
   const fromSet = Boolean(visitWindowFrom.trim());
   const toSet = Boolean(visitWindowTo.trim());
   if (!fromSet && !toSet) return null;
 
   const vf = fromSet ? parseClockMinutes(visitWindowFrom) : null;
   const vt = toSet ? parseClockMinutes(visitWindowTo) : null;
-  if (fromSet && vf === null) return "שעת ההתחלה לא תקינה.";
-  if (toSet && vt === null) return "שעת הסיום לא תקינה.";
-  if (vf !== null && vt !== null && vt <= vf) {
-    return "שעת הסיום חייבת להיות אחרי שעת ההתחלה.";
-  }
+  if (fromSet && vf === null) return "invalidFrom";
+  if (toSet && vt === null) return "invalidTo";
+  if (vf !== null && vt !== null && vt <= vf) return "endBeforeStart";
   return null;
+}
+
+export function visitWindowIssue(visitWindowFrom = "", visitWindowTo = ""): string | null {
+  const id = visitWindowIssueId(visitWindowFrom, visitWindowTo);
+  if (!id) return null;
+  const messages: Record<VisitWindowIssueId, string> = {
+    invalidFrom: "שעת ההתחלה לא תקינה.",
+    invalidTo: "שעת הסיום לא תקינה.",
+    endBeforeStart: "שעת הסיום חייבת להיות אחרי שעת ההתחלה.",
+  };
+  return messages[id];
 }
 
 export function hasValidVisitWindow(visitWindowFrom = "", visitWindowTo = "") {

@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
+import { useLocale } from "@/hooks/use-locale";
 
 export default function AdminPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const { ready, admin, refresh } = useAdminSession();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -29,12 +31,14 @@ export default function AdminPage() {
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        toast.error(data?.error || (res.status === 401 ? "סיסמה שגויה" : "לא הצלחנו להיכנס. נסו שוב."));
+        toast.error(
+          data?.error || (res.status === 401 ? t("adminPage.wrongPassword") : t("adminPage.loginFailed")),
+        );
         return;
       }
       setPassword("");
       await refresh();
-      toast.success("נכנסתם כמנהלים");
+      toast.success(t("adminPage.loginSuccess"));
       router.replace("/");
     } finally {
       setBusy(false);
@@ -44,7 +48,7 @@ export default function AdminPage() {
   if (!ready || admin) {
     return (
       <div className="flex min-h-dvh items-center justify-center text-orange-200">
-        {admin ? "עוברים למפה…" : "בודקים הרשאות…"}
+        {admin ? t("adminPage.redirectMap") : t("adminPage.checking")}
       </div>
     );
   }
@@ -53,7 +57,7 @@ export default function AdminPage() {
     <div className="relative flex min-h-dvh flex-col">
       <AppHeader />
       <main className="relative z-10 mx-auto w-full max-w-sm flex-1 px-4 py-8">
-        <h1 className="font-display text-2xl text-orange-300">כניסת מנהל</h1>
+        <h1 className="font-display text-2xl text-orange-300">{t("adminPage.title")}</h1>
         <form
           className="mt-6 space-y-3 rounded-2xl bg-[#1d1028] p-4 ring-1 ring-orange-500/25"
           onSubmit={(e) => {
@@ -61,11 +65,9 @@ export default function AdminPage() {
             void login();
           }}
         >
-          <p className="text-base text-violet-200">
-            אחרי הכניסה תישארו במפה הרגילה. תוכלו לערוך בלי קוד ולמחוק בתים, עד שתלחצו יציאה.
-          </p>
+          <p className="text-base text-violet-200">{t("adminPage.intro")}</p>
           <div className="space-y-1.5">
-            <Label>סיסמת מנהל</Label>
+            <Label>{t("adminPage.passwordLabel")}</Label>
             <Input
               type="password"
               value={password}
@@ -74,7 +76,7 @@ export default function AdminPage() {
             />
           </div>
           <Button type="submit" disabled={busy} className="w-full bg-orange-500 text-black">
-            כניסה למפה
+            {t("adminPage.submit")}
           </Button>
         </form>
       </main>

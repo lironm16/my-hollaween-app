@@ -14,6 +14,7 @@ import { originLabel } from "@/lib/distance-origin";
 import { ToolbarBadge } from "@/components/filter-menu";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { inNeighborhood } from "@/lib/config";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 export function OriginTrigger({
@@ -23,11 +24,13 @@ export function OriginTrigger({
   shifted: boolean;
   onClick: () => void;
 }) {
+  const { t } = useLocale();
+  const label = shifted ? t("originPicker.titleShifted") : t("originPicker.title");
   return (
     <button
       type="button"
-      aria-label={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "נקודת התחלה"}
-      title={shifted ? "נקודת מדידה שונה מהמיקום הנוכחי" : "נקודת התחלה"}
+      aria-label={label}
+      title={label}
       onClick={onClick}
       className={cn(
         "relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
@@ -67,6 +70,7 @@ export function OriginPickerSheet({
   onChooseCustom: (lat: number, lng: number, label: string) => void;
   onPickOnMap: () => void;
 }) {
+  const { t } = useLocale();
   const [address, setAddress] = useState("");
   const [addressOk, setAddressOk] = useState(false);
 
@@ -80,38 +84,38 @@ export function OriginPickerSheet({
         <OverlayCloseBar
           compact
           onClose={() => onOpenChange(false)}
-          title={<span className="text-lg font-semibold text-orange-50">נקודת התחלה</span>}
+          title={<span className="text-lg font-semibold text-orange-50">{t("originPicker.title")}</span>}
           className="border-b border-orange-500/15 pb-2"
         />
         <SheetHeader className="shrink-0 px-4 pb-2 pt-3">
-          <p className="text-base text-violet-300">למיון ברשימה, למפה, ולמסלול</p>
+          <p className="text-base text-violet-300">{t("originPicker.subtitle")}</p>
         </SheetHeader>
         <div className="space-y-2 px-4 py-3">
           <OriginOption
             active={gpsAllowed && choice.kind === "gps"}
             disabled={!gpsAllowed}
             icon={<Navigation className="size-4" />}
-            label="המיקום שלי"
-            hint={gpsHint ?? (gpsAllowed ? "GPS" : "אשרו גישה למיקום בהגדרות")}
+            label={t("originPicker.myLocation")}
+            hint={gpsHint ?? (gpsAllowed ? "GPS" : t("originPicker.gpsDenied"))}
             onClick={onChooseGps}
           />
           <OriginOption
             active={choice.kind === "neighborhood"}
             icon={<MapPin className="size-4" />}
-            label="מרכז השכונה"
+            label={t("originPicker.neighborhoodCenter")}
             onClick={onChooseNeighborhood}
           />
           <OriginOption
             active={choice.kind === "custom"}
             icon={<MapPin className="size-4" />}
-            label="בחירה על המפה"
+            label={t("originPicker.pickOnMap")}
             hint={choice.kind === "custom" ? originLabel(choice) : undefined}
             onClick={onPickOnMap}
           />
           <div className="rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
             <p className="mb-2 flex items-center gap-2 text-base font-medium text-orange-100">
               <Search className="size-4" />
-              חיפוש כתובת
+              {t("originPicker.searchAddress")}
             </p>
             <AddressField
               value={address}
@@ -132,7 +136,7 @@ export function OriginPickerSheet({
         </div>
         <div className="border-t border-orange-500/15 px-4 py-3">
           <Button type="button" variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
-            סגירה
+            {t("common.close")}
           </Button>
         </div>
       </SheetContent>

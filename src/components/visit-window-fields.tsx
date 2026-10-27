@@ -1,6 +1,7 @@
 "use client";
 
-import { visitWindowIssue } from "@/lib/hours";
+import { useLocale } from "@/hooks/use-locale";
+import { visitWindowIssueLocalized } from "@/lib/i18n/hours-issue";
 import { cn } from "@/lib/utils";
 
 function ClockInput({
@@ -98,14 +99,15 @@ export function CustomVisitWindowFields({
   onChangeTo: (value: string) => void;
   className?: string;
 }) {
-  const issue = visitWindowIssue(useFrom ? from : "", useTo ? to : "");
+  const { t, locale } = useLocale();
+  const issue = visitWindowIssueLocalized(useFrom ? from : "", useTo ? to : "", locale);
 
   return (
     <div className={cn("space-y-2", className)}>
       <VisitWindowRow
         checked={useFrom}
         onToggle={onToggleFrom}
-        label="התחלה"
+        label={t("filters.visitWindowFrom")}
         timeId="visit-window-from"
         timeValue={from}
         onTimeChange={onChangeFrom}
@@ -113,7 +115,7 @@ export function CustomVisitWindowFields({
       <VisitWindowRow
         checked={useTo}
         onToggle={onToggleTo}
-        label="סיום"
+        label={t("filters.visitWindowTo")}
         timeId="visit-window-to"
         timeValue={to}
         onTimeChange={onChangeTo}

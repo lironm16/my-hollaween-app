@@ -7,7 +7,8 @@ import { SummaryPumpkinIcon } from "@/components/scare-glyphs";
 import { SkipGlyph } from "@/components/skip-icon";
 import type { WalkingRoute } from "@/lib/route";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
-import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 function HouseIcon() {
@@ -94,9 +95,9 @@ function ClockIcon() {
   );
 }
 
-function distanceParts(meters: number) {
-  if (meters < 1000) return { value: String(Math.round(meters)), unit: "מ׳" };
-  return { value: (meters / 1000).toFixed(1), unit: "ק״מ" };
+function distanceParts(meters: number, metersUnit: string, kmUnit: string) {
+  if (meters < 1000) return { value: String(Math.round(meters)), unit: metersUnit };
+  return { value: (meters / 1000).toFixed(1), unit: kmUnit };
 }
 
 function IconWell({ children, className }: { children: ReactNode; className?: string }) {
@@ -139,7 +140,7 @@ function RouteChip({
   return (
     <div className="flex min-h-14 min-w-0 items-center gap-1.5 rounded-xl bg-[#14081c] px-2 py-2">
       <IconWell className="size-9">{icon}</IconWell>
-      <span className="flex min-w-0 flex-col justify-center text-right">
+      <span className="flex min-w-0 flex-col justify-center text-end">
         <span className="text-lg font-bold leading-none text-white">{value}</span>
         <span className="mt-0.5 text-base leading-none text-white/80">{label}</span>
       </span>
@@ -186,43 +187,49 @@ export function StatsSummary({
   heading?: boolean;
   compact?: boolean;
 }) {
-  const walk = route ? distanceParts(route.totalMeters) : null;
+  const { t, dir } = useLocale();
+  const walk = route
+    ? distanceParts(route.totalMeters, t("mapStats.meters"), t("mapStats.km"))
+    : null;
   const houseIcon = <HouseIcon />;
-  const routeTitle = route?.accessible ? "מסלול נגיש" : "מסלול";
+  const routeTitle = route?.accessible ? t("mapStats.routeAccessible") : t("mapStats.route");
+  const kmFallback = t("mapStats.km");
+  const minLabel = t("mapStats.minutes");
+  const approx = t("mapStats.approx");
 
   if (compact) {
     return (
-      <div className="flex min-w-0 w-full flex-col gap-1.5 text-right" dir="rtl">
+      <div className="flex min-w-0 w-full flex-col gap-1.5 text-end" dir={dir}>
         <section className="min-w-0 rounded-2xl bg-[#2c1a12] p-1.5 ring-1 ring-orange-500/25">
-          <h3 className="mb-1 text-right text-base font-semibold text-orange-400">{routeTitle}</h3>
+          <h3 className="mb-1 text-end text-base font-semibold text-orange-400">{routeTitle}</h3>
           <div className="grid min-w-0 grid-cols-2 gap-1.5">
-            <CompactChip icon={houseIcon} value={String(filteredHouses)} label="בתים" />
+            <CompactChip icon={houseIcon} value={String(filteredHouses)} label={t("mapStats.houses")} />
             <CompactChip
               icon={<PinIcon />}
               value={route ? String(route.stops.length) : "—"}
-              label="עצירות"
+              label={t("mapStats.stops")}
             />
             <CompactChip
               icon={<PathIcon />}
               value={walk ? walk.value : "—"}
-              label={walk ? walk.unit : "ק״מ"}
+              label={walk ? walk.unit : kmFallback}
             />
             <CompactChip
               icon={<ClockIcon />}
-              value={route ? `כ־${route.totalMinutes}` : "—"}
-              label="דק׳"
+              value={route ? `${approx}${route.totalMinutes}` : "—"}
+              label={minLabel}
             />
             {route ? (
               <>
                 <CompactChip
                   icon={<VisitedSummaryIcon />}
                   value={String(visitedCount)}
-                  label="ביקרתי"
+                  label={t("visitMarks.visited")}
                 />
                 <CompactChip
                   icon={<SkipSummaryIcon />}
                   value={String(skippedCount)}
-                  label="דילגתי"
+                  label={t("visitMarks.skipped")}
                 />
               </>
             ) : null}
@@ -231,12 +238,12 @@ export function StatsSummary({
                 <CompactChip
                   icon={<LikedSummaryIcon />}
                   value={String(likedCount)}
-                  label="אהבתי"
+                  label={t("visitMarks.liked")}
                 />
                 <CompactChip
                   icon={<GemSummaryIcon />}
                   value={String(gemCollectedCount)}
-                  label={GEM_FOUND_I_HE}
+                  label={t("my.tabGems")}
                 />
               </>
             ) : null}
@@ -247,47 +254,51 @@ export function StatsSummary({
   }
 
   return (
-    <div className="flex flex-col gap-2.5 text-right" dir="rtl">
+    <div className="flex flex-col gap-2.5 text-end" dir={dir}>
       {heading ? (
         <p className="flex items-center gap-1.5 text-xl font-bold text-orange-400">
           <span className="inline-flex size-7 text-orange-500">
             <SummaryPumpkinIcon />
           </span>
-          סיכום
+          {t("mapStats.title")}
         </p>
       ) : null}
       <section className="rounded-2xl bg-[#2c1a12] p-2.5 ring-1 ring-orange-500/25">
-        <h3 className="mb-2 text-right text-base font-semibold text-orange-400">{routeTitle}:</h3>
+        <h3 className="mb-2 text-end text-base font-semibold text-orange-400">{routeTitle}:</h3>
         <div className="grid grid-cols-2 gap-2">
-          <RouteChip icon={houseIcon} value={String(filteredHouses)} label="בתים" />
+          <RouteChip icon={houseIcon} value={String(filteredHouses)} label={t("mapStats.houses")} />
           <RouteChip
             icon={<PinIcon />}
             value={route ? String(route.stops.length) : "—"}
-            label="עצירות"
+            label={t("mapStats.stops")}
           />
-          <RouteChip icon={<PathIcon />} value={walk ? walk.value : "—"} label={walk ? walk.unit : "ק״מ"} />
+          <RouteChip
+            icon={<PathIcon />}
+            value={walk ? walk.value : "—"}
+            label={walk ? walk.unit : kmFallback}
+          />
           <RouteChip
             icon={<ClockIcon />}
-            value={route ? `כ־${route.totalMinutes}` : "—"}
-            label="דק׳"
+            value={route ? `${approx}${route.totalMinutes}` : "—"}
+            label={minLabel}
           />
           {route ? (
             <>
               <RouteChip
                 icon={<VisitedSummaryIcon />}
                 value={String(visitedCount)}
-                label="ביקרתי"
+                label={t("visitMarks.visited")}
               />
-              <RouteChip icon={<SkipSummaryIcon />} value={String(skippedCount)} label="דילגתי" />
+              <RouteChip icon={<SkipSummaryIcon />} value={String(skippedCount)} label={t("visitMarks.skipped")} />
             </>
           ) : null}
           {showPersonalMarks ? (
             <>
-              <RouteChip icon={<LikedSummaryIcon />} value={String(likedCount)} label="אהבתי" />
+              <RouteChip icon={<LikedSummaryIcon />} value={String(likedCount)} label={t("visitMarks.liked")} />
               <RouteChip
                 icon={<GemSummaryIcon />}
                 value={String(gemCollectedCount)}
-                label={GEM_FOUND_I_HE}
+                label={t("my.tabGems")}
               />
             </>
           ) : null}
@@ -306,6 +317,7 @@ export function MapStats(props: {
   gemCollectedCount?: number;
   showPersonalMarks?: boolean;
 }) {
+  const { t, dir } = useLocale();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
@@ -345,14 +357,14 @@ export function MapStats(props: {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                dir="rtl"
-                className="relative w-[min(24rem,calc(100vw-1.5rem))] rounded-3xl bg-[#12081a] p-3 text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/40"
+                dir={dir}
+                className="relative w-[min(24rem,calc(100vw-1.5rem))] rounded-3xl bg-[#12081a] p-3 text-start shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/40"
                 onClick={(event) => event.stopPropagation()}
               >
                 <OverlayCloseBar
                   compact
                   onClose={() => setOpen(false)}
-                  label="סגירת הסיכום"
+                  label={t("mapStats.close")}
                   title={
                     <span
                       id={titleId}
@@ -361,7 +373,7 @@ export function MapStats(props: {
                       <span className="inline-flex size-7 text-orange-500" aria-hidden>
                         <SummaryPumpkinIcon />
                       </span>
-                      סיכום
+                      {t("mapStats.title")}
                     </span>
                   }
                   className="border-b border-orange-500/20 pb-2"
@@ -377,10 +389,10 @@ export function MapStats(props: {
       <button
         type="button"
         className="relative inline-flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-orange-100 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/35 hover:bg-orange-500/10"
-        aria-label={`סיכום המפה · ${props.filteredHouses} בתים בסינון`}
+        aria-label={formatMessage(t("mapStats.buttonAria"), { count: String(props.filteredHouses) })}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        title="סיכום"
+        title={t("mapStats.buttonTitle")}
         onClick={() => setOpen((value) => !value)}
       >
         <span className="inline-flex size-6 items-center justify-center text-orange-400">

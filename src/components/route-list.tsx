@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import type { PublicHouse } from "@/lib/types";
 import { skipReturnActivePreviewLine } from "@/lib/skip-return-preview";
 import { SkipSign } from "@/components/visit-marks";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 import type { TourLegTone } from "@/lib/route-session-progress";
 
@@ -126,6 +127,7 @@ export function RouteList({
   onChangeOrigin?: () => void;
   focusId?: string | null;
 }) {
+  const { t } = useLocale();
   const focusRef = useRef<HTMLLIElement | null>(null);
   const addressReveal = useAddressReveal();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
@@ -140,7 +142,7 @@ export function RouteList({
     waitingForGpsOrigin && onRequestLocation ? (
       <Button type="button" size="sm" variant="outline" className="mt-2" onClick={onRequestLocation}>
         <Navigation className="size-3.5" />
-        הפעילו מיקום
+        {t("routeList.enableLocation")}
       </Button>
     ) : null;
 
@@ -148,15 +150,15 @@ export function RouteList({
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-violet-200">
         {gpsAction}
-        <p className="font-display text-2xl text-orange-300">אין עצירות במסלול</p>
-        <p className="mt-2 text-base">
-          שנו סינון כדי לראות בתים במסלול.
-        </p>
+        <p className="font-display text-2xl text-orange-300">{t("routeList.emptyTitle")}</p>
+        <p className="mt-2 text-base">{t("routeList.emptyHint")}</p>
       </div>
     );
   }
 
-  const startLabel = originLabel || (startedFrom === "gps" ? "מיקום נוכחי" : "ממרכז השכונה");
+  const startLabel =
+    originLabel ||
+    (startedFrom === "gps" ? t("routeList.currentLocation") : t("routeList.fromNeighborhood"));
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
@@ -168,10 +170,10 @@ export function RouteList({
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-base font-medium text-orange-100">נקודת התחלה</p>
+                <p className="text-base font-medium text-orange-100">{t("originPicker.title")}</p>
                 {onChangeOrigin ? (
                   <Button type="button" size="sm" variant="outline" onClick={onChangeOrigin}>
-                    שינוי
+                    {t("common.change")}
                   </Button>
                 ) : null}
               </div>

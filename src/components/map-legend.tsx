@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { POI_PIN_FACE_SRC } from "@/lib/pin-faces";
 import { PIN_BACKGROUND } from "@/lib/pin-colors";
-import { GEM_MAP_LEGEND_OPEN_HE, GEM_MAP_LEGEND_SECTION_HE } from "@/lib/gem-hunt-copy";
 import { BuildingClusterPinArt } from "@/components/building-cluster-pin-art";
 import {
   buildingClusterPinClass,
@@ -17,6 +16,8 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
 import { SkipIcon } from "@/components/skip-icon";
+import { useLocale } from "@/hooks/use-locale";
+import { useLocalizedLabels } from "@/hooks/use-localized-labels";
 import { cn } from "@/lib/utils";
 
 function SwatchPin({
@@ -131,77 +132,84 @@ function SwatchPin({
   );
 }
 
-const BASE_GROUPS: { title: string; items: { key: string; label: string; node: ReactNode }[] }[] = [
-  {
-    title: "סוג המקום",
-    items: [
-      { key: "house-kind", label: "בית", node: <SwatchPin scare="mild" /> },
-      { key: "poi-kind", label: "עסק", node: <SwatchPin scare="mild" poi /> },
-      { key: "school-kind", label: "בית ספר", node: <SwatchPin school /> },
-      {
-        key: "building-houses",
-        label: "כמה בתים",
-        node: <SwatchPin multi multiClusterKind="houses" />,
-      },
-      {
-        key: "building-businesses",
-        label: "כמה עסקים",
-        node: <SwatchPin multi multiClusterKind="businesses" />,
-      },
-      {
-        key: "building-mixed",
-        label: "מעורב",
-        node: <SwatchPin multi multiClusterKind="mixed" />,
-      },
-    ],
-  },
-  {
-    title: "ממתקים",
-    items: [
-      { key: "plenty", label: "יש", node: <SwatchPin scare="mild" candy="plenty" /> },
-      { key: "low", label: "מעט", node: <SwatchPin scare="mild" candy="low" /> },
-      { key: "out", label: "נגמר", node: <SwatchPin scare="mild" candy="out" /> },
-    ],
-  },
-  {
-    title: "קישוט",
-    items: [
-      { key: "bare", label: "ללא", node: <SwatchPin bare /> },
-      { key: "mild", label: "לילדים", node: <SwatchPin scare="mild" /> },
-      { key: "medium", label: "קצת מפחיד", node: <SwatchPin scare="medium" /> },
-      { key: "spicy", label: "מפחיד", node: <SwatchPin scare="spicy" /> },
-    ],
-  },
-  {
-    title: "בית",
-    items: [
-      { key: "closed", label: "סגור", node: <SwatchPin scare="mild" closed /> },
-      { key: "break", label: "הפסקה", node: <SwatchPin scare="mild" onBreak /> },
-      { key: "close", label: "נסגר בקרוב", node: <SwatchPin scare="mild" hours="closing" /> },
-      { key: "open", label: "נפתח בקרוב", node: <SwatchPin scare="mild" hours="opening" /> },
-      { key: "visited", label: "ביקרתי", node: <SwatchPin scare="mild" visited /> },
-      {
-        key: "skipped",
-        label: "דילגתי",
-        node: <SwatchPin scare="mild" candy="plenty" skipped />,
-      },
-    ],
-  },
-];
-
-const GEM_LEGEND_GROUP = {
-  title: GEM_MAP_LEGEND_SECTION_HE,
-  items: [
-    {
-      key: "gem-open",
-      label: GEM_MAP_LEGEND_OPEN_HE,
-      node: <SwatchPin scare="mild" gemRing="sparkle" />,
-    },
-  ],
-} as const;
-
 export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }) {
-  const groups = showGemLegend ? [...BASE_GROUPS, GEM_LEGEND_GROUP] : BASE_GROUPS;
+  const { t, dir } = useLocale();
+  const { decorShort, scareShort, candyToneLabels } = useLocalizedLabels();
+
+  const groups = useMemo(() => {
+    const L = "mapLegend";
+    const base: { title: string; items: { key: string; label: string; node: ReactNode }[] }[] = [
+      {
+        title: t(`${L}.sectionPlaceKind`),
+        items: [
+          { key: "house-kind", label: t("labels.houseKindHouse"), node: <SwatchPin scare="mild" /> },
+          { key: "poi-kind", label: t("labels.houseKindPoi"), node: <SwatchPin scare="mild" poi /> },
+          { key: "school-kind", label: t(`${L}.school`), node: <SwatchPin school /> },
+          {
+            key: "building-houses",
+            label: t(`${L}.buildingHouses`),
+            node: <SwatchPin multi multiClusterKind="houses" />,
+          },
+          {
+            key: "building-businesses",
+            label: t(`${L}.buildingBusinesses`),
+            node: <SwatchPin multi multiClusterKind="businesses" />,
+          },
+          {
+            key: "building-mixed",
+            label: t(`${L}.buildingMixed`),
+            node: <SwatchPin multi multiClusterKind="mixed" />,
+          },
+        ],
+      },
+      {
+        title: t(`${L}.sectionTreats`),
+        items: [
+          { key: "plenty", label: candyToneLabels.plenty, node: <SwatchPin scare="mild" candy="plenty" /> },
+          { key: "low", label: candyToneLabels.low, node: <SwatchPin scare="mild" candy="low" /> },
+          { key: "out", label: candyToneLabels.out, node: <SwatchPin scare="mild" candy="out" /> },
+        ],
+      },
+      {
+        title: t(`${L}.sectionDecor`),
+        items: [
+          { key: "bare", label: t(`${L}.decorBare`), node: <SwatchPin bare /> },
+          { key: "mild", label: scareShort.mild, node: <SwatchPin scare="mild" /> },
+          { key: "medium", label: scareShort.medium, node: <SwatchPin scare="medium" /> },
+          { key: "spicy", label: scareShort.spicy, node: <SwatchPin scare="spicy" /> },
+        ],
+      },
+      {
+        title: t(`${L}.sectionHouse`),
+        items: [
+          { key: "closed", label: t("visitMarks.closed"), node: <SwatchPin scare="mild" closed /> },
+          { key: "break", label: t("visitMarks.pause"), node: <SwatchPin scare="mild" onBreak /> },
+          { key: "close", label: t(`${L}.closingSoon`), node: <SwatchPin scare="mild" hours="closing" /> },
+          { key: "open", label: t(`${L}.openingSoon`), node: <SwatchPin scare="mild" hours="opening" /> },
+          { key: "visited", label: t("visitMarks.visited"), node: <SwatchPin scare="mild" visited /> },
+          {
+            key: "skipped",
+            label: t("visitMarks.skipped"),
+            node: <SwatchPin scare="mild" candy="plenty" skipped />,
+          },
+        ],
+      },
+    ];
+    if (showGemLegend) {
+      base.push({
+        title: t(`${L}.gemSection`),
+        items: [
+          {
+            key: "gem-open",
+            label: t(`${L}.gemOpen`),
+            node: <SwatchPin scare="mild" gemRing="sparkle" />,
+          },
+        ],
+      });
+    }
+    return base;
+  }, [t, candyToneLabels, scareShort, showGemLegend]);
+
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
@@ -238,17 +246,17 @@ export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                dir="rtl"
-                className="map-legend-panel relative flex max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-[#160b20] text-right shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
+                dir={dir}
+                className="map-legend-panel relative flex max-h-[min(88dvh,40rem)] w-[min(38rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-[#160b20] text-start shadow-[0_16px_48px_rgba(0,0,0,0.55)] ring-1 ring-orange-500/30"
                 onClick={(event) => event.stopPropagation()}
               >
                 <OverlayCloseBar
                   compact
                   onClose={() => setOpen(false)}
-                  label="סגירת המקרא"
+                  label={t("mapLegend.close")}
                   title={
                     <span id={titleId} className="text-base font-semibold text-orange-100">
-                      מקרא
+                      {t("mapLegend.title")}
                     </span>
                   }
                   className="border-b border-orange-500/15 px-3 pb-2"
@@ -282,10 +290,10 @@ export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }
       <button
         type="button"
         className="inline-flex size-11 items-center justify-center rounded-full bg-[#1d1028] text-orange-100 shadow-[0_8px_24px_rgba(0,0,0,0.45)] ring-1 ring-orange-500/35 hover:bg-orange-500/10"
-        aria-label="מקרא המפה"
+        aria-label={t("mapLegend.buttonAria")}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        title="מקרא"
+        title={t("mapLegend.buttonTitle")}
         onClick={() => setOpen((value) => !value)}
       >
         <Info className="size-5" />
