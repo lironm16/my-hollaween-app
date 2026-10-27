@@ -12,6 +12,7 @@ import { CollectedGemSign, LikedSign, SkipSign } from "@/components/visit-marks"
 import { VisitedCheck } from "@/components/visited-check";
 import { useLocale } from "@/hooks/use-locale";
 import { useLocalizedLabels } from "@/hooks/use-localized-labels";
+import { localizedNeighborhoodLabel } from "@/lib/i18n/neighborhood-labels";
 import { localizedTreatLabel } from "@/lib/i18n/treat-labels";
 import { cn } from "@/lib/utils";
 import { NEIGHBORHOODS } from "@/lib/config";
@@ -263,7 +264,13 @@ export function AdminStatsCard({
         <Subhead>{t("stats.subheadNeighborhoods")}</Subhead>
         <div className="grid grid-cols-2 gap-2">
           {NEIGHBORHOODS.map((name) => (
-            <StatTile key={name} icon={<MapPinned className="size-5" />} label={name} value={stats.neighborhoods[name]} plain />
+            <StatTile
+              key={name}
+              icon={<MapPinned className="size-5" />}
+              label={localizedNeighborhoodLabel(locale, name)}
+              value={stats.neighborhoods[name]}
+              plain
+            />
           ))}
           <StatTile
             icon={<MapPinned className="size-5" />}

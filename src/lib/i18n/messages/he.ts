@@ -213,6 +213,13 @@ export const heMessages = {
     added: "חדשים קודם",
     name: "לפי שם",
   },
+  neighborhoods: {
+    shikunVatikim: "שיכון ותיקים",
+    charuzim: "חרוזים",
+    nachlatGanim: "נחלת גנים",
+    haGefen: "הגפן",
+    marqueeSeparator: " · ",
+  },
   stats: {
     title: "תמונת מצב",
     loading: "טוענים נתונים…",

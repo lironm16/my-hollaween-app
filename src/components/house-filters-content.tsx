@@ -11,6 +11,7 @@ import { FilterOption, FilterSection } from "@/components/filter-menu";
 import { CustomVisitWindowFields } from "@/components/visit-window-fields";
 import { OpenNowSign } from "@/components/open-now-mark";
 import { NEIGHBORHOOD_FILTER_OPTIONS } from "@/lib/config";
+import { localizedNeighborhoodFilterLabel } from "@/lib/i18n/neighborhood-labels";
 import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
 import { useLocalizedLabels } from "@/hooks/use-localized-labels";
@@ -124,7 +125,7 @@ export function HouseFiltersContent({
     patch: Partial<HouseFiltersState> | ((current: HouseFiltersState) => HouseFiltersState),
   ) => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { decorShort, scareShort, locationKindFilterLabels, candyTones } = useLocalizedLabels();
   const visitMode = effectiveVisitWindowMode(filters);
   const candySensitivityEnabled = hasStockCandySelection(filters);
@@ -349,7 +350,7 @@ export function HouseFiltersContent({
               }))
             }
           >
-            {area}
+            {localizedNeighborhoodFilterLabel(locale, area)}
           </FilterOption>
         ))}
       </FilterSection>

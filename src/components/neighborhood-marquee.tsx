@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { config } from "@/lib/config";
+import { useLocale } from "@/hooks/use-locale";
+import { neighborhoodMarqueeText } from "@/lib/i18n/neighborhood-labels";
 import { cn } from "@/lib/utils";
 
 /** One-line ping-pong scroll when the row is too narrow. */
 export function PingPongMarquee({
   text,
+  dir,
   className,
 }: {
   text: string;
+  dir?: "ltr" | "rtl";
   className?: string;
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null);
@@ -36,8 +39,9 @@ export function PingPongMarquee({
       ref={wrapRef}
       title={text}
       aria-label={text}
+      dir={dir}
       className={cn(
-        "neighborhood-marquee block w-full min-w-0 text-right",
+        "neighborhood-marquee block w-full min-w-0 text-end",
         shift > 0 && "is-overflow",
         className,
       )}
@@ -55,9 +59,13 @@ export function PingPongMarquee({
 
 /** Neighborhood names under the brand: ping-pong scroll when the row is too narrow. */
 export function NeighborhoodMarquee({ className }: { className?: string }) {
+  const { locale, dir } = useLocale();
+  const text = neighborhoodMarqueeText(locale);
+
   return (
     <PingPongMarquee
-      text={config.neighborhood}
+      text={text}
+      dir={dir}
       className={cn("mt-0.5 text-base text-violet-200/80", className)}
     />
   );

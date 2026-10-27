@@ -214,6 +214,13 @@ export const enMessages: AppMessages = {
     added: "Newest first",
     name: "By name",
   },
+  neighborhoods: {
+    shikunVatikim: "Shikun Vatikim",
+    charuzim: "Charuzim",
+    nachlatGanim: "Nachlat Ganim",
+    haGefen: "HaGefen",
+    marqueeSeparator: " · ",
+  },
   stats: {
     title: "Live stats",
     loading: "Loading stats…",
