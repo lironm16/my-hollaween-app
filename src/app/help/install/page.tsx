@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { HelpExpandable, HelpShell, HelpStep } from "@/components/help-shell";
 import { HelpText } from "@/lib/render-help-text";
+import { useHelpMessages } from "@/hooks/use-help-messages";
 import { helpImage } from "@/lib/help-images";
 import {
   ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
@@ -17,41 +18,6 @@ import { isAndroidDevice, isIosDevice } from "@/lib/push-client";
 function installHelpImage(name: string) {
   return helpImage(`install/${name}`);
 }
-
-const IPHONE_STEPS = [
-  {
-    title: "לחצו שיתוף",
-    body: "ב-Safari, בסרגל התחתון — כפתור שיתוף (חץ למעלה מריבוע).",
-    image: installHelpImage("ios-2-share-photo.jpg"),
-    imageHighlight: IOS_INSTALL_SHARE_HIGHLIGHT,
-    imageAlt: "כפתור שיתוף בסафari",
-  },
-  {
-    title: "הוספה למסך הבית",
-    body: "גללו ובחרו **הוספה למסך הבית** בתפריט השיתוף.",
-    image: installHelpImage("ios-3-add-home-photo.png"),
-    imageHighlight: IOS_INSTALL_ADD_HOME_HIGHLIGHT,
-    imageAlt: "הוספה למסך הבית בתפריט השיתוף",
-  },
-  {
-    title: "אישור",
-    body: "לחצו **הוסף** (Add) למעלה מימין. האייקון יופיע במסך הבית.",
-    image: installHelpImage("ios-4-add-confirm-photo.jpg"),
-    imageHighlight: IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT,
-    imageAlt: "מסך אישור — הוסף למסך הבית",
-  },
-] as const;
-
-const ANDROID_STEPS = [
-  {
-    title: "התקנת האפליקציה",
-    body: "ב-**Chrome** — לחצו **הורדה** בראש המסך ואשרו.",
-    imageFirst: true,
-    image: installHelpImage("android-2-install.jpg"),
-    imageHighlight: ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
-    imageAlt: "כפתור התקנת האפליקציה ב-Chrome",
-  },
-] as const;
 
 function PlatformSteps({
   steps,
@@ -86,23 +52,32 @@ function PlatformSteps({
 }
 
 function AndroidInstallSection() {
+  const { help } = useHelpMessages();
+  const page = help.install;
+  const androidStep = page.androidSteps[0];
+
+  const androidSteps = [
+    {
+      ...androidStep,
+      imageFirst: true as const,
+      image: installHelpImage("android-2-install.jpg"),
+      imageHighlight: ANDROID_INSTALL_DOWNLOAD_HIGHLIGHT,
+    },
+  ];
+
   return (
     <div className="space-y-3">
-      <PlatformSteps steps={ANDROID_STEPS} />
-      <HelpExpandable title="Google Play Protect חוסם?" subtitle="פתרון" defaultOpen={false}>
+      <PlatformSteps steps={androidSteps} />
+      <HelpExpandable title={page.playProtectTitle} subtitle={page.playProtectSubtitle} defaultOpen={false}>
         <ul className="space-y-3">
+          <HelpStep variant="tip" hideTitle body={page.playProtectTip1} />
           <HelpStep
             variant="tip"
             hideTitle
-            body="**כבר מותקן ו-Google חוסם?** מחקו את HallowHood מ**הגדרות → אפליקציות** ונסו שוב מכפתור **הורדה**."
-          />
-          <HelpStep
-            variant="tip"
-            hideTitle
-            body="Google עלול להציג **אפליקציה לא בטוחה נחסמה**. לחצו **פרטים נוספים**, ואז **הבנתי**."
+            body={page.playProtectTip2}
             image={installHelpImage("android-play-protect.jpg")}
             imageHighlight={ANDROID_PLAY_PROTECT_DETAILS_HIGHLIGHT}
-            imageAlt="Google Play Protect — אפליקציה לא בטוחה נחסמה"
+            imageAlt={page.playProtectImageAlt}
           />
         </ul>
       </HelpExpandable>
@@ -124,19 +99,36 @@ function useInstallHelpPlatform() {
 
 export default function InstallHelpPage() {
   const platform = useInstallHelpPlatform();
+  const { help } = useHelpMessages();
+  const page = help.install;
+
   const iphoneDefaultOpen = platform === "ios" || platform === "other";
   const androidDefaultOpen = platform === "android";
 
+  const iphoneSteps = page.iphoneSteps.map((step, index) => {
+    const images = [
+      { file: "ios-2-share-photo.jpg", highlight: IOS_INSTALL_SHARE_HIGHLIGHT },
+      { file: "ios-3-add-home-photo.png", highlight: IOS_INSTALL_ADD_HOME_HIGHLIGHT },
+      { file: "ios-4-add-confirm-photo.jpg", highlight: IOS_INSTALL_ADD_CONFIRM_HIGHLIGHT },
+    ] as const;
+    const spec = images[index];
+    return {
+      ...step,
+      image: installHelpImage(spec.file),
+      imageHighlight: spec.highlight,
+    };
+  });
+
   return (
-    <HelpShell title="איך מתקינים את האפליקציה?">
+    <HelpShell title={page.title}>
       <p className="mb-4 text-lg leading-relaxed text-orange-50">
-        <HelpText>{"התקנה = הוספה למסך הבית."}</HelpText>
+        <HelpText>{page.intro}</HelpText>
       </p>
       <div className="space-y-3">
-        <HelpExpandable title="אייפון" subtitle="Safari בלבד" defaultOpen={iphoneDefaultOpen}>
-          <PlatformSteps steps={IPHONE_STEPS} />
+        <HelpExpandable title={page.iphoneSectionTitle} subtitle={page.iphoneSectionSubtitle} defaultOpen={iphoneDefaultOpen}>
+          <PlatformSteps steps={iphoneSteps} />
         </HelpExpandable>
-        <HelpExpandable title="אנדרואיד" subtitle="Chrome מומלץ" defaultOpen={androidDefaultOpen}>
+        <HelpExpandable title={page.androidSectionTitle} subtitle={page.androidSectionSubtitle} defaultOpen={androidDefaultOpen}>
           <AndroidInstallSection />
         </HelpExpandable>
       </div>

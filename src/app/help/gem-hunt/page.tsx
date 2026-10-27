@@ -6,38 +6,35 @@ import { HelpText } from "@/lib/render-help-text";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
+import { useHelpMessages } from "@/hooks/use-help-messages";
+import { useLocale } from "@/hooks/use-locale";
 import { buttonVariants } from "@/components/ui/button";
-import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
-import {
-  GEM_FOUND_CHEER_HE,
-  GEM_FOUND_I_HE,
-  GEM_GAME_ABOUT_BODY_HE,
-  GEM_GAME_ABOUT_SECTION_HE,
-  GEM_GAME_TITLE_HE,
-  GEM_NOT_FOUND_I_HE,
-} from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
 
 export default function GemHuntHelpPage() {
+  const { t } = useLocale();
+  const { help, fh } = useHelpMessages();
+  const page = help.gemHunt;
+  const product = help.product;
   const { admin, ready } = useAdminSession();
-  const now = useAppNow();
+  useAppNow();
   const { gemUiVisible: showGemHuntHelp } = useGemHuntAdminUi(admin);
 
   if (!ready) {
     return (
-      <HelpShell title={GEM_GAME_TITLE_HE}>
-        <p className="text-base text-violet-300">טוענים…</p>
+      <HelpShell title={product.gemGameTitle}>
+        <p className="text-base text-violet-300">{t("common.loading")}</p>
       </HelpShell>
     );
   }
 
   if (!showGemHuntHelp) {
     return (
-      <HelpShell title={GEM_GAME_TITLE_HE}>
+      <HelpShell title={product.gemGameTitle}>
         <div className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
-          <p className="text-lg leading-relaxed text-orange-50">הציד עדיין לא פתוח לכולם.</p>
+          <p className="text-lg leading-relaxed text-orange-50">{page.closedMessage}</p>
           <Link href="/help" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "inline-flex")}>
-            חזרה לשאלות ותשובות
+            {page.backToFaq}
           </Link>
         </div>
       </HelpShell>
@@ -45,11 +42,11 @@ export default function GemHuntHelpPage() {
   }
 
   return (
-    <HelpShell title={GEM_GAME_TITLE_HE}>
+    <HelpShell title={product.gemGameTitle}>
       <div className="space-y-3">
-        <HelpExpandable title={GEM_GAME_ABOUT_SECTION_HE} defaultOpen>
+        <HelpExpandable title={page.aboutTitle} defaultOpen>
           <div className="space-y-3 text-lg leading-relaxed text-orange-50">
-            {GEM_GAME_ABOUT_BODY_HE.map((paragraph) => (
+            {page.aboutBody.map((paragraph) => (
               <p key={paragraph.slice(0, 24)}>
                 <HelpText>{paragraph}</HelpText>
               </p>
@@ -57,142 +54,59 @@ export default function GemHuntHelpPage() {
           </div>
         </HelpExpandable>
 
-        <HelpExpandable title="איפה רואים שדונים?">
-          <ul className="list-disc space-y-2 pr-5 text-lg leading-relaxed text-orange-50">
-            <li>
-              <HelpText>
-                {
-                  "במפה — סימני שדון על בתים (אחרי שמפעילים את כפתור השדונים בסרגל). בליל פורים, כשהציד פעיל, יופיע גם כפתור חיפוש שדון נסתר כשמתקרבים לבית."
-                }
-              </HelpText>
-            </li>
-            <li>
-              <HelpText>
-                {
-                  "בכרטיס בית — בלוק שדון נסתר עם מרחק וכפתור פתחו מצלמה בטווח (iPhone ~5 מ׳, Android ~15 מ׳ מהנקודה על המדרכה)."
-                }
-              </HelpText>
-            </li>
-            <li>
-              <HelpText>
-                {
-                  `בסינון — אפשר לסנן ${GEM_NOT_FOUND_I_HE} / ${GEM_FOUND_I_HE}. בהסימונים שלי יש לשונית ${GEM_FOUND_I_HE}.`
-                }
-              </HelpText>
-            </li>
+        <HelpExpandable title={page.whereTitle}>
+          <ul className="list-disc space-y-2 ps-5 text-lg leading-relaxed text-orange-50">
+            {page.whereItems.map((item) => (
+              <li key={item.slice(0, 24)}>
+                <HelpText>{fh(item)}</HelpText>
+              </li>
+            ))}
           </ul>
         </HelpExpandable>
 
-        <HelpExpandable title="איך מתחילים ציד?">
-          <ol className="list-decimal space-y-2 pr-5 text-lg leading-relaxed text-orange-50">
-            <li>
-              <HelpText>{"התקרבו לבית — עדכנו מיקום (GPS) אם צריך."}</HelpText>
-            </li>
-            <li>
-              <HelpText>
-                {
-                  "פתחו מצלמה מכרטיס הבית או מכפתור הציד במפה. ב-iPhone — Safari; ב-Android — Chrome."
-                }
-              </HelpText>
-            </li>
-            <li>
-              <HelpText>
-                {
-                  "אשרו מיקום וכיוון (מצפן) כשהדפדפן מבקש — החץ ברמז זקוק לכיוון."
-                }
-              </HelpText>
-            </li>
-            <li>
-              <HelpText>
-                {
-                  "סובבו את המצלמה — השדון ננעל בעולם ליד המדרכה (בטווח קרוב, עד ~15 מ׳, כדי שלא יתערבב עם שכן)."
-                }
-              </HelpText>
-            </li>
+        <HelpExpandable title={page.startTitle}>
+          <ol className="list-decimal space-y-2 ps-5 text-lg leading-relaxed text-orange-50">
+            {page.startSteps.map((step) => (
+              <li key={step.slice(0, 24)}>
+                <HelpText>{step}</HelpText>
+              </li>
+            ))}
           </ol>
         </HelpExpandable>
 
-        <HelpExpandable title="רמז ו**גלה לי**">
+        <HelpExpandable title={page.hintTitle}>
           <div className="space-y-3 text-lg leading-relaxed text-orange-50">
-            <p>
-              <HelpText>
-                {
-                  "רמז · כוון אותי — חץ מצפן (קו ישר לשדון), מרחק, שמאלה/ימינה, וקישור הליכה ב-Google Maps למסלול ברחוב."
-                }
-              </HelpText>
-            </p>
-            <p>
-              <HelpText>
-                {
-                  "גלה לי — מציג את החיה במרכז המסך בלי לחפש עם המצלמה (שימושי בלי הרשאת מצלמה או כשקשה לכוון). הסתר מחזיר למצב ציד רגיל. צריך להיות בטווח הציד (כפתור מודגש בירוק); מחוץ לטווח — הודעת שגיאה בשורת הרמז."
-                }
-              </HelpText>
-            </p>
-            <p>
-              <HelpText>
-                {
-                  "אחרי גלה לי, לחיצה על רמז מבטלת את מרכוז המסך — כדי לחזור לניווט."
-                }
-              </HelpText>
-            </p>
+            {page.hintParagraphs.map((paragraph) => (
+              <p key={paragraph.slice(0, 24)}>
+                <HelpText>{paragraph}</HelpText>
+              </p>
+            ))}
           </div>
         </HelpExpandable>
 
-        <HelpExpandable title={`מציאה ו${GEM_ALBUM_TITLE_HE}`}>
+        <HelpExpandable title={fh(page.foundTitle)}>
           <div className="space-y-3 text-lg leading-relaxed text-orange-50">
-            <p>
-              <HelpText>
-                {
-                  `כשהחיה במסגרת — הקישו עליה (או סובבו במצב מפגש ואז הקישו). אחרי ${GEM_FOUND_CHEER_HE} אפשר לפתוח את ${GEM_ALBUM_TITLE_HE} מהתפריט.`
-                }
-              </HelpText>
-            </p>
-            <p>
-              <HelpText>
-                {
-                  "כל בית עם שדון מוסיף שדון לאוסף — אפשר לראות מי כבר נמצא ומי עדיין מחכה בשכונה."
-                }
-              </HelpText>
-            </p>
+            {page.foundParagraphs.map((paragraph) => (
+              <p key={paragraph.slice(0, 24)}>
+                <HelpText>{fh(paragraph)}</HelpText>
+              </p>
+            ))}
             <Link
               href="/gem-bag"
               className="inline-block text-orange-300 underline underline-offset-2 hover:text-orange-200"
             >
-              {`פתיחת ${GEM_ALBUM_TITLE_HE}`}
+              {fh(page.openAlbum)}
             </Link>
           </div>
         </HelpExpandable>
 
-        <HelpExpandable title="בעיות נפוצות">
-          <ul className="list-disc space-y-2 pr-5 text-lg leading-relaxed text-orange-50">
-            <li>
-              <HelpText>
-                {
-                  "**מרחק קופץ** — המתינו ל-GPS להתייצב; עמדו בחוץ עם שמיים פתוחים."
-                }
-              </HelpText>
-            </li>
-            <li>
-              <HelpText>
-                {
-                  "**אין מצלמה** — אפשר לצוד עם גלה לי בלבד."
-                }
-              </HelpText>
-            </li>
-            <li>
-              <HelpText>
-                {
-                  "**חץ לא זז (Safari)** — לחצו אפשרו כיוון בfooter ואשרו ב-iOS."
-                }
-              </HelpText>
-            </li>
-            <li>
-              <HelpText>
-                {
-                  "**שדון של שכן** — הנקודה על המדרכה מוגבלת בטווח; אם צריך כיול — כלי מנהל בכרטיס הבית."
-                }
-              </HelpText>
-            </li>
+        <HelpExpandable title={page.troubleshootingTitle}>
+          <ul className="list-disc space-y-2 ps-5 text-lg leading-relaxed text-orange-50">
+            {page.troubleshootingItems.map((item) => (
+              <li key={item.slice(0, 24)}>
+                <HelpText>{item}</HelpText>
+              </li>
+            ))}
           </ul>
         </HelpExpandable>
       </div>
@@ -205,7 +119,7 @@ export default function GemHuntHelpPage() {
             "w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
           )}
         >
-          מיקום השדון — בעלי בתים (מדריך צילומי)
+          {page.linkPlaceDemon}
         </Link>
       </div>
     </HelpShell>

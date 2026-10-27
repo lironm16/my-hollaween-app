@@ -1,48 +1,25 @@
 "use client";
 
 import { HelpShell, HelpStep } from "@/components/help-shell";
+import { useHelpMessages } from "@/hooks/use-help-messages";
 import { helpImage } from "@/lib/help-images";
 
-type ShareEditCodeStep = {
-  title: string;
-  body: string;
-  image?: string;
-  imageAlt?: string;
-};
-
-const STEPS: ShareEditCodeStep[] = [
-  {
-    title: "פתחו את תפריט הפעולות (⋮)",
-    body: "במפה או ברשימה, פתחו את כרטיס הבית. בפינה העליונה של הכרטיס לחצו על **⋮** (שלוש נקודות).",
-  },
-  {
-    title: "בחרו **קוד עריכה**",
-    body: "בתפריט שנפתח בחרו **קוד עריכה**. מופיעים רק לבעלי הבית או למנהל.",
-  },
-  {
-    title: "העתיקו או שתפו",
-    body: "ייפתח חלון עם הקוד בן 6 הספרות. לחצו **העתיקו** או **שיתוף** כדי לשלוח בוואטסאפ / הודעה. מי שמקבל את הקוד מזין אותו פעם אחת ב: תפריט → בית → עריכה → בחרו את הבית → **פתיחה לעריכה**.",
-    image: helpImage("share-edit-code-dialog.png"),
-    imageAlt: "חלון קוד עריכה עם העתיקו ושיתוף",
-  },
-];
-
 export default function ShareEditCodeHelpPage() {
+  const { help } = useHelpMessages();
+  const page = help.shareEditCode;
+
   return (
-    <HelpShell title="איך לשתף קוד עריכה?">
-      <p className="mb-4 text-lg leading-relaxed text-violet-100">
-        קוד עריכה מאפשר למישהו אחר לעדכן את הבית שלכם. הדרך המהירה: מתוך כרטיס הבית → ⋮ → קוד
-        עריכה.
-      </p>
+    <HelpShell title={page.title}>
+      <p className="mb-4 text-lg leading-relaxed text-violet-100">{page.intro}</p>
       <ol className="space-y-4">
-        {STEPS.map((step, index) => (
+        {page.steps.map((step, index) => (
           <HelpStep
             key={step.title}
             n={index + 1}
             title={step.title}
             body={step.body}
-            image={step.image}
-            imageAlt={step.imageAlt}
+            image={index === 2 ? helpImage("share-edit-code-dialog.png") : undefined}
+            imageAlt={"imageAlt" in step ? step.imageAlt : undefined}
           />
         ))}
       </ol>

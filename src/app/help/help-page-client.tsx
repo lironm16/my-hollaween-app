@@ -2,66 +2,47 @@
 
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { HelpShell } from "@/components/help-shell";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useHelpMessages } from "@/hooks/use-help-messages";
+import { useLocale } from "@/hooks/use-locale";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
-import { GEM_GAME_TITLE_HE } from "@/lib/gem-hunt-copy";
 import { refreshNightPassState } from "@/lib/night-pass-client";
 
-type HelpLink = { question: string; href: string };
+type HelpLinkKey = keyof typeof import("@/lib/i18n/messages/help-he").helpMessagesHe.index.links;
 
-const QUESTIONS: HelpLink[] = [
-  {
-    question: "עזרה אישית — טופס ליצירת קשר",
-    href: "/help/contact",
-  },
-  {
-    question: "איך מוסיפים בית?",
-    href: "/help/add-house",
-  },
-  {
-    question: "איך מתקינים את האפליקציה?",
-    href: "/help/install",
-  },
-  {
-    question: "איך מסננים בתים?",
-    href: "/help/filter",
-  },
-  {
-    question: "איך יוצרים מסלול?",
-    href: "/help/create-route",
-  },
-  {
-    question: "במהלך המסלול",
-    href: "/help/during-route",
-  },
-  {
-    question: "איך סורקים QR לביקור?",
-    href: "/help/scan-visit",
-  },
-  {
-    question: "איך לשתף קוד עריכה?",
-    href: "/help/share-edit-code",
-  },
-  {
-    question: "איבדתי את קוד העריכה",
-    href: "/help/edit-code",
-  },
+const LINK_HREF: Record<HelpLinkKey, string> = {
+  contact: "/help/contact",
+  addHouse: "/help/add-house",
+  eventDeviceOwner: "/help/event-device-owner",
+  eventDeviceVisitor: "/help/event-device-visitor",
+  install: "/help/install",
+  filter: "/help/filter",
+  createRoute: "/help/create-route",
+  duringRoute: "/help/during-route",
+  scanVisit: "/help/scan-visit",
+  shareEditCode: "/help/share-edit-code",
+  editCode: "/help/edit-code",
+  gemHunt: "/help/gem-hunt",
+  gemPlaceDemon: "/help/gem-place-demon",
+};
+
+const BASE_ORDER: HelpLinkKey[] = [
+  "contact",
+  "addHouse",
+  "install",
+  "filter",
+  "createRoute",
+  "duringRoute",
+  "scanVisit",
+  "shareEditCode",
+  "editCode",
 ];
 
-const EVENT_DEVICE_QUESTIONS: HelpLink[] = [
-  {
-    question: "קוד עריכה ומכשירים — בעלי בתים",
-    href: "/help/event-device-owner",
-  },
-  {
-    question: "חיבור מכשיר — קוד עריכה (6 ספרות)",
-    href: "/help/event-device-visitor",
-  },
-];
+const EVENT_DEVICE_ORDER: HelpLinkKey[] = ["eventDeviceOwner", "eventDeviceVisitor"];
 
 export type HelpPageClientProps = {
   eventDeviceHelpFromServer: boolean;
@@ -72,6 +53,8 @@ export function HelpPageClient({
   eventDeviceHelpFromServer,
   gemHuntPublicFromServer,
 }: HelpPageClientProps) {
+  const { dir } = useLocale();
+  const { help } = useHelpMessages();
   const { admin } = useAdminSession();
   const { catalog } = useCatalog();
   const nightPass = useNightPass();
@@ -85,19 +68,23 @@ export function HelpPageClient({
     catalog?.eventSettings?.gemHuntPublic === true || gemHuntPublicFromServer;
 
   const items = useMemo(() => {
-    const list = [...QUESTIONS];
+    const keys: HelpLinkKey[] = [...BASE_ORDER];
     if (eventDeviceHelp) {
-      list.splice(2, 0, ...EVENT_DEVICE_QUESTIONS);
+      keys.splice(2, 0, ...EVENT_DEVICE_ORDER);
     }
     if (gemHuntVisible(admin, gemHuntPublic)) {
-      list.push({ question: GEM_GAME_TITLE_HE, href: "/help/gem-hunt" });
-      list.push({ question: "מיקום השדון — בעלי בתים", href: "/help/gem-place-demon" });
+      keys.push("gemHunt", "gemPlaceDemon");
     }
-    return list;
-  }, [admin, eventDeviceHelp, gemHuntPublic]);
+    return keys.map((key) => ({
+      href: LINK_HREF[key],
+      question: help.index.links[key],
+    }));
+  }, [admin, eventDeviceHelp, gemHuntPublic, help.index.links]);
+
+  const Chevron = dir === "ltr" ? ChevronRight : ChevronLeft;
 
   return (
-    <HelpShell title="שאלות ותשובות" backHref="/" backLabel="מפה">
+    <HelpShell title={help.index.title} backHref="/" backLabel={help.shell.backToMap}>
       <ul className="space-y-2">
         {items.map((item) => (
           <li key={item.href}>
@@ -106,7 +93,7 @@ export function HelpPageClient({
               className="flex items-center gap-3 rounded-2xl bg-[#1d1028] px-4 py-5 ring-1 ring-orange-500/20 transition hover:bg-[#241332]"
             >
               <span className="min-w-0 flex-1 text-xl font-medium text-orange-50">{item.question}</span>
-              <ChevronLeft className="size-7 shrink-0 text-orange-400/70" aria-hidden />
+              <Chevron className="size-7 shrink-0 text-orange-400/70" aria-hidden />
             </Link>
           </li>
         ))}

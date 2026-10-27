@@ -11,16 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { collectHelpRequestContext } from "@/lib/help-request-client";
 import { compressJpegFile } from "@/lib/compress-image";
 import {
-  HELP_REQUEST_PLATFORM_LABELS,
   HELP_REQUEST_PLATFORMS,
-  HELP_REQUEST_ROLE_LABELS,
   HELP_REQUEST_ROLES,
-  HELP_REQUEST_TOPIC_LABELS,
   HELP_REQUEST_TOPICS,
   type HelpRequestPlatform,
   type HelpRequestRole,
   type HelpRequestTopic,
 } from "@/lib/help-request-schema";
+import { useHelpMessages } from "@/hooks/use-help-messages";
 import { cn } from "@/lib/utils";
 
 function ChoiceGroup<T extends string>({
@@ -66,6 +64,9 @@ function ChoiceGroup<T extends string>({
 }
 
 export function HelpContactForm() {
+  const { help } = useHelpMessages();
+  const copy = help.contactForm;
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<HelpRequestRole | "">("");
@@ -99,12 +100,12 @@ export function HelpContactForm() {
     if (!photoFile) return undefined;
     const dataUrl = await compressJpegFile(photoFile);
     const blob = await fetch(dataUrl).then((r) => r.blob());
-    const form = new FormData();
-    form.append("file", blob, "screenshot.jpg");
-    const res = await fetch("/api/help-request/screenshot", { method: "POST", body: form });
+    const uploadForm = new FormData();
+    uploadForm.append("file", blob, "screenshot.jpg");
+    const res = await fetch("/api/help-request/screenshot", { method: "POST", body: uploadForm });
     const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
     if (!res.ok || !data.url) {
-      throw new Error(data.error ?? "העלאת התמונה נכשלה");
+      throw new Error(data.error ?? copy.errorUpload);
     }
     return data.url;
   }
@@ -113,11 +114,11 @@ export function HelpContactForm() {
     event.preventDefault();
     setError(null);
     if (!role) {
-      setError("נא לבחור מי אתם.");
+      setError(copy.errorPickRole);
       return;
     }
     if (!platform) {
-      setError("נא לבחור איזה מכשיר.");
+      setError(copy.errorPickPlatform);
       return;
     }
     setBusy(true);
@@ -127,7 +128,7 @@ export function HelpContactForm() {
         try {
           screenshotUrl = await uploadScreenshotIfNeeded();
         } catch (uploadError) {
-          setError(uploadError instanceof Error ? uploadError.message : "העלאת התמונה נכשלה");
+          setError(uploadError instanceof Error ? uploadError.message : copy.errorUpload);
           return;
         }
       }
@@ -150,14 +151,14 @@ export function HelpContactForm() {
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string; ticket?: string };
       if (!res.ok) {
-        const msg = data.error ?? "השליחה נכשלה.";
+        const msg = data.error ?? copy.errorSubmit;
         setError(msg);
         toast.error(msg);
         return;
       }
       setTicket(data.ticket ?? "ok");
     } catch {
-      const msg = "אין חיבור לשרת. בדקו רשת ונסו שוב.";
+      const msg = copy.errorOffline;
       setError(msg);
       toast.error(msg);
     } finally {
@@ -170,13 +171,13 @@ export function HelpContactForm() {
       <div className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-emerald-500/30">
         <div className="flex flex-col items-center gap-2 text-center">
           <CheckCircle2 className="size-12 text-emerald-400" aria-hidden />
-          <h2 className="text-xl font-semibold text-orange-50">קיבלנו את הפנייה</h2>
+          <h2 className="text-xl font-semibold text-orange-50">{copy.successTitle}</h2>
           <p className="text-sm text-violet-300/90" dir="ltr">
             #{ticket}
           </p>
         </div>
         <Link href="/" className={cn(buttonVariants({ size: "lg" }), "w-full bg-orange-500 text-black hover:bg-orange-400")}>
-          חזרה לדף הבית
+          {copy.successBack}
         </Link>
       </div>
     );
@@ -185,7 +186,7 @@ export function HelpContactForm() {
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-5">
       <p className="text-lg leading-relaxed text-orange-100/95">
-        משהו לא עובד? נשמח לעזור. השאירו פרטים — אפשר גם בלי טלפון.
+        {copy.intro}
       </p>
 
       <div className="hidden" aria-hidden>
@@ -200,7 +201,7 @@ export function HelpContactForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="help-name">שם *</Label>
+        <Label htmlFor="help-name">{copy.nameLabel}</Label>
         <Input
           id="help-name"
           required
@@ -213,7 +214,7 @@ export function HelpContactForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="help-phone">טלפון — לחזרה אליכם</Label>
+        <Label htmlFor="help-phone">{copy.phoneLabel}</Label>
         <Input
           id="help-phone"
           type="tel"
@@ -229,34 +230,34 @@ export function HelpContactForm() {
       </div>
 
       <ChoiceGroup
-        legend="מי אתם? *"
+        legend={copy.roleLegend}
         name="help-role"
         value={role}
         onChange={setRole}
         options={HELP_REQUEST_ROLES}
-        labels={HELP_REQUEST_ROLE_LABELS}
+        labels={copy.role}
       />
 
       <ChoiceGroup
-        legend="איזה מכשיר? *"
+        legend={copy.platformLegend}
         name="help-platform"
         value={platform}
         onChange={setPlatform}
         options={HELP_REQUEST_PLATFORMS}
-        labels={HELP_REQUEST_PLATFORM_LABELS}
+        labels={copy.platform}
       />
 
       <fieldset className="space-y-2">
-        <legend className="text-base font-medium text-orange-100">נושא</legend>
+        <legend className="text-base font-medium text-orange-100">{copy.topicLegend}</legend>
         <select
           value={topic}
           onChange={(e) => setTopic(e.target.value as HelpRequestTopic | "")}
           className="h-11 w-full rounded-lg border border-orange-500/25 bg-[#12081a] px-3 text-lg text-orange-50"
         >
-          <option value="">בחרו…</option>
+          <option value="">{copy.topicPlaceholder}</option>
           {topicOptions.map((t) => (
             <option key={t} value={t}>
-              {HELP_REQUEST_TOPIC_LABELS[t]}
+              {copy.topic[t]}
             </option>
           ))}
         </select>
@@ -264,7 +265,7 @@ export function HelpContactForm() {
 
       {role === "owner" ? (
         <div className="space-y-2">
-          <Label htmlFor="help-house">שם הבית או כתובת</Label>
+          <Label htmlFor="help-house">{copy.houseLabel}</Label>
           <Input
             id="help-house"
             value={houseHint}
@@ -276,7 +277,7 @@ export function HelpContactForm() {
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="help-message">מה קרה / במה צריכים עזרה? *</Label>
+        <Label htmlFor="help-message">{copy.messageLabel}</Label>
         <Textarea
           id="help-message"
           required
@@ -285,13 +286,13 @@ export function HelpContactForm() {
           onChange={(e) => setMessage(e.target.value)}
           className="min-h-[8rem] border-orange-500/25 bg-[#12081a] text-lg text-orange-50"
           maxLength={2000}
-          placeholder="למשל: המפה ריקה, לא מצליחים להתקין, קוד עריכה לא עובד…"
+          placeholder={copy.messagePlaceholder}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="help-photo">צילום מסך</Label>
-        <p className="text-sm text-violet-300/90">התמונה נשמרת בשרת זמני לכ־72 שעות.</p>
+        <Label htmlFor="help-photo">{copy.photoLabel}</Label>
+        <p className="text-sm text-violet-300/90">{copy.photoHint}</p>
         <input
           ref={fileInputRef}
           id="help-photo"
@@ -306,7 +307,7 @@ export function HelpContactForm() {
             <img src={photoPreview} alt="" className="max-h-48 w-full object-contain bg-[#12081a]" />
             <button
               type="button"
-              aria-label="הסרת תמונה"
+              aria-label={copy.photoRemoveAria}
               onClick={clearPhoto}
               className="absolute left-2 top-2 rounded-full bg-black/60 p-1.5 text-orange-100"
             >
@@ -321,7 +322,7 @@ export function HelpContactForm() {
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus className="size-5" aria-hidden />
-            הוספת צילום מסך
+            {copy.photoAdd}
           </Button>
         )}
       </div>
@@ -337,10 +338,10 @@ export function HelpContactForm() {
         {busy ? (
           <>
             <Loader2 className="size-5 animate-spin" aria-hidden />
-            שולח…
+            {copy.submitting}
           </>
         ) : (
-          "שליחה"
+          copy.submit
         )}
       </Button>
     </form>

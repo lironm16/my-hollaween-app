@@ -2,61 +2,35 @@
 
 import Link from "next/link";
 import { HelpShell, HelpStep } from "@/components/help-shell";
+import { useHelpMessages } from "@/hooks/use-help-messages";
 import { helpImage } from "@/lib/help-images";
-import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/night-pass-copy";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type DeviceHelpStep = {
-  title: string;
-  body: string;
-  image?: string;
-  imageAlt?: string;
-};
-
-const STEPS: DeviceHelpStep[] = [
-  {
-    title: "קוד אחד — עריכה וחיבור",
-    body: `קוד עריכה (${HOUSE_ACCESS_CODE_LENGTH} ספרות) הוא גם קוד החיבור למכשירים. מי שמזין אותו נרשם למכשיר, יכול לערוך את הבית (בעלים או עורך), ורואה כתובות מלאות ביום החשיפה.`,
-    image: helpImage("event-device-owner-dialog.png"),
-    imageAlt: "חלון קוד עריכה ומכשירים עם קוד בן 6 ספרות",
-  },
-  {
-    title: "איפה פותחים את המסך?",
-    body: "אחרי הוספת בית: במסך ההצלחה לחצו «קוד עריכה ומכשירים». בכל זמן: כרטיס הבית → ⋮ → «קוד עריכה ומכשירים».",
-    image: helpImage("event-device-owner-menu.png"),
-    imageAlt: "תפריט פעולות עם קוד עריכה ומכשירים",
-  },
-  {
-    title: "שיתוף ומעקב",
-    body: "«העתק» — ושלחו את הקוד (וואטסאפ / SMS). אפשר גם קישור הזמנה מהחלון. ברשימה למטה: שם, טלפון ותפקיד (בעל בית / עורך) לכל מכשיר. «קוד כניסה חדש» / איפוס — מנתק את כל המכשירים ודורש קוד מעודכן.",
-    image: helpImage("event-device-owner-devices.png"),
-    imageAlt: "רשימת מכשירים מחוברים מתחת לקוד",
-  },
-  {
-    title: "בעלי בית — חיבור לאירוע",
-    body: `במכשיר שבו הוספתם את הבית אפשר «חיבור לאירוע (בעלי בית)» בראש המפה או «חיבור לאירוע» בתפריט ☰ — בלי להקליד קוד. עורכים ואורחים משתמשים באותו קוד עריכה (${HOUSE_ACCESS_CODE_LENGTH} ספרות) או בקישור הזמנה.`,
-    image: helpImage("event-device-owner-banner.png"),
-    imageAlt: "פס חיבור לאירוע בראש המפה לבעלי בית",
-  },
-];
+const STEP_IMAGES = [
+  helpImage("event-device-owner-dialog.png"),
+  helpImage("event-device-owner-menu.png"),
+  helpImage("event-device-owner-devices.png"),
+  helpImage("event-device-owner-banner.png"),
+] as const;
 
 export default function EventDeviceOwnerHelpPage() {
+  const { help, fh } = useHelpMessages();
+  const page = help.eventDeviceOwner;
+
   return (
-    <HelpShell title="קוד עריכה ומכשירים — בעלי בתים">
+    <HelpShell title={page.title}>
       <div className="mb-5 rounded-2xl bg-orange-500/10 p-4 ring-1 ring-orange-400/30">
-        <p className="text-lg leading-relaxed text-orange-50">
-          עד 4 מכשירים לכל בית — כולם עם אותו קוד משפחה ({HOUSE_ACCESS_CODE_LENGTH} ספרות).
-        </p>
+        <p className="text-lg leading-relaxed text-orange-50">{fh(page.callout)}</p>
       </div>
       <ol className="space-y-6">
-        {STEPS.map((step, i) => (
+        {page.steps.map((step, i) => (
           <HelpStep
             key={step.title}
             n={i + 1}
             title={step.title}
-            body={step.body}
-            image={step.image}
+            body={fh(step.body)}
+            image={STEP_IMAGES[i]}
             imageAlt={step.imageAlt}
           />
         ))}
@@ -68,7 +42,7 @@ export default function EventDeviceOwnerHelpPage() {
           "mt-6 w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
         )}
       >
-        מדריך למשפחה ואורחים — חיבור מכשיר
+        {page.linkVisitor}
       </Link>
     </HelpShell>
   );

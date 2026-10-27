@@ -8,18 +8,21 @@ import { buttonVariants } from "@/components/ui/button";
 import { renderHelpText } from "@/lib/render-help-text";
 import { cn } from "@/lib/utils";
 import type { HelpShotHighlight } from "@/lib/help-shot-highlight";
+import { useLocale } from "@/hooks/use-locale";
 
 export function HelpShell({
   title,
   children,
   backHref = "/help",
-  backLabel = "חזרה",
+  backLabel,
 }: {
   title: string;
   children: ReactNode;
   backHref?: string;
   backLabel?: string;
 }) {
+  const { t } = useLocale();
+  const resolvedBackLabel = backLabel ?? t("help.shell.back");
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
@@ -28,7 +31,7 @@ export function HelpShell({
         <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
           <h1 className="font-display text-3xl text-orange-300">{title}</h1>
           <Link href={backHref} className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>
-            {backLabel}
+            {resolvedBackLabel}
           </Link>
         </div>
         {children}
@@ -61,7 +64,7 @@ export function HelpExpandable({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-3 px-4 py-4 text-right transition hover:bg-[#241332]"
+        className="flex w-full items-center gap-3 px-4 py-4 text-start transition hover:bg-[#241332]"
       >
         <span className="min-w-0 flex-1">
           <span className="block text-xl font-semibold text-orange-50">{title}</span>

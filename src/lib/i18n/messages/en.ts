@@ -1,4 +1,5 @@
 import type { AppMessages } from "@/lib/i18n/messages/he";
+import { helpMessagesEn } from "@/lib/i18n/messages/help-en";
 
 export const enMessages: AppMessages = {
   settings: {
@@ -295,4 +296,5 @@ export const enMessages: AppMessages = {
     treatSesameFree: "Sesame-free",
     treatVegan: "Vegan",
   },
+  help: helpMessagesEn,
 };

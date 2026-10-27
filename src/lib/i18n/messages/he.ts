@@ -1,3 +1,5 @@
+import { helpMessagesHe } from "@/lib/i18n/messages/help-he";
+
 export const heMessages = {
   settings: {
     title: "הגדרות",
@@ -293,6 +295,7 @@ export const heMessages = {
     treatSesameFree: "ללא שומשום",
     treatVegan: "טבעוני",
   },
+  help: helpMessagesHe,
 } as const;
 
 /** Same keys as {@link heMessages}; leaf values are any locale string (not Hebrew literals). */

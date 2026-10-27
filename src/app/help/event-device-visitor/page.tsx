@@ -2,70 +2,37 @@
 
 import Link from "next/link";
 import { HelpShell, HelpStep } from "@/components/help-shell";
+import { useHelpMessages } from "@/hooks/use-help-messages";
 import { helpImage } from "@/lib/help-images";
-import {
-  HOUSE_ACCESS_CODE_LENGTH,
-  NIGHT_PASS_BANNER_CTA,
-  NIGHT_PASS_REVEAL_HINT,
-} from "@/lib/night-pass-copy";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type DeviceHelpStep = {
-  title: string;
-  body: string;
-  image?: string;
-  imageAlt?: string;
-};
-
-const STEPS: DeviceHelpStep[] = [
-  {
-    title: "איזה קוד מקבלים?",
-    body: `מבעלי הבית: קוד עריכה בן ${HOUSE_ACCESS_CODE_LENGTH} ספרות — אותו קוד שמשמש לעריכת הבית. אפשר גם קישור הזמנה (בלי להקליד ספרות).`,
-  },
-  {
-    title: `«${NIGHT_PASS_BANNER_CTA}» במפה`,
-    body: `אם המכשיר עדיין לא מחובר, יופיע פס בראש המפה. לחצו «${NIGHT_PASS_BANNER_CTA}», הזינו את קוד העריכה (${HOUSE_ACCESS_CODE_LENGTH} ספרות) + שם + טלפון, ואז «הרשמה».`,
-    image: helpImage("event-device-visitor-banner.png"),
-    imageAlt: "פס יש לי קוד כניסה בראש המפה",
-  },
-  {
-    title: "חיבור גם מהתפריט",
-    body: "פתחו ☰. למעלה: «מכשיר לא מחובר» ולחצו «חיבור לאירוע» — אותו טופס הרשמה (קוד, שם, טלפון).",
-    image: helpImage("event-device-visitor-menu-connect.png"),
-    imageAlt: "תפריט צד עם אזור חיבור לאירוע",
-  },
-  {
-    title: "טופס ההרשמה",
-    body: "אחרי «הרשמה» החלון נסגר והמפה מתעדכנת. אותו קוד עובד במכשיר אחד בכל רגע — אם נרשמתם ממכשיר אחר, הקודם מתנתק. «התנתק» בתפריט משחרר רק את המכשיר הזה; הקוד נשאר תקף.",
-    image: helpImage("event-device-visitor-register.png"),
-    imageAlt: "טופס הרשמה עם קוד כניסה 6 ספרות",
-  },
-  {
-    title: "אחרי החיבור",
-    body: `ב☰ תראו «מכשיר מחובר» והשם שהזנתם. ${NIGHT_PASS_REVEAL_HINT}`,
-    image: helpImage("event-device-visitor-menu.png"),
-    imageAlt: "תפריט עם מכשיר מחובר",
-  },
-];
+const STEP_IMAGES = [
+  undefined,
+  helpImage("event-device-visitor-banner.png"),
+  helpImage("event-device-visitor-menu-connect.png"),
+  helpImage("event-device-visitor-register.png"),
+  helpImage("event-device-visitor-menu.png"),
+] as const;
 
 export default function EventDeviceVisitorHelpPage() {
+  const { help, fh } = useHelpMessages();
+  const page = help.eventDeviceVisitor;
+
   return (
-    <HelpShell title="חיבור מכשיר — משפחה ואורחים">
+    <HelpShell title={page.title}>
       <div className="mb-5 rounded-2xl bg-orange-500/10 p-4 ring-1 ring-orange-400/30">
-        <p className="text-lg leading-relaxed text-orange-50">
-          קוד עריכה ({HOUSE_ACCESS_CODE_LENGTH} ספרות) מבעלי הבית = הרשמת המכשיר + גישה לכתובות ופרטי ביקור.
-        </p>
+        <p className="text-lg leading-relaxed text-orange-50">{fh(page.callout)}</p>
       </div>
       <ol className="space-y-6">
-        {STEPS.map((step, i) => (
+        {page.steps.map((step, i) => (
           <HelpStep
             key={step.title}
             n={i + 1}
-            title={step.title}
-            body={step.body}
-            image={step.image}
-            imageAlt={step.imageAlt}
+            title={fh(step.title)}
+            body={fh(step.body)}
+            image={STEP_IMAGES[i]}
+            imageAlt={"imageAlt" in step ? step.imageAlt : undefined}
           />
         ))}
       </ol>
@@ -76,7 +43,7 @@ export default function EventDeviceVisitorHelpPage() {
           "mt-6 w-full border-orange-400/50 bg-orange-500/10 text-lg text-orange-100 hover:bg-orange-500/20",
         )}
       >
-        בעלי בתים — שיתוף קוד ומכשירים
+        {page.linkOwner}
       </Link>
     </HelpShell>
   );
