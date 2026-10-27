@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderHelpText } from "./render-help-text";
+import { normalizeFlowArrows, renderHelpText } from "./render-help-text";
 
 test("renderHelpText leaves plain text unchanged", () => {
   assert.equal(renderHelpText("לחצו על כפתור"), "לחצו על כפתור");
@@ -31,7 +31,18 @@ test("renderHelpText mixes plain labels and emphasis", () => {
 });
 
 test("renderHelpText replaces → with ← for RTL menu paths", () => {
-  assert.equal(renderHelpText("הגדרות → אפליקציות"), "הגדרות ← אפליקציות");
+  assert.equal(renderHelpText("הגדרות → אפליקציות", { dir: "rtl" }), "הגדרות ← אפליקציות");
+});
+
+test("renderHelpText keeps → for LTR menu paths", () => {
+  assert.equal(
+    renderHelpText("Menu ☰ → House → Add.", { dir: "ltr" }),
+    "Menu ☰ → House → Add.",
+  );
+});
+
+test("normalizeFlowArrows maps ← to → in LTR", () => {
+  assert.equal(normalizeFlowArrows("Menu ← House", "ltr"), "Menu → House");
 });
 
 test("renderHelpText converts guillemets to strong markers", () => {

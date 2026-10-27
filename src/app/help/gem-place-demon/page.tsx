@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { HelpShell, HelpStep } from "@/components/help-shell";
-import { HelpText } from "@/lib/render-help-text";
+import { HelpText } from "@/components/help-text";
 import { useHelpMessages } from "@/hooks/use-help-messages";
 import { helpImage } from "@/lib/help-images";
 import { buttonVariants } from "@/components/ui/button";

@@ -44,14 +44,19 @@ function normalizeHelpEmphasis(text: string): string {
     .replace(/\u00AB([^\u00BB]+)\u00BB/g, "**$1**");
 }
 
-/** U+2192 mirrors in `dir=rtl` and reads backwards for Hebrew menu paths — use ←. */
-function normalizeRtlFlowArrows(text: string): string {
-  return text.replace(/\s→\s/g, " ← ");
+/** Menu-path arrows: RTL uses ← (natural read order); LTR keeps →. */
+export function normalizeFlowArrows(text: string, dir: "ltr" | "rtl"): string {
+  if (dir === "rtl") return text.replace(/\s→\s/g, " ← ");
+  return text.replace(/\s←\s/g, " → ");
 }
 
 /** Split copy on optional **strong** / *em* markers. */
-export function renderHelpText(text: string): ReactNode {
-  const normalized = normalizeRtlFlowArrows(normalizeHelpEmphasis(text));
+export function renderHelpText(
+  text: string,
+  options?: { dir?: "ltr" | "rtl" },
+): ReactNode {
+  const dir = options?.dir ?? "rtl";
+  const normalized = normalizeFlowArrows(normalizeHelpEmphasis(text), dir);
   const lines = normalized.split("\n");
   if (lines.length === 1) return renderLine(normalized, "line");
 
@@ -67,8 +72,3 @@ export function renderHelpText(text: string): ReactNode {
   );
 }
 
-/** App-wide helper: auto-parses string children for emphasis; passes ReactNode through unchanged. */
-export function HelpText({ children }: { children: ReactNode }) {
-  if (typeof children === "string") return renderHelpText(children);
-  return children;
-}

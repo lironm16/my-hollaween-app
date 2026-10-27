@@ -173,10 +173,11 @@ export function HelpStep({
   /** Show screenshot above the step text (Android install). */
   imageFirst?: boolean;
 }) {
-  const renderedTitle = typeof title === "string" ? renderHelpText(title) : title;
+  const { dir } = useLocale();
+  const renderedTitle = typeof title === "string" ? renderHelpText(title, { dir }) : title;
   const renderedBody =
-    parseBody && typeof body === "string" ? renderHelpText(body) : body;
-  const renderedIssue = issueNote ? renderHelpText(issueNote) : null;
+    parseBody && typeof body === "string" ? renderHelpText(body, { dir }) : body;
+  const renderedIssue = issueNote ? renderHelpText(issueNote, { dir }) : null;
 
   const shot = image ? (
     <HelpShot src={image} alt={imageAlt ?? ""} highlight={imageHighlight} />

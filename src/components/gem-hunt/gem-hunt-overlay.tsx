@@ -74,7 +74,7 @@ import { gemTapCollectReady } from "@/lib/gem-hunt-tap-collect";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/hooks/use-locale";
 import { useGemCopy } from "@/hooks/use-gem-copy";
-import { HelpText } from "@/lib/render-help-text";
+import { HelpText } from "@/components/help-text";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
 

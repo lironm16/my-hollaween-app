@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { HelpExpandable, HelpShell } from "@/components/help-shell";
-import { HelpText } from "@/lib/render-help-text";
+import { HelpText } from "@/components/help-text";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
