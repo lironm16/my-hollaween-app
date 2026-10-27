@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { GemDiamondIcon } from "@/components/gem-diamond-icon";
-import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
 import { MapHouseSheet } from "@/components/map-house-sheet";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
@@ -229,7 +229,7 @@ export function AdminGemOpsPanel({ houses: housesProp }: { houses: PublicHouse[]
       <div className="relative z-0 h-[min(52vh,22rem)] w-full shrink-0 overflow-hidden rounded-lg ring-1 ring-violet-500/25">
         <button
           type="button"
-          aria-label={mapGemRingsVisible ? GEM_MAP_TOGGLE_HIDE_HE : GEM_MAP_TOGGLE_SHOW_HE}
+          aria-label={mapGemRingsVisible ? t("gem.mapToggleHide") : t("gem.mapToggleShow")}
           aria-pressed={mapGemRingsVisible}
           onClick={() => setMapGemRingsVisible((on) => !on)}
           className={cn(

@@ -1218,7 +1218,7 @@ export function NeighborhoodApp({
       owned.some((item) => item.id === house.id) ||
       nightPassGrantsHouseEdit(house.id, nightPass);
     if (!deviceOwner && !localCode && !ownedBookmark) {
-      toast.message("אין הרשאת עריכה — בקשו מבעל הבית קוד חדש או הזמנה.");
+      toast.message(t("edit.noEditPermissionToast"));
       return;
     }
     const editCode = deviceOwner
@@ -1762,7 +1762,7 @@ export function NeighborhoodApp({
               )}
               style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#12081a" }}
               role="region"
-              aria-label="רשימת בתים"
+              aria-label={t("houseList.regionAria")}
               aria-hidden={view !== "list"}
             >
               <div className="mx-auto w-full min-w-0 max-w-3xl px-3 pt-3">

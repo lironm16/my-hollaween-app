@@ -2,7 +2,6 @@
 
 import { HouseCardQuickActions } from "@/components/house-card-quick-actions";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
-import { GEM_CLUSTER_FIND_ALL_HE, GEM_CLUSTER_FOUND_ALL_HE } from "@/lib/gem-hunt-copy";
 import { clusterIsSchoolCampus } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 import { useLocale } from "@/hooks/use-locale";
@@ -86,7 +85,7 @@ export function ClusterHouseActionMenu({
       likeAriaLabel={allLiked ? t("clusterActions.unlikeAll") : t("clusterActions.likeAll")}
       skipAriaLabel={allSkipped ? t("clusterActions.unskipAll") : t("clusterActions.skipAll")}
       gemAriaLabel={
-        allGemsCollected ? GEM_CLUSTER_FOUND_ALL_HE : GEM_CLUSTER_FIND_ALL_HE
+        allGemsCollected ? t("clusterActions.foundAllGems") : t("clusterActions.findAllGems")
       }
     />
   );

@@ -109,11 +109,13 @@ export const heMessages = {
     ownedOpensEdit: "הבית שמור במכשיר הזה — נפתח לעריכה.",
     editHouseButton: "עריכת הבית",
     noEditPermission: "אין הרשאת עריכה — הזינו קוד עריכה.",
+    noEditPermissionToast: "אין הרשאת עריכה — בקשו מבעל הבית קוד חדש או הזמנה.",
     wrongCode: "קוד העריכה שגוי. נסו שוב.",
     removedViewOnly:
       "הבית הוסר מהמפה — צפייה בלבד. להסרה מהמכשיר: **במכשיר שלי** → **הסר מהמכשיר**.",
   },
   houseList: {
+    regionAria: "רשימת בתים",
     skippedTitle: "אין בתים שדילגתם עליהם",
     skippedHint: "בתים שתדלגו עליהם במסלול יופיעו כאן.",
     visitedTitle: "עדיין לא ביקרתם",
@@ -808,6 +810,8 @@ export const heMessages = {
     unlikeAll: "הסירו אהבתי מכל הבתים",
     skipAll: "דילוג על כל הבתים",
     unskipAll: "החזרה — ביטול דילוג על הכל",
+    findAllGems: "מצא את כל השדונים",
+    foundAllGems: "מצאתם את כל השדונים — איפוס",
   },
   gemAnchor: {
     intro:

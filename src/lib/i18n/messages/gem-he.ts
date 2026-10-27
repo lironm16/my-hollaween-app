@@ -21,6 +21,8 @@ export const gemMessagesHe = {
   placeAction: "מיקום השדון",
   mapCamFabOpen: "מצלמת שדונים",
   mapCamFabClose: "סגירת מצלמת שדונים",
+  mapToggleShow: "הצג שדונים במפה",
+  mapToggleHide: "הסתר שדונים במפה",
   panelInRange: "בטווח — אפשר למצוא",
   panelOpenPreview: "פתחו מצלמה לתצוגה",
   panelNearGps: "ליד השדון — המתינו רגע ל-GPS",

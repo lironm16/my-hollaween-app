@@ -22,6 +22,8 @@ export const gemMessagesEn: AppMessages["gem"] = {
   placeAction: "Imp location",
   mapCamFabOpen: "Imp camera",
   mapCamFabClose: "Close imp camera",
+  mapToggleShow: "Show imps on map",
+  mapToggleHide: "Hide imps on map",
   panelInRange: "In range — ready to find",
   panelOpenPreview: "Open camera for preview",
   panelNearGps: "Near the imp — wait a moment for GPS",

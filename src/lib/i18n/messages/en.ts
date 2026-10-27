@@ -110,11 +110,13 @@ export const enMessages: AppMessages = {
     ownedOpensEdit: "Saved on this device — opening for edit.",
     editHouseButton: "Edit house",
     noEditPermission: "No edit permission — enter an edit code.",
+    noEditPermissionToast: "No edit permission — ask the owner for a new code or an invite.",
     wrongCode: "Wrong edit code. Try again.",
     removedViewOnly:
       "This house was removed from the map — view only. To remove from device: **On my device** → **Remove from device**.",
   },
   houseList: {
+    regionAria: "House list",
     skippedTitle: "No skipped houses",
     skippedHint: "Houses you skip on a route will show up here.",
     visitedTitle: "Nothing visited yet",
@@ -813,6 +815,8 @@ export const enMessages: AppMessages = {
     unlikeAll: "Unlike all houses",
     skipAll: "Skip all houses",
     unskipAll: "Restore — unskip all",
+    findAllGems: "Find all imps",
+    foundAllGems: "All imps found — reset",
   },
   gemAnchor: {
     intro:
