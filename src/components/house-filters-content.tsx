@@ -318,7 +318,7 @@ export function HouseFiltersContent({
           onChange={() => onPatch({ includeUndecorated: !filters.includeUndecorated })}
         >
           <span className="inline-flex items-center gap-2">
-            <ScareSign level="none" />
+            <ScareSign level="none" locale={locale} />
             <span>{decorShort.none}</span>
           </span>
         </FilterOption>
@@ -329,7 +329,7 @@ export function HouseFiltersContent({
             onChange={() => toggleScareLevel(level)}
           >
             <span className="inline-flex items-center gap-2">
-              <ScareSign level={level} />
+              <ScareSign level={level} locale={locale} />
               <span>{scareShort[level]}</span>
             </span>
           </FilterOption>

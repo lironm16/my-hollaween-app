@@ -1,7 +1,7 @@
 import type { AppLocale } from "@/lib/i18n/locale";
 import { formatMessage } from "@/lib/i18n/format";
 import { messagesForLocale } from "@/lib/i18n/translate";
-import type { CandyTone, DecorLevel } from "@/lib/types";
+import type { CandyTone, DecorLevel, ScareLevel } from "@/lib/types";
 
 export function decorShortForLocale(locale: AppLocale): Record<DecorLevel, string> {
   const l = messagesForLocale(locale).labels;
@@ -10,6 +10,15 @@ export function decorShortForLocale(locale: AppLocale): Record<DecorLevel, strin
     mild: l.scareMild,
     medium: l.scareMedium,
     heavy: l.scareSpicy,
+  };
+}
+
+export function scareShortForLocale(locale: AppLocale): Record<ScareLevel, string> {
+  const l = messagesForLocale(locale).labels;
+  return {
+    mild: l.scareMild,
+    medium: l.scareMedium,
+    spicy: l.scareSpicy,
   };
 }
 

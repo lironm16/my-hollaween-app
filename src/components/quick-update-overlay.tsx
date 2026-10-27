@@ -64,6 +64,16 @@ export function QuickUpdateOverlay({
   onUpdated: (house: PublicHouse) => void;
 }) {
   const { dir, t } = useLocale();
+  const candyOptionLabel = (id: QuickCandyChoice) => {
+    if (id === "plenty") return t("labels.candyPlenty");
+    if (id === "low") return t("labels.candyLow");
+    return t("labels.candyOut");
+  };
+  const houseOptionLabel = (id: QuickHouseChoice) => {
+    if (id === "open") return t("houseForm.statusOpen");
+    if (id === "pause") return t("houseForm.statusPause");
+    return t("houseForm.statusClosed");
+  };
   useEffect(() => {
     if (open && !deviceHouseEditAllowed(house.id)) {
       toast.message(t("catalogRemoved.editBlockedToast"));
@@ -222,7 +232,7 @@ export function QuickUpdateOverlay({
           onChange={setCandyPick}
           options={QUICK_CANDY_OPTIONS.map((option) => ({
             value: option.id,
-            label: option.label,
+            label: candyOptionLabel(option.id),
             danger: option.tone === "danger",
             icon: <CandySign tone={option.id} className="size-7" />,
           }))}
@@ -233,7 +243,7 @@ export function QuickUpdateOverlay({
           onChange={setHousePick}
           options={QUICK_HOUSE_OPTIONS.map((option) => ({
             value: option.id,
-            label: option.label,
+            label: houseOptionLabel(option.id),
             icon: <span className={cn("night-status-dot night-status-dot--lg border-2", option.dotClass)} />,
           }))}
         />

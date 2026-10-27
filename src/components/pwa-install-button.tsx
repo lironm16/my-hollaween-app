@@ -6,6 +6,7 @@ import { usePwaInstall } from "@/components/pwa-install-provider";
 import { Button } from "@/components/ui/button";
 import { shouldShowPwaInstallButton } from "@/lib/pwa-install";
 import { isAndroidDevice } from "@/lib/push-client";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 export function PwaInstallButton({
@@ -24,6 +25,7 @@ export function PwaInstallButton({
   forceVisible?: boolean;
 }) {
   const { canInstall, isPwaInstalled, promptInstall } = usePwaInstall();
+  const { t } = useLocale();
   const android = isAndroidDevice();
 
   if (
@@ -43,11 +45,11 @@ export function PwaInstallButton({
     const outcome = await promptInstall();
     if (outcome === "accepted") {
       onInstalled?.();
-      toast.success("האפליקציה הותקנה!", { closeButton: true });
+      toast.success(t("pwaInstall.success"), { closeButton: true });
       return;
     }
     if (outcome === "dismissed" && !android) {
-      toast.message("אפשר להתקין בכל עת מהתפריט או מדף העזרה.");
+      toast.message(t("pwaInstall.dismissedHint"));
     }
   }
 
@@ -63,7 +65,7 @@ export function PwaInstallButton({
         )}
       >
         <Download className="size-5" aria-hidden />
-        התקנת האפליקציה
+        {t("pwaInstall.label")}
       </Button>
     );
   }
@@ -71,8 +73,8 @@ export function PwaInstallButton({
   return (
     <button
       type="button"
-      aria-label="התקנת האפליקציה"
-      title="התקנת האפליקציה"
+      aria-label={t("pwaInstall.label")}
+      title={t("pwaInstall.label")}
       onClick={() => void onClick()}
       className={cn(
         "inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25 hover:bg-orange-500/10",

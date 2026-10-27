@@ -15,7 +15,9 @@ import { readApiJson } from "@/lib/api-json";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { HouseInput, PublicHouse } from "@/lib/types";
-import { DEFAULT_PUSH_TEMPLATES, type PushKind } from "@/lib/push-templates";
+import type { PushKind } from "@/lib/push-templates";
+import { formatMessage } from "@/lib/i18n/format";
+import { messagesForLocale } from "@/lib/i18n/translate";
 
 type PushOffer = { kind: PushKind; title: string; body: string };
 type PushNoticeState =
@@ -42,7 +44,7 @@ export function NightDesk({
   allowDelete = false,
   onDeleted,
 }: Props) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const editLocked = !deviceHouseEditAllowed(house.id);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<PushNoticeState | null>(null);
@@ -83,7 +85,7 @@ export function NightDesk({
     rememberSessionHouseDetail(next);
     notifyCatalogChanged();
     setNotice(null);
-    toast.success("נשמר במכשיר · יישלח כשיש רשת");
+    toast.success(t("nightDesk.savedOffline"));
     return { house: next, pendingPushOffer: false };
   }
 
@@ -125,7 +127,7 @@ export function NightDesk({
         };
       }>(res);
       if (!res.ok || !data.house) {
-        toast.error(data.error ?? "העדכון נכשל");
+        toast.error(data.error ?? t("nightDesk.saveFailed"));
         return null;
       }
       onUpdated(data.house);
@@ -147,16 +149,16 @@ export function NightDesk({
           body: data.push.body ?? "",
         });
         void showLocalPush(data.push.title ?? "", data.push.body ?? "", `/?focus=${encodeURIComponent(house.id)}`);
-        toast.success("נשמר · התראה נשלחה לשכונה");
+        toast.success(t("nightDesk.savedNotifyAll"));
       } else if (pushAlertsEnabled() && data.push?.offer) {
         setNotice({ mode: "offer", offer: data.push.offer });
-        toast.success("נשמר — אפשר לשלוח התראה");
+        toast.success(t("nightDesk.savedNotifyOffer"));
       } else if (pushAlertsEnabled() && data.push?.kind && !data.push.autoSent && !data.push.offer) {
         setNotice(null);
-        toast.success("נשמר · סוג ההתראה כבוי אצל המנהלים");
+        toast.success(t("nightDesk.savedNotifyTypeOff"));
       } else {
         setNotice(null);
-        toast.success("נשמר");
+        toast.success(t("nightDesk.saved"));
       }
       return {
         house: data.house,
@@ -182,15 +184,17 @@ export function NightDesk({
       });
       const data = await readApiJson<{ error?: string; sent?: number }>(res);
       if (!res.ok) {
-        toast.error(data.error ?? "השליחה נכשלה");
+        toast.error(data.error ?? t("nightDesk.sendFailed"));
         return;
       }
-      toast.success(`התראה נשלחה ל־${data.sent ?? 0} מכשירים`);
+      toast.success(
+        formatMessage(t("nightDesk.notifySentCount"), { count: String(data.sent ?? 0) }),
+      );
       setNotice({ mode: "sent", title: offer.title, body: offer.body });
       void showLocalPush(offer.title, offer.body, `/?focus=${encodeURIComponent(house.id)}`);
       onCancel?.();
     } catch {
-      toast.error("אין קשר לשרת");
+      toast.error(t("nightDesk.noServer"));
     } finally {
       setOfferBusy(false);
     }
@@ -212,7 +216,7 @@ export function NightDesk({
         onUpdated(withPhoto);
         notifyCatalogChanged();
       } catch {
-        toast.warning("הבית נשמר בלי תמונה. אפשר לנסות שוב בעריכה.");
+        toast.warning(t("nightDesk.photoSavedNoImage"));
       }
     }
     if (!saved.pendingPushOffer) onCancel?.();
@@ -221,7 +225,7 @@ export function NightDesk({
   async function onDelete() {
     if (editLocked) return;
     if (!allowDelete) return;
-    if (!window.confirm("למחוק את הבית מהמפה? אי אפשר לבטל את זה.")) return;
+    if (!window.confirm(t("nightDesk.deleteConfirm"))) return;
     setBusy(true);
     try {
       const res = admin
@@ -235,20 +239,20 @@ export function NightDesk({
       if (res.status === 404) {
         forgetPublishedHouse(house.id);
         notifyCatalogChanged();
-        toast.success("הבית נמחק מהמפה");
+        toast.success(t("nightDesk.deletedSuccess"));
         onDeleted?.();
         return;
       }
       if (!res.ok || !data.ok) {
-        toast.error(data.error ?? "המחיקה נכשלה");
+        toast.error(data.error ?? t("nightDesk.deleteFailed"));
         return;
       }
       forgetPublishedHouse(house.id);
       notifyCatalogChanged();
-      toast.success("הבית נמחק מהמפה");
+      toast.success(t("nightDesk.deletedSuccess"));
       onDeleted?.();
     } catch {
-      toast.error("אין קשר לשרת");
+      toast.error(t("nightDesk.noServer"));
     } finally {
       setBusy(false);
     }
@@ -271,9 +275,11 @@ export function NightDesk({
               <div className="flex items-start gap-2">
                 <Bell className="mt-0.5 size-4 shrink-0 text-orange-300" />
                 <div className="min-w-0 space-y-0.5">
-                  <p className="text-base font-semibold text-orange-100">לשלוח התראה לשכונה?</p>
+                  <p className="text-base font-semibold text-orange-100">{t("nightDesk.pushOfferTitle")}</p>
                   <p className="text-base text-violet-300">
-                    {DEFAULT_PUSH_TEMPLATES[notice.offer.kind].label} · נשלח רק אם תלחצו על הכפתור
+                    {formatMessage(t("nightDesk.pushOfferHint"), {
+                      kind: messagesForLocale(locale).pushKinds[notice.offer.kind],
+                    })}
                   </p>
                 </div>
               </div>
@@ -288,7 +294,7 @@ export function NightDesk({
                   onClick={() => void sendOffer()}
                 >
                   <Bell className="size-4" />
-                  {offerBusy ? "שולחים…" : "שלחו התראה לשכונה"}
+                  {offerBusy ? t("nightDesk.pushSending") : t("nightDesk.pushSend")}
                 </Button>
                 <Button
                   type="button"
@@ -299,7 +305,7 @@ export function NightDesk({
                     onCancel?.();
                   }}
                 >
-                  לא עכשיו
+                  {t("nightDesk.pushNotNow")}
                 </Button>
               </div>
             </>
@@ -308,9 +314,7 @@ export function NightDesk({
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" />
                 <p className="text-base font-semibold text-emerald-200">
-                  {notice.mode === "auto"
-                    ? "נשלחה התראה אוטומטית לשכונה"
-                    : "ההתראה נשלחה לשכונה"}
+                  {notice.mode === "auto" ? t("nightDesk.pushAutoSent") : t("nightDesk.pushSent")}
                 </p>
               </div>
               {notice.title ? (
@@ -325,7 +329,7 @@ export function NightDesk({
         <HouseForm
           key={house.id}
           initial={house}
-          submitLabel="שמירה"
+          submitLabel={t("common.save")}
           busy={busy}
           onSubmit={onSave}
           onCancel={onCancel}
@@ -339,7 +343,7 @@ export function NightDesk({
                 onClick={() => void onDelete()}
               >
                 <Trash2 className="size-4" />
-                מחיקת הבית מהמפה
+                {t("nightDesk.deleteHouse")}
               </Button>
             ) : null
           }

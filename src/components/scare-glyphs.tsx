@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
-import { decorShort, scareShort } from "@/lib/labels";
 import { POI_PIN_FACE_SRC, PIN_GLYPH_SCALE } from "@/lib/pin-faces";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { decorShortForLocale, scareShortForLocale } from "@/lib/i18n/pin-labels";
 import type { ScareLevel } from "@/lib/types";
 import { DiscStrike } from "@/components/disc-strike";
 
@@ -125,17 +126,21 @@ export function ScareSign({
   level,
   className,
   glyphClassName,
+  locale = "he",
 }: {
   Glyph?: (props: { level?: ScareLevel | "none" }) => ReactNode;
   level: ScareLevel | "none";
   className?: string;
   /** Override inner glyph scale (e.g. card details matching map pin %). */
   glyphClassName?: string;
+  locale?: AppLocale;
 }) {
   const struck = level === "none";
   const useOfferedGhost = !Glyph || Glyph === ScareGhost;
   const usePumpkin = Glyph === ScarePumpkin;
   const usePoiPinFace = Glyph === PoiPinFaceGlyph;
+  const decorShort = decorShortForLocale(locale);
+  const scareShort = scareShortForLocale(locale);
   const label = struck ? decorShort.none : scareShort[level];
   const defaultGhostScale = glyphClassName ?? PIN_GLYPH_SCALE.house;
   const defaultPumpkinScale = glyphClassName ?? PIN_GLYPH_SCALE.poi;
@@ -184,23 +189,27 @@ export function ScareMark({
   labeled = false,
   level = "mild",
   className,
+  locale = "he",
 }: {
   labeled?: boolean;
   level?: ScareLevel;
   className?: string;
+  locale?: AppLocale;
 }) {
+  const scareShort = scareShortForLocale(locale);
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <ScareSign level={level} />
+      <ScareSign level={level} locale={locale} />
       {labeled ? <span>{scareShort[level]}</span> : <span className="sr-only">{scareShort[level]}</span>}
     </span>
   );
 }
 
+/** Preview / design tooling — Hebrew labels OK. */
 export const SCARE_TONES: { id: ScareLevel; label: string }[] = [
-  { id: "mild", label: scareShort.mild },
-  { id: "medium", label: scareShort.medium },
-  { id: "spicy", label: scareShort.spicy },
+  { id: "mild", label: "לילדים" },
+  { id: "medium", label: "קצת מפחיד" },
+  { id: "spicy", label: "מפחיד" },
 ];
 
 export const SCARE_OPTIONS = [

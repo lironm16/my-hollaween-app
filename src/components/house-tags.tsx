@@ -118,6 +118,7 @@ export function HouseTags({
           level={undecorated ? "none" : scare}
           className={signSize}
           glyphClassName={pinGlyphScale}
+          locale={locale}
         />
         {house.accessible ? (
           <span title={t("houseSign.accessible")} aria-label={t("houseSign.accessible")}>

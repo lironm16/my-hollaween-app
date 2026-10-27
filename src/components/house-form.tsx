@@ -806,6 +806,7 @@ export function HouseForm({
                 level="none"
                 className="size-6"
                 glyphClassName={scareGlyphScale}
+                locale={locale}
               />
               {decorShort.none}
             </ChoiceChip>
@@ -820,6 +821,7 @@ export function HouseForm({
                   level={level}
                   className="size-6"
                   glyphClassName={scareGlyphScale}
+                  locale={locale}
                 />
                 {scareShort[level]}
               </ChoiceChip>
