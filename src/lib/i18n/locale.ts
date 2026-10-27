@@ -8,11 +8,19 @@ export function isAppLocale(value: unknown): value is AppLocale {
 }
 
 /** Default when the user has not chosen a language (not persisted). */
-export function defaultAppLocale(): AppLocale {
-  if (process.env.NODE_ENV === "development") return "en";
-  const fromEnv = process.env.NEXT_PUBLIC_DEFAULT_LOCALE;
+export function resolveDefaultAppLocale(input?: {
+  nodeEnv?: string;
+  defaultLocaleEnv?: string;
+}): AppLocale {
+  const nodeEnv = input?.nodeEnv ?? process.env.NODE_ENV;
+  if (nodeEnv === "development") return "en";
+  const fromEnv = input?.defaultLocaleEnv ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE;
   if (fromEnv === "en" || fromEnv === "he") return fromEnv;
   return "he";
+}
+
+export function defaultAppLocale(): AppLocale {
+  return resolveDefaultAppLocale();
 }
 
 export function localeDirection(locale: AppLocale): "ltr" | "rtl" {

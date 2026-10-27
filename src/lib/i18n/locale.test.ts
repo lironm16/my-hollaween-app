@@ -1,22 +1,26 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { defaultAppLocale, localeDirection } from "@/lib/i18n/locale";
+import { defaultAppLocale, localeDirection, resolveDefaultAppLocale } from "@/lib/i18n/locale";
 import { translate } from "@/lib/i18n/translate";
 
 describe("i18n locale", () => {
   it("defaults to Hebrew in production-like env", () => {
-    const prev = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
-    delete process.env.NEXT_PUBLIC_DEFAULT_LOCALE;
-    assert.equal(defaultAppLocale(), "he");
-    process.env.NODE_ENV = prev;
+    assert.equal(resolveDefaultAppLocale({ nodeEnv: "production" }), "he");
   });
 
   it("defaults to English in development", () => {
-    const prev = process.env.NODE_ENV;
-    process.env.NODE_ENV = "development";
-    assert.equal(defaultAppLocale(), "en");
-    process.env.NODE_ENV = prev;
+    assert.equal(resolveDefaultAppLocale({ nodeEnv: "development" }), "en");
+  });
+
+  it("honors NEXT_PUBLIC_DEFAULT_LOCALE when not in development", () => {
+    assert.equal(
+      resolveDefaultAppLocale({ nodeEnv: "production", defaultLocaleEnv: "en" }),
+      "en",
+    );
+  });
+
+  it("defaultAppLocale matches runtime env", () => {
+    assert.equal(defaultAppLocale(), resolveDefaultAppLocale());
   });
 
   it("maps locale to document direction", () => {
