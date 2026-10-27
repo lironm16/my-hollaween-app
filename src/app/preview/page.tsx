@@ -1,7 +1,8 @@
 import { CANDY_TONES, CandySign } from "@/components/candy-glyphs";
 import { PreviewNav } from "@/components/preview-nav";
 import { SCARE_TONES, ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
-import { SENSITIVITY_KINDS, SensitivitySign } from "@/components/sensitivity-glyphs";
+import { SensitivitySign } from "@/components/sensitivity-glyphs";
+import { SENSITIVITY_KINDS } from "@/lib/sensitivity-kinds";
 import { config } from "@/lib/config";
 
 export default function PreviewHubPage() {

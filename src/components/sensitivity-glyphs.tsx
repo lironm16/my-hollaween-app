@@ -308,12 +308,7 @@ export function SensitivityMark({
   );
 }
 
-export const SENSITIVITY_KINDS: { id: SensitivityId; label: string }[] = [
-  { id: "glutenFree", label: treatLabels.glutenFree },
-  { id: "nutsFree", label: treatLabels.nutsFree },
-  { id: "sesameFree", label: treatLabels.sesameFree },
-  { id: "vegan", label: treatLabels.vegan },
-];
+export { SENSITIVITY_KINDS } from "@/lib/sensitivity-kinds";
 
 export const SENSITIVITY_SETS = [
   {

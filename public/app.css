@@ -1669,6 +1669,9 @@
   .border-input {
     border-color: var(--input);
   }
+  .border-orange-400 {
+    border-color: var(--color-orange-400);
+  }
   .border-orange-400\/40 {
     border-color: color-mix(in srgb, oklch(75% 0.183 55.934) 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1748,6 +1751,12 @@
     border-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 55%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--color-violet-400) 55%, transparent);
+    }
+  }
+  .border-violet-400\/60 {
+    border-color: color-mix(in srgb, oklch(70.2% 0.183 293.541) 60%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-violet-400) 60%, transparent);
     }
   }
   .border-violet-500\/25 {
@@ -3091,6 +3100,12 @@
     color: color-mix(in srgb, oklch(83.7% 0.128 66.29) 80%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklab, var(--color-orange-300) 80%, transparent);
+    }
+  }
+  .text-orange-300\/90 {
+    color: color-mix(in srgb, oklch(83.7% 0.128 66.29) 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-orange-300) 90%, transparent);
     }
   }
   .text-orange-400 {
@@ -4747,6 +4762,10 @@
     .sm\:text-5xl {
       font-size: var(--text-5xl);
       line-height: var(--tw-leading, var(--text-5xl--line-height));
+    }
+    .sm\:text-base {
+      font-size: var(--text-base);
+      line-height: var(--tw-leading, var(--text-base--line-height));
     }
     .sm\:text-xl {
       font-size: var(--text-xl);

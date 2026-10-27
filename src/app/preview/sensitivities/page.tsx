@@ -1,8 +1,7 @@
-import {
-  SENSITIVITY_KINDS,
-  SENSITIVITY_SETS,
-  SensitivitySign,
-} from "@/components/sensitivity-glyphs";
+"use client";
+
+import { SENSITIVITY_SETS, SensitivitySign } from "@/components/sensitivity-glyphs";
+import { SENSITIVITY_KINDS } from "@/lib/sensitivity-kinds";
 import { PreviewNav, PreviewPhoto } from "@/components/preview-nav";
 import { config } from "@/lib/config";
 
