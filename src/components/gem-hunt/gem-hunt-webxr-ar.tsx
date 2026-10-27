@@ -1000,7 +1000,7 @@ export function GemHuntWebXrAr({
         undefined,
         () => {
           setWorldModelLoaded(false);
-          setError("לא הצלחנו לטעון את הדמות");
+          setError("character-load-failed");
         },
       );
     };
@@ -1223,7 +1223,7 @@ export function GemHuntWebXrAr({
       domOverlay: { root: domOverlayRoot },
     });
     arButton.className = "gem-hunt-webxr__start";
-    arButton.textContent = "התחילו AR";
+    arButton.textContent = t("gem.startAr");
     arButton.hidden = !showManualStart;
     startHost.appendChild(arButton);
 
@@ -1263,7 +1263,7 @@ export function GemHuntWebXrAr({
       hitTestSource?.cancel?.();
       mixer = null;
     };
-  }, [encounterMode, onFallbackCamera]);
+  }, [encounterMode, onFallbackCamera, t]);
 
   /** Cluster — same as iOS: auto center gem when in hunt band (tap demon to collect). */
   useEffect(() => {
@@ -1476,7 +1476,7 @@ export function GemHuntWebXrAr({
       >
         {error ? (
           <p className="gem-hunt-webxr__error" role="alert">
-            {error}
+            {error === "character-load-failed" ? t("gem.characterLoadFailed") : error}
           </p>
         ) : (
           <div className="gem-hunt-overlay__footer-stack">

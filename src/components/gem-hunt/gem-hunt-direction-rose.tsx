@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 function bearingToSectorIndex(bearingDeg: number) {
@@ -17,13 +18,14 @@ export function GemHuntDirectionRose({
   facing?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
   const active = bearingToSectorIndex(bearingDeg);
 
   return (
     <div
       className={cn("gem-hunt-direction-rose", className)}
       role="img"
-      aria-label="כיוון הליכה — חץ דולק"
+      aria-label={t("gem.walkRoseAria")}
     >
       {Array.from({ length: 8 }, (_, i) => (
         <span

@@ -2,17 +2,18 @@
 
 import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
 import { useGemCopy } from "@/hooks/use-gem-copy";
+import { useLocale } from "@/hooks/use-locale";
 import { gemMonsterForHouse } from "@/lib/gem-monsters";
-import { GEM_ORBIT_PICK_HOUSE_HE } from "@/lib/gem-hunt-copy";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
 export function GemBagOrbitViewer({ house }: { house: PublicHouse | null }) {
+  const { t } = useLocale();
   const gemCopy = useGemCopy();
   if (!house) {
     return (
       <div className="gem-bag-viewer gem-bag-viewer--empty">
-        <p className="text-sm text-violet-300">{GEM_ORBIT_PICK_HOUSE_HE}</p>
+        <p className="text-sm text-violet-300">{t("gem.orbitPickHouse")}</p>
       </div>
     );
   }
@@ -26,7 +27,7 @@ export function GemBagOrbitViewer({ house }: { house: PublicHouse | null }) {
       </p>
       <GemOrbitStage
         house={house}
-        hint="גררו באצבע / עכבר — סיבוב, זום, מלמעלה"
+        hint={t("gem.orbitHintBag")}
         stageClassName="gem-bag-viewer__stage"
       />
     </div>

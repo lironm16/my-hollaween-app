@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
 import { useGemCopy } from "@/hooks/use-gem-copy";
+import { useLocale } from "@/hooks/use-locale";
 import { gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ export function GemStickerSpotlight({
   monsterId: GemMonsterId;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const gemCopy = useGemCopy();
   const meta = gemMonsterMeta(monsterId);
   const label = gemCopy.petLabel(monsterId);
@@ -84,7 +86,7 @@ export function GemStickerSpotlight({
           />
         </div>
         <p className="pointer-events-none absolute inset-x-0 bottom-6 text-center text-sm text-violet-300/90">
-          גררו כדי להזיז · לחצו מחוץ לדמות לסגירה
+          {t("gem.stickerSpotlightDrag")}
         </p>
       </div>
     </div>

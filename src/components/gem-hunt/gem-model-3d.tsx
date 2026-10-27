@@ -12,6 +12,7 @@ import {
   type GemMonsterHouseRef,
   type GemMonsterId,
 } from "@/lib/gem-monsters";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -111,6 +112,7 @@ export function GemModel3D({
   onInspectTap,
   zoom = 1,
 }: Props) {
+  const { t } = useLocale();
   const hostRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
   const onInspectTapRef = useRef(onInspectTap);
@@ -465,9 +467,9 @@ export function GemModel3D({
       role={controls === "orbit" || controls === "inspect360" ? "img" : undefined}
       aria-label={
         controls === "inspect360"
-          ? "סיבוב 360° — גררו באצבע או הלכו מסביב"
+          ? t("gem.modelInspect360Aria")
           : controls === "orbit"
-            ? "תצוגת דוגמנית — גררו לסיבוב"
+            ? t("gem.modelOrbitAria")
             : undefined
       }
     />

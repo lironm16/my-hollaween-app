@@ -1,31 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
+import { useLocale } from "@/hooks/use-locale";
 import type { GemBagCelebrateKind } from "@/lib/gem-bag-celebrate";
+import { gemCelebrateCopy } from "@/lib/i18n/gem-celebrate-copy";
 import { cn } from "@/lib/utils";
-
-const COPY: Record<
-  GemBagCelebrateKind,
-  { title: string; sub: string; kicker: string }
-> = {
-  map: {
-    kicker: "כל השדונים במפה שלך",
-    title: "השכונה שלכם מלאה קסם!",
-    sub: "מצאתם את כל השדונים הנסתרים — התיק מוכן לפסגה.",
-  },
-  album: {
-    kicker: "האוסף הושלם",
-    title: "כל השדונים באוסף!",
-    sub: "מצאתם את כל השדונים — אין עוד סימני שאלה.",
-  },
-  "map-album": {
-    kicker: "פסגה כפולה",
-    title: "מפה מלאה + אוסף שלם!",
-    sub: "שדון אחרון, שדון אחרון — כל הכבוד, ציידי הקסם.",
-  },
-};
 
 const FADE_OUT_MS = 280;
 
@@ -37,9 +18,10 @@ export function GemBagMilestoneCelebration({
   kind: GemBagCelebrateKind;
   onDone: () => void;
 }) {
+  const { dir, locale, t } = useLocale();
   const [visible, setVisible] = useState(false);
   const dismissedRef = useRef(false);
-  const copy = COPY[kind];
+  const copy = useMemo(() => gemCelebrateCopy(locale, kind), [locale, kind]);
 
   const finish = useCallback(() => {
     if (dismissedRef.current) return;
@@ -69,7 +51,7 @@ export function GemBagMilestoneCelebration({
       aria-modal="true"
       aria-live="assertive"
       aria-label={copy.title}
-      dir="rtl"
+      dir={dir}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.preventDefault();
@@ -83,7 +65,7 @@ export function GemBagMilestoneCelebration({
         <button
           type="button"
           className="gem-bag-milestone__close absolute start-3 top-3 flex size-10 items-center justify-center rounded-full text-violet-200/90 ring-1 ring-violet-400/30 hover:bg-violet-950/40"
-          aria-label="סגירה"
+          aria-label={t("common.close")}
           onClick={finish}
         >
           <X className="size-5" aria-hidden />
@@ -98,7 +80,7 @@ export function GemBagMilestoneCelebration({
           className="gem-bag-milestone__dismiss mt-4 rounded-full bg-amber-400 px-6 py-2.5 text-base font-medium text-black hover:bg-amber-300"
           onClick={finish}
         >
-          סגירה
+          {t("common.close")}
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Navigation } from "lucide-react";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 /** Phone-relative walk needle in the scan ring (Lucide Navigation — original gem cam compass). */
@@ -15,6 +16,7 @@ export function GemHuntOrientationArrow({
   mapNorth?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
   return (
     <div
       className={cn(
@@ -26,7 +28,7 @@ export function GemHuntOrientationArrow({
       dir="ltr"
       style={{ transform: `translate(-50%, -50%) rotate(${bearingDeg}deg)` }}
       role="img"
-      aria-label="כיוון הליכה — מחט מצפן"
+      aria-label={t("gem.walkNeedleAria")}
     >
       <Navigation className="gem-hunt-overlay__scan-compass-icon" strokeWidth={2.5} aria-hidden />
     </div>

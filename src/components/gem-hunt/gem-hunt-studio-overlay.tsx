@@ -16,24 +16,24 @@ export function GemHuntStudioOverlay({
   monsterId: GemMonsterId;
   onClose: () => void;
 }) {
-  const { dir } = useLocale();
+  const { dir, t } = useLocale();
   const gemCopy = useGemCopy();
   return (
     <div className="gem-hunt-studio" dir={dir}>
       <div className="gem-hunt-studio__bar">
         <div>
-          <p className="gem-hunt-studio__kicker">סיבוב 360°</p>
+          <p className="gem-hunt-studio__kicker">{t("gem.studioKicker")}</p>
           <p className="gem-hunt-studio__title">{gemCopy.petLabel(monsterId)}</p>
         </div>
         <button type="button" className="gem-hunt-studio__close" onClick={onClose}>
-          חזרה למצלמה
+          {t("gem.studioBackToCamera")}
         </button>
       </div>
       <GemOrbitStage
         house={house}
         className="gem-hunt-studio__stage"
         stageClassName="gem-hunt-studio__canvas"
-        hint="גררו באצבע · צביטה להתקרב — סובבו מסביב לראות את כל הגוף"
+        hint={t("gem.orbitHintStudio")}
       />
     </div>
   );

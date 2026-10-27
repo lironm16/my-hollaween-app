@@ -383,7 +383,7 @@ export function GemHuntOverlay({
         return;
       }
       if (ok) setCameraError(null);
-      else setCameraError("לא ניתן להציג מצלמה");
+      else setCameraError("no-camera");
     }
 
     void attachCamera();

@@ -133,9 +133,9 @@ export function GemCollectAlbumReveal({
               ? newAlbumFriend
                 ? showActions
                   ? ""
-                  : "שמור באוסף — ממשיכים לצוד!"
-                : "שדון נוסף לבית — כבר אצלכם באוסף!"
-              : "מדביקים…"}
+                  : t("gem.albumRevealFootContinue")
+                : t("gem.albumRevealFootRepeatAtHouse")
+              : t("gem.albumRevealFootSticking")}
           </p>
         )}
       </div>
