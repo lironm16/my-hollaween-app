@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { adminStyleStripClass } from "@/components/admin-style-strip";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 /** Menu strip when night passes are on but this device is not registered. */
@@ -12,10 +13,11 @@ export function NightPassConnectStrip({
   className?: string;
   onConnect: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <div className={cn(adminStyleStripClass(className), "items-center")}>
       <div className="min-w-0 flex-1 text-start">
-        <p className="text-base font-medium text-orange-100">מכשיר לא מחובר</p>
+        <p className="text-base font-medium text-orange-100">{t("nightPass.stripNotConnected")}</p>
       </div>
       <Button
         type="button"
@@ -23,7 +25,7 @@ export function NightPassConnectStrip({
         className="shrink-0 bg-orange-500 text-black hover:bg-orange-400"
         onClick={onConnect}
       >
-        חיבור לאירוע
+        {t("nightPass.stripConnect")}
       </Button>
     </div>
   );

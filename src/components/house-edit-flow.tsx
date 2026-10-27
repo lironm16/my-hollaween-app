@@ -5,7 +5,7 @@ import { HouseEditOverlay } from "@/components/house-edit-overlay";
 import { QuickUpdateOverlay } from "@/components/quick-update-overlay";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
-import { catalogRemovedEditBlockedToast } from "@/lib/labels";
+import { useLocale } from "@/hooks/use-locale";
 import { quickUpdateAvailable } from "@/lib/quick-update";
 import type { PublicHouse } from "@/lib/types";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ export type HouseEditFlowState = {
 };
 
 export function useHouseEditFlow() {
+  const { t } = useLocale();
   const now = useAppNow();
   const [flow, setFlow] = useState<HouseEditFlowState | null>(null);
 
@@ -32,7 +33,7 @@ export function useHouseEditFlow() {
       options?: { editCode?: string; admin?: boolean; allowDelete?: boolean; forceFull?: boolean },
     ) => {
       if (!deviceHouseEditAllowed(house.id)) {
-        toast.message(catalogRemovedEditBlockedToast);
+        toast.message(t("catalogRemoved.editBlockedToast"));
         return;
       }
       const canQuick = !options?.forceFull && quickUpdateAvailable(house, now);
@@ -44,7 +45,7 @@ export function useHouseEditFlow() {
         allowDelete: options?.allowDelete,
       });
     },
-    [now],
+    [now, t],
   );
 
   const openQuick = useCallback(
@@ -53,7 +54,7 @@ export function useHouseEditFlow() {
       options?: { editCode?: string; admin?: boolean },
     ) => {
       if (!deviceHouseEditAllowed(house.id)) {
-        toast.message(catalogRemovedEditBlockedToast);
+        toast.message(t("catalogRemoved.editBlockedToast"));
         return;
       }
       setFlow({
@@ -63,7 +64,7 @@ export function useHouseEditFlow() {
         admin: options?.admin,
       });
     },
-    [],
+    [t],
   );
 
   return { flow, openEdit, openQuick, close, setFlow };

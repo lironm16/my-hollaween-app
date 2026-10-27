@@ -8,11 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
-import {
-  NIGHT_PASS_ALREADY_REGISTERED_BODY,
-  NIGHT_PASS_ALREADY_REGISTERED_TITLE,
-  NIGHT_PASS_REGISTER_SUBTITLE,
-} from "@/lib/night-pass-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import {
   notifyNightPassSlotsChanged,
   refreshNightPassState,
@@ -75,6 +72,7 @@ export function NightPassRegisterPanel({
 }: Props) {
   const pass = useNightPass();
   const { admin } = useAdminSession();
+  const { t } = useLocale();
   const [checked, setChecked] = useState(false);
   const [code, setCode] = useState(initialCode);
   const [name, setName] = useState("");
@@ -167,13 +165,11 @@ export function NightPassRegisterPanel({
           const targetId = ownerHouseId?.trim() || local[0]?.id;
           const hasLocal = Boolean(targetId && local.some((h) => h.id === targetId));
           if (hasLocal && targetId && !storedOwnedHouseEditCode(targetId)) {
-            setError(
-              "הבית שמור במכשיר, אבל חסר קוד עריכה. פתחו עריכת בית (שלי או עריכה) והזינו את קוד העריכה פעם אחת, ואז נסו שוב.",
-            );
+            setError(t("nightPass.errMissingEditCode"));
           } else if (hasLocal) {
-            setError("לא הצלחנו לאמת בעלות על הבית. נסו שוב בעוד רגע.");
+            setError(t("nightPass.errOwnerVerify"));
           } else {
-            setError("לא נמצא בית לעריכה במכשיר הזה.");
+            setError(t("nightPass.errNoHouseOnDevice"));
           }
           return;
         }
@@ -184,7 +180,7 @@ export function NightPassRegisterPanel({
         if (json.name?.trim()) setName((prev) => prev.trim() || json.name!.trim());
         if (json.phone?.trim()) setPhone((prev) => prev.trim() || json.phone!.trim());
       } catch {
-        if (!cancelled) setError("לא הצלחנו לטעון פרטים. נסו שוב.");
+        if (!cancelled) setError(t("nightPass.errLoadPrefill"));
       }
     })();
     return () => {
@@ -243,7 +239,7 @@ export function NightPassRegisterPanel({
             }
           }
         }
-        setError(json?.error ?? "ההרשמה נכשלה. נסו שוב.");
+        setError(json?.error ?? t("nightPass.errRegisterFailed"));
         return;
       }
       if (json?.houseId) {
@@ -259,7 +255,7 @@ export function NightPassRegisterPanel({
       if (json?.reregistered) {
         await refreshNightPassState({ force: true });
         notifyNightPassSlotsChanged();
-        toast.success("המכשיר עודכן");
+        toast.success(t("nightPass.deviceUpdated"));
         onRegistered?.();
       } else if (onEventRegistered) {
         onEventRegistered({
@@ -273,7 +269,7 @@ export function NightPassRegisterPanel({
         onRegistered?.();
       }
     } catch {
-      setError("אין חיבור לשרת. נסו שוב כשיש קליטה.");
+      setError(t("nightPass.errNoServer"));
     } finally {
       setBusy(false);
     }
@@ -282,21 +278,21 @@ export function NightPassRegisterPanel({
   const open = pass.enabled || admin;
 
   if (!checked || (hasInvite && !inviteReady)) {
-    return <p className="text-base text-violet-300">בודקים את המכשיר…</p>;
+    return <p className="text-base text-violet-300">{t("nightPass.checkingDevice")}</p>;
   }
 
   if (hasInvite && inviteUnavailable) {
     return (
       <div className="space-y-4">
         <p className="rounded-xl bg-zinc-900/90 px-4 py-5 text-center text-base leading-relaxed text-zinc-100 ring-1 ring-white/10">
-          הבית הוסר מהאירוע — לא ניתן להירשם מהזמנה הזו.
+          {t("nightPass.inviteUnavailable")}
         </p>
         <Button
           type="button"
           className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
           onClick={() => onRegistered?.()}
         >
-          סגירה
+          {t("common.close")}
         </Button>
       </div>
     );
@@ -311,9 +307,11 @@ export function NightPassRegisterPanel({
     return (
       <div className="space-y-4">
         <div className="rounded-xl bg-emerald-950/70 px-4 py-5 text-center ring-2 ring-emerald-400/40">
-          <p className="text-xl font-semibold text-emerald-100">{NIGHT_PASS_ALREADY_REGISTERED_TITLE}</p>
+          <p className="text-xl font-semibold text-emerald-100">
+            {t("nightPass.alreadyRegisteredTitle")}
+          </p>
           <p className="mt-2 text-base leading-relaxed text-emerald-200/95">
-            {NIGHT_PASS_ALREADY_REGISTERED_BODY}
+            {t("nightPass.alreadyRegisteredBody")}
           </p>
         </div>
         <Button
@@ -321,7 +319,7 @@ export function NightPassRegisterPanel({
           className="h-11 w-full bg-emerald-500 text-black hover:bg-emerald-400"
           onClick={() => onAlreadyRegistered?.() ?? onRegistered?.()}
         >
-          סגירה
+          {t("common.close")}
         </Button>
       </div>
     );
@@ -330,7 +328,7 @@ export function NightPassRegisterPanel({
   if (!open) {
     return (
       <p className="text-base text-violet-200">
-        ההרשמה עם קוד כניסה עוד לא נפתחה. נסו שוב בקרוב.
+        {t("nightPass.registrationNotOpen")}
       </p>
     );
   }
@@ -344,7 +342,7 @@ export function NightPassRegisterPanel({
       }}
     >
       {!ownerRegister && !hasInvite ? (
-        <p className="text-base leading-relaxed text-violet-100">{NIGHT_PASS_REGISTER_SUBTITLE}</p>
+        <p className="text-base leading-relaxed text-violet-100">{t("nightPass.registerSubtitle")}</p>
       ) : null}
       {ownerRegister && ownerHouseName ? (
         <p className="rounded-xl bg-violet-950/50 p-3 text-center text-sm text-violet-100 ring-1 ring-violet-500/25">
@@ -353,16 +351,22 @@ export function NightPassRegisterPanel({
       ) : null}
       {iosTab ? (
         <p className="rounded-xl bg-amber-950/60 p-3 text-sm text-amber-100 ring-1 ring-amber-500/25">
-          באייפון: הירשמו מתוך האפליקציה אם הוספתם אותה למסך הבית.
+          {t("nightPass.iosSafariHint")}
         </p>
       ) : null}
       {hasInvite ? (
         <p className="rounded-xl bg-emerald-950/50 p-3 text-center text-sm text-emerald-100 ring-1 ring-emerald-500/25">
-          {inviteHouseName ? `הזמנה ל${inviteHouseName}` : "הזמנה לבית"}
+          {inviteHouseName
+            ? formatMessage(t("nightPass.inviteToHouseNamed"), { name: inviteHouseName })
+            : t("nightPass.inviteToHouse")}
         </p>
       ) : ownerRegister ? null : (
         <div className="space-y-1.5">
-          <Label htmlFor="pass-code">קוד כניסה (6 ספרות)</Label>
+          <Label htmlFor="pass-code">
+            {formatMessage(t("editCodeDialog.accessCode"), {
+              suffix: t("editCodeDialog.suffix6Digits"),
+            })}
+          </Label>
           <Input
             id="pass-code"
             value={code}
@@ -377,7 +381,7 @@ export function NightPassRegisterPanel({
         </div>
       )}
       <div className="space-y-1.5">
-        <Label htmlFor="pass-name">שם</Label>
+        <Label htmlFor="pass-name">{t("nightPass.nameLabel")}</Label>
         <Input
           id="pass-name"
           value={name}
@@ -388,7 +392,7 @@ export function NightPassRegisterPanel({
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="pass-phone">טלפון נייד</Label>
+        <Label htmlFor="pass-phone">{t("nightPass.phoneLabel")}</Label>
         <Input
           id="pass-phone"
           value={phone}
@@ -417,7 +421,7 @@ export function NightPassRegisterPanel({
         }
         className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
       >
-        {busy ? "נרשמים…" : "הרשמה"}
+        {busy ? t("nightPass.submitting") : t("nightPass.submit")}
       </Button>
       {compact ? (
         <Link
@@ -428,7 +432,7 @@ export function NightPassRegisterPanel({
             "w-full text-violet-300 hover:text-violet-100",
           )}
         >
-          איך זה עובד?
+          {t("nightPass.howItWorks")}
         </Link>
       ) : null}
       {!compact ? (
@@ -439,7 +443,7 @@ export function NightPassRegisterPanel({
             "w-full border-violet-500/30 text-violet-200",
           )}
         >
-          למפה
+          {t("nightPass.toMap")}
         </Link>
       ) : null}
     </form>

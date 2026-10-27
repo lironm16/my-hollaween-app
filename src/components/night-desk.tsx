@@ -7,10 +7,7 @@ import { HouseForm, type HouseFormExtras } from "@/components/house-form";
 import { PushNotice } from "@/components/push-notice";
 import { Button } from "@/components/ui/button";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
-import {
-  catalogRemovedEditBlockedToast,
-  catalogRemovedViewOnlyNotice,
-} from "@/lib/labels";
+import { useLocale } from "@/hooks/use-locale";
 import { notifyCatalogChanged, applyLocalHousePatch, queueHouseWrite, rememberPublishedHouse, forgetPublishedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { rememberSessionHouseDetail } from "@/lib/house-detail-session-cache";
 import { publishHousePhoto } from "@/lib/house-photo";
@@ -45,6 +42,7 @@ export function NightDesk({
   allowDelete = false,
   onDeleted,
 }: Props) {
+  const { t } = useLocale();
   const editLocked = !deviceHouseEditAllowed(house.id);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<PushNoticeState | null>(null);
@@ -65,7 +63,7 @@ export function NightDesk({
     },
   ) {
     if (editLocked) {
-      toast.message(catalogRemovedEditBlockedToast);
+      toast.message(t("catalogRemoved.editBlockedToast"));
       return { house, pendingPushOffer: false };
     }
     const next = applyLocalHousePatch(house, patch);
@@ -98,7 +96,7 @@ export function NightDesk({
     },
   ): Promise<SaveResult | null> {
     if (editLocked) {
-      toast.message(catalogRemovedEditBlockedToast);
+      toast.message(t("catalogRemoved.editBlockedToast"));
       return null;
     }
     setBusy(true);
@@ -260,7 +258,7 @@ export function NightDesk({
     <div className="space-y-4">
       {editLocked ? (
         <p className="rounded-lg bg-zinc-900/90 px-3 py-2 text-base text-zinc-100" role="status">
-          {catalogRemovedViewOnlyNotice}
+          {t("catalogRemoved.viewOnlyNotice")}
         </p>
       ) : null}
       {notice ? (

@@ -19,14 +19,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
-import {
-  NIGHT_PASS_ALREADY_REGISTERED_BODY,
-  NIGHT_PASS_ALREADY_REGISTERED_TITLE,
-  NIGHT_PASS_EVENT_REGISTERED_CONTINUE,
-  NIGHT_PASS_EVENT_REGISTERED_TITLE,
-  nightPassEventRegisteredBody,
-  type HouseAccessRegistrationKind,
-} from "@/lib/night-pass-copy";
+import type { HouseAccessRegistrationKind } from "@/lib/night-pass-copy";
+import { nightPassEventRegisteredBody } from "@/lib/i18n/night-pass-ui";
 import {
   NIGHT_PASS_OWNER_REGISTER_EVENT,
   clientMayUseOwnerRegister,
@@ -61,7 +55,7 @@ export type EventRegisteredOptions = {
 const NightPassDialogContext = createContext<NightPassDialogContextValue | null>(null);
 
 export function NightPassDialogProvider({ children }: { children: ReactNode }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const router = useRouter();
   const { admin } = useAdminSession();
   const nightPass = useNightPass();
@@ -166,9 +160,11 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       >
         <div className="space-y-4">
           <div className="rounded-xl bg-emerald-950/70 px-4 py-5 text-center ring-2 ring-emerald-400/40">
-            <p className="text-xl font-semibold text-emerald-100">{NIGHT_PASS_ALREADY_REGISTERED_TITLE}</p>
+            <p className="text-xl font-semibold text-emerald-100">
+              {t("nightPass.alreadyRegisteredTitle")}
+            </p>
             <p className="mt-2 text-base leading-relaxed text-emerald-200/95">
-              {NIGHT_PASS_ALREADY_REGISTERED_BODY}
+              {t("nightPass.alreadyRegisteredBody")}
             </p>
           </div>
           <Button
@@ -183,11 +179,12 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
       <HouseEditModal
         open={eventRegisteredOpen}
         onClose={() => void finishEventRegistered(false)}
-        title={NIGHT_PASS_EVENT_REGISTERED_TITLE}
+        title={t("nightPass.eventRegisteredTitle")}
       >
         <div className="space-y-4">
           <p className="text-center text-base leading-relaxed text-emerald-200/95">
             {nightPassEventRegisteredBody(
+              locale,
               eventRegisteredMeta.houseName ?? "",
               eventRegisteredMeta.registrationKind ?? "owner",
             )}
@@ -197,7 +194,7 @@ export function NightPassDialogProvider({ children }: { children: ReactNode }) {
             className="h-11 w-full bg-emerald-500 text-black hover:bg-emerald-400"
             onClick={() => void finishEventRegistered(true)}
           >
-            {NIGHT_PASS_EVENT_REGISTERED_CONTINUE}
+            {t("nightPass.eventRegisteredContinue")}
           </Button>
         </div>
       </HouseEditModal>

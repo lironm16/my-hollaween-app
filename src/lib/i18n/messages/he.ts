@@ -509,6 +509,14 @@ export const heMessages = {
     inviteTitle: "הזמנה — {name}",
     inviteBody: "הצטרפו לבית שלנו במפת השכונה:\n{url}",
   },
+  catalogRemoved: {
+    banner: "הוסר מהמפה",
+    editBlockedToast: "הבית הוסר מהמפה — אי אפשר לערוך",
+    viewOnlyNotice:
+      "הבית הוסר מהמפה — צפייה בלבד. אפשר להסיר את הכרטיס מ**במכשיר שלי**.",
+    viewOnlyEditPage:
+      "הבית הוסר מהמפה — צפייה בלבד. להסרה מהמכשיר: **במכשיר שלי** → **הסר מהמכשיר**.",
+  },
   catalogBoot: {
     serverDown:
       "השרת לא עונה, ואין עותק שמור בטלפון. נסו שוב כשיש קליטה.",
@@ -845,6 +853,66 @@ export const heMessages = {
     eventConnect: "חיבור לאירוע",
     removedFromEvent: "הבית הוסר מהאירוע — לא ניתן להירשם מהזמנה הזו.",
     checkFailed: "לא הצלחנו לבדוק את ההזמנה. נסו שוב.",
+  },
+  nightPass: {
+    registerSubtitle:
+      "קיבלתם קוד כניסה? הירשמו כדי לראות כתובות בתים ביום החשיפה",
+    bannerCta: "יש לי קוד כניסה",
+    ownerBannerCta: "חיבור לאירוע (בעלי בית)",
+    alreadyRegisteredTitle: "כבר נרשמתם!",
+    alreadyRegisteredBody:
+      "המכשיר הזה כבר מחובר לאירוע. אין צורך להירשם שוב מהזמנה.",
+    eventRegisteredTitle: "נרשמתם לאירוע!",
+    eventRegisteredBodyOwner:
+      "אתם בעלי הבית של {houseName} ויכולים לערוך אותו מהטלפון הזה.",
+    eventRegisteredBodyEditor:
+      "נרשמתם כעורך של {houseName}. כתובות בתים יוצגו ביום החשיפה במכשיר הזה.",
+    eventRegisteredBodyFallback: "הבית",
+    eventRegisteredContinue: "המשך למפה",
+    checkingDevice: "בודקים את המכשיר…",
+    inviteUnavailable: "הבית הוסר מהאירוע — לא ניתן להירשם מהזמנה הזו.",
+    registrationNotOpen: "ההרשמה עם קוד כניסה עוד לא נפתחה. נסו שוב בקרוב.",
+    iosSafariHint: "באייפון: הירשמו מתוך האפליקציה אם הוספתם אותה למסך הבית.",
+    inviteToHouse: "הזמנה לבית",
+    inviteToHouseNamed: "הזמנה ל{name}",
+    nameLabel: "שם",
+    phoneLabel: "טלפון נייד",
+    submitting: "נרשמים…",
+    submit: "הרשמה",
+    howItWorks: "איך זה עובד?",
+    toMap: "למפה",
+    errMissingEditCode:
+      "הבית שמור במכשיר, אבל חסר קוד עריכה. פתחו עריכת בית (שלי או עריכה) והזינו את קוד העריכה פעם אחת, ואז נסו שוב.",
+    errOwnerVerify: "לא הצלחנו לאמת בעלות על הבית. נסו שוב בעוד רגע.",
+    errNoHouseOnDevice: "לא נמצא בית לעריכה במכשיר הזה.",
+    errLoadPrefill: "לא הצלחנו לטעון פרטים. נסו שוב.",
+    errRegisterFailed: "ההרשמה נכשלה. נסו שוב.",
+    errNoServer: "אין חיבור לשרת. נסו שוב כשיש קליטה.",
+    deviceUpdated: "המכשיר עודכן",
+    bannerDismissAria: "סגירת ההודעה",
+    bannerMoreHouses: "עוד {count} בתים זמינים למכשיר רשום",
+    bannerAddressesAvailable: "כתובות בתים זמינות למכשיר רשום",
+    lostHouseRemoved: "המכשיר התנתק — הבית הוסר מהאירוע.",
+    lostRemoved: "המכשיר התנתק — בעלי הבית הסירו אותו מרשימת המכשירים.",
+    lostReset: "התנתקת מהמפה כי קוד הכניסה אופס.",
+    lostTaken: "המכשיר התנתק — נרשם מחדש ממכשיר אחר עם אותו קוד כניסה.",
+    lostDefault: "המכשיר התנתק — אין יותר גישה מאובטחת במכשיר הזה.",
+    lostDescRemoved: "אפשר לבקש מבעלי הבית הזמנה להתחבר שוב.",
+    lostDescReset: "פנו לבעלי הבית לקוד מעודכן.",
+    stripNotConnected: "מכשיר לא מחובר",
+    stripConnect: "חיבור לאירוע",
+    stripConnected: "מכשיר מחובר",
+    stripActive: "פעיל",
+    stripRegisteredFallback: "רשומים",
+    stripDisconnect: "התנתק",
+    stripDisconnecting: "מתנתק…",
+    stripDisconnectFailed: "ההתנתקות נכשלה. נסו שוב.",
+    stripDisconnectSuccessOwner: "המכשיר התנתק והוסר מהרשימה.",
+    stripDisconnectSuccessEditor: "המכשיר התנתק. קוד הכניסה עדיין תקף לכניסה מחדש.",
+    stripConfirmOwner:
+      "להתנתק?\n\nהמכשיר יוסר מרשימת המכשירים המאושרים. אפשר להירשם שוב מאוחר יותר (בעל בית — חיבור לאירוע; אורח — עם קוד כניסה).",
+    stripConfirmEditor:
+      "להתנתק מהמכשיר הזה?\n\nקוד הכניסה נשאר רשום — אפשר להיכנס שוב עם אותו קוד. מכשיר אחר לא יושפע.",
   },
   quickUpdate: {
     title: "עדכון מהיר",

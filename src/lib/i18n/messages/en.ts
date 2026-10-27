@@ -510,6 +510,14 @@ export const enMessages: AppMessages = {
     inviteTitle: "Invite — {name}",
     inviteBody: "Join our house on the neighborhood map:\n{url}",
   },
+  catalogRemoved: {
+    banner: "Removed from map",
+    editBlockedToast: "House removed from the map — cannot edit",
+    viewOnlyNotice:
+      "House removed from the map — view only. You can remove the card from **On my device**.",
+    viewOnlyEditPage:
+      "House removed from the map — view only. To remove from device: **On my device** → **Remove from device**.",
+  },
   catalogBoot: {
     serverDown:
       "The server is not responding and there is no saved copy on this device. Try again when online.",
@@ -847,6 +855,67 @@ export const enMessages: AppMessages = {
     eventConnect: "Connect to event",
     removedFromEvent: "House removed from the event — cannot register from this invite.",
     checkFailed: "Could not verify the invite. Try again.",
+  },
+  nightPass: {
+    registerSubtitle:
+      "Have an entry code? Register to see house addresses on reveal day.",
+    bannerCta: "I have an entry code",
+    ownerBannerCta: "Connect to event (homeowner)",
+    alreadyRegisteredTitle: "Already registered!",
+    alreadyRegisteredBody:
+      "This device is already connected to the event. No need to register again from an invite.",
+    eventRegisteredTitle: "You're registered for the event!",
+    eventRegisteredBodyOwner:
+      "You're the homeowner of {houseName} and can edit it from this phone.",
+    eventRegisteredBodyEditor:
+      "You're registered as editor for {houseName}. House addresses will show on reveal day on this device.",
+    eventRegisteredBodyFallback: "the house",
+    eventRegisteredContinue: "Continue to map",
+    checkingDevice: "Checking device…",
+    inviteUnavailable: "House removed from the event — cannot register from this invite.",
+    registrationNotOpen: "Entry-code registration is not open yet. Try again soon.",
+    iosSafariHint: "On iPhone: register from the home-screen app if you installed it.",
+    inviteToHouse: "Invite to a house",
+    inviteToHouseNamed: "Invite to {name}",
+    nameLabel: "Name",
+    phoneLabel: "Mobile phone",
+    submitting: "Registering…",
+    submit: "Register",
+    howItWorks: "How does it work?",
+    toMap: "To map",
+    errMissingEditCode:
+      "House is saved on this device but the edit code is missing. Open house edit (My houses or Edit), enter the edit code once, then try again.",
+    errOwnerVerify: "Could not verify home ownership. Try again in a moment.",
+    errNoHouseOnDevice: "No editable house found on this device.",
+    errLoadPrefill: "Could not load details. Try again.",
+    errRegisterFailed: "Registration failed. Try again.",
+    errNoServer: "No server connection. Try again when online.",
+    deviceUpdated: "Device updated",
+    bannerDismissAria: "Dismiss message",
+    bannerMoreHouses: "{count} more houses available to a registered device",
+    bannerAddressesAvailable: "House addresses available to a registered device",
+    lostHouseRemoved: "Device disconnected — house removed from the event.",
+    lostRemoved: "Device disconnected — the homeowner removed it from the device list.",
+    lostReset: "You were disconnected because the entry code was reset.",
+    lostTaken: "Device disconnected — the same entry code was used on another device.",
+    lostDefault: "Device disconnected — secure access on this device ended.",
+    lostDescRemoved: "Ask the homeowner for a new invite to connect again.",
+    lostDescReset: "Ask the homeowner for an updated code.",
+    stripNotConnected: "Device not connected",
+    stripConnect: "Connect to event",
+    stripConnected: "Device connected",
+    stripActive: "Active",
+    stripRegisteredFallback: "Registered",
+    stripDisconnect: "Disconnect",
+    stripDisconnecting: "Disconnecting…",
+    stripDisconnectFailed: "Could not disconnect. Try again.",
+    stripDisconnectSuccessOwner: "Device disconnected and removed from the list.",
+    stripDisconnectSuccessEditor:
+      "Device disconnected. The entry code is still valid to sign in again.",
+    stripConfirmOwner:
+      "Disconnect?\n\nThis device will be removed from the approved list. You can register again later (homeowner — connect to event; guest — with entry code).",
+    stripConfirmEditor:
+      "Disconnect this device?\n\nThe entry code stays valid — you can sign in again with the same code. Other devices are not affected.",
   },
   quickUpdate: {
     title: "Quick update",

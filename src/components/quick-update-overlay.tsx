@@ -40,7 +40,6 @@ import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import type { PushKind } from "@/lib/push-templates";
 import { isDecorated } from "@/lib/house-state";
 import { deviceHouseEditAllowed } from "@/lib/catalog-removed";
-import { catalogRemovedEditBlockedToast } from "@/lib/labels";
 import { useCatalog } from "@/hooks/use-catalog";
 import type { PublicHouse } from "@/lib/types";
 import { useLocale } from "@/hooks/use-locale";
@@ -67,10 +66,10 @@ export function QuickUpdateOverlay({
   const { dir, t } = useLocale();
   useEffect(() => {
     if (open && !deviceHouseEditAllowed(house.id)) {
-      toast.message(catalogRemovedEditBlockedToast);
+      toast.message(t("catalogRemoved.editBlockedToast"));
       onClose();
     }
-  }, [open, house.id, admin, onClose]);
+  }, [open, house.id, admin, onClose, t]);
   const [candyPick, setCandyPick] = useState<QuickCandyChoice>(() => currentQuickCandy(house));
   const [housePick, setHousePick] = useState<QuickHouseChoice>(() => currentQuickHouse(house));
   const [sendPush, setSendPush] = useState(true);

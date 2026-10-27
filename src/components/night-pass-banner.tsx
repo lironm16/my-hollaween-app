@@ -6,9 +6,11 @@ import { toast } from "sonner";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useLocale } from "@/hooks/use-locale";
 import { useNightPass } from "@/hooks/use-night-pass";
 import type { HouseSet } from "@/lib/house-set";
-import { NIGHT_PASS_BANNER_CTA, NIGHT_PASS_OWNER_BANNER_CTA } from "@/lib/night-pass-copy";
+import { formatMessage } from "@/lib/i18n/format";
+import { nightPassLostDescription, nightPassLostMessage } from "@/lib/i18n/night-pass-ui";
 import {
   NIGHT_PASS_LOST_EVENT,
   clientMayUseOwnerRegister,
@@ -35,35 +37,9 @@ function writeBannerDismissed() {
   }
 }
 
-function lostMessage(detail: NightPassLostDetail): string {
-  if (detail?.reason === "house_removed") {
-    return "המכשיר התנתק — הבית הוסר מהאירוע.";
-  }
-  if (detail?.reason === "removed") {
-    return "המכשיר התנתק — בעלי הבית הסירו אותו מרשימת המכשירים.";
-  }
-  if (detail?.reason === "reset") {
-    return "התנתקת מהמפה כי קוד הכניסה אופס.";
-  }
-  if (detail?.reason === "taken") {
-    return "המכשיר התנתק — נרשם מחדש ממכשיר אחר עם אותו קוד כניסה.";
-  }
-  return "המכשיר התנתק — אין יותר גישה מאובטחת במכשיר הזה.";
-}
-
-function lostDescription(detail: NightPassLostDetail): string | undefined {
-  if (detail?.reason === "house_removed") return undefined;
-  if (detail?.reason === "removed") {
-    return "אפשר לבקש מבעלי הבית הזמנה להתחבר שוב.";
-  }
-  if (detail?.reason === "reset") {
-    return "פנו לבעלי הבית לקוד מעודכן.";
-  }
-  return undefined;
-}
-
 /** Map strip: register CTA when not registered (dismissible for this tab session). */
 export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
+  const { locale, t } = useLocale();
   const { admin } = useAdminSession();
   const pass = useNightPass();
   const { catalog } = useCatalog();
@@ -77,25 +53,25 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
   useEffect(() => {
     const onLost = (event: Event) => {
       const detail = (event as CustomEvent<NightPassLostDetail>).detail ?? null;
-      const description = lostDescription(detail);
-      toast.message(lostMessage(detail), {
+      const description = nightPassLostDescription(locale, detail);
+      toast.message(nightPassLostMessage(locale, detail), {
         ...(description ? { description } : {}),
         duration: 12_000,
       });
     };
     window.addEventListener(NIGHT_PASS_LOST_EVENT, onLost);
     return () => window.removeEventListener(NIGHT_PASS_LOST_EVENT, onLost);
-  }, []);
+  }, [locale]);
 
   if (!pass.enabled || admin || pass.viewer === "admin" || pass.registered || dismissed) return null;
 
   const hidden = hiddenHouseCountForSet(catalog, houseSet);
   const owner = clientMayUseOwnerRegister(pass);
-  const cta = owner ? NIGHT_PASS_OWNER_BANNER_CTA : NIGHT_PASS_BANNER_CTA;
+  const cta = owner ? t("nightPass.ownerBannerCta") : t("nightPass.bannerCta");
   const prefix =
     hidden > 0
-      ? `עוד ${hidden} בתים זמינים למכשיר רשום`
-      : "כתובות בתים זמינות למכשיר רשום";
+      ? formatMessage(t("nightPass.bannerMoreHouses"), { count: String(hidden) })
+      : t("nightPass.bannerAddressesAvailable");
 
   function dismissBanner(event: MouseEvent) {
     event.stopPropagation();
@@ -123,7 +99,7 @@ export function NightPassBanner({ houseSet }: { houseSet: HouseSet }) {
       </button>
       <button
         type="button"
-        aria-label="סגירת ההודעה"
+        aria-label={t("nightPass.bannerDismissAria")}
         onClick={dismissBanner}
         className="flex shrink-0 items-center justify-center border-s border-orange-500/20 px-3 text-violet-300 hover:bg-orange-500/10 hover:text-orange-100"
       >
