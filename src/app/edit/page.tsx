@@ -36,15 +36,17 @@ import {
   refreshNightPassState,
 } from "@/lib/night-pass-client";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
-import { catalogRemovedViewOnlyEditPage } from "@/lib/labels";
 import { HOUSE_ACCESS_CODE_LENGTH } from "@/lib/house-access-code";
 import { useNightPass } from "@/hooks/use-night-pass";
+import { useLocale } from "@/hooks/use-locale";
 
 export default function EditPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-dvh items-center justify-center text-orange-200">טוענים…</div>
+        <div className="flex min-h-dvh items-center justify-center text-orange-200">
+          <EditLoadingFallback />
+        </div>
       }
     >
       <EditPageContent />
@@ -52,7 +54,13 @@ export default function EditPage() {
   );
 }
 
+function EditLoadingFallback() {
+  const { t } = useLocale();
+  return <>{t("common.loading")}</>;
+}
+
 function EditPageContent() {
+  const { t, dir } = useLocale();
   const searchParams = useSearchParams();
   const focusId = searchParams.get("focus");
   const owned = useOwnedHouses();
@@ -124,7 +132,7 @@ function EditPageContent() {
       if (pickedIdRef.current !== target.id) return false;
       if (!res.ok || !data.id) {
         if (!options?.quiet) {
-          toast.error(data.error ?? "אין הרשאת עריכה — הזינו קוד עריכה.");
+          toast.error(data.error ?? t("edit.noEditPermission"));
         }
         return false;
       }
@@ -132,7 +140,7 @@ function EditPageContent() {
       return true;
     } catch {
       if (pickedIdRef.current !== target.id) return false;
-      if (!options?.quiet) toast.error("אין קשר לשרת");
+      if (!options?.quiet) toast.error(t("common.noConnection"));
       return false;
     } finally {
       setBusy(false);
@@ -160,7 +168,7 @@ function EditPageContent() {
           clearOwnedHouseEditCode(target.id);
         }
         if (!options?.quiet) {
-          toast.error(data.error ?? "קוד העריכה שגוי. נסו שוב.");
+          toast.error(data.error ?? t("edit.wrongCode"));
         }
         return false;
       }
@@ -179,7 +187,7 @@ function EditPageContent() {
       return true;
     } catch {
       if (pickedIdRef.current !== target.id) return false;
-      if (!options?.quiet) toast.error("אין קשר לשרת");
+      if (!options?.quiet) toast.error(t("common.noConnection"));
       return false;
     } finally {
       setBusy(false);
@@ -268,20 +276,20 @@ function EditPageContent() {
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
-        <div className="mx-auto w-full max-w-lg pb-10">
+        <div className="mx-auto w-full max-w-lg pb-10" dir={dir}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/banner.jpg"
           alt=""
           className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
         />
-        <h1 className="font-display mb-1 text-2xl text-orange-300">עריכת בית</h1>
-        <p className="mb-4 text-base text-violet-200">בחרו בית מהרשימה לעריכה.</p>
+        <h1 className="font-display mb-1 text-2xl text-orange-300">{t("edit.title")}</h1>
+        <p className="mb-4 text-base text-violet-200">{t("edit.intro")}</p>
         <PersistNote className="mb-4" />
 
         <section className="mb-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
           <div className="space-y-1.5">
-            <Label htmlFor="house-pick">איזה בית לערוך?</Label>
+            <Label htmlFor="house-pick">{t("edit.whichHouse")}</Label>
             <HousePicker
               houses={houses}
               selected={picked}
@@ -297,18 +305,16 @@ function EditPageContent() {
           {needsCode ? (
             <div className="space-y-1.5 border-t border-orange-500/15 pt-3">
               {ownedMatch ? (
-                <p className="text-base text-amber-200/95">
-                  הקוד שמור במכשיר אינו תקף — הזינו קוד עריכה חדש מבעל הבית.
-                </p>
+                <p className="text-base text-amber-200/95">{t("edit.codeInvalidOnDevice")}</p>
               ) : null}
-              <Label htmlFor="edit-code">קוד עריכה</Label>
+              <Label htmlFor="edit-code">{t("edit.codeLabel")}</Label>
               <Input
                 id="edit-code"
                 value={editCode}
                 onChange={(event) => setEditCode(event.target.value)}
                 autoCapitalize="characters"
                 autoComplete="one-time-code"
-                placeholder="6 ספרות"
+                placeholder={t("edit.codePlaceholder")}
                 className="h-10 bg-[#12081a] font-mono tracking-widest"
                 maxLength={HOUSE_ACCESS_CODE_LENGTH}
                 inputMode="numeric"
@@ -321,16 +327,16 @@ function EditPageContent() {
                 }}
                 disabled={busy || !picked || !editCode.trim()}
               >
-                {busy ? "בודקים…" : "פתיחה לעריכה"}
+                {busy ? t("common.checking") : t("edit.openForEdit")}
               </Button>
             </div>
           ) : picked && admin ? (
             <p className="border-t border-orange-500/15 pt-3 text-base text-emerald-300">
-              מצב מנהל — אפשר לערוך בלי קוד.
+              {t("edit.adminNoCode")}
             </p>
           ) : picked && ownedMatch && localEditCode ? (
             <p className="border-t border-orange-500/15 pt-3 text-base text-emerald-300">
-              הבית שמור במכשיר הזה — נפתח לעריכה.
+              {t("edit.ownedOpensEdit")}
             </p>
           ) : null}
         </section>
@@ -338,7 +344,7 @@ function EditPageContent() {
         {house && !editFlow.flow ? (
           pickedRemovedFromCatalog && !admin ? (
             <p className="rounded-xl bg-zinc-900/90 px-3 py-3 text-center text-base text-zinc-100 ring-1 ring-white/10">
-              {catalogRemovedViewOnlyEditPage}
+              {t("edit.removedViewOnly")}
             </p>
           ) : (
             <Button
@@ -346,7 +352,7 @@ function EditPageContent() {
               className="h-11 w-full justify-center whitespace-normal bg-orange-500 text-center text-base text-black hover:bg-orange-400"
               onClick={() => openHouseEdit(house)}
             >
-              עריכת הבית
+              {t("edit.editHouseButton")}
             </Button>
           )
         ) : null}

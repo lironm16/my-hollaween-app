@@ -10,7 +10,7 @@ import { SensitivitySign } from "@/components/sensitivity-glyphs";
 import { StrollerSign } from "@/components/symbols";
 import { CollectedGemSign, LikedSign, SkipSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
-import { GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
 import { scareShort, decorShort, treatLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { NEIGHBORHOODS } from "@/lib/config";
@@ -48,12 +48,13 @@ export function PersonalMarksSection({
   selectedTab: PersonalMarksTab;
   onSelectTab: (tab: PersonalMarksTab) => void;
 }) {
+  const { t, dir } = useLocale();
   return (
-    <section className="rounded-2xl bg-[#241332] p-2.5 ring-1 ring-white/10" dir="rtl">
+    <section className="rounded-2xl bg-[#241332] p-2.5 ring-1 ring-white/10" dir={dir}>
       <div className="grid grid-cols-2 gap-2">
         <StatTile
           icon={<Home className="size-8 text-orange-300" strokeWidth={2.1} />}
-          label="בתים שלי"
+          label={t("my.tabMine")}
           value={ownedCount}
           valueClass={ownedCount ? "text-orange-200" : undefined}
           plain
@@ -62,7 +63,7 @@ export function PersonalMarksSection({
         />
         <StatTile
           icon={<LikedSign className="size-8" />}
-          label="אהבתי"
+          label={t("my.tabSaved")}
           value={likedCount}
           valueClass={likedCount ? "text-rose-300" : undefined}
           plain
@@ -71,7 +72,7 @@ export function PersonalMarksSection({
         />
         <StatTile
           icon={<VisitedCheck visited className="size-8" />}
-          label="ביקרתי"
+          label={t("my.tabVisited")}
           value={visitedCount}
           valueClass={visitedCount ? "text-emerald-300" : undefined}
           plain
@@ -80,7 +81,7 @@ export function PersonalMarksSection({
         />
         <StatTile
           icon={<SkipSign className="size-8" />}
-          label="דילגתי"
+          label={t("my.tabSkipped")}
           value={skippedCount}
           valueClass={skippedCount ? "text-slate-300" : undefined}
           plain
@@ -90,7 +91,7 @@ export function PersonalMarksSection({
         {showGemStats ? (
           <StatTile
             icon={<CollectedGemSign />}
-            label={GEM_FOUND_I_HE}
+            label={t("my.tabGems")}
             value={gemCollectedCount}
             valueClass={gemCollectedCount ? "text-amber-300" : undefined}
             plain

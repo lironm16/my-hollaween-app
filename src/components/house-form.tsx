@@ -11,12 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HouseMapDynamic } from "@/components/house-map-dynamic";
-import {
-  scareShort,
-  decorShort,
-  themeFromName,
-  houseKindLabels,
-} from "@/lib/labels";
+import { themeFromName } from "@/lib/labels";
+import { useLocale } from "@/hooks/use-locale";
+import { useLocalizedLabels } from "@/hooks/use-localized-labels";
+import { hoursWindowsIssueLocalized } from "@/lib/i18n/hours-issue";
 import { isPoiHouse } from "@/lib/house-kind";
 import { displayAddressFromHit } from "@/lib/address-fields";
 import {
@@ -31,10 +29,7 @@ import {
   isSchoolCampusAddress,
   schoolCampusNeighborhoodForAddress,
 } from "@/lib/school-campus";
-import {
-  ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE,
-  eventNeighborhoodForNewHousePin,
-} from "@/lib/add-house-event-zone";
+import { eventNeighborhoodForNewHousePin } from "@/lib/add-house-event-zone";
 import {
   SENSITIVITY_OPTIONS,
   type DecorLevel,
@@ -45,7 +40,7 @@ import {
   type TreatId,
   type VisitState,
 } from "@/lib/types";
-import { candyTone, CandySign, CANDY_TONES, type CandyTone } from "@/components/candy-glyphs";
+import { candyTone, CandySign, type CandyTone } from "@/components/candy-glyphs";
 import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
 import { StrollerSign } from "@/components/symbols";
 import { LocationKindSign } from "@/components/location-kind-sign";
@@ -55,7 +50,6 @@ import { PIN_GLYPH_SCALE } from "@/lib/pin-faces";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import {
   houseHoursWindows,
-  hoursWindowsIssue,
   MAX_HOUR_WINDOWS,
   nightStatusControlsEnabled,
   parseClockMinutes,
@@ -143,6 +137,8 @@ export function HouseForm({
   busy?: boolean;
   extraActions?: ReactNode;
 }) {
+  const { t, locale, dir } = useLocale();
+  const { scareShort, decorShort, houseKindLabels, candyTones } = useLocalizedLabels();
   const { catalog } = useCatalog();
   const catalogDefaultHours = useMemo(
     () =>
@@ -185,6 +181,10 @@ export function HouseForm({
   const ownerPhoneRequired = isNewHouse || !initial?.ownerPhone?.trim();
   const ownerPhoneError = ownerPhoneTouched
     ? ownerPhoneValidationError(ownerPhone, ownerPhoneRequired)
+      ? !ownerPhone.trim()
+        ? t("houseForm.phoneRequired")
+        : t("houseForm.phoneInvalid")
+      : null
     : null;
   const now = useAppNow();
   const { admin } = useAdminSession();
@@ -239,8 +239,9 @@ export function HouseForm({
 
   const candyOffered = candy === "plenty" || candy === "low";
   const undecorated = decorLevel === "none";
-  const hoursIssue = hoursWindowsIssue(
+  const hoursIssue = hoursWindowsIssueLocalized(
     hourWindows.map((window) => ({ from: clock(window.from), to: clock(window.to) })),
+    locale,
   );
   const hoursSource = {
     openHours: hourWindows,
@@ -331,7 +332,7 @@ export function HouseForm({
     const address = displayAddressFromHit(hit);
     const hood = resolveNeighborhoodForPin(address, hit.lat, hit.lng);
     if (isNewHouse && !schoolCampusNeighborhoodForAddress(address) && !hood) {
-      toast.error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
+      toast.error(t("houseForm.outsideEventZones"));
       setAddressOk(false);
       return;
     }
@@ -344,7 +345,7 @@ export function HouseForm({
     }));
     setAddressOk(true);
     if (!hit.precise) {
-      toast.message(streetPinHint(hit) ?? "סימנו את הרחוב. גררו את הסיכה עד לבית שלכם.");
+      toast.message(streetPinHint(hit) ?? t("houseForm.pinStreetHint"));
     }
   }
 
@@ -353,13 +354,13 @@ export function HouseForm({
     const hit = await reversePin(lat, lng);
     if (!hit) {
       setAddressOk(false);
-      toast.error("לא מצאנו כתובת בנקודה הזו. הזינו רחוב ומספר מהרשימה.");
+      toast.error(t("houseForm.geocodeMiss"));
       return;
     }
     const address = displayAddressFromHit(hit);
     const hood = resolveNeighborhoodForPin(address, hit.lat, hit.lng);
     if (isNewHouse && !schoolCampusNeighborhoodForAddress(address) && !hood) {
-      toast.error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
+      toast.error(t("houseForm.outsideEventZones"));
       setAddressOk(false);
       return;
     }
@@ -372,7 +373,7 @@ export function HouseForm({
     }));
     setAddressOk(true);
     if (!hit.precise) {
-      toast.message(streetPinHint(hit) ?? "סימנו את הרחוב. גררו את הסיכה עד לבית שלכם.");
+      toast.message(streetPinHint(hit) ?? t("houseForm.pinStreetHint"));
     }
   }
 
@@ -393,18 +394,19 @@ export function HouseForm({
   return (
     <form
       className="space-y-6"
+      dir={dir}
       onSubmit={(e) => {
         e.preventDefault();
         if (blocked) return;
         if (!addressOk) {
-          toast.error("בחרו כתובת אמיתית מהרשימה, או גררו את הסיכה לבית.");
+          toast.error(t("houseForm.pickRealAddress"));
           return;
         }
         let neighborhood = form.neighborhood;
         if (isNewHouse && !isSchoolCampusAddress(form.address)) {
           const geoHood = eventNeighborhoodForNewHousePin(form.lat, form.lng);
           if (!geoHood) {
-            toast.error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
+            toast.error(t("houseForm.outsideEventZones"));
             return;
           }
           neighborhood = geoHood;
@@ -417,27 +419,29 @@ export function HouseForm({
             undefined;
         }
         if (isNewHouse && neighborhood === undefined) {
-          toast.error(ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE);
+          toast.error(t("houseForm.outsideEventZones"));
           return;
         }
         const submitter = addedBy.trim();
         if (isNewHouse && submitter.length < 2) {
-          toast.error("נא למלא מי מוסיף את המקום.");
+          toast.error(t("houseForm.needSubmitter"));
           return;
         }
         if (!isNewHouse && submitter.length > 0 && submitter.length < 2) {
-          toast.error("שם מלא של מי שהוסיף את המקום — לפחות 2 תווים.");
+          toast.error(t("houseForm.submitterTooShort"));
           return;
         }
         setOwnerPhoneTouched(true);
         const phoneIssue = ownerPhoneValidationError(ownerPhone, ownerPhoneRequired);
         if (phoneIssue) {
-          toast.error(phoneIssue);
+          toast.error(
+            !ownerPhone.trim() ? t("houseForm.phoneRequired") : t("houseForm.phoneInvalid"),
+          );
           return;
         }
         const phone = normalizeOwnerPhone(ownerPhone);
         if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
-          toast.error("סמנו לפחות קישוטים או ממתקים — אחרת אין סיבה להוסיף את הבית למפה.");
+          toast.error(t("houseForm.needDecorOrCandy"));
           return;
         }
         const theme = themeFromName(form.name) ?? form.theme;
@@ -467,9 +471,9 @@ export function HouseForm({
           from: clock(window.from),
           to: clock(window.to),
         }));
-        const hoursIssue = hoursWindowsIssue(windows);
-        if (hoursIssue) {
-          toast.error(hoursIssue);
+        const submitHoursIssue = hoursWindowsIssueLocalized(windows, locale);
+        if (submitHoursIssue) {
+          toast.error(submitHoursIssue);
           return;
         }
         if (isNewHouse) rememberLastOwner({ addedBy: submitter, ownerPhone: phone });
@@ -505,7 +509,7 @@ export function HouseForm({
               try {
                 photoDataUrl = await compressJpegFile(photoFile, photoFocus);
               } catch {
-                toast.warning("לא הצלחנו לעבד את התמונה — שומרים את הבית בלי תמונה.");
+                toast.warning(t("houseForm.photoProcessFailed"));
               }
             }
             await onSubmit(payload, {
@@ -522,7 +526,7 @@ export function HouseForm({
       }}
     >
       {admin ? (
-        <FormSection title="סוג מקום">
+        <FormSection title={t("houseForm.placeTypeSection")}>
           <div className="flex flex-wrap gap-1.5">
             {(["house", "poi"] as HouseKind[]).map((kind) => (
               <button
@@ -565,19 +569,27 @@ export function HouseForm({
               }
             >
               <PracticeLocationSign className="size-6" />
-              בית תרגול
+              {t("houseForm.practiceHouse")}
             </button>
           </div>
           {isPracticePlace ? (
             <p className="text-base text-teal-200/90">
-              לתרגול שדונים בלבד — לא נספר בבתים בשכונה ולא נכנס למסלול.
+              {t("houseForm.practiceHint")}
             </p>
           ) : null}
         </FormSection>
       ) : null}
-      <FormSection title={isPracticePlace ? "בית תרגול" : isPoi ? "העסק" : "הבית"}>
+      <FormSection
+        title={
+          isPracticePlace
+            ? t("houseForm.sectionPractice")
+            : isPoi
+              ? t("houseForm.sectionPoi")
+              : t("houseForm.sectionHouse")
+        }
+      >
         <Field
-          label={isPoi ? "שם המקום" : "שם הבית"}
+          label={isPoi ? t("houseForm.namePoi") : t("houseForm.nameHouse")}
           charCount={{ length: form.name.length, max: HOUSE_FIELD_LIMITS.name.max }}
         >
           <Input
@@ -594,7 +606,7 @@ export function HouseForm({
           />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="השם שלך" hint="לא מוצג">
+          <Field label={t("houseForm.yourName")} hint={t("houseForm.notShown")}>
             <Input
               required={isNewHouse}
               value={addedBy}
@@ -605,7 +617,7 @@ export function HouseForm({
               className="h-11 bg-[#1d1028] text-lg"
             />
           </Field>
-          <Field label="טלפון" hint="לא מוצג">
+          <Field label={t("houseForm.phone")} hint={t("houseForm.notShown")}>
             <Input
               required={ownerPhoneRequired}
               type="tel"
@@ -630,10 +642,10 @@ export function HouseForm({
           </p>
         ) : null}
       </FormSection>
-      <FormSection title="איפה">
+      <FormSection title={t("houseForm.whereSection")}>
         <Field
-          label="כתובת"
-          hint={HIDDEN_UNTIL_EVENT}
+          label={t("houseForm.address")}
+          hint={t("houseForm.hiddenUntilEvent")}
           charCount={{ length: form.address.length, max: HOUSE_FIELD_LIMITS.address.max }}
         >
           <AddressField
@@ -648,33 +660,33 @@ export function HouseForm({
           />
         </Field>
         <Field
-          label="איפה הדלת"
-          hint={HIDDEN_UNTIL_EVENT}
+          label={t("houseForm.arrival")}
+          hint={t("houseForm.hiddenUntilEvent")}
           charCount={{ length: form.arrival.length, max: HOUSE_FIELD_LIMITS.arrival.max }}
         >
           <Input
             value={form.arrival}
             maxLength={HOUSE_FIELD_LIMITS.arrival.max}
             onChange={(e) => setForm({ ...form, arrival: e.target.value })}
-            placeholder="קומה 2, דירה 5"
+            placeholder={t("houseForm.arrivalPlaceholder")}
           />
         </Field>
         <Field
-          label="הערה למבקרים"
-          hint={HIDDEN_UNTIL_EVENT}
+          label={t("houseForm.visitorNote")}
+          hint={t("houseForm.hiddenUntilEvent")}
           charCount={{ length: form.notes.length, max: HOUSE_FIELD_LIMITS.notes.max }}
         >
           <Input
             value={form.notes}
             maxLength={HOUSE_FIELD_LIMITS.notes.max}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            placeholder="יש כלב, מדרגות…"
+            placeholder={t("houseForm.visitorNotePlaceholder")}
           />
         </Field>
         {admin ? (
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-lg font-medium">סיכה על המפה</p>
+              <p className="text-lg font-medium">{t("houseForm.mapPin")}</p>
               <Button
                 type="button"
                 size="sm"
@@ -682,7 +694,7 @@ export function HouseForm({
                 onClick={useMyLocation}
                 disabled={schoolCampusPinLocked || blocked}
               >
-                {locating ? "מאתרים…" : "המיקום שלי"}
+                {locating ? t("houseForm.locating") : t("houseForm.myLocation")}
               </Button>
             </div>
             <div
@@ -702,20 +714,20 @@ export function HouseForm({
             </div>
             <p className="mt-1 text-base text-violet-300">
               {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
-              {schoolCampusPinLocked ? " · מיקום בית הספר קבוע" : null}
+              {schoolCampusPinLocked ? t("houseForm.schoolPinLocked") : null}
             </p>
           </div>
         ) : null}
       </FormSection>
-      <FormSection title="שעות ב־31 באוקטובר">
+      <FormSection title={t("houseForm.hoursSection")}>
         <div className="space-y-2">
           {hourWindows.map((window, index) => (
             <div key={`hours-${index}`} className="hours-range-row" dir="ltr">
               <div className="min-w-0">
-                <p className="hours-range-row__label">פתיחה</p>
+                <p className="hours-range-row__label">{t("houseForm.openTime")}</p>
                 <TimeField
                   required
-                  ariaLabel={`פתיחה ${index + 1}`}
+                  ariaLabel={`${t("houseForm.openTime")} ${index + 1}`}
                   value={window.from}
                   onChange={(from) => updateHourWindow(index, { from })}
                 />
@@ -724,10 +736,10 @@ export function HouseForm({
                 –
               </span>
               <div className="min-w-0">
-                <p className="hours-range-row__label">סגירה</p>
+                <p className="hours-range-row__label">{t("houseForm.closeTime")}</p>
                 <TimeField
                   required
-                  ariaLabel={`סגירה ${index + 1}`}
+                  ariaLabel={`${t("houseForm.closeTime")} ${index + 1}`}
                   value={window.to}
                   onChange={(to) => updateHourWindow(index, { to })}
                 />
@@ -735,7 +747,7 @@ export function HouseForm({
               {hourWindows.length > 1 ? (
                 <button
                   type="button"
-                  aria-label="הסרת חלון שעות"
+                  aria-label={t("houseForm.removeHoursWindow")}
                   className="hours-range-row__remove px-1 text-xl text-violet-300 hover:text-orange-200"
                   onClick={() => removeHourWindow(index)}
                 >
@@ -752,28 +764,31 @@ export function HouseForm({
               className="text-lg font-medium text-orange-300 underline-offset-2 hover:underline"
               onClick={addHourWindow}
             >
-              + עוד חלון שעות
+              {t("houseForm.addHoursWindow")}
             </button>
           ) : null}
           {hoursIssue ? <p className="text-lg text-red-300">{hoursIssue}</p> : null}
         </div>
-        <Field label="מצב" hint={pauseCloseEnabled ? undefined : "הפסקה וסגירה בערב האירוע"}>
+        <Field
+          label={t("houseForm.status")}
+          hint={pauseCloseEnabled ? undefined : t("houseForm.pauseCloseHint")}
+        >
           <div className="flex flex-wrap items-center gap-1.5">
             <NightStatusChip
-              label="פתוח"
+              label={t("houseForm.statusOpen")}
               dotClass="is-open"
               selected={nightStatus === "open"}
               onClick={() => setNightStatus("open")}
             />
             <NightStatusChip
-              label="הפסקה"
+              label={t("houseForm.statusPause")}
               dotClass="is-break"
               selected={nightStatus === "pause"}
               disabled={!pauseCloseEnabled}
               onClick={() => setNightStatus("pause")}
             />
             <NightStatusChip
-              label="סגור"
+              label={t("houseForm.statusClosed")}
               dotClass="is-closed"
               selected={nightStatus === "stop"}
               disabled={!pauseCloseEnabled}
@@ -782,8 +797,8 @@ export function HouseForm({
           </div>
         </Field>
       </FormSection>
-      <FormSection title="מה יש בבית">
-        <Field label="רמת פחד">
+      <FormSection title={t("houseForm.whatsInside")}>
+        <Field label={t("houseForm.scareLevel")}>
           <div className="flex flex-wrap gap-1.5">
             <ChoiceChip selected={undecorated} onClick={() => setDecorLevel("none")}>
               <ScareSign
@@ -811,9 +826,9 @@ export function HouseForm({
             ))}
           </div>
         </Field>
-        <Field label="ממתקים">
+        <Field label={t("houseForm.treats")}>
           <div className="flex flex-wrap gap-1.5">
-            {CANDY_TONES.map((tone) => (
+            {candyTones.map((tone) => (
               <ChoiceChip
                 key={tone.id}
                 selected={candy === tone.id}
@@ -825,7 +840,7 @@ export function HouseForm({
             ))}
           </div>
         </Field>
-        <Field label="סמנו מה מתאים">
+        <Field label={t("houseForm.markWhatFits")}>
           <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
             <CheckRow
               checked={form.accessible}
@@ -833,7 +848,7 @@ export function HouseForm({
             >
               <span className="inline-flex items-center gap-2">
                 <StrollerSign />
-                נגיש (בלי מדרגות)
+                {t("houseForm.accessible")}
               </span>
             </CheckRow>
             {candyOffered
@@ -850,19 +865,19 @@ export function HouseForm({
           </div>
         </Field>
         <Field
-          label="מה מחכה בבית?"
+          label={t("houseForm.description")}
           charCount={{ length: form.description.length, max: HOUSE_FIELD_LIMITS.description.max }}
         >
           <Textarea
             value={form.description}
             maxLength={HOUSE_FIELD_LIMITS.description.max}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="קישוטים, אווירה, הפתעות…"
+            placeholder={t("houseForm.descriptionPlaceholder")}
             className="min-h-20 text-lg"
           />
         </Field>
       </FormSection>
-      <FormSection title="תמונת קישוט">
+      <FormSection title={t("houseForm.photoSection")}>
           {photoPreview || (existingPhoto && !clearPhoto) ? (
             <HousePhotoFrame
               src={photoPreview || existingPhoto}
@@ -879,7 +894,9 @@ export function HouseForm({
                 )}
               >
                 <Camera className="size-4" />
-                {photoPreview || (existingPhoto && !clearPhoto) ? "החלפת תמונה" : "העלאת תמונה"}
+                {photoPreview || (existingPhoto && !clearPhoto)
+                  ? t("houseForm.replacePhoto")
+                  : t("houseForm.uploadPhoto")}
               </span>
               <input
                 type="file"
@@ -911,7 +928,7 @@ export function HouseForm({
                   setClearPhoto(true);
                 }}
               >
-                הסרת תמונה
+                {t("houseForm.removePhoto")}
               </button>
             ) : null}
           </div>
@@ -926,7 +943,7 @@ export function HouseForm({
               : "h-11 w-full text-lg bg-orange-500 text-black hover:bg-orange-400"
           }
         >
-          {blocked ? "שומרים בשרת…" : submitLabel}
+          {blocked ? t("common.savingServer") : submitLabel}
         </Button>
         {onCancel ? (
           <Button
@@ -936,7 +953,7 @@ export function HouseForm({
             className="h-11 flex-1 text-lg"
             onClick={onCancel}
           >
-            ביטול
+            {t("common.cancel")}
           </Button>
         ) : null}
       </div>
@@ -1075,7 +1092,6 @@ function CheckRow({
   );
 }
 
-const HIDDEN_UNTIL_EVENT = "לא מוצג עד יום האירוע";
 
 const LAST_OWNER_KEY = "house-form:last-owner";
 

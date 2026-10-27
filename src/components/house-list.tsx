@@ -12,6 +12,7 @@ import { clusterBoothLabel } from "@/lib/cluster-booth";
 import { clusterMembersForHouse } from "@/lib/house-clusters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 
 export function HouseList({
   houses,
@@ -48,6 +49,7 @@ export function HouseList({
   /** `flush` — horizontal padding comes from the page (e.g. /my tabs). */
   insetX?: "default" | "flush";
 }) {
+  const { t, dir } = useLocale();
   const focusRef = useRef<HTMLDivElement | null>(null);
   const addressReveal = useAddressReveal();
   const sort = useSyncExternalStore(
@@ -76,36 +78,36 @@ export function HouseList({
 
   if (houses.length === 0) {
     return (
-      <div className="px-4 py-16 text-center text-violet-200">
+      <div className="px-4 py-16 text-center text-violet-200" dir={dir}>
         {emptyKind === "skipped" ? (
           <>
-            <p className="font-display text-2xl text-orange-300">אין בתים שדילגתם עליהם</p>
-            <p className="mt-2 text-base">בתים שתדלגו עליהם במסלול יופיעו כאן.</p>
+            <p className="font-display text-2xl text-orange-300">{t("houseList.skippedTitle")}</p>
+            <p className="mt-2 text-base">{t("houseList.skippedHint")}</p>
           </>
         ) : emptyKind === "visited" ? (
           <>
-            <p className="font-display text-2xl text-orange-300">עדיין לא ביקרתם</p>
-            <p className="mt-2 text-base">בתים שתסמנו כביקור יופיעו כאן.</p>
+            <p className="font-display text-2xl text-orange-300">{t("houseList.visitedTitle")}</p>
+            <p className="mt-2 text-base">{t("houseList.visitedHint")}</p>
           </>
         ) : emptyKind === "saved" ? (
           <>
-            <p className="font-display text-2xl text-orange-300">עדיין לא אהבתם בתים</p>
-            <p className="mt-2 text-base">לחצו על הלב במפה או ברשימה כדי לסמן אהבתי.</p>
+            <p className="font-display text-2xl text-orange-300">{t("houseList.savedTitle")}</p>
+            <p className="mt-2 text-base">{t("houseList.savedHint")}</p>
           </>
         ) : emptyKind === "collected" ? (
           <>
-            <p className="font-display text-2xl text-orange-300">עדיין לא מצאתם שדונים</p>
-            <p className="mt-2 text-base">שדונים שתמצאו במסע יופיעו כאן.</p>
+            <p className="font-display text-2xl text-orange-300">{t("houseList.collectedTitle")}</p>
+            <p className="mt-2 text-base">{t("houseList.collectedHint")}</p>
           </>
         ) : emptyKind === "mine" ? (
           <>
-            <p className="text-base">אין בתים שהוספתם מהמכשיר הזה.</p>
+            <p className="text-base">{t("houseList.mineEmpty")}</p>
             {emptyAction}
           </>
         ) : (
           <>
-            <p className="font-display text-2xl text-orange-300">אין בתים שמתאימים לסינון</p>
-            <p className="mt-2 text-base">נסו לבטל סינון בתפריטי שכונה, רמת פחד, עוד או רגישויות.</p>
+            <p className="font-display text-2xl text-orange-300">{t("houseList.filterEmptyTitle")}</p>
+            <p className="mt-2 text-base">{t("houseList.filterEmptyHint")}</p>
           </>
         )}
       </div>

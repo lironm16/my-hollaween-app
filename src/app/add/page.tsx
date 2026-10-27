@@ -25,18 +25,12 @@ import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
-import {
-  ADD_HOUSE_CLOSED_HE,
-  ADD_HOUSE_SUCCESS_CODE_AND_DEVICES,
-  ADD_HOUSE_SUCCESS_EDIT,
-  ADD_HOUSE_SUCCESS_MAP,
-  ADD_HOUSE_SUCCESS_SHARE_CODE,
-  ADD_HOUSE_SUCCESS_TITLE,
-  addHouseSuccessSubtitle,
-} from "@/lib/add-house-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 
 export default function AddPage() {
   const router = useRouter();
+  const { t, dir } = useLocale();
   const { admin } = useAdminSession();
   const editFlow = useHouseEditFlow();
   const addHouseOpen = useAddHouseOpen();
@@ -87,7 +81,7 @@ export default function AddPage() {
         try {
           preview = await publishHousePhoto(house.id, editCode, extras.photoDataUrl);
         } catch {
-          toast.warning("הבית נוסף בלי תמונה. אפשר להוסיף תמונה בעריכה.");
+          toast.warning(t("add.photoSkipped"));
         }
       }
       saveOwnedHouse({
@@ -105,16 +99,28 @@ export default function AddPage() {
         deviceConnected: Boolean(deviceConnected),
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "השליחה נכשלה");
+      toast.error(error instanceof Error ? error.message : t("add.submitFailed"));
     } finally {
       setBusy(false);
     }
   }
 
+  const successSubtitle = done
+    ? formatMessage(
+        nightPass.enabled && done.deviceConnected
+          ? t("add.successSubtitleWithEvent")
+          : t("add.successSubtitle"),
+        { name: done.name },
+      )
+    : "";
+
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
-      <main className="relative z-10 mx-auto min-h-0 w-full max-w-lg flex-1 overflow-y-auto px-4 py-5 pb-10">
+      <main
+        className="relative z-10 mx-auto min-h-0 w-full max-w-lg flex-1 overflow-y-auto px-4 py-5 pb-10"
+        dir={dir}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/banner.jpg"
@@ -125,12 +131,8 @@ export default function AddPage() {
           <div className="house-added-success space-y-6 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-400/30">
             <div className="flex flex-col items-center gap-2 text-center">
               <CheckCircle2 className="house-added-check size-12 text-emerald-400" />
-              <h1 className="font-display text-2xl text-orange-300">{ADD_HOUSE_SUCCESS_TITLE}</h1>
-              <p className="max-w-sm text-base leading-relaxed text-violet-100">
-                {addHouseSuccessSubtitle(done.name, {
-                  registeredForEvent: nightPass.enabled && done.deviceConnected,
-                })}
-              </p>
+              <h1 className="font-display text-2xl text-orange-300">{t("add.successTitle")}</h1>
+              <p className="max-w-sm text-base leading-relaxed text-violet-100">{successSubtitle}</p>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -141,7 +143,7 @@ export default function AddPage() {
                   "w-full bg-orange-500 text-black hover:bg-orange-400",
                 )}
               >
-                {ADD_HOUSE_SUCCESS_MAP}
+                {t("add.successViewMap")}
               </Link>
               <Button
                 type="button"
@@ -155,7 +157,7 @@ export default function AddPage() {
                   })
                 }
               >
-                {ADD_HOUSE_SUCCESS_EDIT}
+                {t("add.successEdit")}
               </Button>
               <Button
                 type="button"
@@ -163,32 +165,30 @@ export default function AddPage() {
                 className="w-full border-orange-400/50 bg-orange-500/10 text-orange-100 hover:bg-orange-500/20"
                 onClick={() => openOwnerPasses(done.house, done.editCode)}
               >
-                {nightPass.enabled
-                  ? ADD_HOUSE_SUCCESS_CODE_AND_DEVICES
-                  : ADD_HOUSE_SUCCESS_SHARE_CODE}
+                {nightPass.enabled ? t("add.successCodeAndDevices") : t("add.successShareCode")}
               </Button>
             </div>
           </div>
         ) : !canAdd ? (
           <div className="space-y-4 rounded-2xl bg-[#1d1028] p-5 ring-1 ring-orange-500/25">
-            <h1 className="font-display text-3xl text-orange-300">הוספת בית אימה</h1>
-            <p className="text-lg leading-relaxed text-violet-100">{ADD_HOUSE_CLOSED_HE}</p>
+            <h1 className="font-display text-3xl text-orange-300">{t("add.pageTitle")}</h1>
+            <p className="text-lg leading-relaxed text-violet-100">{t("add.closedMessage")}</p>
             <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
-              חזרה למפה
+              {t("common.backToMap")}
             </Link>
           </div>
         ) : (
           <>
-            <h1 className="font-display mb-1 text-3xl text-orange-300">הוספת בית אימה</h1>
+            <h1 className="font-display mb-1 text-3xl text-orange-300">{t("add.pageTitle")}</h1>
             <p className="mb-4 text-lg text-violet-200">
-              שם, כתובת ושעות — וזהו.{" "}
+              {t("add.intro")}{" "}
               <Link href="/help/add-house" className="text-orange-300 underline underline-offset-2">
-                איך מוסיפים?
+                {t("common.howToLink")}
               </Link>
             </p>
             <PersistNote className="mb-4" />
             <HouseForm
-              submitLabel="שמירה"
+              submitLabel={t("common.save")}
               onSubmit={onSubmit}
               onCancel={() => router.push("/")}
               busy={busy}

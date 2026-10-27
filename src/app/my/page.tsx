@@ -52,6 +52,7 @@ import { useNightPass } from "@/hooks/use-night-pass";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import type { OwnedHouse } from "@/lib/offline-db";
 import { houseFromOwnedBookmark, repairOwnedPreviewsMissingAddress } from "@/lib/owned-bookmark-house";
+import { useLocale } from "@/hooks/use-locale";
 
 function parseTab(raw: string | null, showCollected: boolean): PersonalMarksTab {
   if (raw === "skipped" || raw === "visited" || raw === "saved") return raw;
@@ -77,7 +78,9 @@ export default function MyCollectionsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-dvh items-center justify-center bg-[#12081a] text-orange-200">טוענים…</div>
+        <div className="flex min-h-dvh items-center justify-center bg-[#12081a] text-orange-200">
+          <MyLoadingFallback />
+        </div>
       }
     >
       <MyCollectionsPageContent />
@@ -85,8 +88,14 @@ export default function MyCollectionsPage() {
   );
 }
 
+function MyLoadingFallback() {
+  const { t } = useLocale();
+  return <>{t("common.loading")}</>;
+}
+
 function MyCollectionsPageContent() {
   const router = useRouter();
+  const { t, dir } = useLocale();
   const searchParams = useSearchParams();
   const { admin } = useAdminSession();
   const now = useAppNow();
@@ -150,7 +159,7 @@ function MyCollectionsPageContent() {
     if (owned.some((item) => item.id === id)) return;
     saveOwnedHouse({
       id,
-      name: nightPass.houseName?.trim() || "הבית",
+      name: nightPass.houseName?.trim() || t("common.defaultHouseName"),
       editCode: "",
       preview: catalogHouses.find((house) => house.id === id),
     });
@@ -173,7 +182,7 @@ function MyCollectionsPageContent() {
         : mineHouseFromOwned(
             {
               id: nightPass.houseId,
-              name: nightPass.houseName?.trim() || "הבית",
+              name: nightPass.houseName?.trim() || t("common.defaultHouseName"),
               editCode: "",
             },
             catalogHouses,
@@ -436,14 +445,15 @@ function MyCollectionsPageContent() {
     setSelectedIds(new Set());
   }
 
-  const selectionRemoveLabel = tab === "mine" ? "הסר מהמכשיר" : "אפס מהרשימה";
+  const selectionRemoveLabel =
+    tab === "mine" ? t("my.removeFromDevice") : t("my.resetList");
 
   return (
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto bg-[#12081a]">
-        <div className="mx-auto w-full max-w-lg space-y-4 px-4 py-5 pb-10">
-          <h1 className="font-display text-2xl text-orange-300">במכשיר שלי</h1>
+        <div className="mx-auto w-full max-w-lg space-y-4 px-4 py-5 pb-10" dir={dir}>
+          <h1 className="font-display text-2xl text-orange-300">{t("my.title")}</h1>
 
           <PersonalMarksSection
             ownedCount={mineHouses.length}
@@ -478,7 +488,7 @@ function MyCollectionsPageContent() {
                   href="/add"
                   className={cn(buttonVariants(), "mt-4 inline-flex bg-orange-500 text-black hover:bg-orange-400")}
                 >
-                  הוספת בית
+                  {t("my.addHouseCta")}
                 </Link>
               ) : undefined
             }

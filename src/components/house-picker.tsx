@@ -9,6 +9,7 @@ import { houseHeadline, locationSearchHaystack, poiCategoryLabel } from "@/lib/l
 import { isPoiHouse } from "@/lib/house-kind";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 
 export function houseSearchHaystack(house: PublicHouse, canViewLocationDetails = true) {
   return [
@@ -40,7 +41,7 @@ export function HousePicker({
   ownedIds,
   loading,
   disabled,
-  placeholder = "הקלידו שם משפחה או כתובת",
+  placeholder,
 }: {
   houses: PublicHouse[];
   selected: PublicHouse | null;
@@ -50,6 +51,8 @@ export function HousePicker({
   disabled?: boolean;
   placeholder?: string;
 }) {
+  const { t, dir } = useLocale();
+  const resolvedPlaceholder = placeholder ?? t("housePicker.placeholder");
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -98,13 +101,13 @@ export function HousePicker({
   return (
     <div ref={wrapRef} className="relative">
       <input
-        dir="rtl"
+        dir={dir}
         autoComplete="off"
         spellCheck={false}
         id="house-pick"
         disabled={disabled}
         value={query}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         aria-autocomplete="list"
         aria-expanded={open}
         aria-controls={listId}
@@ -150,9 +153,9 @@ export function HousePicker({
           className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-xl bg-[#1d1028] py-1 text-base shadow-lg ring-1 ring-orange-500/30"
         >
           {loading ? (
-            <li className="px-3 py-2 text-violet-300">טוענים בתים…</li>
+            <li className="px-3 py-2 text-violet-300">{t("housePicker.loading")}</li>
           ) : matches.length === 0 ? (
-            <li className="px-3 py-2 text-violet-300">אין בית כזה ברשימה. נסו שם משפחה או רחוב.</li>
+            <li className="px-3 py-2 text-violet-300">{t("housePicker.noMatch")}</li>
           ) : (
             matches.map((house, index) => {
               const mine = owned.has(house.id);
@@ -177,7 +180,9 @@ export function HousePicker({
                         {arrival ? ` · ${arrival}` : ""}
                       </span>
                       {mine ? (
-                        <span className="mt-0.5 block text-base text-emerald-300">הבית שלכם</span>
+                        <span className="mt-0.5 block text-base text-emerald-300">
+                          {t("housePicker.yourHouse")}
+                        </span>
                       ) : null}
                     </span>
                   </button>

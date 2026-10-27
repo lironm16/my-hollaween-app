@@ -57,18 +57,30 @@ export function hoursWindowsOverlap(windows: HoursWindow[]): boolean {
   return false;
 }
 
-export function hoursWindowsIssue(windows: HoursWindow[]): string | null {
-  if (windows.length === 0) return "מלאו לפחות חלון שעות אחד.";
+export type HoursWindowsIssueId = "needOne" | "incomplete" | "closeAfterOpen" | "overlap";
+
+const HOURS_WINDOWS_ISSUE_HE: Record<HoursWindowsIssueId, string> = {
+  needOne: "מלאו לפחות חלון שעות אחד.",
+  incomplete: "מלאו את כל חלונות השעות, או הסירו חלון ריק.",
+  closeAfterOpen: "שעת הסגירה חייבת להיות אחרי שעת הפתיחה.",
+  overlap: "חלונות השעות חופפים. בחרו טווחים שלא נחתכים.",
+};
+
+export function hoursWindowsIssueId(windows: HoursWindow[]): HoursWindowsIssueId | null {
+  if (windows.length === 0) return "needOne";
   for (const window of windows) {
     const from = parseClockMinutes(window.from);
     const to = parseClockMinutes(window.to);
-    if (from === null || to === null) return "מלאו את כל חלונות השעות, או הסירו חלון ריק.";
-    if (to <= from) return "שעת הסגירה חייבת להיות אחרי שעת הפתיחה.";
+    if (from === null || to === null) return "incomplete";
+    if (to <= from) return "closeAfterOpen";
   }
-  if (hoursWindowsOverlap(windows)) {
-    return "חלונות השעות חופפים. בחרו טווחים שלא נחתכים.";
-  }
+  if (hoursWindowsOverlap(windows)) return "overlap";
   return null;
+}
+
+export function hoursWindowsIssue(windows: HoursWindow[]): string | null {
+  const id = hoursWindowsIssueId(windows);
+  return id ? HOURS_WINDOWS_ISSUE_HE[id] : null;
 }
 
 export function normalizeHoursWindows(windows: HoursWindow[]): HoursWindow[] {

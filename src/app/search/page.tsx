@@ -31,9 +31,11 @@ import { useAdminPreviewAsUser } from "@/hooks/use-admin-preview-as-user";
 import { notifyCatalogChanged, removeOwnedHouse, saveOwnedHouse } from "@/lib/offline-db";
 import { writeHomeView } from "@/lib/home-view";
 import type { PublicHouse } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
 
 export default function SearchPage() {
   const router = useRouter();
+  const { t, dir } = useLocale();
   const owned = useOwnedHouses();
   const { catalog, loading: catalogLoading, source, refresh } = useCatalog();
   const { admin, ready: adminReady } = useAdminSession();
@@ -142,19 +144,17 @@ export default function SearchPage() {
     <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden">
       <AppHeader />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
-        <div className="mx-auto w-full max-w-lg pb-10">
+        <div className="mx-auto w-full max-w-lg pb-10" dir={dir}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/banner.jpg"
             alt=""
             className="mb-4 h-28 w-full rounded-2xl object-cover ring-1 ring-orange-500/30"
           />
-          <h1 className="font-display mb-1 text-2xl text-orange-300">חיפוש בית</h1>
-          <p className="mb-4 text-base text-violet-200">
-            בחרו בית מהרשימה — הפרטים יופיעו כאן בכרטיס, כמו ברשימה הראשית.
-          </p>
+          <h1 className="font-display mb-1 text-2xl text-orange-300">{t("search.title")}</h1>
+          <p className="mb-4 text-base text-violet-200">{t("search.intro")}</p>
           <div className="mb-4 space-y-1.5 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-            <Label htmlFor="house-pick">בית</Label>
+            <Label htmlFor="house-pick">{t("search.fieldLabel")}</Label>
             <HousePicker
               houses={houses}
               selected={picked}
@@ -164,7 +164,7 @@ export default function SearchPage() {
             />
           </div>
           {!picked ? (
-            <p className="text-base text-violet-300">הקלידו שם משפחה או כתובת ובחרו בית.</p>
+            <p className="text-base text-violet-300">{t("search.emptyHint")}</p>
           ) : (
             <HouseCard {...houseCardPropsFor(picked, actionContext)} />
           )}

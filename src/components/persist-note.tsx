@@ -1,7 +1,11 @@
+"use client";
+
 import { config } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 
 export function PersistNote({ className }: { className?: string }) {
+  const { t } = useLocale();
   if (config.durableWrites) return null;
   return (
     <p
@@ -10,7 +14,7 @@ export function PersistNote({ className }: { className?: string }) {
         className,
       )}
     >
-      המצב המקומי הזה שומר בתים רק על המחשב שמריץ את האפליקציה. באתר המפורסם כולם רואים את אותה מפה.
+      {t("persistNote.localOnly")}
     </p>
   );
 }
