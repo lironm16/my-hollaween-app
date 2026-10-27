@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { useLocale } from "@/hooks/use-locale";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import {
   DEFAULT_PUSH_TOPIC_PREFS,
@@ -13,8 +14,9 @@ import {
   type PushTopic,
   type PushTopicPrefs,
 } from "@/lib/push-client";
-import { anyPushTopicOn, PUSH_TOPIC_ROWS, PUSH_TOPICS } from "@/lib/push-topics";
+import { anyPushTopicOn, PUSH_TOPICS } from "@/lib/push-topics";
 import { cn } from "@/lib/utils";
+import { LanguageSettings } from "@/components/language-settings";
 
 function SettingSwitch({
   on,
@@ -80,7 +82,13 @@ function SettingsSection({ title, children }: { title: string; children: ReactNo
   );
 }
 
-function DeviceSettingsInner() {
+const PUSH_TOPIC_I18N: { id: PushTopic; titleKey: string; hintKey?: string }[] = [
+  { id: "newHouse", titleKey: "settings.pushTopicNewHouse", hintKey: "settings.pushTopicNewHouseHint" },
+  { id: "admin", titleKey: "settings.pushTopicAdmin", hintKey: "settings.pushTopicAdminHint" },
+];
+
+function PushSettingsInner() {
+  const { t } = useLocale();
   const [topics, setTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
   const [savedTopics, setSavedTopics] = useState<PushTopicPrefs>(DEFAULT_PUSH_TOPIC_PREFS);
   const [pushBusy, setPushBusy] = useState(false);
@@ -114,13 +122,13 @@ function DeviceSettingsInner() {
       const result = await syncPushTopicPrefs(next);
       if (result === "on") {
         setSavedTopics(next);
-        toast.message("ההעדפות נשמרו.");
+        toast.message(t("settings.notificationsSaved"));
       } else {
-        toast.message("ההעדפות נשמרו במכשיר. הפעילו התראות דרך סמל הפעמון.");
+        toast.message(t("settings.notificationsSavedDeviceOnly"));
         setSavedTopics(next);
       }
     } catch {
-      toast.error("לא הצלחנו לשמור את ההעדפות.");
+      toast.error(t("settings.notificationsSaveFailed"));
       setTopics(savedTopics);
     } finally {
       setPushBusy(false);
@@ -133,33 +141,35 @@ function DeviceSettingsInner() {
   }
 
   return (
-    <div className="space-y-3" dir="rtl">
-      <SettingsSection title="התראות">
-        <p className="px-1 text-sm text-violet-300">
-          סוגי ההתראות שיישלחו למכשיר. הפעלה/כיבוי מלא דרך סמל הפעמון בראש המסך.
-        </p>
-        {PUSH_TOPIC_ROWS.map((row) => (
-          <SettingSwitch
-            key={row.id}
-            title={row.title}
-            hint={row.hint}
-            on={topics[row.id]}
-            disabled={pushBusy}
-            onChange={(next) => toggleTopic(row.id, next)}
-          />
-        ))}
-        {!anyPushTopicOn(topics) ? (
-          <p className="px-1 text-sm text-amber-200/90">סמנו לפחות סוג אחד כדי לקבל התראות.</p>
-        ) : null}
-        {PUSH_TOPICS.some((topic) => topics[topic] !== savedTopics[topic]) ? (
-          <p className="px-1 text-sm text-violet-400">שומרים אוטומטית…</p>
-        ) : null}
-      </SettingsSection>
-    </div>
+    <SettingsSection title={t("settings.notificationsSection")}>
+      <p className="px-1 text-sm text-violet-300">{t("settings.notificationsIntro")}</p>
+      {PUSH_TOPIC_I18N.map((row) => (
+        <SettingSwitch
+          key={row.id}
+          title={t(row.titleKey)}
+          hint={row.hintKey ? t(row.hintKey) : undefined}
+          on={topics[row.id]}
+          disabled={pushBusy}
+          onChange={(next) => toggleTopic(row.id, next)}
+        />
+      ))}
+      {!anyPushTopicOn(topics) ? (
+        <p className="px-1 text-sm text-amber-200/90">{t("settings.notificationsPickOne")}</p>
+      ) : null}
+      {PUSH_TOPICS.some((topic) => topics[topic] !== savedTopics[topic]) ? (
+        <p className="px-1 text-sm text-violet-400">{t("settings.notificationsSaving")}</p>
+      ) : null}
+    </SettingsSection>
   );
 }
 
 export function DeviceSettings() {
-  if (!pushAlertsEnabled()) return null;
-  return <DeviceSettingsInner />;
+  const { dir } = useLocale();
+
+  return (
+    <div className="space-y-3" dir={dir}>
+      <LanguageSettings />
+      {pushAlertsEnabled() ? <PushSettingsInner /> : null}
+    </div>
+  );
 }

@@ -1,0 +1,53 @@
+export const heMessages = {
+  settings: {
+    title: "הגדרות",
+    languageSection: "שפה",
+    languageHint: "בחרו את שפת הממשק. ההעדפה נשמרת במכשיר.",
+    languageEnglish: "English",
+    languageHebrew: "עברית",
+    notificationsSection: "התראות",
+    notificationsIntro:
+      "סוגי ההתראות שיישלחו למכשיר. הפעלה/כיבוי מלא דרך סמל הפעמון בראש המסך.",
+    notificationsPickOne: "סמנו לפחות סוג אחד כדי לקבל התראות.",
+    notificationsSaving: "שומרים אוטומטית…",
+    notificationsSaved: "ההעדפות נשמרו.",
+    notificationsSavedDeviceOnly:
+      "ההעדפות נשמרו במכשיר. הפעילו התראות דרך סמל הפעמון.",
+    notificationsSaveFailed: "לא הצלחנו לשמור את ההעדפות.",
+    pushTopicNewHouse: "בית חדש נוסף",
+    pushTopicNewHouseHint: "לפני ליל האלווין — כשבית חדש נרשם למפה",
+    pushTopicAdmin: "הודעות מהמנהלים",
+    pushTopicAdminHint: "מסרים מותאמים בלילה (וגם לפניו)",
+  },
+  menu: {
+    open: "תפריט",
+    close: "סגירת תפריט",
+    home: "מסך הבית",
+    homeAria: "מסך הבית",
+    houses: "בתים",
+    addHouse: "הוספה",
+    editHouse: "עריכה",
+    search: "חיפוש",
+    onDevice: "במכשיר שלי",
+    scanQr: "סרוק QR",
+    stats: "תמונת מצב",
+    gemAlbum: "אוסף השדונים",
+    helpFaq: "שאלות ותשובות",
+    helpContact: "עזרה אישית",
+    settings: "הגדרות",
+    adminAlerts: "התראות לשכונה",
+    adminAnomalies: "חריגות בתים",
+    adminRehearsal: "הגדרות מנהל",
+    adminDownload: "הורדת רשימת בתים",
+    adminLogout: "יציאה",
+    adminLogin: "כניסת מנהל",
+    adminLogoutToast: "יצאתם ממצב מנהל",
+    sheetTitle: "תפריט",
+  },
+  brand: {
+    tagline: "מפת הבתים המפחידים של השכונה",
+    tabTitle: "הלואין בשכונה HallowHood",
+  },
+} as const;
+
+export type AppMessages = typeof heMessages;

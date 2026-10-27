@@ -1,0 +1,53 @@
+import type { AppMessages } from "@/lib/i18n/messages/he";
+
+export const enMessages: AppMessages = {
+  settings: {
+    title: "Settings",
+    languageSection: "Language",
+    languageHint: "Choose the interface language. Your choice is saved on this device.",
+    languageEnglish: "English",
+    languageHebrew: "עברית",
+    notificationsSection: "Notifications",
+    notificationsIntro:
+      "Which alerts this device receives. Turn all notifications on or off with the bell in the header.",
+    notificationsPickOne: "Enable at least one type to receive alerts.",
+    notificationsSaving: "Saving…",
+    notificationsSaved: "Preferences saved.",
+    notificationsSavedDeviceOnly:
+      "Preferences saved on this device. Turn on alerts with the bell icon.",
+    notificationsSaveFailed: "Could not save preferences.",
+    pushTopicNewHouse: "New house added",
+    pushTopicNewHouseHint: "Before Halloween night — when a new house joins the map",
+    pushTopicAdmin: "Messages from organizers",
+    pushTopicAdminHint: "Custom messages on event night (and before)",
+  },
+  menu: {
+    open: "Menu",
+    close: "Close menu",
+    home: "Home",
+    homeAria: "Home",
+    houses: "Houses",
+    addHouse: "Add house",
+    editHouse: "Edit",
+    search: "Search",
+    onDevice: "On my device",
+    scanQr: "Scan QR",
+    stats: "Live stats",
+    gemAlbum: "Imp collection",
+    helpFaq: "FAQ",
+    helpContact: "Contact help",
+    settings: "Settings",
+    adminAlerts: "Neighborhood alerts",
+    adminAnomalies: "House anomalies",
+    adminRehearsal: "Admin settings",
+    adminDownload: "Download house list",
+    adminLogout: "Log out",
+    adminLogin: "Admin login",
+    adminLogoutToast: "Logged out of admin mode",
+    sheetTitle: "Menu",
+  },
+  brand: {
+    tagline: "Your neighborhood spooky house map",
+    tabTitle: "HallowHood — Halloween in the Hood",
+  },
+};

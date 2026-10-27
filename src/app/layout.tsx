@@ -8,6 +8,7 @@ import { HalloweenFxGate } from "@/components/halloween-fx-gate";
 import { RehearsalBoot } from "@/components/rehearsal-boot";
 import { appVersion } from "@/lib/app-version";
 import { config } from "@/lib/config";
+import { defaultAppLocale } from "@/lib/i18n/locale";
 import { getInlineThemeCss } from "@/lib/inline-css";
 import "./globals.css";
 
@@ -61,10 +62,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const themeCss = getInlineThemeCss();
+  const bootLocale = defaultAppLocale();
   return (
     <html
-      lang="he"
-      dir="rtl"
+      lang={bootLocale}
+      dir={bootLocale === "he" ? "rtl" : "ltr"}
       className={`${rubik.variable} ${creepster.variable} ${rubikWetPaint.variable} dark h-full antialiased`}
       suppressHydrationWarning
     >
@@ -72,6 +74,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Inlined: Cursor Preview is a different origin and Next.js 16 returns 403 for /_next CSS. */}
         {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
         <link rel="stylesheet" href={`/app.css?v=${appVersion()}`} />
+        <meta name="hw-default-locale" content={bootLocale} />
         <meta name="hw-build" content="2026-10-18-gem-cam-merge-v1" />
         <meta name="hw-version" content={appVersion()} />
         <link rel="stylesheet" href={`/shell.css?v=${appVersion()}`} />

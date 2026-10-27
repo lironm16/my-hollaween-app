@@ -18,6 +18,7 @@ import {
   Sparkles,
   Save,
   ScanLine,
+  Settings,
   X,
 } from "lucide-react";
 import { NightPassConnectStrip } from "@/components/night-pass-connect-strip";
@@ -37,7 +38,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { buttonVariants } from "@/components/ui/button";
-import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
@@ -53,6 +53,7 @@ import {
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { readHelpInstallCaptureFromLocation } from "@/lib/help-install-capture";
 import { useAddHouseOpen } from "@/hooks/use-add-house-open";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -77,6 +78,7 @@ export function AppHeader({
   const [adminDownloadOpen, setAdminDownloadOpen] = useState(false);
   const [visitQrScanOpen, setVisitQrScanOpen] = useState(false);
   const [helpInstallCapture, setHelpInstallCapture] = useState(false);
+  const { t, dir } = useLocale();
 
   useEffect(() => {
     setHelpInstallCapture(readHelpInstallCaptureFromLocation());
@@ -85,7 +87,7 @@ export function AppHeader({
   async function onLogout() {
     setMenuOpen(false);
     await logout();
-    toast.message("יצאתם ממצב מנהל");
+    toast.message(t("menu.adminLogoutToast"));
   }
 
   function closeMenu() {
@@ -112,7 +114,7 @@ export function AppHeader({
         <div className="app-header__actions">
           <button
             type="button"
-            aria-label="תפריט"
+            aria-label={t("menu.open")}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(true)}
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d1028] text-orange-100 ring-1 ring-orange-500/25 hover:bg-orange-500/10"
@@ -124,9 +126,9 @@ export function AppHeader({
         </div>
         <Link
           href="/"
-          aria-label="מסך הבית"
+          aria-label={t("menu.homeAria")}
           className="app-header__brand"
-          dir="rtl"
+          dir={dir}
           onClick={(event) => {
             if (!onHomeTap) return;
             event.preventDefault();
@@ -147,10 +149,10 @@ export function AppHeader({
         >
           <SheetHeader className="border-b border-orange-500/15 px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
             <div className="flex items-center justify-between gap-2">
-              <SheetTitle className="text-lg font-semibold text-orange-50">תפריט</SheetTitle>
+              <SheetTitle className="text-lg font-semibold text-orange-50">{t("menu.sheetTitle")}</SheetTitle>
               <button
                 type="button"
-                aria-label="סגירת תפריט"
+                aria-label={t("menu.close")}
                 onClick={closeMenu}
                 className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-violet-300 hover:bg-orange-500/10 hover:text-orange-100"
               >
@@ -158,7 +160,7 @@ export function AppHeader({
               </button>
             </div>
           </SheetHeader>
-          <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3 pt-2">
+          <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3 pt-2" dir={dir}>
             {showAdminUserPreview ? (
               <div className="px-1 pb-1">
                 <AdminGemUserPreviewToggle compact />
@@ -194,7 +196,7 @@ export function AppHeader({
               )}
             >
               <Home className="size-4" />
-              מסך הבית
+              {t("menu.home")}
             </Link>
 
             <div className="flex flex-col gap-0.5">
@@ -208,7 +210,7 @@ export function AppHeader({
                 )}
               >
                 <Home className="size-4" />
-                <span className="flex-1 text-start">בתים</span>
+                <span className="flex-1 text-start">{t("menu.houses")}</span>
                 <ChevronDown
                   className={cn("size-4 shrink-0 text-violet-400 transition-transform", houseOpen && "rotate-180")}
                   aria-hidden
@@ -227,20 +229,20 @@ export function AppHeader({
                       )}
                     >
                       <HousePlus className="size-4" />
-                      הוספה
+                      {t("menu.addHouse")}
                     </Link>
                   ) : null}
                   <Link href="/edit" onClick={closeMenu} className={houseSubLinkClass}>
                     <Pencil className="size-4" />
-                    עריכה
+                    {t("menu.editHouse")}
                   </Link>
                   <Link href="/search" onClick={closeMenu} className={houseSubLinkClass}>
                     <Search className="size-4" />
-                    חיפוש
+                    {t("menu.search")}
                   </Link>
                   <Link href="/my" onClick={closeMenu} className={houseSubLinkClass}>
                     <Home className="size-4" />
-                    במכשיר שלי
+                    {t("menu.onDevice")}
                   </Link>
                   <button
                     type="button"
@@ -251,7 +253,7 @@ export function AppHeader({
                     className={houseSubLinkClass}
                   >
                     <ScanLine className="size-4" />
-                    סרוק QR
+                    {t("menu.scanQr")}
                   </button>
                 </div>
               ) : null}
@@ -266,7 +268,7 @@ export function AppHeader({
               )}
             >
               <Activity className="size-4" />
-              תמונת מצב
+              {t("menu.stats")}
             </Link>
             {showGemBag ? (
               <Link
@@ -278,9 +280,20 @@ export function AppHeader({
                 )}
               >
                 <ImpOutlineIcon className="size-4 shrink-0" />
-                {GEM_ALBUM_TITLE_HE}
+                {t("menu.gemAlbum")}
               </Link>
             ) : null}
+            <Link
+              href="/settings"
+              onClick={closeMenu}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "h-11 justify-start gap-2 text-base text-orange-50 hover:bg-orange-500/10",
+              )}
+            >
+              <Settings className="size-4" />
+              {t("menu.settings")}
+            </Link>
             <Link
               href="/help"
               onClick={closeMenu}
@@ -290,7 +303,7 @@ export function AppHeader({
               )}
             >
               <HelpCircle className="size-4" />
-              שאלות ותשובות
+              {t("menu.helpFaq")}
             </Link>
             <Link
               href="/help/contact"
@@ -301,7 +314,7 @@ export function AppHeader({
               )}
             >
               <HelpCircle className="size-4" />
-              עזרה אישית
+              {t("menu.helpContact")}
             </Link>
             {admin ? (
               <>
@@ -315,7 +328,7 @@ export function AppHeader({
                     )}
                   >
                     <Bell className="size-4" />
-                    התראות לשכונה
+                    {t("menu.adminAlerts")}
                   </Link>
                 ) : null}
                 <Link
@@ -327,7 +340,7 @@ export function AppHeader({
                   )}
                 >
                   <AlertTriangle className="size-4" />
-                  חריגות בתים
+                  {t("menu.adminAnomalies")}
                 </Link>
                 <Link
                   href="/admin/rehearsal"
@@ -338,7 +351,7 @@ export function AppHeader({
                   )}
                 >
                   <Sparkles className="size-4" />
-                  הגדרות מנהל
+                  {t("menu.adminRehearsal")}
                 </Link>
                 <button
                   type="button"
@@ -349,7 +362,7 @@ export function AppHeader({
                   )}
                 >
                   <Save className="size-4" strokeWidth={2.25} />
-                  הורדת רשימת בתים
+                  {t("menu.adminDownload")}
                 </button>
                 <button
                   type="button"
@@ -360,7 +373,7 @@ export function AppHeader({
                   )}
                 >
                   <LogOut className="size-4" />
-                  יציאה
+                  {t("menu.adminLogout")}
                 </button>
               </>
             ) : (
@@ -373,7 +386,7 @@ export function AppHeader({
                 )}
               >
                 <Shield className="size-4" />
-                כניסת מנהל
+                {t("menu.adminLogin")}
               </Link>
             )}
           </nav>

@@ -22,6 +22,25 @@
     document.documentElement.classList.add("hw-mobile-browser");
   }
 
+  function applyStoredLocale() {
+    var KEY = "hw-app-locale";
+    var locale = null;
+    try {
+      var stored = localStorage.getItem(KEY);
+      if (stored === "en" || stored === "he") locale = stored;
+    } catch (e) {}
+    if (!locale) {
+      var meta = document.querySelector('meta[name="hw-default-locale"]');
+      var fromMeta = meta && meta.getAttribute("content");
+      if (fromMeta === "en" || fromMeta === "he") locale = fromMeta;
+    }
+    if (!locale) locale = "he";
+    document.documentElement.lang = locale;
+    document.documentElement.dir = locale === "he" ? "rtl" : "ltr";
+  }
+
+  applyStoredLocale();
+
   syncAppH();
   window.addEventListener("resize", syncAppH);
   if (window.visualViewport) {
