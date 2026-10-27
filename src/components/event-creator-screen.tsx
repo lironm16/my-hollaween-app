@@ -239,13 +239,40 @@ export function EventCreatorScreen() {
 
   const pickHit = useCallback(
     (hit: BoundarySearchHit) => {
-      if (selectedIds.includes(hit.id)) return;
+      if (selectedIds.includes(hit.id)) {
+        setMapFocusId(hit.id);
+        return;
+      }
       persist({ ...draft, zones: addEventBoundaryZone(draft.zones, hitToZone(hit)) });
       setMapFocusId(hit.id);
       resetSearch();
       toast.success(`נוסף: ${hit.label}`);
     },
     [draft, persist, resetSearch, selectedIds],
+  );
+
+  const mapPickInFlight = useRef(false);
+  const onMapBackgroundTap = useCallback(
+    async (lat: number, lng: number) => {
+      if (mapPickInFlight.current) return;
+      mapPickInFlight.current = true;
+      try {
+        const res = await fetch(
+          `/api/event-boundaries/pick?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
+        );
+        const body = (await res.json()) as { ok?: boolean; hit?: BoundarySearchHit };
+        if (body.hit) {
+          pickHit(body.hit);
+          return;
+        }
+        toast.message("לא נמצאה שכונה בנקודה זו");
+      } catch {
+        toast.error("לא הצלחנו לזהות שכונה");
+      } finally {
+        mapPickInFlight.current = false;
+      }
+    },
+    [pickHit],
   );
 
   const removeZone = useCallback(
@@ -381,6 +408,7 @@ export function EventCreatorScreen() {
               selectedIds={selectedIds}
               focusedId={mapFocusId}
               onAreaClick={onMapAreaClick}
+              onBackgroundTap={onMapBackgroundTap}
             />
             {loadingMap ? (
               <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs text-white/70">

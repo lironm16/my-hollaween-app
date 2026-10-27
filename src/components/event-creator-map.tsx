@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo } from "react";
-import { MapContainer, Polygon, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Polygon, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
@@ -42,6 +42,15 @@ function ringsFromGeometry(geometry: GeoJSON.Geometry): [number, number][][] {
   return [];
 }
 
+function MapBackgroundTap({ onTap }: { onTap?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onTap?.(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
 function FitBounds({
   bounds,
   showCountry,
@@ -66,6 +75,8 @@ type Props = {
   selectedIds: string[];
   focusedId?: string | null;
   onAreaClick?: (featureId: string) => void;
+  /** Tap on map outside selected polygons — e.g. add שכונה at point. */
+  onBackgroundTap?: (lat: number, lng: number) => void;
   className?: string;
 };
 
@@ -74,6 +85,7 @@ export function EventCreatorMap({
   selectedIds,
   focusedId = null,
   onAreaClick,
+  onBackgroundTap,
   className,
 }: Props) {
   const { tiles } = useMapTiles();
@@ -117,6 +129,7 @@ export function EventCreatorMap({
           />
         ) : null}
         <FitBounds bounds={bounds} showCountry={showCountry} />
+        {onBackgroundTap ? <MapBackgroundTap onTap={onBackgroundTap} /> : null}
         {[...features]
           .map((feature, idx) => ({ feature, idx }))
           .sort((a, b) => {
@@ -151,7 +164,10 @@ export function EventCreatorMap({
                   eventHandlers={
                     onAreaClick
                       ? {
-                          click: () => onAreaClick(id),
+                          click: (e) => {
+                            L.DomEvent.stopPropagation(e.originalEvent);
+                            onAreaClick(id);
+                          },
                         }
                       : undefined
                   }
