@@ -312,8 +312,8 @@ function StatTile({
   onClick?: () => void;
 }) {
   const className = cn(
-    "flex min-w-0 items-center gap-2.5 rounded-xl bg-[#14081c] px-2.5 py-2 text-start",
-    wide && "col-span-2 w-full",
+    "flex w-full min-w-0 items-center gap-2.5 rounded-xl bg-[#14081c] px-2.5 py-2",
+    wide && "col-span-2",
     onClick &&
       "cursor-pointer transition hover:bg-[#1a1028] hover:ring-1 hover:ring-orange-500/25 active:scale-[0.99]",
     selected && "ring-2 ring-orange-400/50 bg-[#1a1028]",
@@ -328,10 +328,10 @@ function StatTile({
       >
         {icon}
       </span>
-      <span className="min-w-0 text-end">
+      <span className="min-w-0 flex-1 text-end">
         <span className="block text-base leading-tight text-violet-300">{label}</span>
         {hint ? <span className="block text-sm leading-tight text-violet-400">{hint}</span> : null}
-        <span className={cn("block text-2xl font-bold leading-none text-orange-50", valueClass)}>
+        <span className={cn("block text-2xl font-bold leading-none tabular-nums text-orange-50", valueClass)}>
           {value}
         </span>
       </span>
