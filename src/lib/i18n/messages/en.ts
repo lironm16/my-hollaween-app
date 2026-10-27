@@ -434,6 +434,8 @@ export const enMessages: AppMessages = {
     showMore: "Show more",
     showLess: "Show less",
     closePhoto: "Close photo",
+    openInGoogleMaps: "Open in Google Maps",
+    shareHouseLink: "House link",
   },
   houseMeta: {
     added: "Added {when}",

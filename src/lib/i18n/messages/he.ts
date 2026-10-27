@@ -433,6 +433,8 @@ export const heMessages = {
     showMore: "הצג עוד",
     showLess: "הצג פחות",
     closePhoto: "סגירת התמונה",
+    openInGoogleMaps: "ניווט ב־Google Maps",
+    shareHouseLink: "קישור לבית",
   },
   houseMeta: {
     added: "נוסף {when}",

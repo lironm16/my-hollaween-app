@@ -158,14 +158,14 @@ function ListDetailSection({
           event.stopPropagation();
           setOpen((value) => !value);
         }}
-        className="flex w-full items-center gap-2 px-3 py-2 text-right transition hover:bg-[#342040]"
+        className="flex w-full items-center gap-2 px-3 py-2 text-start transition hover:bg-[#342040]"
       >
-        <span className={cn("min-w-0 flex-1 text-sm font-medium", titleClassName ?? "text-amber-200/80")}>
+        <span className={cn("min-w-0 flex-1 text-sm font-medium text-start", titleClassName ?? "text-amber-200/80")}>
           {title}
         </span>
         <ChevronDown
           className={cn(
-            "size-4 shrink-0 text-amber-200/70 transition-transform",
+            "ms-auto size-4 shrink-0 text-amber-200/70 transition-transform",
             open && "rotate-180",
           )}
           aria-hidden
@@ -337,7 +337,7 @@ export function HouseDetails({
   hideHoursBanner?: boolean;
   clusterBoothTag?: string | null;
 }) {
-  const { locale, t } = useLocale();
+  const { dir, locale, t } = useLocale();
   const addressReveal = useAddressReveal();
   const mapsUrl = useHouseMapsUrl(house);
   const { admin } = useAdminSession();
@@ -493,7 +493,7 @@ export function HouseDetails({
     </div>
   );
   return (
-    <div className={cn(compact ? "space-y-2" : "space-y-3")}>
+    <div className={cn(compact ? "space-y-2" : "space-y-3")} dir={dir}>
       {photoOpen && house.photoUrl && typeof document !== "undefined"
         ? createPortal(
             <button
@@ -578,7 +578,7 @@ export function HouseDetails({
               onClick={(e) => e.stopPropagation()}
               className={cn(buttonVariants({ size: "sm" }))}
             >
-              ניווט ב־Google Maps
+              {t("houseCard.openInGoogleMaps")}
             </a>
           ) : null}
           <Link
@@ -586,7 +586,7 @@ export function HouseDetails({
             onClick={(e) => e.stopPropagation()}
             className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
           >
-            קישור לבית
+            {t("houseCard.shareHouseLink")}
           </Link>
         </div>
       ) : null}

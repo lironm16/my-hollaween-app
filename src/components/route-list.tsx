@@ -11,6 +11,7 @@ import type { PublicHouse } from "@/lib/types";
 import { skipReturnActivePreviewLine } from "@/lib/skip-return-preview";
 import { SkipSign } from "@/components/visit-marks";
 import { useLocale } from "@/hooks/use-locale";
+import { localizedRouteOriginLabel } from "@/lib/i18n/origin-copy";
 import { cn } from "@/lib/utils";
 import type { TourLegTone } from "@/lib/route-session-progress";
 
@@ -158,12 +159,10 @@ export function RouteList({
     );
   }
 
-  const startLabel =
-    originLabel ||
-    (startedFrom === "gps" ? t("routeList.currentLocation") : t("routeList.fromNeighborhood"));
+  const startLabel = localizedRouteOriginLabel(locale, startedFrom, originLabel);
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3">
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-3 py-3" dir={dir}>
       <ol className="route-list">
         <li className="route-list-card route-list-card--origin">
           <div className="flex items-start gap-3">
