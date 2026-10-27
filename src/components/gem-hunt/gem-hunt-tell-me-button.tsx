@@ -1,6 +1,7 @@
 "use client";
 
 import type { MouseEvent } from "react";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 export function GemHuntTellMeButton({
@@ -12,6 +13,7 @@ export function GemHuntTellMeButton({
   readyHighlight: boolean;
   onClick: (e: MouseEvent) => void;
 }) {
+  const { t } = useLocale();
   return (
     <button
       type="button"
@@ -24,7 +26,7 @@ export function GemHuntTellMeButton({
       onPointerDown={(e) => e.stopPropagation()}
       onClick={onClick}
     >
-      {centerReveal ? "הסתר" : "גלה לי"}
+      {centerReveal ? t("gem.hide") : t("gem.tellMe")}
     </button>
   );
 }

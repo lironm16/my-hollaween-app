@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GEM_TELL_ME_OUT_OF_RANGE_MESSAGE } from "@/lib/gem-tell-me-gate";
+import { useLocale } from "@/hooks/use-locale";
 
 export function gemTellMeReadyHighlight(args: {
   inRange: boolean;
@@ -30,6 +30,7 @@ export function useGemTellMeButton({
   onActivate: () => void;
   onDeactivate: () => void;
 }) {
+  const { t } = useLocale();
   const [showRangeError, setShowRangeError] = useState(false);
 
   useEffect(() => {
@@ -66,6 +67,6 @@ export function useGemTellMeButton({
     onTellMeClick,
     readyHighlight,
     showRangeError,
-    rangeErrorMessage: GEM_TELL_ME_OUT_OF_RANGE_MESSAGE,
+    rangeErrorMessage: t("gem.tellMeRangeError"),
   };
 }

@@ -17,7 +17,7 @@ import {
   markedCandy,
 } from "@/lib/house-state";
 import { useCatalogRemoved } from "@/hooks/use-catalog-removed";
-import { catalogRemovedBannerLabel } from "@/lib/labels";
+import { useLocale } from "@/hooks/use-locale";
 import type { TreatStock, TreatId, VisitState } from "@/lib/types";
 
 const BANNER = "rounded-lg px-3 py-2 text-base font-medium leading-snug break-words";
@@ -52,25 +52,26 @@ export function HoursStatusBanner({
   const rehearsed = useAppNow();
   const clock = now ?? rehearsed;
   const catalogRemoved = useCatalogRemoved(house.id);
+  const { t } = useLocale();
 
   if (catalogRemoved) {
     return (
       <p className={cn(BANNER, CATALOG_REMOVED_TONE, className)} role="status">
-        {catalogRemovedBannerLabel}
+        {t("banners.removedFromMap")}
       </p>
     );
   }
 
   if (effectiveVisit(house) === "closed" || isHoursNightOver(house, clock)) {
     return (
-      <p className={cn(BANNER, CLOSED_TONE, className)}>הבית סגור</p>
+      <p className={cn(BANNER, CLOSED_TONE, className)}>{t("banners.houseClosed")}</p>
     );
   }
 
   if (isOwnerFrozen(house, clock.getTime())) {
     return (
       <p className={cn(BANNER, "bg-red-950/85 text-red-50", className)}>
-        הפסקה עכשיו
+        {t("banners.onBreakNow")}
       </p>
     );
   }
@@ -82,7 +83,7 @@ export function HoursStatusBanner({
     candyLevel(withTreats) === "out"
   ) {
     return (
-      <p className={cn(BANNER, CLOSED_TONE, className)}>נגמר המלאי</p>
+      <p className={cn(BANNER, CLOSED_TONE, className)}>{t("banners.outOfStock")}</p>
     );
   }
 
@@ -90,7 +91,8 @@ export function HoursStatusBanner({
   if (closesAt) {
     return (
       <p className={cn(BANNER, "bg-orange-950/55 text-orange-200", className)}>
-        נסגר בקרוב ב־<ClockTime>{closesAt}</ClockTime>
+        {t("banners.closingSoonBefore")}
+        <ClockTime>{closesAt}</ClockTime>
       </p>
     );
   }
@@ -98,7 +100,8 @@ export function HoursStatusBanner({
   if (opensSoonAt) {
     return (
       <p className={cn(BANNER, "bg-cyan-950/55 text-cyan-100", className)}>
-        נפתח בקרוב ב־<ClockTime>{opensSoonAt}</ClockTime>
+        {t("banners.openingSoonBefore")}
+        <ClockTime>{opensSoonAt}</ClockTime>
       </p>
     );
   }
@@ -106,7 +109,8 @@ export function HoursStatusBanner({
   if (breakOpens) {
     return (
       <p className={cn(BANNER, "bg-red-950/85 text-red-50", className)}>
-        הפסקה עכשיו — נפתח שוב ב־<ClockTime>{breakOpens}</ClockTime>
+        {t("banners.breakUntilBefore")}
+        <ClockTime>{breakOpens}</ClockTime>
       </p>
     );
   }
@@ -126,11 +130,12 @@ export function HoursStatusBanner({
   if (status.kind === "between") {
     return (
       <p className={cn(BANNER, "bg-red-950/85 text-red-50", className)}>
-        הפסקה עכשיו — נפתח שוב ב־<ClockTime>{status.opensAt}</ClockTime>
+        {t("banners.breakUntilBefore")}
+        <ClockTime>{status.opensAt}</ClockTime>
       </p>
     );
   }
   return (
-    <p className={cn(BANNER, CLOSED_TONE, className)}>הבית סגור</p>
+    <p className={cn(BANNER, CLOSED_TONE, className)}>{t("banners.houseClosed")}</p>
   );
 }

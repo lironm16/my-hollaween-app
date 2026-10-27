@@ -1,5 +1,6 @@
 import type { AppMessages } from "@/lib/i18n/messages/he";
 import { helpMessagesEn } from "@/lib/i18n/messages/help-en";
+import { gemMessagesEn } from "@/lib/i18n/messages/gem-en";
 
 export const enMessages: AppMessages = {
   settings: {
@@ -367,4 +368,43 @@ export const enMessages: AppMessages = {
     treatVegan: "Vegan",
   },
   help: helpMessagesEn,
+  gem: gemMessagesEn,
+  houseActions: {
+    menuAria: "Actions",
+    toolbarAria: "House actions",
+    nav: "Directions",
+    showOnMap: "Show on map",
+    showInList: "Show in list",
+    share: "Share",
+    editHouse: "Edit house",
+    closeEdit: "Close edit",
+    editCodeDevices: "Edit code & devices",
+    visitPoster: "Show visit sheet",
+    linkCopied: "Link copied",
+    shareFailed: "Could not share",
+    visitedMark: "Visited",
+    unvisitMark: "Mark as not visited",
+    liked: "Liked",
+    unlike: "Remove like",
+    skip: "Skip",
+    unskip: "Skipped — restore",
+  },
+  banners: {
+    outsideNeighborhood: "Your location is outside the neighborhood map — we marked the nearest edge.",
+    offlineCached: "Offline · showing the list saved on this device",
+    offlineNoCache: "Offline, and nothing saved on this device",
+    serverCached: "Server unavailable · showing the list saved on this device",
+    serverNoCache: "Server unavailable, and nothing saved on this device",
+    removedFromMap: "Removed from map",
+    houseClosed: "House closed",
+    onBreakNow: "On break now",
+    outOfStock: "Out of treats",
+    closingSoonBefore: "Closing soon at ",
+    openingSoonBefore: "Opening soon at ",
+    breakUntilBefore: "On break — opens again at ",
+  },
+  houseCard: {
+    loadingDetail: "Loading house details from server…",
+    notPublic: "This house is not on the public map.",
+  },
 };

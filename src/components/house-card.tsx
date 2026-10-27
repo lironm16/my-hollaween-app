@@ -15,6 +15,7 @@ import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
 import { houseNeedsLocationHydration, isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 import type { ReactNode } from "react";
 
 export function HouseCard({
@@ -92,6 +93,7 @@ export function HouseCard({
   clusterBoothTag?: string | null;
   hideLiveStatus?: boolean;
 }) {
+  const { t } = useLocale();
   const catalogRemoved = useCatalogRemoved(house.id);
   const mayEdit = canEdit && deviceHouseEditAllowed(house.id);
   const overlaid = useAdminHouseFields(house) ?? house;
@@ -148,12 +150,12 @@ export function HouseCard({
       <div className="px-3 pb-1 pt-2">
         {shouldFetchLive && loading && !hideLiveStatus ? (
           <p className="mb-2 text-sm text-violet-300" role="status">
-            טוען פרטי בית מהשרת…
+            {t("houseCard.loadingDetail")}
           </p>
         ) : null}
         {shouldFetchLive && unavailable && !hideLiveStatus ? (
           <p className="mb-2 text-sm text-orange-200" role="alert">
-            הבית לא זמין במפה הציבורית.
+            {t("houseCard.notPublic")}
           </p>
         ) : null}
         <div

@@ -6,7 +6,7 @@ import { ImpDemonCameraIcon } from "@/components/imp-demon-camera-icon";
 import { SavedTrafficIcon, SkipTrafficIcon, VisitedTrafficIcon } from "@/components/traffic-icons";
 import { SkipOutlineIcon } from "@/components/skip-icon";
 import { VisitedCheck } from "@/components/visited-check";
-import { GEM_ACTION_FIND_HE, GEM_FOUND_I_HE } from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
@@ -41,7 +41,7 @@ export function HouseCardQuickActions({
   onRestoreRoute,
   skipped,
   className,
-  toolbarAriaLabel = "פעולות בית",
+  toolbarAriaLabel,
   visitedAriaLabel,
   likeAriaLabel,
   skipAriaLabel,
@@ -64,18 +64,20 @@ export function HouseCardQuickActions({
   skipAriaLabel?: string;
   gemAriaLabel?: string;
 }) {
+  const { t } = useLocale();
   const hasSkip = Boolean(onSkip || onRestoreRoute);
   const hasAny = Boolean(onToggleVisited || onToggleLike || onToggleGem || hasSkip);
   if (!hasAny) return null;
+  const toolbarLabel = toolbarAriaLabel ?? t("houseActions.toolbarAria");
 
   return (
-    <div className={cn("house-card-quick-actions", className)} role="toolbar" aria-label={toolbarAriaLabel}>
+    <div className={cn("house-card-quick-actions", className)} role="toolbar" aria-label={toolbarLabel}>
       {onToggleVisited ? (
         <button
           type="button"
           className={quickBtnClass(Boolean(visited), "visited")}
           aria-label={
-            visitedAriaLabel ?? (visited ? "סמנו כלא ביקרתי" : "ביקרתי")
+            visitedAriaLabel ?? (visited ? t("houseActions.unvisitMark") : t("houseActions.visitedMark"))
           }
           aria-pressed={visited}
           onPointerDown={stopCardPointerBubble}
@@ -99,7 +101,7 @@ export function HouseCardQuickActions({
         <button
           type="button"
           className={quickBtnClass(Boolean(liked), "saved")}
-          aria-label={likeAriaLabel ?? (liked ? "הסירו אהבתי" : "אהבתי")}
+          aria-label={likeAriaLabel ?? (liked ? t("houseActions.unlike") : t("houseActions.liked"))}
           aria-pressed={liked}
           onPointerDown={stopCardPointerBubble}
           onClick={(event) => {
@@ -118,7 +120,7 @@ export function HouseCardQuickActions({
         <button
           type="button"
           className={quickBtnClass(Boolean(skipped), "skipped")}
-          aria-label={skipAriaLabel ?? (skipped ? "דילגתי — החזרה" : "דילוג")}
+          aria-label={skipAriaLabel ?? (skipped ? t("houseActions.unskip") : t("houseActions.skip"))}
           aria-pressed={skipped}
           onPointerDown={stopCardPointerBubble}
           onClick={(event) => {
@@ -141,7 +143,7 @@ export function HouseCardQuickActions({
             quickBtnClass(Boolean(gemCollected), "gem"),
             gemNearHunt && !gemCollected && "is-gem-near-hunt",
           )}
-          aria-label={gemAriaLabel ?? (gemCollected ? GEM_FOUND_I_HE : GEM_ACTION_FIND_HE)}
+          aria-label={gemAriaLabel ?? (gemCollected ? t("gem.foundI") : t("gem.actionFind"))}
           aria-pressed={gemCollected}
           onPointerDown={stopCardPointerBubble}
           onClick={(event) => {

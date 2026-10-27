@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/hooks/use-locale";
+
 export function NeighborhoodStatusBanners({
   outsideBanner,
   offline,
@@ -13,6 +15,8 @@ export function NeighborhoodStatusBanners({
   error: string | null;
   hasCachedHouses: boolean;
 }) {
+  const { t } = useLocale();
+
   return (
     <>
       {outsideBanner ? (
@@ -20,18 +24,18 @@ export function NeighborhoodStatusBanners({
           role="status"
           className="relative z-30 bg-amber-950 px-3 py-2 text-center text-base text-amber-50"
         >
-          המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.
+          {t("banners.outsideNeighborhood")}
         </div>
       ) : null}
       {offline || unreachable ? (
         <div className="relative z-30 bg-[#2a1638] px-3 py-2 text-center text-base text-amber-100 ring-1 ring-inset ring-amber-500/20">
           {offline
             ? hasCachedHouses
-              ? "אין אינטרנט · מוצגת הרשימה ששמורה בטלפון"
-              : "אין אינטרנט, ואין עותק שמור בטלפון"
+              ? t("banners.offlineCached")
+              : t("banners.offlineNoCache")
             : hasCachedHouses
-              ? "השרת לא עונה · מוצגת הרשימה ששמורה בטלפון"
-              : "השרת לא עונה, ואין עותק שמור בטלפון"}
+              ? t("banners.serverCached")
+              : t("banners.serverNoCache")}
         </div>
       ) : error ? (
         <div className="relative z-30 bg-red-950/70 px-3 py-2 text-center text-base text-red-100">

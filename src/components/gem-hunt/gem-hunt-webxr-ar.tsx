@@ -76,15 +76,8 @@ import { cn } from "@/lib/utils";
 import { GemHuntTellMeButton } from "@/components/gem-hunt/gem-hunt-tell-me-button";
 import { useGemTellMeButton } from "@/hooks/use-gem-tell-me-button";
 import { gemTellMeInRange } from "@/lib/gem-tell-me-gate";
-import {
-  GEM_AR_LOCATING_HE,
-  GEM_CLUSTER_FINISH_HE,
-  GEM_CLUSTER_SKIP_HE,
-  gemFoundOnScreenBannerHe,
-  GEM_AT_STOP_DISCOVER_HE,
-  GEM_WALK_MAPS_ARIA_HE,
-  GEM_WALK_MAPS_LINK_HE,
-} from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { useGemCopy } from "@/hooks/use-gem-copy";
 
 type HuntPhase = "boot" | "placing" | "placed" | "collecting";
 
@@ -161,6 +154,8 @@ export function GemHuntWebXrAr({
   clusterSkipAvailable?: boolean;
   clusterFinishAvailable?: boolean;
 }) {
+  const { dir, t } = useLocale();
+  const gemCopy = useGemCopy();
   const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const monsterId = gemMonsterForHouse(house);
   const meta = gemMonsterMeta(monsterId);
@@ -757,7 +752,7 @@ export function GemHuntWebXrAr({
     geoLockMode === "pending" &&
     GEM_WEBXR_GEO_PLACEMENT_ENABLED;
 
-  const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(
+  const foundOnScreenBanner = gemCopy.foundOnScreenBanner(
     repeatVisitLatched,
     gemLabelHe(monsterId),
     isNewGemTypeLatched,
@@ -1316,11 +1311,11 @@ export function GemHuntWebXrAr({
         (centerReveal || campusSession) && "is-tell-me-active",
         naturalDiscoverActive && "is-at-gem-stop",
       )}
-      dir="rtl"
+      dir={dir}
     >
       {naturalDiscoverActive ? (
         <p className="gem-hunt-overlay__at-stop-badge" role="status">
-          {GEM_AT_STOP_DISCOVER_HE}
+          {t("gem.atStopDiscover")}
         </p>
       ) : null}
       <header
@@ -1328,10 +1323,10 @@ export function GemHuntWebXrAr({
           "gem-hunt-webxr__bar",
           campusQueue ? "gem-hunt-overlay__header--title" : "gem-hunt-webxr__bar--close-only",
         )}
-        dir={campusQueue ? "rtl" : "ltr"}
+        dir={campusQueue ? dir : "ltr"}
       >
         {campusQueue ? (
-          <div className="gem-hunt-overlay__header-text pointer-events-none" dir="rtl">
+          <div className="gem-hunt-overlay__header-text pointer-events-none" dir={dir}>
             <p className="gem-hunt-overlay__title--hero text-orange-50">{campusQueue.boothTitle}</p>
             {campusQueue.boothSubtitle ? (
               <p className="mt-0.5 text-sm font-semibold text-amber-200/95">{campusQueue.boothSubtitle}</p>
@@ -1339,7 +1334,7 @@ export function GemHuntWebXrAr({
           </div>
         ) : null}
         <OverlayCloseButton
-          label="סגירה"
+          label={t("common.close")}
           onClick={handleClose}
           className="gem-hunt-overlay__close gem-hunt-webxr__close-btn pointer-events-auto"
         />
@@ -1353,7 +1348,7 @@ export function GemHuntWebXrAr({
           className="gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--collect is-exploding"
           role="status"
         >
-          {foundOnScreenBannerHe}
+          {foundOnScreenBanner}
         </p>
       ) : null}
 
@@ -1477,11 +1472,11 @@ export function GemHuntWebXrAr({
 
       <footer
         className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt gem-hunt-webxr__footer"
-        dir="rtl"
+        dir={dir}
       >
         {error ? (
           <p className="gem-hunt-webxr__error" role="alert">
-            {error} — עוברים למצב מצלמה…
+            {error}
           </p>
         ) : (
           <div className="gem-hunt-overlay__footer-stack">
@@ -1496,14 +1491,14 @@ export function GemHuntWebXrAr({
               ) : null}
               {showWebXrGeoHint ? (
                 <p className="gem-hunt-overlay__footer-hint gem-hunt-overlay__footer-hint--plain" role="status">
-                  {GEM_AR_LOCATING_HE}
+                  {t("gem.arLocating")}
                 </p>
               ) : null}
               {showSessionFooter && showWalkNavGuide ? (
                 <div
                   className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                   role="region"
-                  aria-label={GEM_WALK_MAPS_ARIA_HE}
+                  aria-label={t("gem.walkMapsAria")}
                 >
                   <p className="gem-hunt-overlay__walk-text">
                     {walkGuideCopy}
@@ -1516,7 +1511,7 @@ export function GemHuntWebXrAr({
                       rel="noopener noreferrer"
                       className="gem-hunt-overlay__walk-maps"
                     >
-                      {GEM_WALK_MAPS_LINK_HE}
+                      {t("gem.walkMapsLink")}
                     </a>
                   ) : null}
                 </div>
@@ -1547,8 +1542,8 @@ export function GemHuntWebXrAr({
                     }}
                   >
                     <span className="gem-hunt-overlay__hint-btn-label">
-                      <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                      <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+                      <span className="gem-hunt-overlay__hint-btn-title">{t("gem.hintTitle")}</span>
+                      <span className="gem-hunt-overlay__hint-btn-sub">{t("gem.hintSub")}</span>
                     </span>
                   </button>
                   {!encounterMode || showEncounterFooter ? (
@@ -1576,7 +1571,7 @@ export function GemHuntWebXrAr({
                       onClusterSkipHouse();
                     }}
                   >
-                    {GEM_CLUSTER_SKIP_HE}
+                    {t("gem.clusterSkip")}
                   </button>
                 ) : null}
                 {clusterFinishAvailable && onClusterFinishSession ? (
@@ -1588,7 +1583,7 @@ export function GemHuntWebXrAr({
                       onClusterFinishSession();
                     }}
                   >
-                    {GEM_CLUSTER_FINISH_HE}
+                    {t("gem.clusterFinish")}
                   </button>
                 ) : null}
               </div>

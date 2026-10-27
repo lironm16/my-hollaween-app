@@ -69,17 +69,12 @@ import {
 } from "@/lib/gem-encounter";
 import { isAndroidLike, isIosLike } from "@/lib/gem-hunt-ar-platform";
 import { getGemHuntPortalRoot } from "@/lib/gem-hunt-portal-root";
-import {
-  GEM_AT_STOP_DISCOVER_HE,
-  GEM_CLUSTER_FINISH_HE,
-  GEM_CLUSTER_SKIP_HE,
-  GEM_WALK_MAPS_ARIA_HE,
-  GEM_WALK_MAPS_LINK_HE,
-  gemFoundOnScreenBannerHe,
-} from "@/lib/gem-hunt-copy";
 import { gemHuntFooterVisible } from "@/lib/gem-hunt-footer";
 import { gemTapCollectReady } from "@/lib/gem-hunt-tap-collect";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
+import { useGemCopy } from "@/hooks/use-gem-copy";
+import { HelpText } from "@/lib/render-help-text";
 
 type HuntPhase = "scanning" | "visible" | "collecting" | "albumReveal" | "done";
 
@@ -156,6 +151,8 @@ export function GemHuntOverlay({
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
+  const { dir, t } = useLocale();
+  const gemCopy = useGemCopy();
   const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const sim = simulateInRange;
   const monsterId = gemMonsterForHouse(house);
@@ -620,7 +617,7 @@ export function GemHuntOverlay({
   const showHuntUi = phase !== "albumReveal";
   const inOnsiteBand = sim || canCollectNow;
   const gemVisibleBand = inGemStayVisibleBand;
-  const foundOnScreenBannerHe = gemFoundOnScreenBannerHe(
+  const foundOnScreenBanner = gemCopy.foundOnScreenBanner(
     repeatVisitLatched,
     gemLabelHe(monsterId),
     isNewGemTypeLatched,
@@ -886,11 +883,11 @@ export function GemHuntOverlay({
         (centerReveal || campusSession) && "is-tell-me-active",
         naturalDiscoverActive && "is-at-gem-stop",
       )}
-      dir="rtl"
+      dir={dir}
     >
       {naturalDiscoverActive ? (
         <p className="gem-hunt-overlay__at-stop-badge" role="status">
-          {GEM_AT_STOP_DISCOVER_HE}
+          {t("gem.atStopDiscover")}
         </p>
       ) : null}
       <video
@@ -906,12 +903,12 @@ export function GemHuntOverlay({
       />
       {cameraError ? (
         <div className="gem-hunt-overlay__camera-banner" role="status">
-          <p className="gem-hunt-overlay__camera-banner-title">אין גישה למצלמה</p>
+          <p className="gem-hunt-overlay__camera-banner-title">{t("gem.noCameraTitle")}</p>
           <p className="gem-hunt-overlay__camera-banner-text">
-            אפשר לצוד עם **גלה לי** למטה, או לאשר מצלמה ולנסות שוב.
+            <HelpText>{t("gem.noCameraBody")}</HelpText>
           </p>
           <button type="button" className="gem-hunt-overlay__fallback-btn" onClick={() => void retryCamera()}>
-            נסו שוב — אישור מצלמה
+            {t("gem.retryCamera")}
           </button>
         </div>
       ) : null}
@@ -933,10 +930,10 @@ export function GemHuntOverlay({
           "gem-hunt-overlay__header",
           campusQueue ? "gem-hunt-overlay__header--title" : "gem-hunt-overlay__header--close-only",
         )}
-        dir={campusQueue ? "rtl" : "ltr"}
+        dir={campusQueue ? dir : "ltr"}
       >
         {campusQueue ? (
-          <div className="gem-hunt-overlay__header-text pointer-events-none" dir="rtl">
+          <div className="gem-hunt-overlay__header-text pointer-events-none" dir={dir}>
             <p className="gem-hunt-overlay__title--hero text-orange-50">{campusQueue.boothTitle}</p>
             {campusQueue.boothSubtitle ? (
               <p className="mt-0.5 text-sm font-semibold text-amber-200/95">{campusQueue.boothSubtitle}</p>
@@ -944,7 +941,7 @@ export function GemHuntOverlay({
           </div>
         ) : null}
         <OverlayCloseButton
-          label="סגירה"
+          label={t("common.close")}
           onClick={handleClose}
           className={cn(
             "gem-hunt-overlay__close pointer-events-auto",
@@ -964,7 +961,7 @@ export function GemHuntOverlay({
           className="gem-hunt-overlay__found-again-banner gem-hunt-overlay__found-again-banner--collect is-exploding"
           role="status"
         >
-          {foundOnScreenBannerHe}
+          {foundOnScreenBanner}
         </p>
       ) : null}
 
@@ -1067,7 +1064,7 @@ export function GemHuntOverlay({
       ) : null}
 
       {showHuntUi && phase !== "collecting" && showLegacyFooter && !hideFooterChrome ? (
-        <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir="rtl">
+        <footer className="gem-hunt-overlay__footer gem-hunt-overlay__footer--hunt" dir={dir}>
           <div className="gem-hunt-overlay__footer-stack">
             <div className="gem-hunt-overlay__footer-hint-slot">
               {tellMeButton.showRangeError ? (
@@ -1084,14 +1081,14 @@ export function GemHuntOverlay({
                   className="gem-hunt-overlay__hint-btn gem-hunt-overlay__hint-btn--compact w-full"
                   onClick={() => void retryCompassPermission()}
                 >
-                  אפשרו כיוון (Safari) — לחץ כדי שהחץ יזוז
+                  {t("gem.compassSafari")}
                 </button>
               ) : null}
               {showWalkNavGuide ? (
                 <div
                   className="gem-hunt-overlay__walk-guide gem-hunt-overlay__walk-guide--hint gem-hunt-overlay__walk-guide--footer"
                   role="region"
-                  aria-label={GEM_WALK_MAPS_ARIA_HE}
+                  aria-label={t("gem.walkMapsAria")}
                 >
                   <p className="gem-hunt-overlay__walk-text">
                     {walkGuideCopy}
@@ -1104,7 +1101,7 @@ export function GemHuntOverlay({
                       rel="noopener noreferrer"
                       className="gem-hunt-overlay__walk-maps"
                     >
-                      {GEM_WALK_MAPS_LINK_HE}
+                      {t("gem.walkMapsLink")}
                     </a>
                   ) : null}
                 </div>
@@ -1127,8 +1124,8 @@ export function GemHuntOverlay({
                       }}
                     >
                       <span className="gem-hunt-overlay__hint-btn-label">
-                        <span className="gem-hunt-overlay__hint-btn-title">רמז</span>
-                        <span className="gem-hunt-overlay__hint-btn-sub">כוון אותי</span>
+                        <span className="gem-hunt-overlay__hint-btn-title">{t("gem.hintTitle")}</span>
+                        <span className="gem-hunt-overlay__hint-btn-sub">{t("gem.hintSub")}</span>
                       </span>
                     </button>
                     {!encounterMode || showEncounterFooter ? (
@@ -1155,7 +1152,7 @@ export function GemHuntOverlay({
                       onClusterSkipHouse();
                     }}
                   >
-                    {GEM_CLUSTER_SKIP_HE}
+                    {t("gem.clusterSkip")}
                   </button>
                 ) : null}
                 {clusterFinishAvailable && onClusterFinishSession ? (
@@ -1167,7 +1164,7 @@ export function GemHuntOverlay({
                       onClusterFinishSession();
                     }}
                   >
-                    {GEM_CLUSTER_FINISH_HE}
+                    {t("gem.clusterFinish")}
                   </button>
                 ) : null}
               </div>

@@ -1,4 +1,5 @@
 import { helpMessagesHe } from "@/lib/i18n/messages/help-he";
+import { gemMessagesHe } from "@/lib/i18n/messages/gem-he";
 
 export const heMessages = {
   settings: {
@@ -366,6 +367,45 @@ export const heMessages = {
     treatVegan: "טבעוני",
   },
   help: helpMessagesHe,
+  gem: gemMessagesHe,
+  houseActions: {
+    menuAria: "פעולות",
+    toolbarAria: "פעולות בית",
+    nav: "ניווט",
+    showOnMap: "הצג במפה",
+    showInList: "הצגה ברשימה",
+    share: "שתף",
+    editHouse: "ערוך בית",
+    closeEdit: "סגירת עריכה",
+    editCodeDevices: "קוד עריכה ומכשירים",
+    visitPoster: "הצג דף ביקור",
+    linkCopied: "הקישור הועתק",
+    shareFailed: "לא הצלחנו לשתף",
+    visitedMark: "ביקרתי",
+    unvisitMark: "סמנו כלא ביקרתי",
+    liked: "אהבתי",
+    unlike: "הסירו אהבתי",
+    skip: "דילוג",
+    unskip: "דילגתי — החזרה",
+  },
+  banners: {
+    outsideNeighborhood: "המיקום שלכם מחוץ למפת השכונה — סימנו את הקצה הקרוב.",
+    offlineCached: "אין אינטרנט · מוצגת הרשימה ששמורה בטלפון",
+    offlineNoCache: "אין אינטרנט, ואין עותק שמור בטלפון",
+    serverCached: "השרת לא עונה · מוצגת הרשימה ששמורה בטלפון",
+    serverNoCache: "השרת לא עונה, ואין עותק שמור בטלפון",
+    removedFromMap: "הוסר מהמפה",
+    houseClosed: "הבית סגור",
+    onBreakNow: "הפסקה עכשיו",
+    outOfStock: "נגמר המלאי",
+    closingSoonBefore: "נסגר בקרוב ב־",
+    openingSoonBefore: "נפתח בקרוב ב־",
+    breakUntilBefore: "הפסקה עכשיו — נפתח שוב ב־",
+  },
+  houseCard: {
+    loadingDetail: "טוען פרטי בית מהשרת…",
+    notPublic: "הבית לא זמין במפה הציבורית.",
+  },
 } as const;
 
 /** Same keys as {@link heMessages}; leaf values are any locale string (not Hebrew literals). */

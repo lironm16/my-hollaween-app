@@ -25,17 +25,8 @@ import type { GemMonsterId } from "@/lib/gem-monsters";
 import { distanceMeters } from "@/lib/geo";
 import type { PublicHouse } from "@/lib/types";
 import type { UserLocation } from "@/hooks/use-user-location";
-import {
-  GEM_ANCHOR_RESET_ALL_HE,
-  GEM_ANCHOR_RESET_ONE_HE,
-  GEM_ANCHOR_SET_GPS_HE,
-  GEM_ANCHOR_TITLE_AUTO_HE,
-  GEM_ANCHOR_TITLE_CALIBRATED_HE,
-  GEM_ANCHOR_UPDATE_PUBLIC_HE,
-  GEM_PANEL_NEAR_GPS_HE,
-  gemPanelApproachHe,
-  gemPanelOpenCameraHe,
-} from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { useGemCopy } from "@/hooks/use-gem-copy";
 
 export type GemHuntOpenPrepare = () => Promise<UserLocation | null | void>;
 import { gemBagCelebrateAfterCollect, gemBagCollectHref, gemBagPlainHref } from "@/lib/gem-bag-celebrate";
@@ -74,6 +65,8 @@ export function GemHuntPanel({
   /** Map-eligible houses — used for milestone query on /gem-bag after collect. */
   mapHousesForCelebrate?: PublicHouse[];
 }) {
+  const { dir, t } = useLocale();
+  const gemCopy = useGemCopy();
   const gems = useGemProgress();
   const { overrides: anchorOverrideMap } = useGemAnchorOverrides();
   const calibratedCount = useMemo(() => countGemAnchorOverrides(), [anchorOverrideMap]);
@@ -246,20 +239,20 @@ export function GemHuntPanel({
 
   return (
     <>
-      <section className="gem-hunt-panel" dir="rtl">
+      <section className="gem-hunt-panel" dir={dir}>
         <GemHouseFoundHero house={house} collected={collected} className="gem-hunt-panel__found-hero" />
 
         {!collected ? (
           <p className="gem-hunt-panel__status">
             {canCollect
-              ? "בטווח — אפשר למצוא"
+              ? t("gem.panelInRange")
               : proximity === "far" && distanceM != null && distanceM <= huntBandM + 10
-                ? GEM_PANEL_NEAR_GPS_HE
+                ? t("gem.panelNearGps")
                 : proximity === "far"
-                  ? gemPanelApproachHe(huntBandM)
+                  ? gemCopy.panelApproach(huntBandM)
                   : distanceM != null
-                    ? gemPanelOpenCameraHe(Math.round(distanceM))
-                    : "פתחו מצלמה לתצוגה"}
+                    ? gemCopy.panelOpenCamera(Math.round(distanceM))
+                    : t("gem.panelOpenPreview")}
           </p>
         ) : null}
 
@@ -277,20 +270,20 @@ export function GemHuntPanel({
               onClick={() => setGemAnchorOverride(house.id, userLocation)}
             >
               <MapPin className="size-3.5" aria-hidden />
-              {GEM_ANCHOR_UPDATE_PUBLIC_HE}
+              {t("gem.anchorUpdatePublic")}
             </Button>
           </div>
         ) : null}
 
         {!collected && anchorOverrideMap[house.id] ? (
           <p className="gem-hunt-panel__override-hint">
-            המיקום בטלפון שלכם דורס את המפה. אחרי עדכון אפל —{" "}
+            {t("gem.overrideHintBefore")}{" "}
             <button
               type="button"
               className="gem-hunt-panel__override-reset"
               onClick={() => clearGemAnchorOverride(house.id)}
             >
-              {GEM_ANCHOR_RESET_ONE_HE}
+              {t("gem.anchorResetOne")}
             </button>
           </p>
         ) : null}
@@ -303,15 +296,13 @@ export function GemHuntPanel({
                 checked={simulate}
                 onChange={(e) => setSimulate(e.target.checked)}
               />
-              סימולציה: בטווח (מנהל)
+              {t("gem.adminSimulate")}
             </label>
             <div className="gem-hunt-panel__calibrate">
               <p className="gem-hunt-panel__calibrate-title">
-                {anchorCalibrated ? GEM_ANCHOR_TITLE_CALIBRATED_HE : GEM_ANCHOR_TITLE_AUTO_HE}
+                {anchorCalibrated ? t("gem.anchorTitleCalibrated") : t("gem.anchorTitleAuto")}
               </p>
-              <p className="gem-hunt-panel__calibrate-hint">
-                הלכו physically למקום הרצוי (לובי, חצר, ליד הדלת), עמדו שם, ואז:
-              </p>
+              <p className="gem-hunt-panel__calibrate-hint">{t("gem.adminCalibrateHint")}</p>
               <Button
                 type="button"
                 variant="outline"
@@ -321,7 +312,7 @@ export function GemHuntPanel({
                 onClick={() => userLocation && setGemAnchorOverride(house.id, userLocation)}
               >
                 <MapPin className="size-3.5" aria-hidden />
-                {GEM_ANCHOR_SET_GPS_HE}
+                {t("gem.anchorSetGps")}
               </Button>
               {anchorCalibrated ? (
                 <Button
@@ -331,12 +322,12 @@ export function GemHuntPanel({
                   className="w-full text-violet-300"
                   onClick={() => clearGemAnchorOverride(house.id)}
                 >
-                  איפוס — חזרה למיקום אוטומטי
+                  {t("gem.adminResetAuto")}
                 </Button>
               ) : null}
               {userLocation && anchorCalibrated ? (
                 <p className="gem-hunt-panel__calibrate-dist" dir="ltr">
-                  אתם ~{Math.round(distanceMeters(userLocation, anchor))}m מהנקודה שנשמרה
+                  {gemCopy.adminDistFromSaved(Math.round(distanceMeters(userLocation, anchor)))}
                 </p>
               ) : null}
               {calibratedCount > 1 ? (
@@ -347,7 +338,7 @@ export function GemHuntPanel({
                   className="w-full text-rose-300/95"
                   onClick={() => clearAllGemAnchorOverrides()}
                 >
-                  {GEM_ANCHOR_RESET_ALL_HE(calibratedCount)}
+                  {gemCopy.anchorResetAll(calibratedCount)}
                 </Button>
               ) : null}
             </div>
@@ -364,10 +355,10 @@ export function GemHuntPanel({
         >
           <Camera className="size-4" aria-hidden />
           {collected
-            ? "מפגש במצלמה שוב"
+            ? t("gem.btnEncounterAgain")
             : canCollect
-              ? "התחילו מפגש"
-              : "נסו מפגש (רחוק)"}
+              ? t("gem.btnStartEncounter")
+              : t("gem.btnTryFar")}
         </Button>
       </section>
 

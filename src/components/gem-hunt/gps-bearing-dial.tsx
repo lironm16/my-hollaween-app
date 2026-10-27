@@ -2,7 +2,7 @@
 
 import { bearingClockLabelHe } from "@/lib/gem-hunt";
 import { formatDistance } from "@/lib/geo";
-import { GEM_BEARING_ARIA_HE } from "@/lib/gem-hunt-copy";
+import { useGemCopy } from "@/hooks/use-gem-copy";
 import { cn } from "@/lib/utils";
 
 /** Map-north compass dial — works without iPhone motion/orientation permission. */
@@ -17,16 +17,15 @@ export function GpsBearingDial({
   className?: string;
   compact?: boolean;
 }) {
+  const gemCopy = useGemCopy();
   const label = bearingClockLabelHe(bearingDeg);
+  const distanceSuffix = distanceM != null ? `, ${formatDistance(distanceM)}` : "";
 
   return (
     <div
       className={cn("gps-bearing-dial", compact && "gps-bearing-dial--compact", className)}
       role="img"
-      aria-label={GEM_BEARING_ARIA_HE(
-        label,
-        distanceM != null ? `, ${formatDistance(distanceM)}` : "",
-      )}
+      aria-label={gemCopy.bearingAria(label, distanceSuffix)}
     >
       <svg viewBox="0 0 120 120" className="gps-bearing-dial__svg" aria-hidden>
         <circle cx="60" cy="60" r="54" className="gps-bearing-dial__ring" />

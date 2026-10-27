@@ -15,8 +15,8 @@ import {
 import { toast } from "sonner";
 import { EditCodeDialog } from "@/components/edit-code-dialog";
 import { ImpOutlineIcon } from "@/components/imp-outline-icon";
-import { GEM_PLACE_ACTION_HE } from "@/lib/gem-hunt-copy";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
+import { useLocale } from "@/hooks/use-locale";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { useHouseMapsUrl } from "@/hooks/use-house-maps-url";
 import { shareHouse } from "@/lib/nav-links";
@@ -105,6 +105,7 @@ export function HouseActionBar({
   menuPlacement?: "top" | "bottom";
   className?: string;
 }) {
+  const { t, dir } = useLocale();
   const addressReveal = useAddressReveal();
   const mapsUrl = useHouseMapsUrl(house);
   const [open, setOpen] = useState(false);
@@ -140,7 +141,7 @@ export function HouseActionBar({
   if (showNav && addressReveal.mapsAllowed(house.id) && houseServerDetailReady(house)) {
     items.push({
       id: "nav",
-      label: "ניווט",
+      label: t("houseActions.nav"),
       icon: <Navigation className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       href: mapsUrl,
       external: true,
@@ -149,7 +150,7 @@ export function HouseActionBar({
   if (onShowOnMap) {
     items.push({
       id: "map",
-      label: "הצג במפה",
+      label: t("houseActions.showOnMap"),
       icon: <MapPinned className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       onClick: onShowOnMap,
     });
@@ -157,7 +158,7 @@ export function HouseActionBar({
   if (onShowInList) {
     items.push({
       id: "list",
-      label: "הצגה ברשימה",
+      label: t("houseActions.showInList"),
       icon: <List className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       onClick: onShowInList,
     });
@@ -166,7 +167,7 @@ export function HouseActionBar({
   if (!navOnly) {
     items.push({
       id: "share",
-      label: "שתף",
+      label: t("houseActions.share"),
       icon: <Share2 className={MENU_ICON_CLASS} strokeWidth={2.2} />,
       onClick: () => {
         void shareHouse(house, {
@@ -174,15 +175,15 @@ export function HouseActionBar({
             addressReveal.canViewDetails(house.id) && houseServerDetailReady(house),
           displayAddress: addressReveal.formatDisplayAddress(house),
         }).then((result) => {
-          if (result === "copied") toast.success("הקישור הועתק");
-          if (result === "failed") toast.error("לא הצלחנו לשתף");
+          if (result === "copied") toast.success(t("houseActions.linkCopied"));
+          if (result === "failed") toast.error(t("houseActions.shareFailed"));
         });
       },
     });
     if (onToggleEdit) {
       items.push({
         id: "edit",
-        label: editing ? "סגירת עריכה" : "ערוך בית",
+        label: editing ? t("houseActions.closeEdit") : t("houseActions.editHouse"),
         icon: <Pencil className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: onToggleEdit,
         active: editing,
@@ -191,7 +192,7 @@ export function HouseActionBar({
     if (editCode || nightPassesEnabled) {
       items.push({
         id: "edit-code",
-        label: "קוד עריכה ומכשירים",
+        label: t("houseActions.editCodeDevices"),
         icon: <KeyRound className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: () => setEditCodeOpen(true),
       });
@@ -199,7 +200,7 @@ export function HouseActionBar({
     if (onPlaceGem) {
       items.push({
         id: "gem-place",
-        label: GEM_PLACE_ACTION_HE,
+        label: t("gem.placeAction"),
         icon: <ImpOutlineIcon className={MENU_ICON_CLASS} />,
         onClick: onPlaceGem,
       });
@@ -207,7 +208,7 @@ export function HouseActionBar({
     if (showVisitPoster) {
       items.push({
         id: "visit-poster",
-        label: "הצג דף ביקור",
+        label: t("houseActions.visitPoster"),
         icon: <QrCode className={MENU_ICON_CLASS} strokeWidth={2.2} />,
         onClick: () => {
           queueMicrotask(() => setVisitPosterOpen(true));
@@ -300,7 +301,7 @@ export function HouseActionBar({
           className="house-action-menu-panel house-action-menu-panel--floating"
           style={open ? { ...panelStyle, visibility: "visible", pointerEvents: "auto" } : panelStyle}
           role="menu"
-          dir="rtl"
+          dir={dir}
         >
           {items.map((item) =>
             item.href ? (
@@ -341,7 +342,7 @@ export function HouseActionBar({
     : null;
 
   return (
-    <div ref={rootRef} className={cn("house-action-menu", className)} dir="rtl">
+    <div ref={rootRef} className={cn("house-action-menu", className)} dir={dir}>
       {editCode || nightPassesEnabled ? (
         <EditCodeDialog
           open={editCodeOpen}
@@ -359,7 +360,7 @@ export function HouseActionBar({
         ref={triggerRef}
         type="button"
         className="house-action-menu-trigger"
-        aria-label="פעולות"
+        aria-label={t("houseActions.menuAria")}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={(event) => {
