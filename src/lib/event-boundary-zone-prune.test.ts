@@ -83,7 +83,7 @@ describe("event-boundary-zone-prune", () => {
     assert.equal(pruned[0].id, hood.id);
   });
 
-  it("keeps hood and city when both selected (no street)", () => {
+  it("removes hood contained in selected city", () => {
     const city = { kind: "city" as const, id: zoneKeyCity("רמת גן"), label: "רמת גן" };
     const hood = {
       kind: "neighborhood" as const,
@@ -124,6 +124,7 @@ describe("event-boundary-zone-prune", () => {
       ],
     ]);
     const pruned = pruneZonesContainedInParents([city, hood], geoms);
-    assert.equal(pruned.length, 2);
+    assert.equal(pruned.length, 1);
+    assert.equal(pruned[0].id, city.id);
   });
 });

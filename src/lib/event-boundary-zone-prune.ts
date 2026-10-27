@@ -24,11 +24,17 @@ export function areaGeometryEntirelyInside(inner: AreaGeom, outer: AreaGeom): bo
   return true;
 }
 
-const PARENT_KINDS: EventBoundaryKind[] = ["city", "neighborhood"];
+/** More specific kinds are dropped when fully inside a broader selected zone. */
+const KIND_SPECIFICITY: Record<EventBoundaryKind, number> = {
+  city: 0,
+  neighborhood: 1,
+  street: 2,
+};
 
 /**
- * Drop streets (and only streets) that lie entirely inside a selected city or neighborhood.
- * Example: שכונה + רחוב inside it → keep the hood, remove the street.
+ * Drop inner zones fully contained in an outer selected zone:
+ * - street inside שכונה or עיר
+ * - שכונה inside עיר
  */
 export function pruneZonesContainedInParents(
   zones: EventBoundaryZone[],
@@ -36,18 +42,20 @@ export function pruneZonesContainedInParents(
 ): EventBoundaryZone[] {
   if (zones.length < 2) return zones;
 
-  const parents = zones.filter((z) => PARENT_KINDS.includes(z.kind));
   const toDrop = new Set<string>();
 
   for (const zone of zones) {
-    if (zone.kind !== "street") continue;
     const inner = geometries.get(zone.id);
     if (!inner) continue;
+    const innerRank = KIND_SPECIFICITY[zone.kind];
 
-    for (const parent of parents) {
+    for (const parent of zones) {
       if (parent.id === zone.id) continue;
       const outer = geometries.get(parent.id);
       if (!outer) continue;
+      const outerRank = KIND_SPECIFICITY[parent.kind];
+      if (innerRank <= outerRank) continue;
+
       if (areaGeometryEntirelyInside(inner, outer)) {
         toDrop.add(zone.id);
         break;
