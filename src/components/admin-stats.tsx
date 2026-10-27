@@ -11,7 +11,8 @@ import { StrollerSign } from "@/components/symbols";
 import { CollectedGemSign, LikedSign, SkipSign } from "@/components/visit-marks";
 import { VisitedCheck } from "@/components/visited-check";
 import { useLocale } from "@/hooks/use-locale";
-import { scareShort, decorShort, treatLabels } from "@/lib/labels";
+import { useLocalizedLabels } from "@/hooks/use-localized-labels";
+import { localizedTreatLabel } from "@/lib/i18n/treat-labels";
 import { cn } from "@/lib/utils";
 import { NEIGHBORHOODS } from "@/lib/config";
 import { buildSnapshotStats, type SnapshotStats } from "@/lib/admin-snapshot";
@@ -136,22 +137,24 @@ export function AdminStatsCard({
 }: {
   stats: SnapshotStats;
 }) {
+  const { t, dir, locale } = useLocale();
+  const { decorShort, scareShort } = useLocalizedLabels();
   return (
-    <div className="space-y-3" dir="rtl">
-      <Section title="מפה">
+    <div className="space-y-3" dir={dir}>
+      <Section title={t("stats.sectionMap")}>
         <div className="mb-2 grid grid-cols-2 gap-2">
-          <StatTile icon={<MapPinned className="size-5" />} label="בתים במפה" value={stats.houses} />
+          <StatTile icon={<MapPinned className="size-5" />} label={t("stats.housesOnMap")} value={stats.houses} />
           <StatTile
             icon={<LocationKindSign kind="poi" className="size-8" />}
-            label="עסקים"
+            label={t("stats.pois")}
             value={stats.pois}
             plain
           />
         </div>
-        <Subhead>שעות</Subhead>
+        <Subhead>{t("stats.subheadHours")}</Subhead>
         <StatTile
           icon={<OpenNowSign className="size-8" />}
-          label="פתוחים עכשיו"
+          label={t("stats.openNow")}
           value={stats.openNow}
           valueClass="text-emerald-300"
           wide
@@ -160,77 +163,77 @@ export function AdminStatsCard({
         <div className="mt-2 grid grid-cols-2 gap-2">
           <StatTile
             icon={<OpeningSoonSign className="size-8" />}
-            label="נפתחים בקרוב"
+            label={t("stats.openingSoon")}
             value={stats.openingSoon}
             valueClass={stats.openingSoon ? "text-cyan-300" : undefined}
             plain
           />
           <StatTile
             icon={<ClosingSoonSign className="size-8" />}
-            label="נסגרים בקרוב"
+            label={t("stats.closingSoon")}
             value={stats.closingSoon}
             valueClass={stats.closingSoon ? "text-orange-300" : undefined}
             plain
           />
           <StatTile
             icon={<Pause className="size-4" />}
-            label="בהפסקה"
+            label={t("stats.onBreak")}
             value={stats.onBreak}
             valueClass={stats.onBreak ? "text-amber-300" : undefined}
           />
-          <StatTile icon={<Moon className="size-4" />} label="סגורים" value={stats.closed} />
+          <StatTile icon={<Moon className="size-4" />} label={t("stats.closed")} value={stats.closed} />
         </div>
-        <Subhead>נגישות</Subhead>
+        <Subhead>{t("stats.subheadAccessible")}</Subhead>
         <StatTile
           icon={<StrollerSign className="size-8" />}
-          label="נגיש"
+          label={t("stats.accessible")}
           value={stats.accessible}
           plain
           wide
         />
-        <Subhead>ממתקים</Subhead>
+        <Subhead>{t("stats.subheadTreats")}</Subhead>
         <div className="grid grid-cols-2 gap-2">
           <StatTile
             icon={<CandySign tone="none" className="size-8" />}
-            label="בלי ממתקים"
+            label={t("stats.candyNone")}
             value={stats.candyNone}
             plain
           />
           <StatTile
             icon={<CandySign tone="plenty" className="size-8" />}
-            label="יש ממתקים"
+            label={t("stats.candyPlenty")}
             value={stats.candyPlenty}
             valueClass={stats.candyPlenty ? "text-emerald-300" : undefined}
             plain
           />
           <StatTile
             icon={<CandySign tone="low" className="size-8" />}
-            label="מעט ממתקים"
+            label={t("stats.candyLow")}
             value={stats.candyLow}
             valueClass={stats.candyLow ? "text-amber-300" : undefined}
             plain
           />
           <StatTile
             icon={<CandySign tone="out" className="size-8" />}
-            label="נגמרו הממתקים"
+            label={t("stats.candyOut")}
             value={stats.candyOut}
             valueClass={stats.candyOut ? "text-rose-300" : undefined}
             plain
           />
         </div>
-        <Subhead>רגישויות והתאמות</Subhead>
+        <Subhead>{t("stats.subheadSensitivities")}</Subhead>
         <div className="grid grid-cols-2 gap-2">
           {SENSITIVITY_OPTIONS.map((id) => (
             <StatTile
               key={id}
               icon={<SensitivitySign kind={id} className="size-8" />}
-              label={treatLabels[id]}
+              label={localizedTreatLabel(locale, id)}
               value={stats[id]}
               plain
             />
           ))}
         </div>
-        <Subhead>אופי</Subhead>
+        <Subhead>{t("stats.subheadCharacter")}</Subhead>
         <div className="grid grid-cols-2 gap-2">
           <StatTile
             icon={<ScareSign level="none" className="size-8" />}
@@ -257,12 +260,17 @@ export function AdminStatsCard({
             plain
           />
         </div>
-        <Subhead>שכונות</Subhead>
+        <Subhead>{t("stats.subheadNeighborhoods")}</Subhead>
         <div className="grid grid-cols-2 gap-2">
           {NEIGHBORHOODS.map((name) => (
             <StatTile key={name} icon={<MapPinned className="size-5" />} label={name} value={stats.neighborhoods[name]} plain />
           ))}
-          <StatTile icon={<MapPinned className="size-5" />} label="אחר" value={stats.neighborhoods.other} plain />
+          <StatTile
+            icon={<MapPinned className="size-5" />}
+            label={t("stats.neighborhoodOther")}
+            value={stats.neighborhoods.other}
+            plain
+          />
         </div>
       </Section>
     </div>
@@ -320,7 +328,7 @@ function StatTile({
       >
         {icon}
       </span>
-      <span className="min-w-0 text-right">
+      <span className="min-w-0 text-end">
         <span className="block text-base leading-tight text-violet-300">{label}</span>
         {hint ? <span className="block text-sm leading-tight text-violet-400">{hint}</span> : null}
         <span className={cn("block text-2xl font-bold leading-none text-orange-50", valueClass)}>
