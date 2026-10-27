@@ -5,7 +5,7 @@ import { gemMessagesEn } from "@/lib/i18n/messages/gem-en";
 export const enMessages: AppMessages = {
   settings: {
     title: "Settings",
-    languageSection: "Interface language",
+    languageSection: "Language",
     languageHint:
       "Buttons, menus, and app messages. Official hood names (Shikun Vatikim, Charuzim…) use fixed translations for your interface language — not Google Translate.",
     languageEnglish: "English",
@@ -13,7 +13,7 @@ export const enMessages: AppMessages = {
     contentSection: "Community content",
     contentHint:
       "House names, visitor notes, and similar neighbor-entered text — not the official hood names.",
-    contentTranslateOn: "Translate to English",
+    contentTranslateOn: "Translate neighbor text",
     contentTranslateHint:
       "When the interface is English, show machine translations of neighbor-submitted text. Without a server translation key, originals are shown.",
     contentTranslateRequiresEnglish: "Switch the interface to English first to translate community content.",
@@ -37,7 +37,7 @@ export const enMessages: AppMessages = {
     home: "Home",
     homeAria: "Home",
     houses: "Houses",
-    addHouse: "Add house",
+    addHouse: "Add",
     editHouse: "Edit",
     search: "Search",
     onDevice: "On my device",

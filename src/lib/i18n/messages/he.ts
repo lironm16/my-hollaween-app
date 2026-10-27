@@ -4,7 +4,7 @@ import { gemMessagesHe } from "@/lib/i18n/messages/gem-he";
 export const heMessages = {
   settings: {
     title: "הגדרות",
-    languageSection: "שפת הממשק",
+    languageSection: "שפה",
     languageHint:
       "כפתורים, תפריטים והודעות. שמות השכונות הרשמיות (שיכון ותיקים, חרוזים…) מוצגים בשפת הממשק — תרגום קבוע, לא Google.",
     languageEnglish: "English",
@@ -12,7 +12,7 @@ export const heMessages = {
     contentSection: "תוכן מהקהילה",
     contentHint:
       "שמות בתים, הערות למבקרים וטקסט דומה ששכנים הזינו — לא שמות השכונות הרשמיות.",
-    contentTranslateOn: "תרגום לאנגלית",
+    contentTranslateOn: "תרגום תוכן שכנים",
     contentTranslateHint:
       "כשהממשק באנגלית — מציגים תרגום (מכונה) של טקסט ששכנים הזינו. בלי מפתח תרגום בשרת יוצג המקור.",
     contentTranslateRequiresEnglish: "הפעילו קודם ממשק באנגלית כדי לתרגם תוכן קהילתי.",

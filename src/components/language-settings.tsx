@@ -39,42 +39,28 @@ function LanguageOption({
 
 function SettingSwitch({
   on,
-  disabled,
   title,
-  hint,
   onChange,
 }: {
   on: boolean;
-  disabled?: boolean;
   title: string;
-  hint?: string;
   onChange: (next: boolean) => void;
 }) {
   return (
     <div
-      className={cn(
-        "flex w-full items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-3 text-start ring-1 ring-orange-500/20",
-        disabled ? "opacity-50" : "cursor-pointer",
-      )}
-      onClick={() => {
-        if (disabled) return;
-        onChange(!on);
-      }}
+      className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl bg-[#12081a] px-3 py-3 text-start ring-1 ring-orange-500/20"
+      onClick={() => onChange(!on)}
     >
-      <span className="min-w-0">
-        <span className="block text-base font-medium text-orange-50">{title}</span>
-        {hint ? <span className="mt-0.5 block text-sm text-violet-300">{hint}</span> : null}
-      </span>
+      <span className="text-base font-medium text-orange-50">{title}</span>
       <button
         type="button"
         role="switch"
         aria-checked={on}
         aria-label={title}
-        disabled={disabled}
         onMouseDown={(event) => event.preventDefault()}
         onClick={(event) => {
           event.stopPropagation();
-          if (!disabled) onChange(!on);
+          onChange(!on);
         }}
         className={cn(
           "relative h-7 w-12 shrink-0 rounded-full outline-none transition focus:outline-none focus-visible:ring-0",
@@ -109,12 +95,10 @@ const LOCALE_LABELS: Record<AppLocale, string> = {
 export function LanguageSettings() {
   const { locale, setLocale, translateUserContent, setTranslateUserContent, t, dir } =
     useLocaleContext();
-  const contentToggleEnabled = locale === "en";
 
   return (
     <div dir={dir} className="space-y-3">
       <SettingsSection title={t("settings.languageSection")}>
-        <p className="px-1 text-sm text-violet-300">{t("settings.languageHint")}</p>
         {APP_LOCALES.map((code) => (
           <LanguageOption
             key={code}
@@ -125,21 +109,13 @@ export function LanguageSettings() {
             }}
           />
         ))}
-      </SettingsSection>
-
-      <SettingsSection title={t("settings.contentSection")}>
-        <p className="px-1 text-sm text-violet-300">{t("settings.contentHint")}</p>
-        <SettingSwitch
-          title={t("settings.contentTranslateOn")}
-          hint={
-            contentToggleEnabled
-              ? t("settings.contentTranslateHint")
-              : t("settings.contentTranslateRequiresEnglish")
-          }
-          on={translateUserContent}
-          disabled={!contentToggleEnabled}
-          onChange={setTranslateUserContent}
-        />
+        {locale === "en" ? (
+          <SettingSwitch
+            title={t("settings.contentTranslateOn")}
+            on={translateUserContent}
+            onChange={setTranslateUserContent}
+          />
+        ) : null}
       </SettingsSection>
     </div>
   );

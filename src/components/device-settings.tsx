@@ -22,13 +22,11 @@ function SettingSwitch({
   on,
   disabled,
   title,
-  hint,
   onChange,
 }: {
   on: boolean;
   disabled?: boolean;
   title: string;
-  hint?: string;
   onChange: (next: boolean) => void;
 }) {
   return (
@@ -42,10 +40,7 @@ function SettingSwitch({
         onChange(!on);
       }}
     >
-      <span className="min-w-0">
-        <span className="block text-base font-medium text-orange-50">{title}</span>
-        {hint ? <span className="mt-0.5 block text-base text-violet-300">{hint}</span> : null}
-      </span>
+      <span className="min-w-0 text-base font-medium text-orange-50">{title}</span>
       <button
         type="button"
         role="switch"
@@ -82,9 +77,9 @@ function SettingsSection({ title, children }: { title: string; children: ReactNo
   );
 }
 
-const PUSH_TOPIC_I18N: { id: PushTopic; titleKey: string; hintKey?: string }[] = [
-  { id: "newHouse", titleKey: "settings.pushTopicNewHouse", hintKey: "settings.pushTopicNewHouseHint" },
-  { id: "admin", titleKey: "settings.pushTopicAdmin", hintKey: "settings.pushTopicAdminHint" },
+const PUSH_TOPIC_I18N: { id: PushTopic; titleKey: string }[] = [
+  { id: "newHouse", titleKey: "settings.pushTopicNewHouse" },
+  { id: "admin", titleKey: "settings.pushTopicAdmin" },
 ];
 
 function PushSettingsInner() {
@@ -142,23 +137,15 @@ function PushSettingsInner() {
 
   return (
     <SettingsSection title={t("settings.notificationsSection")}>
-      <p className="px-1 text-sm text-violet-300">{t("settings.notificationsIntro")}</p>
       {PUSH_TOPIC_I18N.map((row) => (
         <SettingSwitch
           key={row.id}
           title={t(row.titleKey)}
-          hint={row.hintKey ? t(row.hintKey) : undefined}
           on={topics[row.id]}
           disabled={pushBusy}
           onChange={(next) => toggleTopic(row.id, next)}
         />
       ))}
-      {!anyPushTopicOn(topics) ? (
-        <p className="px-1 text-sm text-amber-200/90">{t("settings.notificationsPickOne")}</p>
-      ) : null}
-      {PUSH_TOPICS.some((topic) => topics[topic] !== savedTopics[topic]) ? (
-        <p className="px-1 text-sm text-violet-400">{t("settings.notificationsSaving")}</p>
-      ) : null}
     </SettingsSection>
   );
 }
