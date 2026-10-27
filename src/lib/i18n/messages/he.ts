@@ -50,4 +50,11 @@ export const heMessages = {
   },
 } as const;
 
-export type AppMessages = typeof heMessages;
+/** Same keys as {@link heMessages}; leaf values are any locale string (not Hebrew literals). */
+export type WidenStrings<T> = T extends string
+  ? string
+  : T extends object
+    ? { [K in keyof T]: WidenStrings<T[K]> }
+    : T;
+
+export type AppMessages = WidenStrings<typeof heMessages>;
