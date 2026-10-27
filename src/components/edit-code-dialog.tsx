@@ -5,7 +5,11 @@ import { HouseEditModal } from "@/components/house-edit-modal";
 import { NightPassesCard } from "@/components/night-passes-card";
 import { Button } from "@/components/ui/button";
 import { copyText } from "@/lib/copy-text";
-import { editCodeSpecForDisplay, formatEditCodeDisplay } from "@/lib/house-access-code";
+import {
+  editCodeSpecForDisplay,
+  formatEditCodeDisplay,
+  LEGACY_ALPHABET_ACCESS_CODE_LENGTH,
+} from "@/lib/house-access-code";
 import { houseHeadline } from "@/lib/labels";
 import { useLocale } from "@/hooks/use-locale";
 import { formatMessage } from "@/lib/i18n/format";
@@ -32,6 +36,10 @@ export function EditCodeDialog({
   const code = editCode?.trim() ?? "";
   const showCode = code.length > 0;
   const codeSpec = showCode ? editCodeSpecForDisplay(code) : null;
+  const codeSuffix =
+    codeSpec?.maxLength === LEGACY_ALPHABET_ACCESS_CODE_LENGTH
+      ? t("editCodeDialog.suffix4Legacy")
+      : t("editCodeDialog.suffix6Digits");
   const displayCode = showCode ? formatEditCodeDisplay(code) : "";
   const showDevices = nightPassesEnabled || admin;
 
@@ -51,7 +59,7 @@ export function EditCodeDialog({
         {showCode ? (
           <div className="space-y-2">
             <label htmlFor="edit-code-field" className="text-base text-violet-300">
-              {formatMessage(t("editCodeDialog.accessCode"), { suffix: codeSpec!.labelSuffix })}
+              {formatMessage(t("editCodeDialog.accessCode"), { suffix: codeSuffix })}
             </label>
             <input
               id="edit-code-field"

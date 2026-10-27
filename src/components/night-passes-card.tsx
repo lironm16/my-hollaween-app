@@ -11,19 +11,13 @@ import {
   refreshNightPassState,
 } from "@/lib/night-pass-client";
 import { formatHouseAddedAt } from "@/lib/house-meta";
-import {
-  nightPassClientBrowserLabel,
-  nightPassClientSurfaceLabel,
-} from "@/lib/night-pass-client-surface";
+import { nightPassClientBrowserLabel } from "@/lib/night-pass-client-surface";
 import { notifyCatalogChanged, saveOwnedHouse } from "@/lib/offline-db";
 import { useNightPassDialogOptional } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { shareHouseAccessInvite } from "@/lib/nav-links";
-import {
-  HOUSE_ACCESS_ROLE_FIELD_LABEL,
-  houseAccessRoleChangePrompt,
-  houseAccessRoleLabel,
-} from "@/lib/night-pass-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import type { PublicHouse } from "@/lib/types";
 
 type AccessView = {
@@ -134,6 +128,33 @@ export function NightPassesCard({
   const [busyRoleId, setBusyRoleId] = useState<string | null>(null);
   const passDialog = useNightPassDialogOptional();
   const nightPass = useNightPass();
+  const { t, locale } = useLocale();
+
+  function roleLabel(role: "owner" | "editor") {
+    return role === "owner" ? t("nightPassesCard.roleOwner") : t("nightPassesCard.roleEditor");
+  }
+
+  function roleChangePrompt(role: "owner" | "editor") {
+    return role === "owner"
+      ? t("nightPassesCard.promoteToEditor")
+      : t("nightPassesCard.promoteToOwner");
+  }
+
+  function surfaceLabel(surface?: string | null): string | null {
+    if (!surface) return null;
+    if (
+      surface === "ios-browser" ||
+      surface === "android-browser" ||
+      surface === "desktop-browser" ||
+      surface === "other"
+    ) {
+      return t("nightPassesCard.surfaceBrowser");
+    }
+    if (surface === "ios-app" || surface === "android-app" || surface === "desktop-app") {
+      return t("nightPassesCard.surfaceApp");
+    }
+    return null;
+  }
 
   const load = useCallback(async () => {
     setError("");
@@ -143,18 +164,18 @@ export function NightPassesCard({
       });
       const json = (await res.json().catch(() => null)) as PassesResponse | null;
       if (!res.ok || !json) {
-        setError(json?.error ?? "טעינת המכשירים נכשלה.");
+        setError(json?.error ?? t("nightPassesCard.loadFailed"));
         setData(null);
         return;
       }
       setData(json);
     } catch {
-      setError("טעינת המכשירים נכשלה.");
+      setError(t("nightPassesCard.loadFailed"));
       setData(null);
     } finally {
       setLoading(false);
     }
-  }, [houseId]);
+  }, [houseId, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -173,7 +194,7 @@ export function NightPassesCard({
   async function copy(code: string) {
     try {
       await navigator.clipboard.writeText(code);
-      toast.success("קוד המשפחה הועתק");
+      toast.success(t("nightPassesCard.familyCodeCopied"));
     } catch {
       toast.message(code);
     }
@@ -181,9 +202,7 @@ export function NightPassesCard({
 
   async function resetFamilyCode() {
     if (
-      !window.confirm(
-        "ייווצר קוד כניסה חדש. כל המכשירים (כולל שלכם) יצטרכו להתחבר מחדש. להמשיך?",
-      )
+      !window.confirm(t("nightPassesCard.resetConfirm"))
     ) {
       return;
     }
@@ -198,7 +217,7 @@ export function NightPassesCard({
         editCode?: string;
       } | null;
       if (!res.ok) {
-        toast.error(json?.error ?? "האיפוס נכשל.");
+        toast.error(json?.error ?? t("nightPassesCard.resetFailed"));
         return;
       }
       if (json?.editCode?.trim() && house) {
@@ -210,7 +229,7 @@ export function NightPassesCard({
         });
         notifyCatalogChanged();
       }
-      toast.success("קוד הכניסה אופס");
+      toast.success(t("nightPassesCard.resetSuccess"));
       notifyNightPassSlotsChanged();
       await disconnectNightPassOnDevice();
       await refreshNightPassState({ force: true });
@@ -233,10 +252,10 @@ export function NightPassesCard({
       );
       const json = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
-        toast.error(json?.error ?? "עדכון התפקיד נכשל.");
+        toast.error(json?.error ?? t("nightPassesCard.roleUpdateFailed"));
         return;
       }
-      toast.success(`התפקיד עודכן ל${houseAccessRoleLabel(role)}`);
+      toast.success(formatMessage(t("nightPassesCard.roleUpdated"), { role: roleLabel(role) }));
       notifyNightPassSlotsChanged();
       await refreshNightPassState({ force: true });
       await load();
@@ -249,8 +268,8 @@ export function NightPassesCard({
     if (
       !window.confirm(
         isThisDevice
-          ? "להסיר את המכשיר הזה מהרשימה? תצטרכו להירשם מחדש כדי לראות כתובות."
-          : "להסיר את המכשיר מהרשימה?",
+          ? t("nightPassesCard.removeThisDeviceConfirm")
+          : t("nightPassesCard.removeDeviceConfirm"),
       )
     ) {
       return;
@@ -267,13 +286,13 @@ export function NightPassesCard({
       );
       const json = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
-        toast.error(json?.error ?? "ההסרה נכשלה.");
+        toast.error(json?.error ?? t("nightPassesCard.removeFailed"));
         return;
       }
       if (isThisDevice) {
         await disconnectNightPassOnDevice();
       }
-      toast.success("המכשיר הוסר");
+      toast.success(t("nightPassesCard.deviceRemoved"));
       notifyNightPassSlotsChanged();
       await refreshNightPassState({ force: true });
       await load();
@@ -284,15 +303,15 @@ export function NightPassesCard({
 
   async function shareInvite() {
     if (!house) {
-      toast.error("לא ניתן לשלוח הזמנה.");
+      toast.error(t("nightPassesCard.inviteCannotSend"));
       return;
     }
     setBusyShare(true);
     try {
       const result = await shareHouseAccessInvite(house);
-      if (result === "shared") toast.success("ההזמנה נשלחה");
-      else if (result === "copied") toast.success("קישור ההזמנה הועתק");
-      else if (result === "failed") toast.error("שליחת ההזמנה נכשלה");
+      if (result === "shared") toast.success(t("nightPassesCard.inviteSent"));
+      else if (result === "copied") toast.success(t("nightPassesCard.inviteLinkCopied"));
+      else if (result === "failed") toast.error(t("nightPassesCard.inviteSendFailed"));
     } finally {
       setBusyShare(false);
     }
@@ -314,7 +333,7 @@ export function NightPassesCard({
   const inviteActions =
     house && canShareInvite ? (
     <SlotAction
-      label="שלח הזמנה"
+      label={t("nightPassesCard.sendInvite")}
       disabled={busyShare || (loading && !data)}
       onClick={() => void shareInvite()}
       icon={
@@ -329,7 +348,7 @@ export function NightPassesCard({
 
   const resetAction = canResetCode ? (
     <SlotAction
-      label="איפוס קוד"
+      label={t("nightPassesCard.resetCode")}
       disabled={busyReset || (loading && !data)}
       onClick={() => void resetFamilyCode()}
       icon={
@@ -377,8 +396,11 @@ export function NightPassesCard({
     : "mt-4 space-y-3 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20";
 
   const devicesHeading = access
-    ? `מכשירים מחוברים: ${access.connectedCount}/${access.maxDevices}`
-    : "מכשירים מחוברים";
+    ? formatMessage(t("nightPassesCard.connectedDevices"), {
+        connected: String(access.connectedCount),
+        max: String(access.maxDevices),
+      })
+    : t("nightPassesCard.connectedDevicesHeading");
   const showConnectMe =
     Boolean(data?.enabled) &&
     Boolean(access) &&
@@ -396,20 +418,20 @@ export function NightPassesCard({
         </h3>
       ) : null}
       {!data.enabled ? (
-        <p className="text-center text-sm text-amber-200">כבוי לציבור — רק מנהלים רואים עכשיו.</p>
+        <p className="text-center text-sm text-amber-200">{t("nightPassesCard.adminOnlyHint")}</p>
       ) : null}
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
       {access ? (
         <>
           {showFamilyCode ? (
             <div className="flex flex-col items-center gap-2 rounded-xl bg-black/30 px-3 py-4 ring-1 ring-orange-500/20">
-              <span className="text-sm text-violet-300">קוד כניסה</span>
+              <span className="text-sm text-violet-300">{t("nightPassesCard.entryCodeLabel")}</span>
               <span dir="ltr" className="font-mono text-2xl tracking-[0.35em] text-orange-100">
                 {access.familyCode}
               </span>
               <div className="flex flex-wrap justify-center gap-2">
                 <SlotAction
-                  label="העתק"
+                  label={t("editCodeDialog.copy")}
                   onClick={() => void copy(access.familyCode.replace(/-/g, ""))}
                   icon={<Copy className="size-4 shrink-0" strokeWidth={2.2} />}
                 />
@@ -425,7 +447,9 @@ export function NightPassesCard({
           )}
           <ul className="divide-y divide-orange-500/15 overflow-hidden rounded-xl ring-1 ring-orange-500/20">
             {access.devices.length === 0 ? (
-              <li className="px-3 py-4 text-center text-emerald-400">אין מכשירים מחוברים עדיין</li>
+              <li className="px-3 py-4 text-center text-emerald-400">
+                {t("nightPassesCard.noDevicesYet")}
+              </li>
             ) : (
               access.devices.map((device) => (
                 <li
@@ -439,10 +463,10 @@ export function NightPassesCard({
                       <bdi dir="ltr" className="text-violet-300">
                         {device.holderPhone}
                       </bdi>
-                      {nightPassClientSurfaceLabel(device.clientSurface) ? (
+                      {surfaceLabel(device.clientSurface) ? (
                         <span className="text-violet-400">
                           {" · "}
-                          {nightPassClientSurfaceLabel(device.clientSurface)}
+                          {surfaceLabel(device.clientSurface)}
                         </span>
                       ) : null}
                       {nightPassClientBrowserLabel(device.clientBrowser) ? (
@@ -452,16 +476,19 @@ export function NightPassesCard({
                         </span>
                       ) : null}
                       {device.isThisDevice ? (
-                        <span className="text-orange-300"> · המכשיר הזה</span>
+                        <span className="text-orange-300">
+                          {" · "}
+                          {t("nightPassesCard.thisDevice")}
+                        </span>
                       ) : null}
                     </p>
                     <p className="text-center text-sm text-violet-400">
-                      {formatHouseAddedAt(device.registeredAt)}
+                      {formatHouseAddedAt(device.registeredAt, locale)}
                     </p>
                     <p className="mt-1 text-center text-sm text-violet-300">
-                      <span className="text-violet-500">{HOUSE_ACCESS_ROLE_FIELD_LABEL}: </span>
+                      <span className="text-violet-500">{t("nightPassesCard.roleField")}: </span>
                       <span className="font-medium text-violet-100">
-                        {houseAccessRoleLabel(device.role)}
+                        {roleLabel(device.role)}
                       </span>
                       {canChangeDeviceRole(device) ? (
                         <>
@@ -478,8 +505,8 @@ export function NightPassesCard({
                             }
                           >
                             {busyRoleId === device.sessionId
-                              ? "שומר…"
-                              : houseAccessRoleChangePrompt(device.role)}
+                              ? t("nightPassesCard.saving")
+                              : roleChangePrompt(device.role)}
                           </button>
                         </>
                       ) : null}
@@ -493,7 +520,9 @@ export function NightPassesCard({
                         className="text-sm text-red-300/90 underline underline-offset-2 hover:text-red-200 disabled:opacity-50"
                         onClick={() => void removeDevice(device.sessionId, device.isThisDevice)}
                       >
-                        {busyRemoveId === device.sessionId ? "מסיר…" : "הסר מהרשימה"}
+                        {busyRemoveId === device.sessionId
+                          ? t("nightPassesCard.removing")
+                          : t("nightPassesCard.removeFromList")}
                       </button>
                     </div>
                   ) : null}
@@ -504,7 +533,9 @@ export function NightPassesCard({
               ? Array.from({ length: access.maxDevices - access.connectedCount }).map((_, i) => (
                   <li key={`empty-${i}`} className="px-3 py-3">
                     <div className="flex flex-col items-center gap-2 text-center">
-                      <p className="text-base font-medium text-emerald-400/95">פנוי</p>
+                      <p className="text-base font-medium text-emerald-400/95">
+                        {t("nightPassesCard.slotOpen")}
+                      </p>
                       {showConnectMe ? (
                         <Button
                           type="button"
@@ -513,7 +544,7 @@ export function NightPassesCard({
                           className="h-9 border-emerald-500/35 text-emerald-100 hover:bg-emerald-950/40"
                           onClick={() => passDialog?.openOwnerRegister(houseId)}
                         >
-                          חבר אותי
+                          {t("nightPassesCard.connectMe")}
                         </Button>
                       ) : (
                         <p className="text-sm text-violet-500/75">—</p>
