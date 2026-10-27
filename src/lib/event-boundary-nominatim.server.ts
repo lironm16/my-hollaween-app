@@ -113,6 +113,34 @@ export async function streetBoundaryPolygon(
 
 type StreetHit = { street: string; city: string; label: string };
 
+function normalizeStreetName(name: string) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[''""`]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+/** When the query equals a street name in a city, hide longer names that merely extend it (e.g. אבא הלל vs אבא הלל סילבר). */
+export function preferExactStreetMatches(streets: StreetHit[], query: string): StreetHit[] {
+  const nq = normalizeStreetName(query);
+  if (!nq) return streets;
+
+  const byCity = new Map<string, StreetHit[]>();
+  for (const row of streets) {
+    const list = byCity.get(row.city) ?? [];
+    list.push(row);
+    byCity.set(row.city, list);
+  }
+
+  const out: StreetHit[] = [];
+  for (const list of byCity.values()) {
+    const exact = list.filter((s) => normalizeStreetName(s.street) === nq);
+    out.push(...(exact.length > 0 ? exact : list));
+  }
+  return out;
+}
+
 function streetFromNominatimHit(
   h: NominatimGeoHit & {
     address?: {
@@ -163,7 +191,7 @@ export async function searchStreets(city: string, q: string, limit = 20): Promis
     seen.add(key);
     out.push(row);
   }
-  return out;
+  return preferExactStreetMatches(out, query);
 }
 
 /** Free-text street search (multiple settlements); slower — one Nominatim call. */
@@ -189,5 +217,5 @@ export async function searchStreetsNationwide(q: string, limit = 12): Promise<St
     seen.add(key);
     out.push(row);
   }
-  return out.slice(0, limit);
+  return preferExactStreetMatches(out, query).slice(0, limit);
 }
