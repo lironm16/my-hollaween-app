@@ -7,6 +7,7 @@ import { CountdownDecor } from "@/components/countdown-decor";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { eventCountdownDateBadgeLabel } from "@/lib/event-countdown-display";
+import { config } from "@/lib/config";
 import { neighborhoodMarqueeText } from "@/lib/i18n/neighborhood-labels";
 import { isStandaloneDisplay } from "@/lib/push-client";
 import { subscribeAppViewport, syncAppViewportVars } from "@/lib/viewport";
