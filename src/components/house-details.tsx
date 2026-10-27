@@ -18,6 +18,7 @@ import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
 import { houseAddedMetaLine } from "@/lib/house-meta";
+import { useTranslatedUserText } from "@/hooks/use-translated-user-text";
 import { houseHeadline } from "@/lib/labels";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { useHouseMapsUrl } from "@/hooks/use-house-maps-url";
@@ -26,6 +27,12 @@ import { shouldLoadHousePhoto } from "@/lib/photos";
 import type { EditorHouse, PublicHouse } from "@/lib/types";
 import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
+
+function HouseDisplayHeadline({ house }: { house: PublicHouse }) {
+  const headline = houseHeadline(house);
+  const display = useTranslatedUserText(headline);
+  return <>{display}</>;
+}
 
 function useMultilineText(text: string, resetKey: string) {
   const measureRef = useRef<HTMLParagraphElement>(null);
@@ -509,7 +516,7 @@ export function HouseDetails({
             )}
           >
             {sheet ? null : <HouseTitleMarkers liked={liked} gemCollected={gemCollected} />}
-            {houseHeadline(house)}
+            <HouseDisplayHeadline house={house} />
           </p>
           {headerMenu ? <div className="house-details-menu shrink-0">{headerMenu}</div> : null}
         </div>

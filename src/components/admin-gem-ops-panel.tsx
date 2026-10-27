@@ -23,7 +23,6 @@ import { gemHuntVisible } from "@/lib/gem-hunt-enabled";
 import { clusterHousesByAddress } from "@/lib/house-clusters";
 import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
-import { useLocale } from "@/hooks/use-locale";
 import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 

@@ -5,10 +5,16 @@ import { gemMessagesEn } from "@/lib/i18n/messages/gem-en";
 export const enMessages: AppMessages = {
   settings: {
     title: "Settings",
-    languageSection: "Language",
-    languageHint: "Choose the interface language. Your choice is saved on this device.",
+    languageSection: "Interface language",
+    languageHint: "Buttons, menus, and app messages — not house names or neighbor-written text.",
     languageEnglish: "English",
     languageHebrew: "עברית",
+    contentSection: "Community content",
+    contentHint: "House names, visitor notes, and similar text from the map.",
+    contentTranslateOn: "Translate to English",
+    contentTranslateHint:
+      "When the interface is English, show machine translations of neighbor-submitted text. Without a server translation key, originals are shown.",
+    contentTranslateRequiresEnglish: "Switch the interface to English first to translate community content.",
     notificationsSection: "Notifications",
     notificationsIntro:
       "Which alerts this device receives. Turn all notifications on or off with the bell in the header.",

@@ -4,10 +4,16 @@ import { gemMessagesHe } from "@/lib/i18n/messages/gem-he";
 export const heMessages = {
   settings: {
     title: "הגדרות",
-    languageSection: "שפה",
-    languageHint: "בחרו את שפת הממשק. ההעדפה נשמרת במכשיר.",
+    languageSection: "שפת הממשק",
+    languageHint: "כפתורים, תפריטים והודעות — לא שמות בתים וטקסט ששכנים כתבו.",
     languageEnglish: "English",
     languageHebrew: "עברית",
+    contentSection: "תוכן מהקהילה",
+    contentHint: "שמות בתים, הערות למבקרים וטקסט דומה מהמפה.",
+    contentTranslateOn: "תרגום לאנגלית",
+    contentTranslateHint:
+      "כשהממשק באנגלית — מציגים תרגום (מכונה) של טקסט ששכנים הזינו. בלי מפתח תרגום בשרת יוצג המקור.",
+    contentTranslateRequiresEnglish: "הפעילו קודם ממשק באנגלית כדי לתרגם תוכן קהילתי.",
     notificationsSection: "התראות",
     notificationsIntro:
       "סוגי ההתראות שיישלחו למכשיר. הפעלה/כיבוי מלא דרך סמל הפעמון בראש המסך.",
