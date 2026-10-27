@@ -1,9 +1,12 @@
 import type { PublicHouse } from "@/lib/types";
 
-export function formatHouseAddedAt(iso: string) {
+import type { AppLocale } from "@/lib/i18n/locale";
+
+export function formatHouseAddedAt(iso: string, locale: AppLocale = "he") {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("he-IL", { dateStyle: "medium", timeStyle: "short" });
+  const tag = locale === "en" ? "en-US" : "he-IL";
+  return date.toLocaleString(tag, { dateStyle: "medium", timeStyle: "short" });
 }
 
 /** One line for when the house was registered — submitter name is admin-only. */

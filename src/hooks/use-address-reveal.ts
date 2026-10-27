@@ -16,6 +16,7 @@ import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
 import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { useOwnedHouses } from "@/hooks/use-owned-houses";
 import { useCatalog } from "@/hooks/use-catalog";
+import { useLocale } from "@/hooks/use-locale";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { nightPassAudience } from "@/lib/night-pass-client";
 import type { PublicHouse } from "@/lib/types";
@@ -28,6 +29,7 @@ export function useAddressReveal(): AddressRevealContext & {
   mapsAllowed: (houseId: string) => boolean;
   distanceAllowed: (houseId: string) => boolean;
 } {
+  const { locale } = useLocale();
   const now = useAppNow();
   const { catalog } = useCatalog();
   const { admin } = useAdminSession();
@@ -66,13 +68,13 @@ export function useAddressReveal(): AddressRevealContext & {
       ...ctx,
       canViewDetails: (houseId: string) => canViewHouseLocationDetails(houseId, ctx),
       formatDisplayAddress: (house: PublicHouse) =>
-        formatDisplayAddressWithPolicy(house, house.id, ctx),
+        formatDisplayAddressWithPolicy(house, house.id, ctx, locale),
       formatClusterAddress: (houses: readonly PublicHouse[], fallback: PublicHouse) =>
         clusterDisplayAddressWithPolicy(houses, fallback, ctx),
       visibleArrival: (house: PublicHouse) => visibleArrivalWithPolicy(house, house.id, ctx),
       mapsAllowed: (houseId: string) => mapsNavigationAllowed(houseId, ctx),
       distanceAllowed: (houseId: string) => canViewHouseLocationDetails(houseId, ctx),
     }),
-    [ctx],
+    [ctx, locale],
   );
 }

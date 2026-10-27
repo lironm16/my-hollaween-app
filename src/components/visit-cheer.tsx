@@ -1,6 +1,9 @@
 "use client";
 
+import { useLocale } from "@/hooks/use-locale";
+
 export function VisitCheer({ show }: { show: boolean }) {
+  const { t } = useLocale();
   if (!show) return null;
   return (
     <div className="visit-cheer" role="status" aria-live="polite">
@@ -9,7 +12,7 @@ export function VisitCheer({ show }: { show: boolean }) {
           <i /><i /><i /><i /><i /><i />
         </span>
         <span className="visit-cheer-check" aria-hidden="true" />
-        כל הכבוד!
+        {t("cheer.visited")}
       </div>
     </div>
   );

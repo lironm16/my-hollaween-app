@@ -1501,6 +1501,9 @@
   .self-start {
     align-self: flex-start;
   }
+  .self-stretch {
+    align-self: stretch;
+  }
   .justify-self-end {
     justify-self: flex-end;
   }
@@ -7485,6 +7488,20 @@ svg.leaflet-zoom-animated {
 }
 .neighborhood-marquee.is-overflow {
   mask-image: linear-gradient(to left, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+}
+.neighborhood-marquee.is-rtl.is-overflow {
+  mask-image: linear-gradient(to right, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+}
+.neighborhood-marquee.is-rtl .neighborhood-marquee-text.is-scroll {
+  animation-name: neighborhood-marquee-rtl;
+}
+@keyframes neighborhood-marquee-rtl {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-1 * var(--marquee-shift, 0px)));
+  }
 }
 .neighborhood-marquee-text {
   display: inline-block;

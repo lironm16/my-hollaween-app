@@ -428,6 +428,21 @@ export const enMessages: AppMessages = {
   houseCard: {
     loadingDetail: "Loading house details from server…",
     notPublic: "This house is not on the public map.",
+    whatAwaits: "What awaits visitors",
+    arrivalDirections: "Directions",
+    visitorNote: "Note",
+    showMore: "Show more",
+    showLess: "Show less",
+    closePhoto: "Close photo",
+  },
+  houseMeta: {
+    added: "Added {when}",
+    addedByWho: "Added by {who}",
+    addedByWhoWhen: "Added by {who} · {when}",
+  },
+  cheer: {
+    liked: "Liked!",
+    visited: "Great job!",
   },
   adminPreview: {
     title: "User view",
@@ -829,7 +844,7 @@ export const enMessages: AppMessages = {
   gemAnchor: {
     intro:
       "Place the **imp** outdoors in a **public spot everyone can reach**, near the **house** — not inside a building.",
-    distanceFromHouse: "{distanceM} m from house",
+    distanceFromHouse: "{n} m from house",
     gpsAccuracy: "GPS accuracy ~{accuracyM} m",
     saveFailed: "Could not save.",
     noServer: "No connection to server. Try again.",

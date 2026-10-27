@@ -67,9 +67,9 @@ button {
   flex-direction: column;
   min-width: 0;
   flex: 1;
-  align-items: flex-end;
+  align-items: stretch;
   justify-content: center;
-  text-align: right;
+  text-align: start;
   gap: 0;
 }
 
@@ -89,7 +89,7 @@ button {
   display: inline-block;
   max-width: 100%;
   white-space: nowrap;
-  text-align: right;
+  text-align: inherit;
 }
 
 html:has(#neighborhood-shell),

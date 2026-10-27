@@ -143,7 +143,7 @@ export function GemAnchorPlaceDialog({
   const atAuto = samePoint(point, auto);
   const mapDistanceLine = useMemo(() => {
     const parts = [
-      formatMessage(t("gemAnchor.distanceFromHouse"), { distanceM: String(distanceM) }),
+      formatMessage(t("gemAnchor.distanceFromHouse"), { n: String(distanceM) }),
     ];
     if (accuracyM != null) {
       parts.push(

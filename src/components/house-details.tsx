@@ -17,7 +17,8 @@ import { adminShowsPrivateHouseFields } from "@/lib/gem-preview-as-user";
 import { formatDistance } from "@/lib/geo";
 import { HoursLabel } from "@/components/clock-time";
 import { formatHoursLabel } from "@/lib/hours";
-import { houseAddedMetaLine } from "@/lib/house-meta";
+import { useLocale } from "@/hooks/use-locale";
+import { houseAddedMetaLineLocalized } from "@/lib/house-meta-i18n";
 import { useTranslatedUserText } from "@/hooks/use-translated-user-text";
 import { houseHeadline } from "@/lib/labels";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
@@ -182,13 +183,15 @@ function HouseArrivalDirections({
   arrival?: string | null;
   houseId: string;
 }) {
+  const { t } = useLocale();
   const arrivalText = arrival?.trim() ?? "";
+  const displayText = useTranslatedUserText(arrivalText);
   if (!arrivalText) return null;
 
   return (
     <CompactTextSection
-      title="הוראות הגעה"
-      text={arrivalText}
+      title={t("houseCard.arrivalDirections")}
+      text={displayText}
       houseId={houseId}
       alwaysCollapsible
       titleClassName="text-amber-200/80"
@@ -204,13 +207,15 @@ function HouseNotesSection({
   notes?: string | null;
   houseId: string;
 }) {
+  const { t } = useLocale();
   const text = notes?.trim() ?? "";
+  const displayText = useTranslatedUserText(text);
   if (!text) return null;
 
   return (
     <CompactTextSection
-      title="הערה"
-      text={text}
+      title={t("houseCard.visitorNote")}
+      text={displayText}
       houseId={houseId}
       titleClassName="text-amber-200/80"
       bodyClassName="text-amber-200/90"
@@ -225,7 +230,9 @@ function HouseDescriptionSection({
   description?: string | null;
   houseId: string;
 }) {
+  const { t } = useLocale();
   const text = description?.trim() ?? "";
+  const displayText = useTranslatedUserText(text);
   const [textExpanded, setTextExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const clampRef = useRef<HTMLDivElement>(null);
@@ -254,7 +261,7 @@ function HouseDescriptionSection({
 
   return (
     <ListDetailSection
-      title="מה מחכה בבית"
+      title={t("houseCard.whatAwaits")}
       resetKey={houseId}
       titleClassName="text-violet-200/80"
       bodyClassName="text-violet-50"
@@ -266,7 +273,7 @@ function HouseDescriptionSection({
           !textExpanded && "line-clamp-3",
         )}
       >
-        {text}
+        {displayText}
       </div>
       {showToggle ? (
         <button
@@ -277,7 +284,7 @@ function HouseDescriptionSection({
             setTextExpanded((value) => !value);
           }}
         >
-          {textExpanded ? "הצג פחות" : "הצג עוד"}
+          {textExpanded ? t("houseCard.showLess") : t("houseCard.showMore")}
         </button>
       ) : null}
     </ListDetailSection>
@@ -330,6 +337,7 @@ export function HouseDetails({
   hideHoursBanner?: boolean;
   clusterBoothTag?: string | null;
 }) {
+  const { locale, t } = useLocale();
   const addressReveal = useAddressReveal();
   const mapsUrl = useHouseMapsUrl(house);
   const { admin } = useAdminSession();
@@ -343,7 +351,9 @@ export function HouseDetails({
   const showMaps = addressReveal.mapsAllowed(viewHouse.id) && houseServerDetailReady(viewHouse);
   const showDistance =
     addressReveal.distanceAllowed(viewHouse.id) && distanceM !== undefined;
-  const addedMeta = houseAddedMetaLine(editorHouse, { showSubmitterName: showPrivateFields });
+  const addedMeta = houseAddedMetaLineLocalized(locale, editorHouse, {
+    showSubmitterName: showPrivateFields,
+  });
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
@@ -463,7 +473,7 @@ export function HouseDetails({
     <>
       {hours ? <HoursLabel house={house} /> : null}
       {hours && showDistance ? metaSep : null}
-      {showDistance ? formatDistance(distanceM!) : null}
+      {showDistance ? formatDistance(distanceM!, locale) : null}
     </>
   );
   const meta = (
@@ -488,7 +498,7 @@ export function HouseDetails({
         ? createPortal(
             <button
               type="button"
-              aria-label="סגירת התמונה"
+              aria-label={t("houseCard.closePhoto")}
               onClick={(e) => {
                 e.stopPropagation();
                 setPhotoOpen(false);

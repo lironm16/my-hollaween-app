@@ -41,8 +41,9 @@ export function PingPongMarquee({
       aria-label={text}
       dir={dir}
       className={cn(
-        "neighborhood-marquee block w-full min-w-0 text-end",
+        "neighborhood-marquee block w-full min-w-0 self-stretch text-start",
         shift > 0 && "is-overflow",
+        dir === "rtl" && "is-rtl",
         className,
       )}
     >

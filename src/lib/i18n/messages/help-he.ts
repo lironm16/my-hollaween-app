@@ -14,7 +14,7 @@ export const helpMessagesHe = {
     gemPlaceHint:
       "מקמו את השדון בחוץ — במקום ציבורי, נגיש לכולם, לא בפנים בבניין.",
     gemPlaceSave: "שמירת מיקום",
-    gemFoundCheer: "מצאת שדון!",
+    gemFoundCheer: "כל הכבוד! מצאתם שדון!",
     gemFoundI: "מצאתי",
     gemNotFoundI: "לא מצאתי",
   },

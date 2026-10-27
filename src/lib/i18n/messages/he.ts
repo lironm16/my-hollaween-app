@@ -427,6 +427,21 @@ export const heMessages = {
   houseCard: {
     loadingDetail: "טוען פרטי בית מהשרת…",
     notPublic: "הבית לא זמין במפה הציבורית.",
+    whatAwaits: "מה מחכה בבית",
+    arrivalDirections: "הוראות הגעה",
+    visitorNote: "הערה",
+    showMore: "הצג עוד",
+    showLess: "הצג פחות",
+    closePhoto: "סגירת התמונה",
+  },
+  houseMeta: {
+    added: "נוסף {when}",
+    addedByWho: "נוסף על ידי {who}",
+    addedByWhoWhen: "נוסף על ידי {who} · {when}",
+  },
+  cheer: {
+    liked: "אהבתם!",
+    visited: "כל הכבוד!",
   },
   adminPreview: {
     title: "תצוגת משתמש",
@@ -824,7 +839,7 @@ export const heMessages = {
   gemAnchor: {
     intro:
       "מקמו את **השדון** בחוץ, במקום **ציבורי ונגיש לכולם**, בקרבת **הבית** — לא בפנים בבניין.",
-    distanceFromHouse: "{distanceM} מ׳ מהבית",
+    distanceFromHouse: "{n} מ׳ מהבית",
     gpsAccuracy: "דיוק GPS ~{accuracyM} מ׳",
     saveFailed: "השמירה נכשלה.",
     noServer: "אין חיבור לשרת. נסו שוב.",
