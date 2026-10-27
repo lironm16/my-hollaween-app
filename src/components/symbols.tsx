@@ -1,4 +1,7 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 
 /** Picker option 1 — classic bassinet pram with a segmented hood. */
 export function StrollerGlyph({ className }: { className?: string }) {
@@ -40,10 +43,12 @@ export function AccessibleMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.accessible");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <StrollerSign />
-      {labeled ? <span>נגיש</span> : <span className="sr-only">נגיש</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }

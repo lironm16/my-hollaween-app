@@ -10,6 +10,8 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 
 /** Same corner chip as the filter count — a digit, or a small icon of the same weight. */
 export function ToolbarBadge({ children }: { children?: ReactNode }) {
@@ -27,10 +29,15 @@ export function FilterTrigger({
   activeCount: number;
   onClick: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <button
       type="button"
-      aria-label={activeCount > 0 ? `סינון (${activeCount})` : "סינון"}
+      aria-label={
+        activeCount > 0
+          ? formatMessage(t("filters.ariaWithCount"), { count: String(activeCount) })
+          : t("filters.aria")
+      }
       onClick={onClick}
       className={cn(
         "relative inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
@@ -64,6 +71,7 @@ export function FiltersSheet({
   saveDisabled?: boolean;
   children: ReactNode;
 }) {
+  const { t } = useLocale();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -75,10 +83,10 @@ export function FiltersSheet({
           compact
           title={
             <span className="inline-flex items-center justify-center gap-2">
-              סינון
+              {t("filters.title")}
               {activeCount > 0 ? (
                 <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-base font-medium text-orange-200">
-                  {activeCount} פעילים
+                  {formatMessage(t("filters.activeCount"), { count: String(activeCount) })}
                 </span>
               ) : null}
             </span>
@@ -98,7 +106,9 @@ export function FiltersSheet({
             disabled={saveDisabled}
             onClick={onSave}
           >
-            {resultCount !== undefined ? `הצג תוצאות (${resultCount})` : "הצג תוצאות"}
+            {resultCount !== undefined
+              ? formatMessage(t("filters.showResultsCount"), { count: String(resultCount) })
+              : t("filters.showResults")}
           </Button>
           <Button
             type="button"
@@ -107,7 +117,7 @@ export function FiltersSheet({
             disabled={activeCount === 0}
             onClick={onClear}
           >
-            איפוס
+            {t("filters.reset")}
           </Button>
         </SheetFooter>
       </SheetContent>

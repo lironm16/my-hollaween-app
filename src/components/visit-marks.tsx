@@ -1,11 +1,12 @@
+"use client";
+
 import { Check, Filter } from "lucide-react";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { DecorMark } from "@/components/decor-glyphs";
 import { ClosedSign, PauseSign } from "@/components/house-tags";
 import { SkipIcon } from "@/components/skip-icon";
-import { visitShort } from "@/lib/labels";
-import { GEM_FOUND_I_HE, GEM_NOT_FOUND_I_HE } from "@/lib/gem-hunt-copy";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 
 function HeartGlyph() {
   return (
@@ -31,14 +32,16 @@ function HouseGlyph() {
 
 /** Rose disc — saved / אהבתי. */
 export function LikedSign({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.liked");
   return (
     <span
       className={cn(
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#e11d48] text-[#fff7ed]",
         className,
       )}
-      title="אהבתי"
-      aria-label="אהבתי"
+      title={label}
+      aria-label={label}
     >
       <span className="size-[62%]">
         <HeartGlyph />
@@ -54,24 +57,28 @@ export function LikedMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.liked");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <LikedSign />
-      {labeled ? <span>אהבתי</span> : <span className="sr-only">אהבתי</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }
 
 /** Indigo disc — unused elsewhere. Not yet visited. */
 export function UnvisitedSign({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.unvisited");
   return (
     <span
       className={cn(
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#4f46e5] text-[#fff7ed]",
         className,
       )}
-      title="לא ביקרתי"
-      aria-label="לא ביקרתי"
+      title={label}
+      aria-label={label}
     >
       <span className="size-[70%]">
         <HouseGlyph />
@@ -87,10 +94,12 @@ export function UnvisitedMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.unvisited");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <UnvisitedSign />
-      {labeled ? <span>לא ביקרתי</span> : <span className="sr-only">לא ביקרתי</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }
@@ -102,10 +111,12 @@ export function ClosedMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.closed");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <ClosedSign />
-      {labeled ? <span>סגור</span> : <span className="sr-only">סגור</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }
@@ -117,10 +128,12 @@ export function OnBreakMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.pause");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <PauseSign />
-      {labeled ? <span>הפסקה</span> : <span className="sr-only">הפסקה</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }
@@ -132,24 +145,28 @@ export function DecorOnlyMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.decorOnly");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <DecorMark level="mild" />
-      {labeled ? <span>{visitShort.decorOnly}</span> : <span className="sr-only">{visitShort.decorOnly}</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }
 
 /** Green disc — visited / ביקרתי (filter row size). */
 export function VisitedSign({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.visited");
   return (
     <span
       className={cn(
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white",
         className,
       )}
-      title="ביקרתי"
-      aria-label="ביקרתי"
+      title={label}
+      aria-label={label}
     >
       <Check className="size-5" strokeWidth={3} />
     </span>
@@ -158,14 +175,16 @@ export function VisitedSign({ className }: { className?: string }) {
 
 /** Orange disc — filtered / מסונן (filter row size). */
 export function FilterSign({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.filtered");
   return (
     <span
       className={cn(
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-black shadow-[0_1px_2px_rgba(0,0,0,0.35)]",
         className,
       )}
-      title="מסונן"
-      aria-label="מסונן"
+      title={label}
+      aria-label={label}
     >
       <Filter className="size-4" strokeWidth={2.5} />
     </span>
@@ -174,14 +193,16 @@ export function FilterSign({ className }: { className?: string }) {
 
 /** Slate disc — skipped / דילגתי (filter row size). */
 export function SkipSign({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.skipped");
   return (
     <span
       className={cn(
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#64748b] text-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]",
         className,
       )}
-      title="דילגתי"
-      aria-label="דילגתי"
+      title={label}
+      aria-label={label}
     >
       <SkipIcon className="size-5" />
     </span>
@@ -207,14 +228,16 @@ export function SkipPinBadge({
 
 /** Amber filled imp — מצאתי (matches LikedSign / VisitedSign size-8). */
 export function CollectedGemSign({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.gemFound");
   return (
     <span
       className={cn(
         "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 ring-1 ring-amber-400/45",
         className,
       )}
-      title={GEM_FOUND_I_HE}
-      aria-label={GEM_FOUND_I_HE}
+      title={label}
+      aria-label={label}
     >
       <ImpMarkerGlyph variant="solid" className="size-[88%] text-[#fbbf24]" />
     </span>
@@ -242,10 +265,12 @@ export function UncollectedGemMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.gemNotFound");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <UncollectedGemSign />
-      {labeled ? <span>{GEM_NOT_FOUND_I_HE}</span> : <span className="sr-only">{GEM_NOT_FOUND_I_HE}</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }
@@ -257,10 +282,12 @@ export function CollectedGemMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.gemFound");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <CollectedGemSign />
-      {labeled ? <span>{GEM_FOUND_I_HE}</span> : <span className="sr-only">{GEM_FOUND_I_HE}</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }
@@ -272,10 +299,12 @@ export function SkippedMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.skipped");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <SkipSign />
-      {labeled ? <span>דילגתי</span> : <span className="sr-only">דילגתי</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }
@@ -287,10 +316,12 @@ export function VisitedMark({
   labeled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+  const label = t("visitMarks.visited");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <VisitedSign />
-      {labeled ? <span>ביקרתי</span> : <span className="sr-only">ביקרתי</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }

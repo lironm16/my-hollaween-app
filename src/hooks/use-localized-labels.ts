@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { CandyTone } from "@/lib/types";
 import type { DecorLevel, HouseKind, ScareLevel } from "@/lib/types";
 import { useLocale } from "@/hooks/use-locale";
+import type { LocationKindFilter } from "@/lib/types";
 
 export function useLocalizedLabels() {
   const { t } = useLocale();
@@ -24,6 +25,11 @@ export function useLocalizedLabels() {
       house: t("labels.houseKindHouse"),
       poi: t("labels.houseKindPoi"),
     };
+    const locationKindFilterLabels: Record<"all" | HouseKind, string> = {
+      all: t("labels.locationKindAll"),
+      house: t("labels.locationKindHouses"),
+      poi: t("labels.locationKindPoi"),
+    };
     const candyToneLabels: Record<CandyTone, string> = {
       none: t("labels.candyNone"),
       plenty: t("labels.candyPlenty"),
@@ -34,6 +40,13 @@ export function useLocalizedLabels() {
       id,
       label: candyToneLabels[id],
     }));
-    return { scareShort, decorShort, houseKindLabels, candyTones, candyToneLabels };
+    return {
+      scareShort,
+      decorShort,
+      houseKindLabels,
+      locationKindFilterLabels,
+      candyTones,
+      candyToneLabels,
+    };
   }, [t]);
 }

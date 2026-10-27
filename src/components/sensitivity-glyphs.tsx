@@ -1,8 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { DiscStrike } from "@/components/disc-strike";
 import { treatLabels } from "@/lib/labels";
 import type { SensitivityId } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
+import { sensitivityLabelKey } from "@/lib/i18n/sensitivity-labels";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -214,12 +218,19 @@ export function SesamePlant() {
   );
 }
 
-const KIND_LABEL: Record<SensitivityId, string> = {
-  glutenFree: treatLabels.glutenFree,
-  nutsFree: treatLabels.nutsFree,
-  sesameFree: treatLabels.sesameFree,
-  vegan: treatLabels.vegan,
-};
+function useKindLabel(kind: SensitivityId): string {
+  const { t, locale } = useLocale();
+  if (locale === "he") {
+    const he: Record<SensitivityId, string> = {
+      glutenFree: treatLabels.glutenFree,
+      nutsFree: treatLabels.nutsFree,
+      sesameFree: treatLabels.sesameFree,
+      vegan: treatLabels.vegan,
+    };
+    return he[kind];
+  }
+  return t(sensitivityLabelKey(kind));
+}
 
 const SENSITIVITY_GLYPH: Record<SensitivityId, string> = {
   glutenFree: "/icons/sensitivity-gluten-glyph.png",
@@ -239,7 +250,7 @@ export function SensitivitySign({
   out?: boolean;
   className?: string;
 }) {
-  const label = KIND_LABEL[kind];
+  const label = useKindLabel(kind);
   const photo = SENSITIVITY_GLYPH[kind];
 
   if (!Glyph) {
@@ -288,10 +299,11 @@ export function SensitivityMark({
   out?: boolean;
   className?: string;
 }) {
+  const label = useKindLabel(kind);
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <SensitivitySign kind={kind} out={out} />
-      {labeled ? <span>{KIND_LABEL[kind]}</span> : <span className="sr-only">{KIND_LABEL[kind]}</span>}
+      {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );
 }

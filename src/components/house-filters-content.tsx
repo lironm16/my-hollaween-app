@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Clock, SlidersHorizontal } from "lucide-react";
 import { AccessibleMark } from "@/components/symbols";
-import { CandySign, CANDY_TONES } from "@/components/candy-glyphs";
+import { CandySign } from "@/components/candy-glyphs";
 import { SensitivityMark } from "@/components/sensitivity-glyphs";
 import { ScareSign } from "@/components/scare-glyphs";
 import { LocationKindSign } from "@/components/location-kind-sign";
@@ -13,7 +13,8 @@ import { OpenNowSign } from "@/components/open-now-mark";
 import { NEIGHBORHOOD_FILTER_OPTIONS } from "@/lib/config";
 import { hasStockCandySelection } from "@/lib/filter-presets";
 import { visitWindowIssue } from "@/lib/hours";
-import { decorShort, locationKindFilterLabels, scareShort } from "@/lib/labels";
+import { useLocalizedLabels } from "@/hooks/use-localized-labels";
+import { useLocale } from "@/hooks/use-locale";
 import { LOCATION_KIND_FILTERS, type LocationKindFilter } from "@/lib/types";
 import type { HouseFiltersState } from "@/lib/offline-db";
 import {
@@ -123,6 +124,8 @@ export function HouseFiltersContent({
     patch: Partial<HouseFiltersState> | ((current: HouseFiltersState) => HouseFiltersState),
   ) => void;
 }) {
+  const { t } = useLocale();
+  const { decorShort, scareShort, locationKindFilterLabels, candyTones } = useLocalizedLabels();
   const visitMode = effectiveVisitWindowMode(filters);
   const candySensitivityEnabled = hasStockCandySelection(filters);
   const useFrom = filters.visitWindowUseFrom ?? true;
@@ -131,7 +134,7 @@ export function HouseFiltersContent({
   const customTo =
     filters.visitWindowTo || defaultVisitWindowEndFromStart(customFrom);
 
-  function toggleCandyTone(tone: (typeof CANDY_TONES)[number]["id"]) {
+  function toggleCandyTone(tone: (typeof candyTones)[number]["id"]) {
     onPatch((current) => {
       const nextCandy = current.candyFilters.includes(tone)
         ? current.candyFilters.filter((item) => item !== tone)
@@ -175,22 +178,22 @@ export function HouseFiltersContent({
 
   return (
     <>
-      <FilterSection title="שעות">
+      <FilterSection title={t("filters.sectionHours")}>
         <VisitWindowRadio checked={visitMode === "all"} onChange={() => setVisitMode("all")}>
           <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-violet-500/25 text-violet-100 ring-1 ring-violet-400/30">
             <Clock className="size-4" aria-hidden="true" />
           </span>
-          <span>כל שעה</span>
+          <span>{t("filters.hoursAll")}</span>
         </VisitWindowRadio>
         <VisitWindowRadio checked={visitMode === "now"} onChange={() => setVisitMode("now")}>
           <OpenNowSign className="size-7" />
-          <span>פתוחים עכשיו</span>
+          <span>{t("filters.hoursNow")}</span>
         </VisitWindowRadio>
         <VisitWindowRadio checked={visitMode === "custom"} onChange={() => setVisitMode("custom")}>
           <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-orange-100 ring-1 ring-orange-400/30">
             <SlidersHorizontal className="size-4" aria-hidden="true" />
           </span>
-          <span>מותאם אישית</span>
+          <span>{t("filters.hoursCustom")}</span>
         </VisitWindowRadio>
         {visitMode === "custom" ? (
           <div className="px-3 py-2">
@@ -208,7 +211,7 @@ export function HouseFiltersContent({
         ) : null}
       </FilterSection>
 
-      <FilterSection title="שלי">
+      <FilterSection title={t("filters.sectionMine")}>
         <FilterToggle
           checked={filters.likedOnly}
           onChange={() => onPatch({ likedOnly: !filters.likedOnly })}
@@ -243,7 +246,7 @@ export function HouseFiltersContent({
         ) : null}
       </FilterSection>
 
-      <FilterSection title="סוג המקום">
+      <FilterSection title={t("filters.sectionPlaceKind")}>
         {LOCATION_KIND_FILTERS.map((kind) => (
           <LocationKindRadio
             key={kind}
@@ -264,7 +267,7 @@ export function HouseFiltersContent({
         ))}
       </FilterSection>
 
-      <FilterSection title="נגישות">
+      <FilterSection title={t("filters.sectionAccessible")}>
         <FilterToggle
           checked={filters.accessibleOnly}
           onChange={() => onPatch({ accessibleOnly: !filters.accessibleOnly })}
@@ -273,8 +276,8 @@ export function HouseFiltersContent({
         </FilterToggle>
       </FilterSection>
 
-      <FilterSection title="ממתקים">
-        {CANDY_TONES.map(({ id, label }) => (
+      <FilterSection title={t("filters.sectionTreats")}>
+        {candyTones.map(({ id, label }) => (
           <FilterOption
             key={id}
             checked={filters.candyFilters.includes(id)}
@@ -288,7 +291,7 @@ export function HouseFiltersContent({
         ))}
       </FilterSection>
 
-      <FilterSection title="רגישויות והתאמות">
+      <FilterSection title={t("filters.sectionSensitivities")}>
         {SENSITIVITY_OPTIONS.map((id) => (
           <FilterOption
             key={id}
@@ -308,7 +311,7 @@ export function HouseFiltersContent({
         ))}
       </FilterSection>
 
-      <FilterSection title="רמת פחד">
+      <FilterSection title={t("filters.sectionScare")}>
         <FilterOption
           checked={filters.includeUndecorated}
           onChange={() => onPatch({ includeUndecorated: !filters.includeUndecorated })}
@@ -332,7 +335,7 @@ export function HouseFiltersContent({
         ))}
       </FilterSection>
 
-      <FilterSection title="שכונה">
+      <FilterSection title={t("filters.sectionNeighborhood")}>
         {NEIGHBORHOOD_FILTER_OPTIONS.map((area) => (
           <FilterOption
             key={area}

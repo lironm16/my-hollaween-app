@@ -1,7 +1,8 @@
 "use client";
 
 import { GemDiamondIcon } from "@/components/gem-diamond-icon";
-import { GEM_MAP_TOGGLE_HIDE_HE, GEM_MAP_TOGGLE_SHOW_HE } from "@/lib/gem-hunt-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { List, MapPinned, Route } from "lucide-react";
 import { FilterTrigger } from "@/components/filter-menu";
 import { OriginTrigger } from "@/components/origin-picker";
@@ -90,6 +91,7 @@ export function NeighborhoodToolbar({
   gemNearSignal?: boolean;
   onToggleGemMap?: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <div
       className={cn(
@@ -108,13 +110,13 @@ export function NeighborhoodToolbar({
             active={view === "map"}
             onClick={() => onViewChange("map")}
             icon={<MapPinned />}
-            label="מפה"
+            label={t("toolbar.map")}
           />
           <ViewToggle
             active={view === "list"}
             onClick={onListView}
             icon={<List />}
-            label="רשימה"
+            label={t("toolbar.list")}
           />
         </div>
         <FilterTrigger activeCount={activeFilterCount} onClick={onOpenFilters} />
@@ -122,7 +124,7 @@ export function NeighborhoodToolbar({
         {gemMapToggleEnabled && onToggleGemMap ? (
           <button
             type="button"
-            aria-label={gemMapVisible ? GEM_MAP_TOGGLE_HIDE_HE : GEM_MAP_TOGGLE_SHOW_HE}
+            aria-label={gemMapVisible ? t("toolbar.gemHide") : t("toolbar.gemShow")}
             aria-pressed={gemMapVisible}
             onClick={(event) => {
               event.stopPropagation();
@@ -144,9 +146,9 @@ export function NeighborhoodToolbar({
           aria-label={
             routeMode
               ? routeUpdateCount > 0
-                ? `${routeUpdateCount} עדכונים במסלול`
-                : "יציאה מהמסלול"
-              : "מסלול"
+                ? formatMessage(t("toolbar.routeUpdates"), { count: String(routeUpdateCount) })
+                : t("toolbar.exitRoute")
+              : t("toolbar.route")
           }
           aria-pressed={routeMode}
           onClick={onToggleRoute}

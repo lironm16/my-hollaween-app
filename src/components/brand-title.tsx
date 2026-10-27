@@ -1,5 +1,8 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { config } from "@/lib/config";
+import { useLocale } from "@/hooks/use-locale";
 
 export function BrandTitle({
   className,
@@ -8,11 +11,23 @@ export function BrandTitle({
   className?: string;
   size?: "header" | "hero";
 }) {
+  const { locale, dir, t } = useLocale();
+  const showHebrewSubtitle = locale === "he";
+
   return (
-    <span className={cn("block w-full min-w-0 text-right leading-none", className)}>
+    <span
+      className={cn(
+        "block w-full min-w-0 leading-none",
+        locale === "he" ? "text-right" : "text-left",
+        className,
+      )}
+    >
       <span
-        dir="rtl"
-        className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-[0.4em] gap-y-0.5 text-right"
+        dir={dir}
+        className={cn(
+          "inline-flex max-w-full flex-wrap items-baseline gap-x-[0.4em] gap-y-0.5",
+          locale === "he" ? "justify-end text-right" : "justify-start text-left",
+        )}
       >
         <span
           dir="ltr"
@@ -23,14 +38,25 @@ export function BrandTitle({
         >
           {config.brandEn}
         </span>
-        <span
-          className={cn(
-            "font-sans font-semibold text-orange-300",
-            size === "header" ? "text-base" : "text-xl sm:text-2xl",
-          )}
-        >
-          {config.brandHe}
-        </span>
+        {showHebrewSubtitle ? (
+          <span
+            className={cn(
+              "font-sans font-semibold text-orange-300",
+              size === "header" ? "text-base" : "text-xl sm:text-2xl",
+            )}
+          >
+            {config.brandHe}
+          </span>
+        ) : (
+          <span
+            className={cn(
+              "font-sans font-medium text-orange-300/90",
+              size === "header" ? "text-sm sm:text-base" : "text-lg sm:text-xl",
+            )}
+          >
+            {t("brand.tagline")}
+          </span>
+        )}
       </span>
     </span>
   );

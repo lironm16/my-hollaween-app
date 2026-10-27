@@ -8,6 +8,8 @@ import { parseStreetAndNumber, streetPinHint } from "@/lib/address-text";
 import { cn } from "@/lib/utils";
 import { useVisualKeyboardOpen } from "@/hooks/use-visual-keyboard-open";
 import { scrollEditableIntoView, subscribeAppViewport } from "@/lib/viewport";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 
 type Props = {
   value: string;
@@ -34,9 +36,11 @@ export function AddressField({
   emptyHint = true,
   maxLength,
   onFocusChange,
-  placeholder = "רחוב ומספר, או שם מוסד — למשל חרוזים 8",
+  placeholder,
   hoodLabel = null,
 }: Props) {
+  const { t, dir } = useLocale();
+  const resolvedPlaceholder = placeholder ?? t("addressField.placeholder");
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,7 +61,7 @@ export function AddressField({
       setError(null);
       return;
     }
-    const t = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       abortRef.current?.abort();
       const ac = new AbortController();
       abortRef.current = ac;
@@ -77,14 +81,14 @@ export function AddressField({
         })
         .catch((err: unknown) => {
           if (err instanceof DOMException && err.name === "AbortError") return;
-          setError("לא הצלחנו לחפש כתובות.");
+          setError(t("addressField.searchFailed"));
         })
         .finally(() => {
           if (!ac.signal.aborted) setLoading(false);
         });
     }, 350);
-    return () => window.clearTimeout(t);
-  }, [value]);
+    return () => window.clearTimeout(timer);
+  }, [value, t]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -118,13 +122,10 @@ export function AddressField({
   }, [focused]);
 
   return (
-    <div
-      ref={wrapRef}
-      className={cn("relative", listOpen && "z-40")}
-    >
+    <div ref={wrapRef} className={cn("relative", listOpen && "z-40")}>
       <input
         ref={inputRef}
-        dir="rtl"
+        dir={dir}
         autoComplete="off"
         spellCheck={false}
         disabled={disabled}
@@ -132,7 +133,7 @@ export function AddressField({
         minLength={3}
         maxLength={maxLength}
         value={value}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         aria-autocomplete="list"
         aria-expanded={open && hits.length > 0}
         aria-controls={listId}
@@ -182,39 +183,40 @@ export function AddressField({
             "absolute z-50 max-h-[min(14rem,var(--app-h,50vh))] w-full overflow-auto rounded-xl bg-[#1d1028] py-1 text-base shadow-lg ring-1 ring-orange-500/30",
             dropUp ? "bottom-full mb-1" : "top-full mt-1",
           )}
+          dir={dir}
         >
           {loading ? (
-            <li className="px-3 py-2 text-violet-300">מחפשים כתובות…</li>
+            <li className="px-3 py-2 text-violet-300">{t("addressField.searching")}</li>
           ) : error ? (
             <li className="px-3 py-2 text-red-200">{error}</li>
           ) : hits.length === 0 ? (
             <li className="px-3 py-2 text-violet-300">
               {parseStreetAndNumber(value.trim()).num
-                ? "אין כתובת כזו בשכונה. נסו רחוב ומספר בית, למשל **חרוזים 8**."
-                : "הוסיפו מספר בית — למשל **חרוזים 8** או **אבא הלל 71**."}
+                ? t("addressField.noMatchWithNumber")
+                : t("addressField.noMatchNeedNumber")}
             </li>
           ) : (
             hits.map((hit, i) => {
               const sub = hit.subtitle ?? streetPinHint(hit);
               return (
-              <li key={hit.id} role="option" aria-selected={i === active}>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex w-full items-start gap-2 px-3 py-2 text-right",
-                    i === active ? "bg-orange-500/20 text-orange-50" : "text-orange-100",
-                  )}
-                  onMouseEnter={() => setActive(i)}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => pick(hit)}
-                >
-                  <MapPin className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
-                  <span>
-                    <span className="block">{hit.label}</span>
-                    {sub ? <span className="block text-base text-violet-300">{sub}</span> : null}
-                  </span>
-                </button>
-              </li>
+                <li key={hit.id} role="option" aria-selected={i === active}>
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex w-full items-start gap-2 px-3 py-2 text-start",
+                      i === active ? "bg-orange-500/20 text-orange-50" : "text-orange-100",
+                    )}
+                    onMouseEnter={() => setActive(i)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => pick(hit)}
+                  >
+                    <MapPin className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
+                    <span>
+                      <span className="block">{hit.label}</span>
+                      {sub ? <span className="block text-base text-violet-300">{sub}</span> : null}
+                    </span>
+                  </button>
+                </li>
               );
             })
           )}
@@ -224,12 +226,14 @@ export function AddressField({
         <p className="mt-1 text-base text-red-300">{fieldError}</p>
       ) : !listOpen && confirmed ? (
         <p className="mt-1 text-base text-emerald-300">
-          {hoodLabel ? `כתובת מאומתת · ${hoodLabel}` : "כתובת מאומתת על המפה"}
+          {hoodLabel
+            ? formatMessage(t("addressField.verifiedWithHood"), { hood: hoodLabel })
+            : t("addressField.verified")}
         </p>
       ) : !listOpen && value.trim().length >= 3 ? (
-        <p className="mt-1 text-base text-amber-200">בחרו כתובת מהרשימה, או גררו את הסיכה לבית הנכון</p>
+        <p className="mt-1 text-base text-amber-200">{t("addressField.pickFromList")}</p>
       ) : !listOpen && emptyHint ? (
-        <p className="mt-1 text-base text-violet-300">הכתובת חייבת להיות כתובת אמיתית בשכונה</p>
+        <p className="mt-1 text-base text-violet-300">{t("addressField.mustBeReal")}</p>
       ) : null}
     </div>
   );

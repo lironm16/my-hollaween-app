@@ -51,7 +51,7 @@ export function HousePicker({
   disabled?: boolean;
   placeholder?: string;
 }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
   const resolvedPlaceholder = placeholder ?? t("housePicker.placeholder");
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -76,9 +76,9 @@ export function HousePicker({
       const ao = owned.has(a.id) ? 0 : 1;
       const bo = owned.has(b.id) ? 0 : 1;
       if (ao !== bo) return ao - bo;
-      return houseHeadline(a).localeCompare(houseHeadline(b), "he");
+      return houseHeadline(a).localeCompare(houseHeadline(b), locale === "he" ? "he" : "en");
     });
-  }, [houses, query, owned, selected, addressReveal]);
+  }, [houses, query, owned, selected, addressReveal, locale]);
 
   useEffect(() => {
     setActive(0);
@@ -166,7 +166,7 @@ export function HousePicker({
                   <button
                     type="button"
                     className={cn(
-                      "flex w-full items-start gap-2 px-3 py-2 text-right",
+                      "flex w-full items-start gap-2 px-3 py-2 text-start",
                       index === active ? "bg-orange-500/20 text-orange-50" : "text-orange-100",
                     )}
                     onMouseEnter={() => setActive(index)}
