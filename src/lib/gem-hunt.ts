@@ -11,6 +11,8 @@ import {
   GEM_OSM_ANCHOR_MAX_PIN_DISTANCE_M,
   isGemOsmAnchorStale,
 } from "@/lib/gem-osm-anchor-data";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { translate } from "@/lib/i18n/translate";
 import { distanceMeters } from "@/lib/geo";
 import {
   nearestSidewalkPoint,
@@ -576,17 +578,38 @@ export function normalizeHeading(deg: number) {
   return ((deg % 360) + 360) % 360;
 }
 
-/** Compass bearing → short Hebrew label (map / GPS fallback when no gyro). */
-export function bearingClockLabelHe(bearingDeg: number) {
+const BEARING_KEYS = [
+  "bearingNorth",
+  "bearingNorthEast",
+  "bearingEast",
+  "bearingSouthEast",
+  "bearingSouth",
+  "bearingSouthWest",
+  "bearingWest",
+  "bearingNorthWest",
+] as const;
+
+function bearingSectorIndex(bearingDeg: number) {
   const b = normalizeHeading(bearingDeg);
-  if (b >= 337.5 || b < 22.5) return "צפון";
-  if (b < 67.5) return "צפון-מזרח";
-  if (b < 112.5) return "מזרח";
-  if (b < 157.5) return "דרום-מזרח";
-  if (b < 202.5) return "דרום";
-  if (b < 247.5) return "דרום-מערב";
-  if (b < 292.5) return "מערב";
-  return "צפון-מערב";
+  if (b >= 337.5 || b < 22.5) return 0;
+  if (b < 67.5) return 1;
+  if (b < 112.5) return 2;
+  if (b < 157.5) return 3;
+  if (b < 202.5) return 4;
+  if (b < 247.5) return 5;
+  if (b < 292.5) return 6;
+  return 7;
+}
+
+/** Compass bearing → short label (map / GPS fallback when no gyro). */
+export function bearingClockLabel(bearingDeg: number, locale: AppLocale = "he") {
+  const key = BEARING_KEYS[bearingSectorIndex(bearingDeg)]!;
+  return translate(locale, `gem.${key}`);
+}
+
+/** @deprecated Prefer {@link bearingClockLabel} with locale. */
+export function bearingClockLabelHe(bearingDeg: number) {
+  return bearingClockLabel(bearingDeg, "he");
 }
 
 export function facingHouse(

@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { useMemo } from "react";
 import { GemBagDiamondHero } from "@/components/gem-hunt/gem-bag-diamond-hero";
+import { useGemCopy } from "@/hooks/use-gem-copy";
+import { useLocale } from "@/hooks/use-locale";
 import {
   gemAlbumStickerPool,
-  gemLabelHe,
   isGemAlbumMonsterCollected,
   syncGemMonsterAssignment,
   type GemCollectionStamp,
@@ -21,6 +22,7 @@ export function GemStickerAlbum({
   mapHouses: PublicHouse[];
   collected: GemCollectionStamp[];
 }) {
+  const { t } = useLocale();
   const housesById = useMemo(
     () => new Map(mapHouses.map((house) => [house.id, house])),
     [mapHouses],
@@ -42,7 +44,7 @@ export function GemStickerAlbum({
     <div className={cn("gem-sticker-album", complete && "gem-sticker-album--complete")}>
       <GemBagDiamondHero filledCount={filledCount} totalSlots={slots.length} complete={complete} />
 
-      <div className="gem-sticker-album__book" role="list" aria-label="שדונים באוסף">
+      <div className="gem-sticker-album__book" role="list" aria-label={t("gem.albumSlotsAria")}>
         {slots.map((monster, index) => {
           const isFound = isGemAlbumMonsterCollected(monster.id, collected, housesById);
           return (
@@ -71,7 +73,9 @@ function GemStickerSlot({
   collected: boolean;
   index: number;
 }) {
-  const label = gemLabelHe(monsterId);
+  const { t } = useLocale();
+  const gemCopy = useGemCopy();
+  const label = gemCopy.petLabel(monsterId);
   return (
     <div
       role="listitem"
@@ -93,7 +97,7 @@ function GemStickerSlot({
             <span className="gem-sticker-slot__shine" aria-hidden />
           </>
         ) : (
-          <div className="gem-sticker-slot__mystery" aria-label="שדון חסר">
+          <div className="gem-sticker-slot__mystery" aria-label={t("gem.albumMissingAria")}>
             <span className="gem-sticker-slot__question" aria-hidden>
               ?
             </span>
@@ -101,7 +105,9 @@ function GemStickerSlot({
           </div>
         )}
       </div>
-      <p className="gem-sticker-slot__caption">{collected ? label : "מסתתר במפה…"}</p>
+      <p className="gem-sticker-slot__caption">
+        {collected ? label : t("gem.albumHiddenCaption")}
+      </p>
     </div>
   );
 }

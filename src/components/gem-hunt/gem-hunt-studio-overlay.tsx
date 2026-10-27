@@ -1,7 +1,8 @@
 "use client";
 
 import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
-import { gemLabelHe } from "@/lib/gem-monsters";
+import { useGemCopy } from "@/hooks/use-gem-copy";
+import { useLocale } from "@/hooks/use-locale";
 import type { GemMonsterId } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 
@@ -15,12 +16,14 @@ export function GemHuntStudioOverlay({
   monsterId: GemMonsterId;
   onClose: () => void;
 }) {
+  const { dir } = useLocale();
+  const gemCopy = useGemCopy();
   return (
-    <div className="gem-hunt-studio" dir="rtl">
+    <div className="gem-hunt-studio" dir={dir}>
       <div className="gem-hunt-studio__bar">
         <div>
           <p className="gem-hunt-studio__kicker">סיבוב 360°</p>
-          <p className="gem-hunt-studio__title">{gemLabelHe(monsterId)}</p>
+          <p className="gem-hunt-studio__title">{gemCopy.petLabel(monsterId)}</p>
         </div>
         <button type="button" className="gem-hunt-studio__close" onClick={onClose}>
           חזרה למצלמה

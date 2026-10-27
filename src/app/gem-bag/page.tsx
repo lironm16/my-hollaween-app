@@ -10,8 +10,8 @@ import { useCatalog } from "@/hooks/use-catalog";
 import { useGemProgress } from "@/hooks/use-gem-progress";
 import { useHouseSet } from "@/hooks/use-house-set";
 import { useGemPreviewAsUser } from "@/hooks/use-gem-preview-as-user";
+import { useLocale } from "@/hooks/use-locale";
 import { resolveCatalogHouses } from "@/lib/catalog-houses";
-import { useAppNow } from "@/hooks/use-app-clock";
 import { useGemHuntAdminUi } from "@/hooks/use-gem-admin-ui";
 import {
   catalogHasRealHouses,
@@ -20,15 +20,14 @@ import {
 } from "@/lib/house-set";
 import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { buttonVariants } from "@/components/ui/button";
-import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
 import { cn } from "@/lib/utils";
 
 export default function GemBagPage() {
+  const { t } = useLocale();
   const { admin, ready } = useAdminSession();
   const { previewAsUser } = useGemPreviewAsUser();
   const { catalog, loading } = useCatalog();
   const gems = useGemProgress();
-  const now = useAppNow();
   const { gemBagMenuVisible: visible } = useGemHuntAdminUi(admin);
   const { houseSet } = useHouseSet();
   const adminForHouseSet = Boolean(admin && !previewAsUser);
@@ -46,7 +45,7 @@ export default function GemBagPage() {
       <div className="relative flex h-dvh min-h-dvh flex-col overflow-hidden bg-[#0f0818]">
         <AppHeader />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
-          <p className="text-base text-violet-300">טוענים…</p>
+          <p className="text-base text-violet-300">{t("gem.albumLoading")}</p>
         </main>
       </div>
     );
@@ -58,10 +57,10 @@ export default function GemBagPage() {
         <AppHeader />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-5">
           <div className="mx-auto max-w-lg space-y-4">
-            <h1 className="font-display text-2xl text-orange-300">{GEM_ALBUM_TITLE_HE}</h1>
-            <p className="text-base text-violet-200">הציד עדיין לא פתוח לכולם.</p>
+            <h1 className="font-display text-2xl text-orange-300">{t("menu.gemAlbum")}</h1>
+            <p className="text-base text-violet-200">{t("gem.albumNotOpen")}</p>
             <Link href="/" className={buttonVariants({ variant: "outline" })}>
-              חזרה למפה
+              {t("common.backToMap")}
             </Link>
           </div>
         </main>
@@ -84,9 +83,9 @@ export default function GemBagPage() {
         )}
       >
         {loading && !hasHouses ? (
-          <p className="text-base text-violet-300">טוענים נתונים…</p>
+          <p className="text-base text-violet-300">{t("gem.albumLoadingData")}</p>
         ) : mapHouses.length === 0 ? (
-          <p className="text-base text-violet-300">אין בתים על המפה עדיין.</p>
+          <p className="text-base text-violet-300">{t("gem.albumNoHouses")}</p>
         ) : (
           <GemStickerAlbum mapHouses={mapHouses} collected={gems.entries} />
         )}

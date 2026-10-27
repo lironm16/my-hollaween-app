@@ -1,3 +1,5 @@
+import type { AppLocale } from "@/lib/i18n/locale";
+
 export function distanceMeters(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number },
@@ -63,7 +65,9 @@ export function destinationPoint(
   return { lat: (φ2 * 180) / Math.PI, lng: (λ2 * 180) / Math.PI };
 }
 
-export function formatDistance(m: number) {
-  if (m < 1000) return `${Math.round(m)} מ׳`;
-  return `${(m / 1000).toFixed(1)} ק״מ`;
+export function formatDistance(m: number, locale: AppLocale = "he") {
+  if (m < 1000) {
+    return locale === "en" ? `${Math.round(m)} m` : `${Math.round(m)} מ׳`;
+  }
+  return locale === "en" ? `${(m / 1000).toFixed(1)} km` : `${(m / 1000).toFixed(1)} ק״מ`;
 }

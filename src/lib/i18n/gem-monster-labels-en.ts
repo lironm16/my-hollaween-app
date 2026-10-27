@@ -1,0 +1,46 @@
+import type { GemMonsterId } from "@/lib/gem-monsters";
+
+/** English display names for imp catalog entries (pet name shown in UI). */
+export const GEM_MONSTER_PET_NAME_EN: Record<GemMonsterId, string> = {
+  dragon: "Dragie the Dragon",
+  "black-cat": "Meow the Cat",
+  "candy-corn": "Corny the Candy Corn",
+  eyeball: "Goggle the Eye",
+  frankie: "Frankie the Friendly",
+  ghost: "Raffi the Ghost",
+  "ghost-hound": "Lebon the Ghost Hound",
+  imp: "Konky the Imp",
+  mummy: "Mumo the Mummy",
+  mushroom: "Patrik the Mushroom",
+  "potion-slime": "Geli the Slime",
+  pumpkin: "Pumpkin Jack",
+  raven: "Cawker the Raven",
+  reaper: "Gory the Reaper",
+  skeleton: "Boneman the Skeleton",
+  spider: "Spidey the Spider",
+  "vampire-bat": "Winky the Bat",
+  werewolf: "Wolfy the Werewolf",
+  zombie: "Zombie the Crawler",
+};
+
+export const GEM_MONSTER_KIND_EN: Record<GemMonsterId, string> = {
+  dragon: "Dragon",
+  "black-cat": "Black cat",
+  "candy-corn": "Candy corn",
+  eyeball: "Eyeball",
+  frankie: "Frankie",
+  ghost: "Ghost",
+  "ghost-hound": "Ghost hound",
+  imp: "Imp",
+  mummy: "Mummy",
+  mushroom: "Mushroom",
+  "potion-slime": "Slime",
+  pumpkin: "Pumpkin",
+  raven: "Raven",
+  reaper: "Reaper",
+  skeleton: "Skeleton",
+  spider: "Spider",
+  "vampire-bat": "Bat",
+  werewolf: "Werewolf",
+  zombie: "Zombie",
+};

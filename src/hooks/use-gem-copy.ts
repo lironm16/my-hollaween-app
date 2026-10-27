@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useLocale } from "@/hooks/use-locale";
 import { formatMessage } from "@/lib/i18n/format";
+import { gemPetLabel } from "@/lib/gem-monsters";
 import { messagesForLocale } from "@/lib/i18n/translate";
 
 export function useGemCopy() {
@@ -30,6 +31,21 @@ export function useGemCopy() {
       },
       adminDistFromSaved(m: number) {
         return fmt(g.adminDistFromSaved, { m: String(m) });
+      },
+      petLabel(monsterId: string) {
+        return gemPetLabel(monsterId, locale);
+      },
+      clusterSessionTitle(total: number, newCount: number) {
+        if (newCount > 0 && total > 1) {
+          return fmt(g.clusterSummaryNew, { total: String(total), newCount: String(newCount) });
+        }
+        if (newCount > 0 && total === 1) {
+          return g.clusterSummarySingle;
+        }
+        if (total > 1) {
+          return fmt(g.clusterSummaryRepeat, { total: String(total) });
+        }
+        return g.clusterSummarySingle;
       },
     };
   }, [locale]);

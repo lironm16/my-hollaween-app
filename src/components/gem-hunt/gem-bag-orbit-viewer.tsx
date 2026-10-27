@@ -1,12 +1,14 @@
 "use client";
 
 import { GemOrbitStage } from "@/components/gem-hunt/gem-orbit-stage";
-import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-hunt";
+import { useGemCopy } from "@/hooks/use-gem-copy";
+import { gemMonsterForHouse } from "@/lib/gem-monsters";
 import { GEM_ORBIT_PICK_HOUSE_HE } from "@/lib/gem-hunt-copy";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
 
 export function GemBagOrbitViewer({ house }: { house: PublicHouse | null }) {
+  const gemCopy = useGemCopy();
   if (!house) {
     return (
       <div className="gem-bag-viewer gem-bag-viewer--empty">
@@ -20,7 +22,7 @@ export function GemBagOrbitViewer({ house }: { house: PublicHouse | null }) {
   return (
     <div className="gem-bag-viewer">
       <p className="gem-bag-viewer__label">
-        {gemLabelHe(monsterId)} · {houseHeadline(house)}
+        {gemCopy.petLabel(monsterId)} · {houseHeadline(house)}
       </p>
       <GemOrbitStage
         house={house}

@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
 import { OverlayCloseButton } from "@/components/overlay-close-button";
-import { gemLabelHe, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
+import { useGemCopy } from "@/hooks/use-gem-copy";
+import { gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
 import { cn } from "@/lib/utils";
 
 /** Full-screen sticker view — drag to move the character art. */
@@ -14,8 +15,9 @@ export function GemStickerSpotlight({
   monsterId: GemMonsterId;
   onClose: () => void;
 }) {
+  const gemCopy = useGemCopy();
   const meta = gemMonsterMeta(monsterId);
-  const label = gemLabelHe(monsterId);
+  const label = gemCopy.petLabel(monsterId);
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 

@@ -1,30 +1,33 @@
-import { bearingClockLabelHe } from "@/lib/gem-hunt";
-import {
-  GEM_WALK_APPROACH_HE,
-  GEM_WALK_BEHIND_HE,
-  GEM_WALK_STRAIGHT_HE,
-  GEM_WALK_TURN_LEFT_HE,
-  GEM_WALK_TURN_RIGHT_HE,
-} from "@/lib/gem-hunt-copy";
+import { bearingClockLabel } from "@/lib/gem-hunt";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { formatMessage } from "@/lib/i18n/format";
+import { translate } from "@/lib/i18n/translate";
 
 export const GEM_BEHIND_TURN_DEG = 120;
 
+function t(locale: AppLocale, key: string) {
+  return translate(locale, `gem.${key}`);
+}
+
 export function gemWalkGuideCopy(
+  locale: AppLocale,
   huntArrowPhoneRelative: boolean,
   facingTarget: boolean,
   turnBearing: number | null,
   gpsBearingToAnchor: number | null,
 ) {
   if (huntArrowPhoneRelative && turnBearing != null) {
-    if (facingTarget) return GEM_WALK_STRAIGHT_HE;
+    if (facingTarget) return t(locale, "walkStraight");
     if (Math.abs(turnBearing) >= GEM_BEHIND_TURN_DEG) {
-      return GEM_WALK_BEHIND_HE;
+      return t(locale, "walkBehind");
     }
-    if (turnBearing > 0) return GEM_WALK_TURN_RIGHT_HE;
-    return GEM_WALK_TURN_LEFT_HE;
+    if (turnBearing > 0) return t(locale, "walkTurnRight");
+    return t(locale, "walkTurnLeft");
   }
   if (gpsBearingToAnchor != null) {
-    return `כיוון לפי GPS: ${bearingClockLabelHe(gpsBearingToAnchor)} — סובבו את הגוף (צפון = למעלה)`;
+    return formatMessage(t(locale, "walkGpsFallback"), {
+      label: bearingClockLabel(gpsBearingToAnchor, locale),
+    });
   }
-  return GEM_WALK_APPROACH_HE;
+  return t(locale, "walkApproach");
 }

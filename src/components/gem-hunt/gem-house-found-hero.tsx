@@ -3,7 +3,9 @@
 import { GemMysteryTeaser3D } from "@/components/gem-hunt/gem-mystery-teaser-3d";
 import { ImpMenuActiveGlyph } from "@/components/imp-marker-glyph";
 import { GEM_HOUSE_KICKER_HE } from "@/lib/gem-hunt-copy";
-import { gemLabelHe, gemMonsterForHouse } from "@/lib/gem-monsters";
+import { useGemCopy } from "@/hooks/use-gem-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { gemMonsterForHouse } from "@/lib/gem-monsters";
 import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +19,10 @@ export function GemHouseFoundHero({
   collected: boolean;
   className?: string;
 }) {
+  const { dir } = useLocale();
+  const gemCopy = useGemCopy();
   const monsterId = gemMonsterForHouse(house);
-  const petName = gemLabelHe(monsterId);
+  const petName = gemCopy.petLabel(monsterId);
 
   return (
     <div
@@ -27,7 +31,7 @@ export function GemHouseFoundHero({
         collected && "gem-house-found-hero--found",
         className,
       )}
-      dir="rtl"
+      dir={dir}
     >
       {collected ? (
         <>

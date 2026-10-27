@@ -35,7 +35,6 @@ import {
   GEM_IN_CAMERA_ALBUM_REVEAL_ENABLED,
   type GemCampusQueueUi,
   gemAnchorForHouse,
-  gemLabelHe,
   gemMonsterForHouse,
   gemScreenPlacement,
   gemWorldPinApproachVisible,
@@ -151,7 +150,7 @@ export function GemHuntOverlay({
   onClose: () => void;
   onCollect: (monsterId: GemMonsterId, options?: GemCollectFinishOptions) => void;
 }) {
-  const { dir, t } = useLocale();
+  const { dir, locale, t } = useLocale();
   const gemCopy = useGemCopy();
   const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const sim = simulateInRange;
@@ -619,7 +618,7 @@ export function GemHuntOverlay({
   const gemVisibleBand = inGemStayVisibleBand;
   const foundOnScreenBanner = gemCopy.foundOnScreenBanner(
     repeatVisitLatched,
-    gemLabelHe(monsterId),
+    gemCopy.petLabel(monsterId),
     isNewGemTypeLatched,
   );
 
@@ -700,6 +699,7 @@ export function GemHuntOverlay({
       ? googleMapsNavigateUrl(liveLoc, { lat: walkNavTarget.lat, lng: walkNavTarget.lng })
       : null;
   const walkGuideCopy = gemWalkGuideCopy(
+    locale,
     huntArrowPhoneRelative,
     facingTarget,
     navTurnBearing,
@@ -1092,7 +1092,7 @@ export function GemHuntOverlay({
                 >
                   <p className="gem-hunt-overlay__walk-text">
                     {walkGuideCopy}
-                    {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
+                    {distanceM != null ? ` · ${formatDistance(distanceM, locale)}` : null}
                   </p>
                   {mapsWalkUrl ? (
                     <a

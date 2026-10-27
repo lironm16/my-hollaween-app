@@ -28,7 +28,6 @@ import {
   bearingDegrees,
   gemAnchorForHouse,
   gemDistanceMeters,
-  gemLabelHe,
   gemMonsterForHouse,
   gemAndroidArCollectWhenVisible,
   gemScreenPlacement,
@@ -154,7 +153,7 @@ export function GemHuntWebXrAr({
   clusterSkipAvailable?: boolean;
   clusterFinishAvailable?: boolean;
 }) {
-  const { dir, t } = useLocale();
+  const { dir, locale, t } = useLocale();
   const gemCopy = useGemCopy();
   const campusSession = Boolean(campusQueue && onCampusStepComplete && onCollectPersist);
   const monsterId = gemMonsterForHouse(house);
@@ -573,6 +572,7 @@ export function GemHuntWebXrAr({
   const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToNav;
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToNav != null;
   const walkGuideCopy = gemWalkGuideCopy(
+    locale,
     huntArrowPhoneRelative,
     facingTarget,
     navTurnBearing,
@@ -754,7 +754,7 @@ export function GemHuntWebXrAr({
 
   const foundOnScreenBanner = gemCopy.foundOnScreenBanner(
     repeatVisitLatched,
-    gemLabelHe(monsterId),
+    gemCopy.petLabel(monsterId),
     isNewGemTypeLatched,
   );
   const hideHuntHintControls =
@@ -1502,7 +1502,7 @@ export function GemHuntWebXrAr({
                 >
                   <p className="gem-hunt-overlay__walk-text">
                     {walkGuideCopy}
-                    {distanceM != null ? ` · ${formatDistance(distanceM)}` : null}
+                    {distanceM != null ? ` · ${formatDistance(distanceM, locale)}` : null}
                   </p>
                   {mapsWalkUrl ? (
                     <a

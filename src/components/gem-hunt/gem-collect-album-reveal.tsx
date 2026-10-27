@@ -2,13 +2,9 @@
 
 import Image from "next/image";
 import { useMemo } from "react";
-import {
-  gemAlbumStickerPool,
-  gemLabelHe,
-  gemMonsterMeta,
-  type GemMonsterId,
-} from "@/lib/gem-monsters";
-import { GEM_ALBUM_TITLE_HE } from "@/lib/gem-album-copy";
+import { useGemCopy } from "@/hooks/use-gem-copy";
+import { useLocale } from "@/hooks/use-locale";
+import { gemAlbumStickerPool, gemMonsterMeta, type GemMonsterId } from "@/lib/gem-monsters";
 import { cn } from "@/lib/utils";
 
 /** Camera overlay after collect — pet flies into the sticker book. */
@@ -29,8 +25,10 @@ export function GemCollectAlbumReveal({
   onOpenStickerBook?: () => void;
   onClose?: () => void;
 }) {
+  const { t } = useLocale();
+  const gemCopy = useGemCopy();
   const meta = gemMonsterMeta(monsterId);
-  const label = gemLabelHe(monsterId);
+  const label = gemCopy.petLabel(monsterId);
   const pool = gemAlbumStickerPool();
   const slotIndex = useMemo(
     () => pool.findIndex((entry) => entry.id === monsterId),
@@ -44,7 +42,7 @@ export function GemCollectAlbumReveal({
     return pool.slice(start, start + 4);
   }, [pool, slotIndex]);
 
-  const bookLabel = newAlbumFriend ? "נוסף לאוסף" : "כבר באוסף — עוד שדון!";
+  const bookLabel = newAlbumFriend ? t("gem.albumRevealAdded") : t("gem.albumRevealRepeat");
   const showFly = newAlbumFriend;
 
   return (
@@ -71,7 +69,7 @@ export function GemCollectAlbumReveal({
           </div>
         ) : null}
 
-        <div className="gem-collect-album-reveal__book" aria-label={GEM_ALBUM_TITLE_HE}>
+        <div className="gem-collect-album-reveal__book" aria-label={t("menu.gemAlbum")}>
           <p className="gem-collect-album-reveal__book-label">{bookLabel}</p>
           <div className="gem-collect-album-reveal__grid">
             {previewSlots.map((entry) => {
@@ -119,14 +117,14 @@ export function GemCollectAlbumReveal({
               className="gem-collect-album-reveal__action gem-collect-album-reveal__action--primary"
               onClick={onOpenStickerBook}
             >
-              {GEM_ALBUM_TITLE_HE}
+              {t("menu.gemAlbum")}
             </button>
             <button
               type="button"
               className="gem-collect-album-reveal__action gem-collect-album-reveal__action--ghost"
               onClick={onClose}
             >
-              סגירה
+              {t("common.close")}
             </button>
           </div>
         ) : (
