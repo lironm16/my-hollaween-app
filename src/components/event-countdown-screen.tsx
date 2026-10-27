@@ -7,7 +7,7 @@ import { CountdownDecor } from "@/components/countdown-decor";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { eventCountdownDateBadgeLabel } from "@/lib/event-countdown-display";
-import { config } from "@/lib/config";
+import { neighborhoodMarqueeText } from "@/lib/i18n/neighborhood-labels";
 import { isStandaloneDisplay } from "@/lib/push-client";
 import { subscribeAppViewport, syncAppViewportVars } from "@/lib/viewport";
 import { useLocale } from "@/hooks/use-locale";
@@ -166,7 +166,9 @@ export function EventCountdownScreen({
                 <p className="countdown-brand-he countdown-brand-he-size leading-tight">
                   {locale === "en" ? config.brandEn : config.brandHe}
                 </p>
-                <p className="countdown-neighborhood-line font-medium text-orange-100/90">{config.neighborhood}</p>
+                <p className="countdown-neighborhood-line font-medium text-orange-100/90">
+                  {neighborhoodMarqueeText(locale)}
+                </p>
                 <p className="countdown-event-line font-medium text-violet-200/85">{t("countdown.eveningStart")}</p>
               </div>
             </div>

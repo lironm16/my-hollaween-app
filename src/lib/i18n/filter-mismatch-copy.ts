@@ -1,5 +1,6 @@
 import type { CandyTone, ScareLevel, SensitivityId } from "@/lib/types";
 import type { AppLocale } from "@/lib/i18n/locale";
+import { displayNeighborhoodName } from "@/lib/i18n/neighborhood-labels";
 import { localizedTreatLabel } from "@/lib/i18n/treat-labels";
 import { translate } from "@/lib/i18n/translate";
 
@@ -94,7 +95,7 @@ export function localizeFilterMismatchReason(
     case "scareLevel":
       return scareLevelLabel(locale, reason.level);
     case "neighborhood":
-      return reason.name || t(locale, "filterMismatch.otherNeighborhood");
+      return displayNeighborhoodName(locale, reason.name || null);
     case "notLiked":
       return t(locale, "filterMismatch.notLiked");
     case "alreadyVisited":

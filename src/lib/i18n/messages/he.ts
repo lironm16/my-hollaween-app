@@ -5,11 +5,13 @@ export const heMessages = {
   settings: {
     title: "הגדרות",
     languageSection: "שפת הממשק",
-    languageHint: "כפתורים, תפריטים והודעות — לא שמות בתים וטקסט ששכנים כתבו.",
+    languageHint:
+      "כפתורים, תפריטים והודעות. שמות השכונות הרשמיות (שיכון ותיקים, חרוזים…) מוצגים בשפת הממשק — תרגום קבוע, לא Google.",
     languageEnglish: "English",
     languageHebrew: "עברית",
     contentSection: "תוכן מהקהילה",
-    contentHint: "שמות בתים, הערות למבקרים וטקסט דומה מהמפה.",
+    contentHint:
+      "שמות בתים, הערות למבקרים וטקסט דומה ששכנים הזינו — לא שמות השכונות הרשמיות.",
     contentTranslateOn: "תרגום לאנגלית",
     contentTranslateHint:
       "כשהממשק באנגלית — מציגים תרגום (מכונה) של טקסט ששכנים הזינו. בלי מפתח תרגום בשרת יוצג המקור.",

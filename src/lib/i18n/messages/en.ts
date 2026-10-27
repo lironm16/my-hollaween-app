@@ -6,11 +6,13 @@ export const enMessages: AppMessages = {
   settings: {
     title: "Settings",
     languageSection: "Interface language",
-    languageHint: "Buttons, menus, and app messages — not house names or neighbor-written text.",
+    languageHint:
+      "Buttons, menus, and app messages. Official hood names (Shikun Vatikim, Charuzim…) use fixed translations for your interface language — not Google Translate.",
     languageEnglish: "English",
     languageHebrew: "עברית",
     contentSection: "Community content",
-    contentHint: "House names, visitor notes, and similar text from the map.",
+    contentHint:
+      "House names, visitor notes, and similar neighbor-entered text — not the official hood names.",
     contentTranslateOn: "Translate to English",
     contentTranslateHint:
       "When the interface is English, show machine translations of neighbor-submitted text. Without a server translation key, originals are shown.",

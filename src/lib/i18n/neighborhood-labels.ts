@@ -14,6 +14,21 @@ const NEIGHBORHOOD_MESSAGE_KEYS: Record<NeighborhoodId, string> = {
   הגפן: "neighborhoods.haGefen",
 };
 
+/** Canonical hood id from data (Hebrew key in config), not a display string. */
+export function isNeighborhoodId(value: string | null | undefined): value is NeighborhoodId {
+  return value != null && (NEIGHBORHOODS as readonly string[]).includes(value);
+}
+
+/** Official hood name for UI — curated copy in messages, never machine-translated. */
+export function displayNeighborhoodName(
+  locale: AppLocale,
+  area: string | null | undefined,
+): string {
+  if (!area) return translate(locale, "stats.neighborhoodOther");
+  if (isNeighborhoodId(area)) return localizedNeighborhoodLabel(locale, area);
+  return area;
+}
+
 export function localizedNeighborhoodLabel(locale: AppLocale, id: NeighborhoodId): string {
   const key = NEIGHBORHOOD_MESSAGE_KEYS[id];
   return key ? translate(locale, key) : id;
