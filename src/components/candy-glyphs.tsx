@@ -3,8 +3,10 @@ import { cn } from "@/lib/utils";
 import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
 import { candyLevel, markedCandy } from "@/lib/house-state";
 import type { CandyTone, TreatId, TreatStock } from "@/lib/types";
-import { stockLabels } from "@/lib/labels";
 import { DiscStrike } from "@/components/disc-strike";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { candyToneLabelForLocale } from "@/lib/i18n/pin-labels";
+import { messagesForLocale } from "@/lib/i18n/translate";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -107,20 +109,18 @@ export function candyTone(house: { treats?: TreatId[]; treatStock?: TreatStock }
   return "plenty";
 }
 
-export function candyToneLabel(tone: CandyTone) {
-  if (tone === "none") return "בלי ממתקים";
-  return `ממתקים · ${stockLabels[tone]}`;
-}
-
 export function CandySign({
   Glyph = CandyRound,
   tone,
   className,
+  locale = "he",
 }: {
   Glyph?: () => ReactNode;
   tone: CandyTone;
   className?: string;
+  locale?: AppLocale;
 }) {
+  const label = candyToneLabelForLocale(locale, tone);
   const usePinCandy = !Glyph || Glyph === CandyRound;
 
   return (
@@ -130,8 +130,8 @@ export function CandySign({
         TONE_CLASS[tone],
         className,
       )}
-      title={candyToneLabel(tone)}
-      aria-label={candyToneLabel(tone)}
+      title={label}
+      aria-label={label}
     >
       {usePinCandy ? (
         <span className="flex size-[86%] items-center justify-center">
@@ -151,15 +151,22 @@ export function CandyMark({
   labeled = false,
   tone = "plenty",
   className,
+  locale = "he",
 }: {
   labeled?: boolean;
   tone?: CandyTone;
   className?: string;
+  locale?: AppLocale;
 }) {
+  const labels = messagesForLocale(locale);
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <CandySign tone={tone} />
-      {labeled ? <span>יש ממתקים</span> : <span className="sr-only">{candyToneLabel(tone)}</span>}
+      <CandySign tone={tone} locale={locale} />
+      {labeled ? (
+        <span>{labels.labels.candyHasTreats}</span>
+      ) : (
+        <span className="sr-only">{candyToneLabelForLocale(locale, tone)}</span>
+      )}
     </span>
   );
 }

@@ -383,7 +383,7 @@ export function HouseDetails({
       loadPhoto ? (
         <button
           type="button"
-          aria-label="הגדלת התמונה"
+          aria-label={t("houseCard.enlargePhoto")}
           onClick={(e) => {
             e.stopPropagation();
             setPhotoOpen(true);
@@ -410,7 +410,7 @@ export function HouseDetails({
           }}
           className={`${HOUSE_CARD_PHOTO_BOX} flex items-center justify-center bg-[#2a1638] px-2 py-2 text-center text-base text-amber-100`}
         >
-          יש תמונת קישוט — לחצו רק אם הרשת פנויה
+          {t("houseCard.decorPhotoHint")}
         </button>
       )
     ) : null;
@@ -419,7 +419,7 @@ export function HouseDetails({
       {onToggleVisited ? (
         <button
           type="button"
-          aria-label={visited ? "סמנו כלא ביקרתי" : "סמנו שביקרתי"}
+          aria-label={visited ? t("houseActions.unvisitMark") : t("houseActions.visitedMark")}
           onClick={(e) => {
             e.stopPropagation();
             onToggleVisited();
@@ -432,7 +432,7 @@ export function HouseDetails({
       {onToggleLike ? (
         <button
           type="button"
-          aria-label={liked ? "הסירו אהבתי" : "סמנו אהבתי"}
+          aria-label={liked ? t("houseActions.unlike") : t("houseActions.liked")}
           onClick={(e) => {
             e.stopPropagation();
             onToggleLike();
@@ -448,7 +448,7 @@ export function HouseDetails({
       {canEdit && onToggleEdit ? (
         <button
           type="button"
-          aria-label={editing ? "סגירת עריכה" : "עריכת הבית"}
+          aria-label={editing ? t("houseActions.closeEdit") : t("houseActions.editHouse")}
           aria-pressed={editing}
           onClick={(e) => {
             e.stopPropagation();

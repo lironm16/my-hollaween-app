@@ -8,6 +8,7 @@ import {
 } from "react";
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { HouseMapPinIcon } from "@/components/house-map-pin-icon";
 import { HouseTitleMarkers } from "@/components/house-title-markers";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
@@ -178,6 +179,7 @@ export function ClusterHouseBackLink({
   total: number;
   onBack: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <button
       type="button"
@@ -185,9 +187,9 @@ export function ClusterHouseBackLink({
       onClick={onBack}
     >
       <ArrowRight className="size-4 shrink-0" aria-hidden />
-      חזרה לרשימה
+      {t("mapUi.clusterBack")}
       <span className="text-orange-300/80">
-        · {index} מתוך {total}
+        · {formatMessage(t("mapUi.clusterIndex"), { index: String(index), total: String(total) })}
       </span>
     </button>
   );

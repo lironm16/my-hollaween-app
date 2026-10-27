@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Catalog, CatalogDelta, PublicHouse } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
 import {
   catalogScopeOf,
   hiddenCountFields,
@@ -301,6 +302,7 @@ async function reconcileWithDeviceCache(prev: Catalog | null): Promise<Catalog |
 }
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
+  const { t } = useLocale();
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [loading, setLoading] = useState(true);
   const [ready, setReady] = useState(false);
@@ -737,11 +739,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         }
         if (isMapListSuspended()) return;
         markReachabilityAfterFetchFailure(online);
-        setError(
-          online
-            ? "השרת לא עונה, ואין עותק שמור בטלפון. נסו שוב כשיש קליטה."
-            : "אין אינטרנט, ואין עותק שמור בטלפון. פתחו את האפליקציה פעם אחת כשיש רשת.",
-        );
+        setError(online ? t("catalogBoot.serverDown") : t("catalogBoot.offlineNoCache"));
       }
     }
 

@@ -308,7 +308,7 @@ export function NightPassesCard({
     }
     setBusyShare(true);
     try {
-      const result = await shareHouseAccessInvite(house);
+      const result = await shareHouseAccessInvite(house, undefined, locale);
       if (result === "shared") toast.success(t("nightPassesCard.inviteSent"));
       else if (result === "copied") toast.success(t("nightPassesCard.inviteLinkCopied"));
       else if (result === "failed") toast.error(t("nightPassesCard.inviteSendFailed"));

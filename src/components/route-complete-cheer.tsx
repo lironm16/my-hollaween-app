@@ -1,6 +1,9 @@
 "use client";
 
+import { useLocale } from "@/hooks/use-locale";
+
 export function RouteCompleteCheer({ show }: { show: boolean }) {
+  const { t } = useLocale();
   if (!show) return null;
   return (
     <div className="route-complete-cheer" role="status" aria-live="polite">
@@ -9,8 +12,8 @@ export function RouteCompleteCheer({ show }: { show: boolean }) {
           <i /><i /><i /><i /><i /><i /><i /><i />
         </span>
         <span className="route-complete-cheer-flag" aria-hidden="true" />
-        <span className="route-complete-cheer-title">סיימתם את המסלול!</span>
-        <span className="route-complete-cheer-sub">כל העצירות בוצעו</span>
+        <span className="route-complete-cheer-title">{t("routeComplete.title")}</span>
+        <span className="route-complete-cheer-sub">{t("routeComplete.sub")}</span>
       </div>
     </div>
   );

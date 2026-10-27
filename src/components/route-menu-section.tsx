@@ -6,6 +6,7 @@ import { readMenuSectionOpen, writeMenuSectionOpen } from "@/lib/menu-section-st
 import { APP_MENU_SUBLINK_PAD, APP_MENU_SUBLIST_CLASS } from "@/components/app-menu-styles";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/hooks/use-locale";
 
 const subLinkClass = cn(
   buttonVariants({ variant: "ghost", size: "lg" }),
@@ -25,6 +26,7 @@ export function RouteMenuSection({
   /** House list download — admin only. */
   exportEnabled?: boolean;
 }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(() => readMenuSectionOpen("route", false));
 
   function openExportDialog() {
@@ -53,7 +55,7 @@ export function RouteMenuSection({
         )}
       >
         <Route className="size-4" />
-        <span className="flex-1 text-start">מסלול</span>
+        <span className="flex-1 text-start">{t("menuRoute.section")}</span>
         <ChevronDown
           className={cn("size-4 shrink-0 text-violet-400 transition-transform", open && "rotate-180")}
           aria-hidden
@@ -64,12 +66,12 @@ export function RouteMenuSection({
           {exportEnabled ? (
             <button type="button" onClick={openExportDialog} className={subLinkClass}>
               <Save className="size-4" strokeWidth={2.25} />
-              הורד
+              {t("menuRoute.download")}
             </button>
           ) : null}
           <button type="button" onClick={openShareDialog} className={subLinkClass}>
             <Share2 className="size-4" />
-            שתף
+            {t("menuRoute.share")}
           </button>
         </div>
       ) : null}

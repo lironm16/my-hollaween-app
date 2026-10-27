@@ -145,11 +145,11 @@ export function DecorOnlyMark({
   labeled?: boolean;
   className?: string;
 }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const label = t("visitMarks.decorOnly");
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <DecorMark level="mild" />
+      <DecorMark level="mild" locale={locale} />
       {labeled ? <span>{label}</span> : <span className="sr-only">{label}</span>}
     </span>
   );

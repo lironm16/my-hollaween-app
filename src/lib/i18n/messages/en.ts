@@ -384,6 +384,8 @@ export const enMessages: AppMessages = {
     candyPlenty: "Plenty",
     candyLow: "Low",
     candyOut: "Out",
+    candyWithStock: "Treats · {stock}",
+    candyHasTreats: "Has treats",
     treatGlutenFree: "Gluten-free",
     treatNutsFree: "Nut-free",
     treatSesameFree: "Sesame-free",
@@ -434,6 +436,8 @@ export const enMessages: AppMessages = {
     showMore: "Show more",
     showLess: "Show less",
     closePhoto: "Close photo",
+    enlargePhoto: "Enlarge photo",
+    decorPhotoHint: "Decor photo available — tap only if you have bandwidth",
     openInGoogleMaps: "Open in Google Maps",
     shareHouseLink: "House link",
   },
@@ -445,6 +449,72 @@ export const enMessages: AppMessages = {
   cheer: {
     liked: "Liked!",
     visited: "Great job!",
+  },
+  routeComplete: {
+    title: "You finished the route!",
+    sub: "Every stop is done",
+  },
+  hoursMark: {
+    openNow: "Open now",
+    closingSoon: "Closing soon",
+    openingSoon: "Opening soon",
+    notYetOpen: "Not open yet",
+    afterHours: "After hours",
+  },
+  houseSign: {
+    closed: "Closed",
+    pause: "On break",
+    accessible: "Accessible",
+    decorated: "Decorated",
+  },
+  traffic: {
+    liked: "Liked",
+    imp: "Imp",
+    save: "Save",
+    skip: "Skipped",
+    visited: "Visited",
+  },
+  mapUi: {
+    skipToHouseList: "Skip to house list",
+    routeStopsAnnounce: " Route with {count} stops.",
+    saveOrigin: "Save start point",
+    bootLoading: "Lighting pumpkins…",
+    mapPickPoint: "Point on map",
+    selectedHouse: "Selected: {name}, {address}. {visit}",
+    visitCome: "Come — treats available",
+    visitDecorOnly: "Decor only — no treats",
+    visitClosed: "House closed",
+    clusterBack: "Back to list",
+    clusterIndex: "{index} of {total}",
+  },
+  menuRoute: {
+    section: "Route",
+    download: "Download",
+    share: "Share",
+  },
+  geoAccess: {
+    hintDenied: "Allow location in settings",
+    hintError: "Could not get location — try again",
+    hintGps: "GPS",
+    toastDeniedBrowser: "Location blocked. Allow it in browser or app settings.",
+    toastDeniedApp:
+      "Location blocked for the installed app. On Android: Settings → App → Permissions → Location.",
+    toastUnavailable: "This device does not support location.",
+    toastError:
+      "Could not read location (GPS or network). Make sure GPS is on and try again.",
+  },
+  shareAccess: {
+    familyCodeTitle: "Family code — {name}",
+    familyCodeBody:
+      "Family code for {name}: {code}\n\nTo connect: menu → sign in → enter the code.",
+    inviteTitle: "Invite — {name}",
+    inviteBody: "Join our house on the neighborhood map:\n{url}",
+  },
+  catalogBoot: {
+    serverDown:
+      "The server is not responding and there is no saved copy on this device. Try again when online.",
+    offlineNoCache:
+      "You are offline and there is no saved copy on this device. Open the app once while online.",
   },
   adminPreview: {
     title: "User view",

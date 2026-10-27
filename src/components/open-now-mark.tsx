@@ -1,3 +1,7 @@
+"use client";
+
+import { useMemo } from "react";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 function ClockGlyph() {
@@ -13,6 +17,20 @@ function ClockGlyph() {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+function useHoursMarkLabels() {
+  const { t } = useLocale();
+  return useMemo(
+    () => ({
+      openNow: t("hoursMark.openNow"),
+      closingSoon: t("hoursMark.closingSoon"),
+      openingSoon: t("hoursMark.openingSoon"),
+      notYetOpen: t("hoursMark.notYetOpen"),
+      afterHours: t("hoursMark.afterHours"),
+    }),
+    [t],
   );
 }
 
@@ -73,7 +91,8 @@ function HoursMark({
 
 /** Gold disc + clock — open houses right now. */
 export function OpenNowSign({ className }: { className?: string }) {
-  return <HoursSign className={className} label="פתוח עכשיו" tone="open" />;
+  const labels = useHoursMarkLabels();
+  return <HoursSign className={className} label={labels.openNow} tone="open" />;
 }
 
 export function OpenNowMark({
@@ -83,11 +102,15 @@ export function OpenNowMark({
   labeled?: boolean;
   className?: string;
 }) {
-  return <HoursMark labeled={labeled} className={className} label="פתוח עכשיו" tone="open" />;
+  const labels = useHoursMarkLabels();
+  return (
+    <HoursMark labeled={labeled} className={className} label={labels.openNow} tone="open" />
+  );
 }
 
 export function ClosingSoonSign({ className }: { className?: string }) {
-  return <HoursSign className={className} label="נסגר בקרוב" tone="closing" />;
+  const labels = useHoursMarkLabels();
+  return <HoursSign className={className} label={labels.closingSoon} tone="closing" />;
 }
 
 export function ClosingSoonMark({
@@ -97,11 +120,15 @@ export function ClosingSoonMark({
   labeled?: boolean;
   className?: string;
 }) {
-  return <HoursMark labeled={labeled} className={className} label="נסגר בקרוב" tone="closing" />;
+  const labels = useHoursMarkLabels();
+  return (
+    <HoursMark labeled={labeled} className={className} label={labels.closingSoon} tone="closing" />
+  );
 }
 
 export function OpeningSoonSign({ className }: { className?: string }) {
-  return <HoursSign className={className} label="נפתח בקרוב" tone="opening" />;
+  const labels = useHoursMarkLabels();
+  return <HoursSign className={className} label={labels.openingSoon} tone="opening" />;
 }
 
 export function OpeningSoonMark({
@@ -111,7 +138,10 @@ export function OpeningSoonMark({
   labeled?: boolean;
   className?: string;
 }) {
-  return <HoursMark labeled={labeled} className={className} label="נפתח בקרוב" tone="opening" />;
+  const labels = useHoursMarkLabels();
+  return (
+    <HoursMark labeled={labeled} className={className} label={labels.openingSoon} tone="opening" />
+  );
 }
 
 export function NotYetOpenMark({
@@ -121,7 +151,10 @@ export function NotYetOpenMark({
   labeled?: boolean;
   className?: string;
 }) {
-  return <HoursMark labeled={labeled} className={className} label="עוד לא נפתח" tone="waiting" />;
+  const labels = useHoursMarkLabels();
+  return (
+    <HoursMark labeled={labeled} className={className} label={labels.notYetOpen} tone="waiting" />
+  );
 }
 
 export function AfterHoursMark({
@@ -131,5 +164,8 @@ export function AfterHoursMark({
   labeled?: boolean;
   className?: string;
 }) {
-  return <HoursMark labeled={labeled} className={className} label="אחרי השעות" tone="ended" />;
+  const labels = useHoursMarkLabels();
+  return (
+    <HoursMark labeled={labeled} className={className} label={labels.afterHours} tone="ended" />
+  );
 }

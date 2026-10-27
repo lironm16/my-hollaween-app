@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { reversePin } from "@/components/address-field";
 import { config, inNeighborhood } from "@/lib/config";
-import { geoLocationFailureToastHe } from "@/lib/geo-location-access";
+import { geoLocationFailureToast } from "@/lib/geo-location-access";
 import { isStandaloneDisplay } from "@/lib/push-client";
 import { writeHomeView, type HomeView } from "@/lib/home-view";
 import type { DistanceOriginChoice, ResolvedOrigin } from "@/lib/distance-origin";
@@ -64,7 +64,7 @@ export function useOriginPick({
     gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
   );
 
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const routeTicker = originPickActive ? t("originPicker.pickOnMapHint") : null;
 
   useEffect(
@@ -109,11 +109,11 @@ export function useOriginPick({
     }
     if (geoErrorToasted.current) return;
     geoErrorToasted.current = true;
-    const message = geoLocationFailureToastHe(geo.status as "denied" | "error" | "unavailable", {
+    const message = geoLocationFailureToast(locale, geo.status as "denied" | "error" | "unavailable", {
       installedApp: isStandaloneDisplay(),
     });
     if (message) toast.warning(message);
-  }, [geoError, geo.status, pinCurrentRoute, pendingRouteGps, clearPendingRouteGps]);
+  }, [geoError, geo.status, locale, pinCurrentRoute, pendingRouteGps, clearPendingRouteGps]);
 
   const panMapTo = useCallback((point: { lat: number; lng: number }) => {
     setPanTo(point);
@@ -135,7 +135,7 @@ export function useOriginPick({
       if (!point) return;
       if (originPickActive) {
         setOriginDraft({ lat: point.lat, lng: point.lng });
-        setOriginDraftLabel("המיקום שלכם");
+        setOriginDraftLabel(t("originPicker.myLocation"));
         return;
       }
       panMapTo(point);
@@ -143,7 +143,7 @@ export function useOriginPick({
     if (originPickActive) {
       if (gps) {
         setOriginDraft({ lat: gps.lat, lng: gps.lng });
-        setOriginDraftLabel("המיקום שלכם");
+        setOriginDraftLabel(t("originPicker.myLocation"));
       }
       return;
     }
@@ -184,7 +184,7 @@ export function useOriginPick({
     writeHomeView("map");
     onBeforePick();
     setOriginDraft({ lat: origin.lat, lng: origin.lng });
-    setOriginDraftLabel(origin.kind === "custom" ? origin.label : "נקודה במפה");
+    setOriginDraftLabel(origin.kind === "custom" ? origin.label : t("mapUi.mapPickPoint"));
     setOriginPickActive(true);
   }, [view, onBeforePick, origin]);
 

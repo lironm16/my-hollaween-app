@@ -146,7 +146,7 @@ import { isPreviewDeploymentClient } from "@/lib/deployment-env";
 import { filterHouses, houseFilterMismatchReasons } from "@/lib/filter-houses";
 import { formatMessage } from "@/lib/i18n/format";
 import { formatDistance } from "@/lib/geo";
-import { geoCanPromptLocation, geoLocationHintHe } from "@/lib/geo-location-access";
+import { geoCanPromptLocation, geoLocationHint } from "@/lib/geo-location-access";
 import { buildWalkingRouteOrdered } from "@/lib/route";
 import { isRouteFullyVisited } from "@/lib/route-completion";
 import {
@@ -1551,12 +1551,16 @@ export function NeighborhoodApp({
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-orange-500 focus:px-3 focus:py-2 focus:text-black"
         onClick={() => setView("list")}
       >
-        דלג לרשימת הבתים
+        {t("mapUi.skipToHouseList")}
       </button>
       <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {selection.selected ? houseSelectionAnnouncement(selection.selected, addressReveal) : ""}
+        {selection.selected
+          ? houseSelectionAnnouncement(selection.selected, addressReveal, locale)
+          : ""}
         {routeMode && walkingRoute
-          ? ` מסלול עם ${walkingRoute.stops.length} עצירות.`
+          ? formatMessage(t("mapUi.routeStopsAnnounce"), {
+              count: String(walkingRoute.stops.length),
+            })
           : ""}
       </div>
       {filtersOpen ? (
@@ -1707,10 +1711,10 @@ export function NeighborhoodApp({
                         disabled={!originPick.originDraft}
                         onClick={() => void originPick.saveOriginPick()}
                       >
-                        שמירת התחלה
+                        {t("mapUi.saveOrigin")}
                       </Button>
                       <Button type="button" variant="outline" size="sm" onClick={originPick.exitOriginPick}>
-                        ביטול
+                        {t("common.cancel")}
                       </Button>
                     </div>
                   </div>
@@ -1801,7 +1805,7 @@ export function NeighborhoodApp({
               className="absolute inset-0 z-30 flex items-center justify-center bg-[#12081a] text-orange-200"
               aria-live="polite"
             >
-              מדליקים דלעות…
+              {t("mapUi.bootLoading")}
             </div>
           ) : null}
         </>
@@ -1813,7 +1817,7 @@ export function NeighborhoodApp({
           onOpenChange={originPick.setOriginPickerOpen}
           choice={originChoice}
           gpsAllowed={gpsAllowed}
-          gpsHint={geoLocationHintHe(geo.status)}
+          gpsHint={geoLocationHint(locale, geo.status)}
           onChooseGps={originPick.chooseGpsOrigin}
           onChooseNeighborhood={originPick.chooseNeighborhoodOrigin}
           onChooseCustom={originPick.chooseCustomOrigin}

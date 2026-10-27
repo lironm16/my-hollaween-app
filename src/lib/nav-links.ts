@@ -3,6 +3,9 @@ import type { ResolvedOrigin } from "@/lib/distance-origin";
 import { isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
 import { houseShareSlug } from "@/lib/ids";
 import { houseHeadline } from "@/lib/labels";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { formatMessage } from "@/lib/i18n/format";
+import { messagesForLocale } from "@/lib/i18n/translate";
 import { googleMapsNavigateUrl } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 
@@ -83,15 +86,22 @@ export function houseSharePayload(
   return { title, text, url };
 }
 
-export function editCodeSharePayload(house: PublicHouse, editCode: string) {
-  const title = `קוד משפחה — ${houseHeadline(house)}`;
-  const text = `קוד המשפחה ל${houseHeadline(house)}: ${editCode}\n\nלהתחברות: תפריט ← התחברות ← הזינו את הקוד.`;
+export function editCodeSharePayload(
+  house: PublicHouse,
+  editCode: string,
+  locale: AppLocale = "he",
+) {
+  const name = houseHeadline(house);
+  const s = messagesForLocale(locale).shareAccess;
+  const title = formatMessage(s.familyCodeTitle, { name });
+  const text = formatMessage(s.familyCodeBody, { name, code: editCode });
   return { title, text };
 }
 
 export async function shareHouseAccessInvite(
   house: PublicHouse,
   origin?: string,
+  locale: AppLocale = "he",
 ): Promise<"shared" | "copied" | "aborted" | "failed"> {
   try {
     const res = await fetch(`/api/houses/${encodeURIComponent(house.id)}/invites`, {
@@ -101,8 +111,10 @@ export async function shareHouseAccessInvite(
     if (!res.ok || !json?.url) return "failed";
     const url =
       json.url.startsWith("http") ? json.url : `${(origin ?? window.location.origin).replace(/\/$/, "")}${json.url}`;
-    const title = `הזמנה — ${houseHeadline(house)}`;
-    const text = `הצטרפו לבית שלנו במפת השכונה:\n${url}`;
+    const name = houseHeadline(house);
+    const s = messagesForLocale(locale).shareAccess;
+    const title = formatMessage(s.inviteTitle, { name });
+    const text = formatMessage(s.inviteBody, { url });
     if (navigator.share) {
       await navigator.share({ title, text, url });
       return "shared";
@@ -118,8 +130,9 @@ export async function shareHouseAccessInvite(
 export async function shareEditCode(
   house: PublicHouse,
   editCode: string,
+  locale: AppLocale = "he",
 ): Promise<"shared" | "copied" | "aborted" | "failed"> {
-  const { title, text } = editCodeSharePayload(house, editCode);
+  const { title, text } = editCodeSharePayload(house, editCode, locale);
   try {
     if (navigator.share) {
       await navigator.share({ title, text });

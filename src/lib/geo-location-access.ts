@@ -1,29 +1,40 @@
 import type { LocationStatus } from "@/hooks/use-user-location";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { messagesForLocale } from "@/lib/i18n/translate";
 
-/** User can still tap **המיקום שלי** — only hard blocks are denied API / no geolocation. */
+/** User can still tap **My location** — only hard blocks are denied API / no geolocation. */
 export function geoCanPromptLocation(status: LocationStatus): boolean {
   return status !== "denied" && status !== "unavailable";
 }
 
+export function geoLocationHint(locale: AppLocale, status: LocationStatus): string {
+  const g = messagesForLocale(locale).geoAccess;
+  if (status === "denied") return g.hintDenied;
+  if (status === "error") return g.hintError;
+  return g.hintGps;
+}
+
+export function geoLocationFailureToast(
+  locale: AppLocale,
+  status: LocationStatus,
+  options?: { installedApp?: boolean },
+): string | null {
+  const g = messagesForLocale(locale).geoAccess;
+  if (status === "denied") {
+    return options?.installedApp ? g.toastDeniedApp : g.toastDeniedBrowser;
+  }
+  if (status === "unavailable") return g.toastUnavailable;
+  if (status === "error") return g.toastError;
+  return null;
+}
+
 export function geoLocationHintHe(status: LocationStatus): string {
-  if (status === "denied") return "אשרו גישה למיקום בהגדרות";
-  if (status === "error") return "לא התקבל מיקום — נסו שוב";
-  return "GPS";
+  return geoLocationHint("he", status);
 }
 
 export function geoLocationFailureToastHe(
   status: LocationStatus,
   options?: { installedApp?: boolean },
 ): string | null {
-  if (status === "denied") {
-    if (options?.installedApp) {
-      return "גישה למיקום חסומה לאפליקציה המותקנת. באנדרoid: הגדרות → האפליקציה → הרשאות → מיקום.";
-    }
-    return "גישה למיקום חסומה. אשרו בהגדרות הדפדפן או האפליקציה.";
-  }
-  if (status === "unavailable") return "המכשיר לא תומך במיקום.";
-  if (status === "error") {
-    return "לא הצלחנו לקרוא מיקום (GPS או רשת). ודאו ש-GPS פעיל ונסו שוב — לא בהכרח הרשאות.";
-  }
-  return null;
+  return geoLocationFailureToast("he", status, options);
 }

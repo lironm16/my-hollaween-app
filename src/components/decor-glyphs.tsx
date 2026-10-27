@@ -3,7 +3,9 @@ import { cn } from "@/lib/utils";
 import { BADGE_TONE_CLASS } from "@/lib/badge-tones";
 import { DiscStrike } from "@/components/disc-strike";
 import { ScareGhost } from "@/components/scare-glyphs";
-import { decorShort } from "@/lib/labels";
+import type { AppLocale } from "@/lib/i18n/locale";
+import { decorShortForLocale } from "@/lib/i18n/pin-labels";
+import { messagesForLocale } from "@/lib/i18n/translate";
 import type { DecorLevel, ScareLevel } from "@/lib/types";
 
 function Icon({ children }: { children: ReactNode }) {
@@ -125,17 +127,20 @@ export function DecorSign({
   on,
   className,
   Glyph,
+  locale = "he",
 }: {
   level?: DecorLevel;
   /** @deprecated Use `level`. true → medium, false → none. */
   on?: boolean;
   className?: string;
   Glyph?: (props: { level?: ScareLevel | "none" }) => ReactNode;
+  locale?: AppLocale;
 }) {
   const resolved: DecorLevel = level ?? (on === false ? "none" : on === true ? "medium" : "mild");
   const struck = resolved === "none";
   const ghostLevel = DECOR_GHOST[resolved];
   const useGhostPreview = Glyph === ScareGhost;
+  const decorShort = decorShortForLocale(locale ?? "he");
   const label = decorShort[resolved];
 
   return (
@@ -166,24 +171,34 @@ export function DecorMark({
   labeled = false,
   level = "medium",
   className,
+  locale = "he",
 }: {
   labeled?: boolean;
   level?: DecorLevel;
   className?: string;
+  locale?: AppLocale;
 }) {
+  const loc = locale ?? "he";
+  const decorShort = decorShortForLocale(loc);
+  const decoratedLabel = messagesForLocale(loc).houseSign.decorated;
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <DecorSign level={level} />
-      {labeled ? <span>מקושט</span> : <span className="sr-only">{decorShort[level]}</span>}
+      <DecorSign level={level} locale={loc} />
+      {labeled ? (
+        <span>{decoratedLabel}</span>
+      ) : (
+        <span className="sr-only">{decorShort[level]}</span>
+      )}
     </span>
   );
 }
 
+/** Preview / design tooling — Hebrew labels OK. */
 export const DECOR_TONES: { id: DecorLevel; label: string }[] = [
-  { id: "mild", label: decorShort.mild },
-  { id: "medium", label: decorShort.medium },
-  { id: "heavy", label: decorShort.heavy },
-  { id: "none", label: decorShort.none },
+  { id: "mild", label: "לילדים" },
+  { id: "medium", label: "קצת מפחיד" },
+  { id: "heavy", label: "מפחיד" },
+  { id: "none", label: "לא מקושט" },
 ];
 
 export const DECOR_OPTIONS = [

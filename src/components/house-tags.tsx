@@ -21,16 +21,19 @@ import {
   treatLevel,
 } from "@/lib/house-state";
 import type { DecorLevel, ScareLevel, TreatId, TreatStock } from "@/lib/types";
+import { useLocale } from "@/hooks/use-locale";
 
 export function ClosedSign({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const label = t("houseSign.closed");
   return (
     <span
       className={cn(
         "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#e11d48]",
         className,
       )}
-      title="סגור"
-      aria-label="סגור"
+      title={label}
+      aria-label={label}
     >
       <span className="absolute inset-x-1.5 top-1/2 h-1.5 -translate-y-1/2 rounded-[1px] bg-white" />
     </span>
@@ -38,14 +41,16 @@ export function ClosedSign({ className }: { className?: string }) {
 }
 
 export function PauseSign({ className }: { className?: string }) {
+  const { t } = useLocale();
+  const label = t("houseSign.pause");
   return (
     <span
       className={cn(
         "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#6b7280]",
         className,
       )}
-      title="הפסקה"
-      aria-label="הפסקה"
+      title={label}
+      aria-label={label}
     >
       <span className="absolute start-[28%] top-[22%] h-[56%] w-[13%] rounded-full bg-white" />
       <span className="absolute end-[28%] top-[22%] h-[56%] w-[13%] rounded-full bg-white" />
@@ -80,6 +85,7 @@ export function HouseTags({
   };
   large?: boolean;
 }) {
+  const { locale, t } = useLocale();
   const now = useAppNow();
   const { catalog } = useCatalog();
   const treats = house.treats ?? [];
@@ -106,7 +112,7 @@ export function HouseTags({
       <div className={cn("flex flex-wrap gap-1.5 pb-0.5 ps-0.5", large && "gap-2")}>
         {closedInsteadOfCandy ? <ClosedSign className={signSize} /> : null}
         {pausedInsteadOfCandy ? <PauseSign className={signSize} /> : null}
-        {showCandy ? <CandySign tone={candy} className={signSize} /> : null}
+        {showCandy ? <CandySign tone={candy} className={signSize} locale={locale} /> : null}
         <ScareSign
           Glyph={isPoiHouse(house) ? ScarePumpkin : undefined}
           level={undecorated ? "none" : scare}
@@ -114,7 +120,7 @@ export function HouseTags({
           glyphClassName={pinGlyphScale}
         />
         {house.accessible ? (
-          <span title="נגיש" aria-label="נגיש">
+          <span title={t("houseSign.accessible")} aria-label={t("houseSign.accessible")}>
             <StrollerSign className={signSize} />
           </span>
         ) : null}

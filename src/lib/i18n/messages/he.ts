@@ -383,6 +383,8 @@ export const heMessages = {
     candyPlenty: "יש",
     candyLow: "מעט",
     candyOut: "נגמר",
+    candyWithStock: "ממתקים · {stock}",
+    candyHasTreats: "יש ממתקים",
     treatGlutenFree: "ללא גלוטן",
     treatNutsFree: "ללא אגוזים",
     treatSesameFree: "ללא שומשום",
@@ -433,6 +435,8 @@ export const heMessages = {
     showMore: "הצג עוד",
     showLess: "הצג פחות",
     closePhoto: "סגירת התמונה",
+    enlargePhoto: "הגדלת התמונה",
+    decorPhotoHint: "יש תמונת קישוט — לחצו רק אם הרשת פנויה",
     openInGoogleMaps: "ניווט ב־Google Maps",
     shareHouseLink: "קישור לבית",
   },
@@ -444,6 +448,72 @@ export const heMessages = {
   cheer: {
     liked: "אהבתם!",
     visited: "כל הכבוד!",
+  },
+  routeComplete: {
+    title: "סיימתם את המסלול!",
+    sub: "כל העצירות בוצעו",
+  },
+  hoursMark: {
+    openNow: "פתוח עכשיו",
+    closingSoon: "נסגר בקרוב",
+    openingSoon: "נפתח בקרוב",
+    notYetOpen: "עוד לא נפתח",
+    afterHours: "אחרי השעות",
+  },
+  houseSign: {
+    closed: "סגור",
+    pause: "הפסקה",
+    accessible: "נגיש",
+    decorated: "מקושט",
+  },
+  traffic: {
+    liked: "אהבתי",
+    imp: "שדון",
+    save: "שמירה",
+    skip: "דילגתי",
+    visited: "ביקרתי",
+  },
+  mapUi: {
+    skipToHouseList: "דלג לרשימת הבתים",
+    routeStopsAnnounce: " מסלול עם {count} עצירות.",
+    saveOrigin: "שמירת התחלה",
+    bootLoading: "מדליקים דלעות…",
+    mapPickPoint: "נקודה במפה",
+    selectedHouse: "נבחר: {name}, {address}. {visit}",
+    visitCome: "בואו — יש מה לקבל",
+    visitDecorOnly: "מקושט — בלי ממתקים",
+    visitClosed: "הבית סגור",
+    clusterBack: "חזרה לרשימה",
+    clusterIndex: "{index} מתוך {total}",
+  },
+  menuRoute: {
+    section: "מסלול",
+    download: "הורד",
+    share: "שתף",
+  },
+  geoAccess: {
+    hintDenied: "אשרו גישה למיקום בהגדרות",
+    hintError: "לא התקבל מיקום — נסו שוב",
+    hintGps: "GPS",
+    toastDeniedBrowser: "גישה למיקום חסומה. אשרו בהגדרות הדפדפן או האפליקציה.",
+    toastDeniedApp:
+      "גישה למיקום חסומה לאפליקציה המותקנת. באנדרואיד: הגדרות → האפליקציה → הרשאות → מיקום.",
+    toastUnavailable: "המכשיר לא תומך במיקום.",
+    toastError:
+      "לא הצלחנו לקרוא מיקום (GPS או רשת). ודאו ש-GPS פעיל ונסו שוב — לא בהכרח הרשאות.",
+  },
+  shareAccess: {
+    familyCodeTitle: "קוד משפחה — {name}",
+    familyCodeBody:
+      "קוד המשפחה ל{name}: {code}\n\nלהתחברות: תפריט ← התחברות ← הזינו את הקוד.",
+    inviteTitle: "הזמנה — {name}",
+    inviteBody: "הצטרפו לבית שלנו במפת השכונה:\n{url}",
+  },
+  catalogBoot: {
+    serverDown:
+      "השרת לא עונה, ואין עותק שמור בטלפון. נסו שוב כשיש קליטה.",
+    offlineNoCache:
+      "אין אינטרנט, ואין עותק שמור בטלפון. פתחו את האפליקציה פעם אחת כשיש רשת.",
   },
   adminPreview: {
     title: "תצוגת משתמש",

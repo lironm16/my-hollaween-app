@@ -76,7 +76,13 @@ export function EditCodeDialog({
                   variant="outline"
                   size="sm"
                   className="h-9 w-auto max-w-full shrink-0 gap-1.5 whitespace-nowrap border-orange-500/25 bg-[#1d1028] px-2.5 text-orange-100 hover:bg-orange-500/15"
-                  onClick={() => void copyText(code.replace(/\s/g, ""), t("editCodeDialog.copied"))}
+                  onClick={() =>
+                    void copyText(
+                      code.replace(/\s/g, ""),
+                      t("editCodeDialog.copied"),
+                      t("codesCopy.copyFailed"),
+                    )
+                  }
                 >
                   <Copy className="size-4 shrink-0" strokeWidth={2.2} />
                   <span className="text-sm">{t("editCodeDialog.copy")}</span>
@@ -95,7 +101,13 @@ export function EditCodeDialog({
                 type="button"
                 variant="outline"
                 className="h-11 w-full justify-center text-base"
-                onClick={() => void copyText(code.replace(/\s/g, ""), t("editCodeDialog.copied"))}
+                onClick={() =>
+                  void copyText(
+                    code.replace(/\s/g, ""),
+                    t("editCodeDialog.copied"),
+                    t("codesCopy.copyFailed"),
+                  )
+                }
               >
                 <Copy className="size-5" />
                 {t("editCodeDialog.copy")}
