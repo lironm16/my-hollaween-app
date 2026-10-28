@@ -6,7 +6,7 @@ describe("pinHoursBadgeHtml", () => {
   it("renders clock badge in pin-status slot", () => {
     const html = pinHoursBadgeHtml("opening", "Opening soon");
     assert.match(html, /pin-status pin-hours-badge is-opening/);
-    assert.match(html, /<svg/);
     assert.doesNotMatch(html, /pin-hours-ring/);
+    assert.doesNotMatch(html, /<svg/);
   });
 });

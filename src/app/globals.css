@@ -1646,26 +1646,27 @@
 }
 
 .house-pin .pin-status.pin-hours-badge,
-.pumpkin-pin .pin-status.pin-hours-badge,
-.pin-apt-dot.pin-hours-badge {
-  display: inline-flex;
+.pumpkin-pin .pin-status.pin-hours-badge {
+  display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   flex-shrink: 0;
+  width: 24px;
+  height: 24px;
   background-image: none;
   padding: 0;
 }
 
-/* Stay in .pin-apt-dots flex row — do not inherit preview absolute positioning */
 .pin-apt-dot.pin-hours-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
-}
-
-.house-pin .pin-status.pin-hours-badge,
-.pumpkin-pin .pin-status.pin-hours-badge {
+  flex: 0 0 auto;
   width: 24px;
   height: 24px;
+  background-image: none;
 }
 
 .house-pin .pin-status.pin-hours-badge.is-opening,
@@ -1680,18 +1681,54 @@
   color: #fff7ed;
 }
 
-.house-pin .pin-status.pin-hours-badge .pin-hours-badge-clock,
-.house-pin .pin-status.pin-hours-badge svg,
-.pin-apt-dot.pin-hours-badge svg {
-  display: block;
-  width: 86%;
-  height: 86%;
-  flex-shrink: 0;
+/* Clock hands only (no face) — same pseudo pattern as break / closed apt dots */
+.house-pin .pin-status.pin-hours-badge::before,
+.house-pin .pin-status.pin-hours-badge::after,
+.pin-apt-dot.pin-hours-badge::before,
+.pin-apt-dot.pin-hours-badge::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  transform-origin: 50% 100%;
+}
+
+.house-pin .pin-status.pin-hours-badge::before,
+.pin-apt-dot.pin-hours-badge::before {
+  height: 12px;
+  margin-left: -2px;
+  margin-top: -12px;
+  transform: rotate(-16deg);
+}
+
+.house-pin .pin-status.pin-hours-badge::after,
+.pin-apt-dot.pin-hours-badge::after {
+  height: 9px;
+  margin-left: -2px;
+  margin-top: -9px;
+  transform: rotate(58deg);
 }
 
 .house-pin.house-pin-dot .pin-status.pin-hours-badge {
   width: 14px;
   height: 14px;
+}
+
+.house-pin.house-pin-dot .pin-status.pin-hours-badge::before {
+  width: 2.5px;
+  height: 7px;
+  margin-left: -1.25px;
+  margin-top: -7px;
+}
+
+.house-pin.house-pin-dot .pin-status.pin-hours-badge::after {
+  width: 2.5px;
+  height: 5px;
+  margin-left: -1.25px;
+  margin-top: -5px;
 }
 
 .house-pin .pin-status.is-plenty,
