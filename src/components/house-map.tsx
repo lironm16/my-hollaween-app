@@ -90,8 +90,10 @@ import {
   clusterGemRingCacheKey,
   mapPinRingDecorForCluster,
   mapPinRingDecorForHouse,
+  pinHoursRingKind,
   type MapGemPinRingContext,
 } from "@/lib/map-gem-pin-ring";
+import { pinHoursAptDotHtml, pinHoursBadgeHtml } from "@/lib/pin-hours-badge";
 import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
 
 /** Pin hours/opening state refresh — one bucket per minute (not app-wide 15s clock). */
@@ -228,6 +230,17 @@ function pinSkipStatusBadgeHtml(locale: AppLocale) {
   return `<b class="pin-status is-skipped" aria-label="${label}">${SKIP_ICON_SVG}</b>`;
 }
 
+function pinHoursStatusBadgeHtml(
+  kind: "opening" | "closing",
+  locale: AppLocale,
+) {
+  const label =
+    kind === "closing"
+      ? translate(locale, "mapPin.closingSoon")
+      : translate(locale, "mapPin.openingSoon");
+  return pinHoursBadgeHtml(kind, attr(label));
+}
+
 function pinStatusMark(
   house: PublicHouse,
   now: Date,
@@ -235,6 +248,10 @@ function pinStatusMark(
   locale: AppLocale,
   skipped = false,
 ) {
+  const hoursKind = pinHoursRingKind(house, now, addressReveal);
+  if (hoursKind) {
+    return pinHoursStatusBadgeHtml(hoursKind, locale);
+  }
   const parts: string[] = [];
   const visit = pinVisitKind(house, now, addressReveal);
   if (visit === "closed") {
@@ -283,6 +300,13 @@ function clusterAptDotsHtml(
         matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
       if (skippedIds?.has(house.id)) {
         return `<i class="pin-apt-dot is-skipped${filteredClass}"></i>`;
+      }
+      const hoursKind = pinHoursRingKind(house, now, addressReveal);
+      if (hoursKind) {
+        const dot = pinHoursAptDotHtml(hoursKind);
+        return filteredClass
+          ? dot.replace("pin-apt-dot pin-hours-badge", `pin-apt-dot pin-hours-badge${filteredClass}`)
+          : dot;
       }
       const visit = pinVisitKind(house, now, addressReveal);
       let dotClass = "is-out";
@@ -441,7 +465,7 @@ function clusterIcon(
   const clusterShell =
     schoolCampus && routeOrder == null ? "" : " is-cluster-shell";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterRing.ringHtml}${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
+    `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     locale,
     routeOrder,
     clusterShell,

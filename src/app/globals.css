@@ -1640,6 +1640,42 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
+.house-pin .pin-status.pin-hours-badge,
+.pumpkin-pin .pin-status.pin-hours-badge,
+.pin-apt-dot.pin-hours-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-image: none;
+  padding: 0;
+}
+
+.house-pin .pin-status.pin-hours-badge.is-opening,
+.pin-apt-dot.pin-hours-badge.is-opening {
+  background-color: #22d3ee;
+  color: #1c0e24;
+}
+
+.house-pin .pin-status.pin-hours-badge.is-closing,
+.pin-apt-dot.pin-hours-badge.is-closing {
+  background-color: #f97316;
+  color: #fff7ed;
+}
+
+.house-pin .pin-status.pin-hours-badge .pin-hours-badge-clock,
+.house-pin .pin-status.pin-hours-badge svg,
+.pin-apt-dot.pin-hours-badge svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.house-pin.house-pin-dot .pin-status.pin-hours-badge svg,
+.house-pin.is-apt .pin-status.pin-hours-badge svg {
+  width: 11px;
+  height: 11px;
+}
+
 .house-pin .pin-status.is-plenty,
 .house-pin .pin-status.is-low,
 .house-pin .pin-status.is-out,

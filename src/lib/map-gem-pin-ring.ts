@@ -101,7 +101,7 @@ export function mapPinRingDecorForHouse(
   if (!hoursKind) return { hoursSoonClass: "", ringHtml: "" };
   return {
     hoursSoonClass: hoursKind === "closing" ? " is-closing-soon" : " is-opening-soon",
-    ringHtml: `<i class="pin-hours-ring is-${hoursKind}" aria-hidden="true"></i>`,
+    ringHtml: "",
   };
 }
 
@@ -128,7 +128,7 @@ export function mapPinRingDecorForCluster(
   if (!hoursKind) return { hoursSoonClass: "", ringHtml: "" };
   return {
     hoursSoonClass: hoursKind === "closing" ? " is-closing-soon" : " is-opening-soon",
-    ringHtml: `<i class="pin-hours-ring is-${hoursKind}" aria-hidden="true"></i>`,
+    ringHtml: "",
   };
 }
 

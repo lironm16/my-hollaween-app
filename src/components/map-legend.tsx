@@ -15,6 +15,7 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
+import { PinHoursStatusBadge } from "@/components/pin-hours-status-badge";
 import { SkipIcon } from "@/components/skip-icon";
 import { useLocale } from "@/hooks/use-locale";
 import { useLocalizedLabels } from "@/hooks/use-localized-labels";
@@ -49,6 +50,7 @@ function SwatchPin({
   skipped?: boolean;
   gemRing?: "sparkle" | "diamond";
 }) {
+  const { t } = useLocale();
   const scareLevel = scare ?? "mild";
   const scareSrc = poi ? POI_PIN_FACE_SRC : `/icons/pin-scare-${scareLevel}.png`;
   return (
@@ -99,8 +101,12 @@ function SwatchPin({
           ) : null}
         </>
       ) : null}
-      {!gemRing && hours === "closing" ? <i className="pin-hours-ring is-closing" /> : null}
-      {!gemRing && hours === "opening" ? <i className="pin-hours-ring is-opening" /> : null}
+      {!gemRing && hours === "closing" ? (
+        <PinHoursStatusBadge kind="closing" label={t("mapLegend.closingSoon")} />
+      ) : null}
+      {!gemRing && hours === "opening" ? (
+        <PinHoursStatusBadge kind="opening" label={t("mapLegend.openingSoon")} />
+      ) : null}
       {scare || bare ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="pin-scare" src={scareSrc} alt="" />
