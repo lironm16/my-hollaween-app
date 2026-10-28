@@ -7,14 +7,19 @@ import { cn } from "@/lib/utils";
 
 export function GemCheer({
   show,
+  isNew = false,
 }: {
   show: boolean;
+  isNew?: boolean;
   /** @deprecated — cheer is text-only (no WebGL in yellow toast). */
   house?: unknown;
   monsterId?: unknown;
 }) {
   const { t } = useLocale();
   if (!show) return null;
+  const cheerText = isNew
+    ? t("help.product.gemFoundCheerNew")
+    : t("help.product.gemFoundCheerRepeat");
   const cheer = (
     <div className="gem-cheer" role="status" aria-live="polite">
       <div className={cn("gem-cheer-card")}>
@@ -24,7 +29,7 @@ export function GemCheer({
         <span className="gem-cheer-gem" aria-hidden="true">
           <ImpMenuActiveGlyph className="size-10" />
         </span>
-        <span className="hw-cheer-display">{t("help.product.gemFoundCheer")}</span>
+        <span className="hw-cheer-display">{cheerText}</span>
       </div>
     </div>
   );

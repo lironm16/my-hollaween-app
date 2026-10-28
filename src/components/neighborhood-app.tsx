@@ -241,6 +241,7 @@ export function NeighborhoodApp({
   const [gemResetCluster, setGemResetCluster] = useState<PublicHouse[] | null>(null);
   const [mapGemCheerHouse, setMapGemCheerHouse] = useState<PublicHouse | null>(null);
   const [mapGemCheerMonster, setMapGemCheerMonster] = useState<GemMonsterId | null>(null);
+  const [mapGemCheerIsNew, setMapGemCheerIsNew] = useState(false);
   const mapGemCheerTimerRef = useRef<number | null>(null);
   const mapGemClusterSessionRef = useRef<GemClusterSessionCatch[]>([]);
   const [clusterGemSessionSummary, setClusterGemSessionSummary] = useState<
@@ -614,16 +615,21 @@ export function NeighborhoodApp({
     setMapGemBadgeCount(loadGemCollectedIds().length);
   }, []);
 
-  const showMapGemCheer = useCallback((house: PublicHouse, monsterId: GemMonsterId) => {
-    setMapGemCheerHouse(house);
-    setMapGemCheerMonster(monsterId);
-    if (mapGemCheerTimerRef.current != null) window.clearTimeout(mapGemCheerTimerRef.current);
-    mapGemCheerTimerRef.current = window.setTimeout(() => {
-      mapGemCheerTimerRef.current = null;
-      setMapGemCheerHouse(null);
-      setMapGemCheerMonster(null);
-    }, GEM_CHEER_MS);
-  }, []);
+  const showMapGemCheer = useCallback(
+    (house: PublicHouse, monsterId: GemMonsterId, isNew: boolean) => {
+      setMapGemCheerHouse(house);
+      setMapGemCheerMonster(monsterId);
+      setMapGemCheerIsNew(isNew);
+      if (mapGemCheerTimerRef.current != null) window.clearTimeout(mapGemCheerTimerRef.current);
+      mapGemCheerTimerRef.current = window.setTimeout(() => {
+        mapGemCheerTimerRef.current = null;
+        setMapGemCheerHouse(null);
+        setMapGemCheerMonster(null);
+        setMapGemCheerIsNew(false);
+      }, GEM_CHEER_MS);
+    },
+    [],
+  );
 
   const finishMapGemClusterSession = useCallback(() => {
     const session = [...mapGemClusterSessionRef.current];
@@ -633,7 +639,7 @@ export function NeighborhoodApp({
     if (session.length > 0 && members && members.length >= 2) {
       setClusterGemSessionSummary(session);
     } else if (session.length === 1) {
-      showMapGemCheer(session[0]!.house, session[0]!.monsterId);
+      showMapGemCheer(session[0]!.house, session[0]!.monsterId, session[0]!.isNew);
     }
   }, [closeMapGemHunt, mapGemClusterMembers, showMapGemCheer]);
 
@@ -1938,7 +1944,7 @@ export function NeighborhoodApp({
                   if (session.length > 0 && members.length >= 2) {
                     setClusterGemSessionSummary(session);
                   } else if (session.length === 1) {
-                    showMapGemCheer(session[0]!.house, session[0]!.monsterId);
+                    showMapGemCheer(session[0]!.house, session[0]!.monsterId, session[0]!.isNew);
                   }
                 }
               : undefined
@@ -1948,6 +1954,7 @@ export function NeighborhoodApp({
             if (mapGemClusterMembers) return;
             const h = mapGemHouse;
             const collectedBefore = loadGemCollected();
+            const isNew = !isGemTypeInCollection(monsterId, collectedBefore);
             const celebrate =
               options?.navigateStickerBook
                 ? gemBagCelebrateAfterCollect(gemMapRingHouses, collectedBefore, h.id, monsterId)
@@ -1960,13 +1967,14 @@ export function NeighborhoodApp({
               return;
             }
             if (options?.cheer !== false) {
-              showMapGemCheer(h, monsterId);
+              showMapGemCheer(h, monsterId, isNew);
             }
           }}
         />
       ) : null}
       <GemCheer
         show={Boolean(mapGemCheerHouse && mapGemCheerMonster)}
+        isNew={mapGemCheerIsNew}
         house={mapGemCheerHouse ?? undefined}
         monsterId={mapGemCheerMonster ?? undefined}
       />

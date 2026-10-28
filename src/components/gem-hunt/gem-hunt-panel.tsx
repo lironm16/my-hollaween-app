@@ -79,6 +79,7 @@ export function GemHuntPanel({
   const [simulate, setSimulate] = useState(adminSimulateInRange);
   const [gemCheer, setGemCheer] = useState(false);
   const [gemCheerPet, setGemCheerPet] = useState<GemMonsterId | null>(null);
+  const [gemCheerIsNew, setGemCheerIsNew] = useState(false);
   const cheerTimerRef = useRef<number | null>(null);
   const huntClusterSessionRef = useRef<GemClusterSessionCatch[]>([]);
   const [clusterSessionSummary, setClusterSessionSummary] = useState<GemClusterSessionCatch[] | null>(
@@ -199,13 +200,16 @@ export function GemHuntPanel({
       return;
     }
     if (options?.cheer !== false) {
+      const isNew = !isGemTypeInCollection(collectedVariant, collectedBefore);
       setGemCheerPet(collectedVariant);
+      setGemCheerIsNew(isNew);
       setGemCheer(true);
       if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
       cheerTimerRef.current = window.setTimeout(() => {
         cheerTimerRef.current = null;
         setGemCheer(false);
         setGemCheerPet(null);
+        setGemCheerIsNew(false);
       }, GEM_CHEER_MS);
     }
   }
@@ -220,12 +224,14 @@ export function GemHuntPanel({
     } else if (session.length === 1) {
       const item = session[0]!;
       setGemCheerPet(item.monsterId);
+      setGemCheerIsNew(item.isNew);
       setGemCheer(true);
       if (cheerTimerRef.current != null) window.clearTimeout(cheerTimerRef.current);
       cheerTimerRef.current = window.setTimeout(() => {
         cheerTimerRef.current = null;
         setGemCheer(false);
         setGemCheerPet(null);
+        setGemCheerIsNew(false);
       }, GEM_CHEER_MS);
     }
   }, [huntClusterMembers]);
@@ -362,7 +368,7 @@ export function GemHuntPanel({
         </Button>
       </section>
 
-      <GemCheer show={gemCheer} house={house} monsterId={gemCheerPet ?? undefined} />
+      <GemCheer show={gemCheer} isNew={gemCheerIsNew} house={house} monsterId={gemCheerPet ?? undefined} />
       {huntOpen && huntTargetHouse ? (
         <GemHuntExperienceLazy
           house={huntTargetHouse}

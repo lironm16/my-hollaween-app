@@ -36,16 +36,13 @@ export function useGemCopy() {
         return gemPetLabel(monsterId, locale);
       },
       clusterSessionTitle(total: number, newCount: number) {
-        if (newCount > 0 && total > 1) {
+        if (total === 1) {
+          return newCount > 0 ? g.clusterSummarySingleNew : g.clusterSummarySingleRepeat;
+        }
+        if (newCount > 0) {
           return fmt(g.clusterSummaryNew, { total: String(total), newCount: String(newCount) });
         }
-        if (newCount > 0 && total === 1) {
-          return g.clusterSummarySingle;
-        }
-        if (total > 1) {
-          return fmt(g.clusterSummaryRepeat, { total: String(total) });
-        }
-        return g.clusterSummarySingle;
+        return fmt(g.clusterSummaryRepeat, { total: String(total) });
       },
     };
   }, [locale]);
