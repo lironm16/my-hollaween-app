@@ -338,6 +338,10 @@ export function GemHuntOverlay({
     document.body.style.overflow = "hidden";
     return () => {
       huntClosingRef.current = true;
+      if (collectFinishRef.current != null) {
+        window.clearTimeout(collectFinishRef.current);
+        collectFinishRef.current = null;
+      }
       document.body.style.overflow = prev;
       releaseGemHuntCamera(videoRef.current);
       stopGemHuntCameraStream();
@@ -392,6 +396,7 @@ export function GemHuntOverlay({
     return () => {
       cancelled = true;
       streamRef.current = null;
+      releaseGemHuntCamera(videoRef.current);
     };
   }, [cameraRetry, sim]);
 
@@ -466,9 +471,12 @@ export function GemHuntOverlay({
     const entries = loadGemCollected();
     const newAlbumFriend = !repeatVisitLatched && !isGemTypeInCollection(monsterId, entries);
     onCollectPersistRef.current?.(monsterId);
-    if (!campusSession && newAlbumFriend) {
-      releaseGemHuntCamera(videoRef.current);
+    const videoOnCollect = videoRef.current;
+    if (videoOnCollect) {
+      videoOnCollect.style.visibility = "hidden";
+      videoOnCollect.style.pointerEvents = "none";
     }
+    releaseGemHuntCamera(videoOnCollect);
     setPhase("collecting");
     setHint("found");
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -629,6 +637,10 @@ export function GemHuntOverlay({
     if (phase === "albumReveal") {
       if (albumShowActions || albumRevealPhase === "landed") finishNewFriendClose();
       return;
+    }
+    if (collectFinishRef.current != null) {
+      window.clearTimeout(collectFinishRef.current);
+      collectFinishRef.current = null;
     }
     huntClosingRef.current = true;
     streamRef.current = null;

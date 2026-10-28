@@ -5,6 +5,23 @@ const CAMERA_GRANTED_KEY = "hw-gem-hunt-camera-granted";
 const ORIENTATION_SESSION_KEY = ORIENTATION_GRANTED_KEY;
 
 let sharedCameraStream: MediaStream | null = null;
+/** Bumped whenever the hunt releases the camera — in-flight getUserMedia must discard its stream. */
+let cameraAcquireToken = 0;
+
+function discardCameraStream(stream: MediaStream | null | undefined) {
+  stream?.getTracks().forEach((t) => {
+    try {
+      t.stop();
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
+export function revokeGemHuntCameraAcquire() {
+  cameraAcquireToken += 1;
+  stopGemHuntCameraStreamInternal();
+}
 
 function readGranted(key: string): boolean {
   if (typeof window === "undefined") return false;
@@ -43,8 +60,8 @@ export function getGemHuntCameraStream() {
   return null;
 }
 
-export function stopGemHuntCameraStream() {
-  sharedCameraStream?.getTracks().forEach((t) => t.stop());
+function stopGemHuntCameraStreamInternal() {
+  discardCameraStream(sharedCameraStream);
   sharedCameraStream = null;
   if (typeof document === "undefined") return;
   document.querySelectorAll("video").forEach((video) => {
@@ -64,6 +81,10 @@ export function stopGemHuntCameraStream() {
       /* ignore */
     }
   });
+}
+
+export function stopGemHuntCameraStream() {
+  revokeGemHuntCameraAcquire();
 }
 
 /**
@@ -99,7 +120,7 @@ function releaseVideoElement(el: HTMLVideoElement) {
 
 export function releaseGemHuntCamera(video?: HTMLVideoElement | null) {
   if (video) releaseVideoElement(video);
-  stopGemHuntCameraStream();
+  revokeGemHuntCameraAcquire();
   if (typeof document === "undefined") return;
   const root = document.getElementById("gem-hunt-portal-root");
   root?.querySelectorAll("video").forEach((node) => {
@@ -109,7 +130,7 @@ export function releaseGemHuntCamera(video?: HTMLVideoElement | null) {
 
 if (typeof document !== "undefined") {
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") stopGemHuntCameraStream();
+    if (document.visibilityState === "hidden") revokeGemHuntCameraAcquire();
   });
 }
 
@@ -171,12 +192,17 @@ export type PrepareGemHuntSensorsOptions = {
  * camera / motion prompt). After the user grants once per origin, killing the stream
  * on close and calling getUserMedia again should not re-show those dialogs.
  */
+function cameraAcquireStillValid(acquireToken: number) {
+  return acquireToken === cameraAcquireToken;
+}
+
 export async function prepareGemHuntSensors(
   options: PrepareGemHuntSensorsOptions = {},
 ): Promise<{
   camera: boolean;
   orientation: boolean;
 }> {
+  const acquireToken = cameraAcquireToken;
   const requestCamera = options.requestCamera !== false;
   const requestOrientation = options.requestOrientation !== false;
   let orientation = !requestOrientation ? false : isGemHuntOrientationGranted();
@@ -186,6 +212,9 @@ export async function prepareGemHuntSensors(
 
   if (requestOrientation && !orientation) {
     orientation = await requestGemHuntOrientationPermission();
+    if (!cameraAcquireStillValid(acquireToken)) {
+      return { camera: false, orientation };
+    }
   }
 
   if (
@@ -196,23 +225,38 @@ export async function prepareGemHuntSensors(
     try {
       const liveTracks = sharedCameraStream?.getVideoTracks().filter((t) => t.readyState === "live");
       if (liveTracks && liveTracks.length > 0) {
-        liveTracks.forEach((t) => {
-          t.enabled = true;
-        });
-        writeGranted(CAMERA_GRANTED_KEY);
+        if (!cameraAcquireStillValid(acquireToken)) {
+          camera = false;
+        } else {
+          liveTracks.forEach((t) => {
+            t.enabled = true;
+          });
+          writeGranted(CAMERA_GRANTED_KEY);
+        }
       } else {
-        stopGemHuntCameraStream();
-        sharedCameraStream = await navigator.mediaDevices.getUserMedia({
+        stopGemHuntCameraStreamInternal();
+        const openToken = cameraAcquireToken;
+        const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" } },
           audio: false,
         });
-        writeGranted(CAMERA_GRANTED_KEY);
+        if (!cameraAcquireStillValid(openToken)) {
+          discardCameraStream(stream);
+          camera = false;
+        } else {
+          sharedCameraStream = stream;
+          writeGranted(CAMERA_GRANTED_KEY);
+        }
       }
     } catch {
       camera = false;
-      stopGemHuntCameraStream();
+      stopGemHuntCameraStreamInternal();
     }
   } else if (requestCamera) {
+    camera = false;
+  }
+
+  if (!cameraAcquireStillValid(acquireToken)) {
     camera = false;
   }
 
