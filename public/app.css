@@ -6952,9 +6952,6 @@ svg.leaflet-zoom-animated {
   }
 }
 .pin-hours-badge {
-  position: absolute;
-  z-index: 5;
-  display: block;
   pointer-events: none;
   font-weight: 700;
   line-height: 1.1;
@@ -6970,6 +6967,8 @@ svg.leaflet-zoom-animated {
   color: #fff7ed;
 }
 .pin-hours-badge.variant-top-pill {
+  position: absolute;
+  z-index: 5;
   top: -5px;
   left: 50%;
   transform: translateX(-50%);
@@ -6980,6 +6979,8 @@ svg.leaflet-zoom-animated {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 .pin-hours-badge.variant-ribbon {
+  position: absolute;
+  z-index: 5;
   bottom: -13px;
   left: 50%;
   transform: translateX(-50%);
@@ -6990,6 +6991,8 @@ svg.leaflet-zoom-animated {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 .pin-hours-badge.variant-side-dot {
+  position: absolute;
+  z-index: 5;
   top: 2px;
   inset-inline-end: -3px;
   width: 14px;
@@ -6999,6 +7002,8 @@ svg.leaflet-zoom-animated {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 .pin-hours-badge.variant-clock {
+  position: absolute;
+  z-index: 5;
   top: -5px;
   inset-inline-end: -5px;
   display: flex;
@@ -7204,6 +7209,9 @@ svg.leaflet-zoom-animated {
   flex-shrink: 0;
   background-image: none;
   padding: 0;
+}
+.pin-apt-dot.pin-hours-badge {
+  position: relative;
 }
 .house-pin .pin-status.pin-hours-badge,
 .pumpkin-pin .pin-status.pin-hours-badge {

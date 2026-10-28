@@ -1362,11 +1362,8 @@
   }
 }
 
-/* Hours-soon badges (preview + future map pins) — replaces pulsing pin-hours-ring */
+/* Hours-soon badges — preview variants only; map uses .pin-status / .pin-apt-dot slots */
 .pin-hours-badge {
-  position: absolute;
-  z-index: 5;
-  display: block;
   pointer-events: none;
   font-weight: 700;
   line-height: 1.1;
@@ -1385,6 +1382,8 @@
 }
 
 .pin-hours-badge.variant-top-pill {
+  position: absolute;
+  z-index: 5;
   top: -5px;
   left: 50%;
   transform: translateX(-50%);
@@ -1396,6 +1395,8 @@
 }
 
 .pin-hours-badge.variant-ribbon {
+  position: absolute;
+  z-index: 5;
   bottom: -13px;
   left: 50%;
   transform: translateX(-50%);
@@ -1407,6 +1408,8 @@
 }
 
 .pin-hours-badge.variant-side-dot {
+  position: absolute;
+  z-index: 5;
   top: 2px;
   inset-inline-end: -3px;
   width: 14px;
@@ -1417,6 +1420,8 @@
 }
 
 .pin-hours-badge.variant-clock {
+  position: absolute;
+  z-index: 5;
   top: -5px;
   inset-inline-end: -5px;
   display: flex;
@@ -1650,6 +1655,11 @@
   flex-shrink: 0;
   background-image: none;
   padding: 0;
+}
+
+/* Stay in .pin-apt-dots flex row — do not inherit preview absolute positioning */
+.pin-apt-dot.pin-hours-badge {
+  position: relative;
 }
 
 .house-pin .pin-status.pin-hours-badge,
