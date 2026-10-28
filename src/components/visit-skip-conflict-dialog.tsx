@@ -5,8 +5,6 @@ import { HouseEditModal } from "@/components/house-edit-modal";
 import { HelpText } from "@/components/help-text";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/hooks/use-locale";
-import { formatMessage } from "@/lib/i18n/format";
-import { houseHeadline } from "@/lib/labels";
 import { clusterBulkActionSubtitle } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 
@@ -50,13 +48,13 @@ export function VisitSkipConflictDialog({
       ? t("visitSkipConflict.visitAllBody")
       : t("visitSkipConflict.skipAllBody")
     : markingVisit
-      ? formatMessage(t("visitSkipConflict.visitOneBody"), { name: houseHeadline(house) })
-      : formatMessage(t("visitSkipConflict.skipOneBody"), { name: houseHeadline(house) });
+      ? t("visitSkipConflict.visitOneBody")
+      : t("visitSkipConflict.skipOneBody");
 
   const subtitle =
     cluster && clusterHouses && clusterHouses.length > 0
       ? clusterBulkActionSubtitle(clusterHouses)
-      : houseHeadline(house);
+      : undefined;
 
   return (
     <HouseEditModal open={open} onClose={onCancel} title={title} subtitle={subtitle}>

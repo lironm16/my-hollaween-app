@@ -602,8 +602,8 @@ export const enMessages: AppMessages = {
       "At least one house at this address is marked **Skipped**. **Mark all visited** clears skip marks on every house.",
     skipAllBody:
       "At least one house at this address is marked **Visited**. **Skip all** clears visit marks on every house.",
-    visitOneBody: "Marking **Visited** removes **Skipped** on {name}.",
-    skipOneBody: "**Skipping** removes **Visited** on {name}.",
+    visitOneBody: "Marking **Visited** removes **Skipped**.",
+    skipOneBody: "**Skipping** removes **Visited**.",
     dismissFuture: "Don't show again",
     confirm: "Confirm",
   },
