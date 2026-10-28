@@ -7,14 +7,12 @@ import { useLocale } from "@/hooks/use-locale";
 
 export function EditChoiceDialog({
   open,
-  houseName,
   quickAvailable,
   onQuick,
   onFull,
   onClose,
 }: {
   open: boolean;
-  houseName: string;
   quickAvailable: boolean;
   onQuick: () => void;
   onFull: () => void;
@@ -22,7 +20,7 @@ export function EditChoiceDialog({
 }) {
   const { t } = useLocale();
   return (
-    <HouseEditModal open={open} onClose={onClose} title={t("editChoice.title")} subtitle={houseName}>
+    <HouseEditModal open={open} onClose={onClose} title={t("editChoice.title")}>
       <div className="space-y-2">
         {quickAvailable ? (
           <Button

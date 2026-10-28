@@ -1,7 +1,6 @@
 import { formatMessage } from "@/lib/i18n/format";
 import type { AppLocale } from "@/lib/i18n/locale";
 import { translate } from "@/lib/i18n/translate";
-import { houseHeadline } from "@/lib/labels";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import {
   metaRestoreTriggers,
@@ -46,18 +45,17 @@ export function localizedSkipMetaSummary(locale: AppLocale, meta: SkippedHouseMe
 
 export function localizedSkipRestoreUndoPromptMessage(
   locale: AppLocale,
-  house: PublicHouse,
+  _house: PublicHouse,
   meta: SkippedHouseMeta,
 ): string {
-  const name = houseHeadline(house);
   const trigger = metaRestoreTriggers(meta)[0];
   if (trigger === "not-open") {
-    return formatMessage(t(locale, "skipRestore.promptOpen"), { name });
+    return t(locale, "skipRestore.promptOpen");
   }
   if (trigger === "candy-out") {
-    return formatMessage(t(locale, "skipRestore.promptCandy"), { name });
+    return t(locale, "skipRestore.promptCandy");
   }
-  return formatMessage(t(locale, "skipRestore.promptGeneric"), { name });
+  return t(locale, "skipRestore.promptGeneric");
 }
 
 const SKIP_REASON_LABEL_KEYS: Record<SkipReasonId, string> = {
@@ -104,19 +102,18 @@ export function localizedSuggestedSkipReasons(
 
 export function localizedTemporaryRestoreAlertText(
   locale: AppLocale,
-  house: PublicHouse,
+  _house: PublicHouse,
   meta: SkippedHouseMeta,
 ): string {
-  const name = houseHeadline(house);
   const triggers = metaRestoreTriggers(meta);
   if (triggers.includes("not-open") && triggers.includes("candy-out")) {
-    return formatMessage(t(locale, "skipRestore.alertOpenAndCandy"), { name });
+    return t(locale, "skipRestore.alertOpenAndCandy");
   }
   if (triggers.includes("not-open")) {
-    return formatMessage(t(locale, "skipRestore.alertOpen"), { name });
+    return t(locale, "skipRestore.alertOpen");
   }
   if (triggers.includes("candy-out")) {
-    return formatMessage(t(locale, "skipRestore.alertCandy"), { name });
+    return t(locale, "skipRestore.alertCandy");
   }
-  return formatMessage(t(locale, "skipRestore.alertGeneric"), { name });
+  return t(locale, "skipRestore.alertGeneric");
 }

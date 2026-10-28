@@ -81,9 +81,7 @@ export function NightPassRegisterPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [iosTab, setIosTab] = useState(false);
-  const [ownerHouseName, setOwnerHouseName] = useState("");
   const [resolvedOwnerHouseId, setResolvedOwnerHouseId] = useState("");
-  const [inviteHouseName, setInviteHouseName] = useState("");
   const [inviteReady, setInviteReady] = useState(false);
   const [inviteUnavailable, setInviteUnavailable] = useState(false);
 
@@ -115,7 +113,6 @@ export function NightPassRegisterPanel({
           setInviteReady(true);
           return;
         }
-        if (json.houseName) setInviteHouseName(json.houseName);
         setInviteReady(true);
       } catch {
         if (!cancelled) {
@@ -177,7 +174,6 @@ export function NightPassRegisterPanel({
         const requested = ownerHouseId?.trim();
         if (requested) setResolvedOwnerHouseId(requested);
         else if (json.houseId) setResolvedOwnerHouseId(json.houseId);
-        if (json.houseName) setOwnerHouseName(json.houseName);
         if (json.name?.trim()) setName((prev) => prev.trim() || json.name!.trim());
         if (json.phone?.trim()) setPhone((prev) => prev.trim() || json.phone!.trim());
       } catch {
@@ -345,11 +341,6 @@ export function NightPassRegisterPanel({
       {!ownerRegister && !hasInvite ? (
         <p className="text-base leading-relaxed text-violet-100">{t("nightPass.registerSubtitle")}</p>
       ) : null}
-      {ownerRegister && ownerHouseName ? (
-        <p className="rounded-xl bg-violet-950/50 p-3 text-center text-sm text-violet-100 ring-1 ring-violet-500/25">
-          {ownerHouseName}
-        </p>
-      ) : null}
       {iosTab ? (
         <p className="rounded-xl bg-amber-950/60 p-3 text-sm text-amber-100 ring-1 ring-amber-500/25">
           {t("nightPass.iosSafariHint")}
@@ -357,9 +348,7 @@ export function NightPassRegisterPanel({
       ) : null}
       {hasInvite ? (
         <p className="rounded-xl bg-emerald-950/50 p-3 text-center text-sm text-emerald-100 ring-1 ring-emerald-500/25">
-          {inviteHouseName
-            ? formatMessage(t("nightPass.inviteToHouseNamed"), { name: inviteHouseName })
-            : t("nightPass.inviteToHouse")}
+          {t("nightPass.inviteToHouse")}
         </p>
       ) : ownerRegister ? null : (
         <div className="space-y-1.5">

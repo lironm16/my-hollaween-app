@@ -10,7 +10,6 @@ import {
   ClusterHouseSwipeArea,
   adjacentClusterHouseId,
 } from "@/components/cluster-house-list";
-import { houseHeadline } from "@/lib/labels";
 import type { RouteStatusChangeEntry } from "@/lib/route-changes";
 import type { PublicHouse } from "@/lib/types";
 import { useLocale } from "@/hooks/use-locale";
@@ -71,7 +70,7 @@ export function RouteChangesSheet({
     <HouseEditModal
       open={open}
       onClose={closeSheet}
-      title={listMode ? t("routeChanges.sheetTitle") : houseHeadline(selected!)}
+      title={listMode ? t("routeChanges.sheetTitle") : t("routeChanges.detailTitle")}
       subtitle={
         listMode
           ? changes.length === 1
@@ -98,8 +97,7 @@ export function RouteChangesSheet({
                   onClick={() => openDetail(change.houseId)}
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block font-medium text-orange-100">{change.name}</span>
-                    <span className="mt-0.5 block text-base text-violet-300">{change.reason}</span>
+                    <span className="block font-medium text-orange-100">{change.reason}</span>
                   </span>
                   {viewed ? (
                     <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">

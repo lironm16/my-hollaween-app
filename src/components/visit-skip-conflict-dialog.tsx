@@ -5,9 +5,6 @@ import { HouseEditModal } from "@/components/house-edit-modal";
 import { HelpText } from "@/components/help-text";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/hooks/use-locale";
-import { formatMessage } from "@/lib/i18n/format";
-import { houseHeadline } from "@/lib/labels";
-import { clusterBulkActionSubtitle } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 
 export function VisitSkipConflictDialog({
@@ -15,7 +12,6 @@ export function VisitSkipConflictDialog({
   kind,
   house,
   cluster = false,
-  clusterHouses,
   onConfirm,
   onCancel,
 }: {
@@ -24,7 +20,6 @@ export function VisitSkipConflictDialog({
   house: PublicHouse | null;
   /** Multi-house / school cluster bulk action — generic copy. */
   cluster?: boolean;
-  clusterHouses?: PublicHouse[];
   onConfirm: (dismissFuture: boolean) => void;
   onCancel: () => void;
 }) {
@@ -50,16 +45,11 @@ export function VisitSkipConflictDialog({
       ? t("visitSkipConflict.visitAllBody")
       : t("visitSkipConflict.skipAllBody")
     : markingVisit
-      ? formatMessage(t("visitSkipConflict.visitOneBody"), { name: houseHeadline(house) })
-      : formatMessage(t("visitSkipConflict.skipOneBody"), { name: houseHeadline(house) });
-
-  const subtitle =
-    cluster && clusterHouses && clusterHouses.length > 0
-      ? clusterBulkActionSubtitle(clusterHouses)
-      : houseHeadline(house);
+      ? t("visitSkipConflict.visitOneBody")
+      : t("visitSkipConflict.skipOneBody");
 
   return (
-    <HouseEditModal open={open} onClose={onCancel} title={title} subtitle={subtitle}>
+    <HouseEditModal open={open} onClose={onCancel} title={title}>
       <div className="space-y-4">
         <p className="text-start text-base leading-relaxed text-violet-100 [overflow-wrap:anywhere]">
           <HelpText>{body}</HelpText>

@@ -26,8 +26,6 @@ import { useAddHouseOpen } from "@/hooks/use-add-house-open";
 import { useNightPassDialog } from "@/components/night-pass-dialog-provider";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { useLocale } from "@/hooks/use-locale";
-import { formatMessage } from "@/lib/i18n/format";
-
 export default function AddPage() {
   const router = useRouter();
   const { t, dir } = useLocale();
@@ -106,12 +104,9 @@ export default function AddPage() {
   }
 
   const successSubtitle = done
-    ? formatMessage(
-        nightPass.enabled && done.deviceConnected
-          ? t("add.successSubtitleWithEvent")
-          : t("add.successSubtitle"),
-        { name: done.name },
-      )
+    ? nightPass.enabled && done.deviceConnected
+      ? t("add.successSubtitleWithEvent")
+      : t("add.successSubtitle")
     : "";
 
   return (

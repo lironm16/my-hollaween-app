@@ -6,7 +6,6 @@ import { HouseSkippedBanner } from "@/components/house-skipped-banner";
 import { HouseEditModal } from "@/components/house-edit-modal";
 import { useLocale } from "@/hooks/use-locale";
 import { localizedTemporaryRestoreOptionLabel } from "@/lib/i18n/skip-copy";
-import { houseHeadline } from "@/lib/labels";
 import {
   availableTemporaryRestoreOptions,
   metaRestoreTriggers,
@@ -97,7 +96,6 @@ export function SkipHouseDialog({
       open={open}
       onClose={close}
       title={editing ? t("skipDialog.editTitle") : t("skipDialog.skipTitle")}
-      subtitle={house ? houseHeadline(house) : undefined}
     >
       <div className="space-y-3">
         {editing && existingMeta ? (
