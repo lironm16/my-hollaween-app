@@ -54,14 +54,31 @@ describe("house-anomalies", () => {
     assert.ok(found.some((a) => a.kind === "hours_outside_event"));
   });
 
-  it("flags arrival on 4th floor and above", () => {
+  it("flags high floor only when not accessible", () => {
     const low = house({ arrival: "קומה 2, דירה 5" });
     assert.equal(
       detectHouseAnomalies(low, [low], ctx).some((a) => a.kind === "arrival_high_floor"),
       false,
     );
-    const high = house({ arrival: "קומה 5, דירה 18, מעלית ואז ימינה" });
-    assert.ok(detectHouseAnomalies(high, [high], ctx).some((a) => a.kind === "arrival_high_floor"));
+    const highNotAccessible = house({
+      arrival: "קומה 5, דירה 18, מעלית ואז ימינה",
+      accessible: false,
+    });
+    assert.ok(
+      detectHouseAnomalies(highNotAccessible, [highNotAccessible], ctx).some(
+        (a) => a.kind === "arrival_high_floor",
+      ),
+    );
+    const highAccessible = house({
+      arrival: "קומה 5, דירה 18",
+      accessible: true,
+    });
+    assert.equal(
+      detectHouseAnomalies(highAccessible, [highAccessible], ctx).some(
+        (a) => a.kind === "arrival_high_floor",
+      ),
+      false,
+    );
   });
 
   it("flags name that looks like an address", () => {

@@ -168,11 +168,15 @@ export function detectHouseAnomalies(
     });
   }
 
-  if (!isPoiHouse(house) && isHighFloorArrival(house.arrival ?? "")) {
+  if (
+    !isPoiHouse(house) &&
+    !house.accessible &&
+    isHighFloorArrival(house.arrival ?? "")
+  ) {
     out.push({
       kind: "arrival_high_floor",
       severity: "warning",
-      messageHe: `קומה ${HIGH_FLOOR_ANOMALY_MIN} ומעלה — בדקו הגעה למפה`,
+      messageHe: `קומה ${HIGH_FLOOR_ANOMALY_MIN}+ ולא נגיש — בדקו הגעה למפה`,
       detailHe: house.arrival.trim(),
     });
   }
@@ -399,7 +403,7 @@ export const ANOMALY_KIND_LABELS: Record<HouseAnomalyKind, string> = {
   building_address_mismatch: "כתובות בבניין",
   visit_closed_with_hours: "סגור עם שעות",
   missing_arrival: "חסרה הגעה",
-  arrival_high_floor: "קומה גבוהה (4+)",
+  arrival_high_floor: "קומה 4+ ולא נגיש",
   pin_outside_bounds: "סיכה מחוץ לאזור",
   empty_display_name: "שם ריק",
 };
