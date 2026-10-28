@@ -2,14 +2,20 @@ import {
   readCachedUserTranslation,
   writeCachedUserTranslation,
 } from "@/lib/user-content-translate-cache";
+import type { UserContentTranslatePurpose } from "@/lib/user-content-translate-purpose";
+import { userContentTranslateCacheKey } from "@/lib/user-content-translate-purpose";
 
 const inflight = new Map<string, Promise<string>>();
 
-async function fetchTranslation(source: string, target: string): Promise<string> {
+async function fetchTranslation(
+  source: string,
+  target: string,
+  purpose: UserContentTranslatePurpose,
+): Promise<string> {
   const res = await fetch("/api/user-content/translate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ texts: [source], target }),
+    body: JSON.stringify({ texts: [source], target, purpose }),
   });
   if (!res.ok) return source;
   const data = (await res.json()) as { translations?: string[] };
@@ -21,20 +27,21 @@ async function fetchTranslation(source: string, target: string): Promise<string>
 export async function requestUserContentTranslation(
   source: string,
   target: "en",
+  purpose: UserContentTranslatePurpose = "prose",
 ): Promise<string> {
   const trimmed = source.trim();
   if (!trimmed) return source;
 
-  const cached = readCachedUserTranslation(trimmed, target);
+  const cached = readCachedUserTranslation(trimmed, target, purpose);
   if (cached) return cached;
 
-  const key = `${target}\0${trimmed}`;
+  const key = userContentTranslateCacheKey(trimmed, target, purpose);
   const pending = inflight.get(key);
   if (pending) return pending;
 
-  const work = fetchTranslation(trimmed, target)
+  const work = fetchTranslation(trimmed, target, purpose)
     .then((translated) => {
-      writeCachedUserTranslation(trimmed, target, translated);
+      writeCachedUserTranslation(trimmed, target, translated, purpose);
       return translated;
     })
     .finally(() => {

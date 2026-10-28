@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { transliterateHebrewPersonName } from "@/lib/transliterate-hebrew-person-name";
+import type { UserContentTranslatePurpose } from "@/lib/user-content-translate-purpose";
 
 export const runtime = "nodejs";
 
 type Body = {
   texts?: unknown;
   target?: unknown;
+  purpose?: unknown;
 };
 
 async function googleTranslate(texts: string[], target: string, apiKey: string): Promise<string[]> {
@@ -26,6 +29,10 @@ async function googleTranslate(texts: string[], target: string, apiKey: string):
   return out.map((value, i) => value.trim() || texts[i]!);
 }
 
+function parsePurpose(value: unknown): UserContentTranslatePurpose {
+  return value === "proper_name" ? "proper_name" : "prose";
+}
+
 export async function POST(request: Request) {
   let body: Body;
   try {
@@ -38,9 +45,16 @@ export async function POST(request: Request) {
     ? body.texts.filter((item): item is string => typeof item === "string").slice(0, 32)
     : [];
   const target = body.target === "en" ? "en" : "en";
+  const purpose = parsePurpose(body.purpose);
 
   if (texts.length === 0) {
     return NextResponse.json({ translations: [] });
+  }
+
+  if (purpose === "proper_name") {
+    return NextResponse.json({
+      translations: texts.map((text) => transliterateHebrewPersonName(text)),
+    });
   }
 
   const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY?.trim();

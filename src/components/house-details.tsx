@@ -369,7 +369,7 @@ export function HouseDetails({
   const editorHouse = viewHouse as EditorHouse;
   const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
   const addedByRaw = showPrivateFields ? editorHouse.addedBy?.trim() ?? "" : "";
-  const addedByDisplay = useTranslatedUserText(addedByRaw);
+  const addedByDisplay = useTranslatedUserText(addedByRaw, { purpose: "proper_name" });
   const displayAddress = addressReveal.formatDisplayAddress(viewHouse);
   const arrivalText = addressReveal.visibleArrival(viewHouse);
   const showMaps = addressReveal.mapsAllowed(viewHouse.id) && houseServerDetailReady(viewHouse);

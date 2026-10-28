@@ -1,11 +1,12 @@
-const CACHE_KEY = "hw-user-content-translate-cache-v1";
+import {
+  userContentTranslateCacheKey,
+  type UserContentTranslatePurpose,
+} from "@/lib/user-content-translate-purpose";
+
+const CACHE_KEY = "hw-user-content-translate-cache-v2";
 const MAX_ENTRIES = 400;
 
 type CacheMap = Record<string, string>;
-
-function cacheKey(source: string, target: string) {
-  return `${target}\0${source}`;
-}
 
 function readCache(): CacheMap {
   if (typeof window === "undefined") return {};
@@ -35,13 +36,22 @@ function writeCache(map: CacheMap) {
   }
 }
 
-export function readCachedUserTranslation(source: string, target: string): string | null {
-  const hit = readCache()[cacheKey(source, target)];
+export function readCachedUserTranslation(
+  source: string,
+  target: string,
+  purpose: UserContentTranslatePurpose = "prose",
+): string | null {
+  const hit = readCache()[userContentTranslateCacheKey(source, target, purpose)];
   return typeof hit === "string" ? hit : null;
 }
 
-export function writeCachedUserTranslation(source: string, target: string, translated: string) {
+export function writeCachedUserTranslation(
+  source: string,
+  target: string,
+  translated: string,
+  purpose: UserContentTranslatePurpose = "prose",
+) {
   const map = readCache();
-  map[cacheKey(source, target)] = translated;
+  map[userContentTranslateCacheKey(source, target, purpose)] = translated;
   writeCache(map);
 }
