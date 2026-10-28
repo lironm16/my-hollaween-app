@@ -60,13 +60,7 @@ import {
 } from "@/lib/route-session-progress";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
 import { useCatalog } from "@/hooks/use-catalog";
-import {
-  isClosingSoon,
-  isHouseClosedBeforeOpening,
-  isHoursNightOver,
-  isOnBreak,
-  isOpeningSoon,
-} from "@/lib/hours";
+import { isHouseClosedBeforeOpening, isHoursNightOver, isOnBreak } from "@/lib/hours";
 import type { AddressRevealSchedule } from "@/lib/types";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { effectiveHouseKind } from "@/lib/house-kind";
@@ -90,10 +84,8 @@ import {
   clusterGemRingCacheKey,
   mapPinRingDecorForCluster,
   mapPinRingDecorForHouse,
-  pinHoursRingKind,
   type MapGemPinRingContext,
 } from "@/lib/map-gem-pin-ring";
-import { pinHoursAptDotHtml, pinHoursBadgeHtml } from "@/lib/pin-hours-badge";
 import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
 
 /** Pin hours/opening state refresh — one bucket per minute (not app-wide 15s clock). */
@@ -230,17 +222,6 @@ function pinSkipStatusBadgeHtml(locale: AppLocale) {
   return `<b class="pin-status is-skipped" aria-label="${label}">${SKIP_ICON_SVG}</b>`;
 }
 
-function pinHoursStatusBadgeHtml(
-  kind: "opening" | "closing",
-  locale: AppLocale,
-) {
-  const label =
-    kind === "closing"
-      ? translate(locale, "mapPin.closingSoon")
-      : translate(locale, "mapPin.openingSoon");
-  return pinHoursBadgeHtml(kind, attr(label));
-}
-
 function pinStatusMark(
   house: PublicHouse,
   now: Date,
@@ -248,10 +229,6 @@ function pinStatusMark(
   locale: AppLocale,
   skipped = false,
 ) {
-  const hoursKind = pinHoursRingKind(house, now, addressReveal);
-  if (hoursKind) {
-    return pinHoursStatusBadgeHtml(hoursKind, locale);
-  }
   const parts: string[] = [];
   const visit = pinVisitKind(house, now, addressReveal);
   if (visit === "closed") {
@@ -300,13 +277,6 @@ function clusterAptDotsHtml(
         matchedIds && !matchedIds.has(house.id) ? " is-filtered-out" : "";
       if (skippedIds?.has(house.id)) {
         return `<i class="pin-apt-dot is-skipped${filteredClass}"></i>`;
-      }
-      const hoursKind = pinHoursRingKind(house, now, addressReveal);
-      if (hoursKind) {
-        const dot = pinHoursAptDotHtml(hoursKind);
-        return filteredClass
-          ? dot.replace("pin-apt-dot pin-hours-badge", `pin-apt-dot pin-hours-badge${filteredClass}`)
-          : dot;
       }
       const visit = pinVisitKind(house, now, addressReveal);
       let dotClass = "is-out";
@@ -362,13 +332,9 @@ function housePinHtml(
       ? translate(locale, "mapPin.closed")
       : visit === "break"
         ? translate(locale, "mapPin.onBreak")
-        : isClosingSoon(house, now)
-          ? translate(locale, "mapPin.closingSoon")
-          : isOpeningSoon(house, now)
-            ? translate(locale, "mapPin.openingSoon")
-            : face === "scare"
-              ? translate(locale, "mapPin.decorated")
-              : translate(locale, "mapPin.undecorated");
+        : face === "scare"
+          ? translate(locale, "mapPin.decorated")
+          : translate(locale, "mapPin.undecorated");
   const label = `aria-label="${attr(aria)}"`;
   const poiClass = effectiveHouseKind(house) === "poi" ? " is-poi" : "";
   return `<div class="house-pin${poiClass}${selectedClass}${filteredClass}${hoursClass}${bareClass}${progressClass}${tourRing.classSuffix}${extraClass}"${styleAttr} ${label}${idAttr}>${ringHtml}${pinStatusMark(house, now, gemCtx.addressReveal, locale, houseSkipped)}${pinFaceHtml(house)}</div>`;
@@ -808,8 +774,6 @@ const ClusterMarker = memo(function ClusterMarker({
   const tick = useMapPinTimeBucket();
   const selectedHere = Boolean(selectedId && cluster.houses.some((h) => h.id === selectedId));
   const now = new Date(tick * MAP_PIN_TIME_BUCKET_MS);
-  const closingSoon = cluster.houses.some((house) => isClosingSoon(house, now));
-  const openingSoon = !closingSoon && cluster.houses.some((house) => isOpeningSoon(house, now));
   const visitedKey = useMemo(
     () => cluster.houses.map((house) => (visitedIds.includes(house.id) ? "1" : "0")).join(""),
     [cluster.houses, visitedIds],
@@ -909,17 +873,7 @@ const ClusterMarker = memo(function ClusterMarker({
       position={[cluster.lat, cluster.lng]}
       icon={icon}
       zIndexOffset={
-        selectedHere
-          ? 10000
-          : routeOrder
-            ? 700
-            : closingSoon
-              ? 360
-              : openingSoon
-                ? 320
-                : cluster.houses.length > 1
-                  ? 480
-                  : 0
+        selectedHere ? 10000 : routeOrder ? 700 : cluster.houses.length > 1 ? 480 : 0
       }
       eventHandlers={eventHandlers}
     />

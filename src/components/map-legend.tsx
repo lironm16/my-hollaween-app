@@ -15,7 +15,6 @@ import {
   PIN_SCHOOL_CAMPUS_INK_SRC,
   PIN_SCHOOL_CAMPUS_INK_SRC_2X,
 } from "@/lib/map-pin-school-icon";
-import { PinHoursStatusBadge } from "@/components/pin-hours-status-badge";
 import { SkipIcon } from "@/components/skip-icon";
 import { useLocale } from "@/hooks/use-locale";
 import { useLocalizedLabels } from "@/hooks/use-localized-labels";
@@ -25,7 +24,6 @@ function SwatchPin({
   scare,
   poi,
   candy,
-  hours,
   closed,
   onBreak,
   bare,
@@ -39,7 +37,6 @@ function SwatchPin({
   scare?: "mild" | "medium" | "spicy";
   poi?: boolean;
   candy?: "plenty" | "low" | "out";
-  hours?: "closing" | "opening";
   closed?: boolean;
   onBreak?: boolean;
   bare?: boolean;
@@ -50,7 +47,6 @@ function SwatchPin({
   skipped?: boolean;
   gemRing?: "sparkle" | "diamond";
 }) {
-  const { t } = useLocale();
   const scareLevel = scare ?? "mild";
   const scareSrc = poi ? POI_PIN_FACE_SRC : `/icons/pin-scare-${scareLevel}.png`;
   return (
@@ -61,8 +57,6 @@ function SwatchPin({
         multi && "is-building",
         multi && multiClusterKind && buildingClusterPinClass(multiClusterKind),
         school && "is-school-campus is-school-list-pin",
-        !gemRing && hours === "closing" && "is-closing-soon",
-        !gemRing && hours === "opening" && "is-opening-soon",
         gemRing === "sparkle" && "is-gem-ring-sparkle",
         gemRing === "diamond" && "is-gem-ring-diamond",
         bare && "is-undecorated",
@@ -100,12 +94,6 @@ function SwatchPin({
             </span>
           ) : null}
         </>
-      ) : null}
-      {!gemRing && hours === "closing" ? (
-        <PinHoursStatusBadge kind="closing" label={t("mapLegend.closingSoon")} />
-      ) : null}
-      {!gemRing && hours === "opening" ? (
-        <PinHoursStatusBadge kind="opening" label={t("mapLegend.openingSoon")} />
       ) : null}
       {scare || bare ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -190,8 +178,6 @@ export function MapLegend({ showGemLegend = false }: { showGemLegend?: boolean }
         items: [
           { key: "closed", label: t("visitMarks.closed"), node: <SwatchPin scare="mild" closed /> },
           { key: "break", label: t("visitMarks.pause"), node: <SwatchPin scare="mild" onBreak /> },
-          { key: "close", label: t(`${L}.closingSoon`), node: <SwatchPin scare="mild" hours="closing" /> },
-          { key: "open", label: t(`${L}.openingSoon`), node: <SwatchPin scare="mild" hours="opening" /> },
           { key: "visited", label: t("visitMarks.visited"), node: <SwatchPin scare="mild" visited /> },
           {
             key: "skipped",

@@ -87,11 +87,10 @@ export default function DecorPreviewPage() {
                   <b className="pin-status is-plenty" />
                 </div>
                 <div
-                  className="house-pin is-apt is-closing-soon"
+                  className="house-pin is-apt"
                   style={{ left: 59, bottom: 51, background: "#6d28d9" }}
-                  aria-label="נסגר בקרוב"
+                  aria-label="מעט ממתקים"
                 >
-                  <i className="pin-hours-ring is-closing" aria-hidden />
                   <span>🍬</span>
                   <b className="pin-status is-low" />
                 </div>

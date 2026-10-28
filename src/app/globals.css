@@ -598,13 +598,9 @@
   isolation: isolate;
 }
 
-.pumpkin-pin-icon.is-closing-soon,
-.pumpkin-pin-icon.is-opening-soon,
 .pumpkin-pin-icon.is-gem-ring-sparkle,
 .pumpkin-pin-icon.is-gem-ring-diamond,
 .pumpkin-pin-icon.pumpkin-pin-fan,
-.pumpkin-pin-icon.pumpkin-pin-building.is-closing-soon,
-.pumpkin-pin-icon.pumpkin-pin-building.is-opening-soon,
 .pumpkin-pin-icon.pumpkin-pin-building.is-gem-ring-sparkle,
 .pumpkin-pin-icon.pumpkin-pin-building.is-gem-ring-diamond {
   overflow: visible !important;
@@ -1176,8 +1172,6 @@
 }
 
 /* Pause pin motion while panning/zooming — smoother map gestures with many markers. */
-.is-map-gesture-active .house-pin .pin-hours-ring,
-.is-map-gesture-active .pumpkin-pin .pin-hours-ring,
 .is-map-gesture-active .house-pin .pin-gem-ring.is-sparkle,
 .is-map-gesture-active .pumpkin-pin .pin-gem-ring.is-sparkle,
 .is-map-gesture-active .house-pin .pin-gem-ring.is-diamond,
@@ -1304,192 +1298,9 @@
     0 2px 6px rgba(0, 0, 0, 0.55);
 }
 
-.house-pin .pin-hours-ring,
-.pumpkin-pin .pin-hours-ring {
-  position: absolute;
-  inset: -8px;
-  z-index: 0;
-  display: block;
-  border-radius: 999px;
-  pointer-events: none;
-  animation: pin-hours-fade 4.5s ease-in-out infinite;
-}
-
-.house-pin.house-pin-dot .pin-hours-ring {
-  inset: -5px;
-  border-width: 3px;
-}
-
-.house-pin .pin-hours-ring.is-closing,
-.pumpkin-pin .pin-hours-ring.is-closing {
-  border: 4px solid #f97316;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.28), 0 0 12px rgba(249, 115, 22, 0.4);
-}
-
-.house-pin .pin-hours-ring.is-opening,
-.pumpkin-pin .pin-hours-ring.is-opening {
-  border: 4px solid #22d3ee;
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28), 0 0 12px rgba(34, 211, 238, 0.4);
-}
-
-.house-pin.is-closing-soon .pin-scare,
-.house-pin.is-opening-soon .pin-scare,
-.pumpkin-pin.is-closing-soon .pin-scare,
-.pumpkin-pin.is-opening-soon .pin-scare {
-  position: relative;
-  z-index: 1;
-}
-
-.house-pin.is-closing-soon .pin-cluster-icon,
-.house-pin.is-opening-soon .pin-cluster-icon,
-.pumpkin-pin.is-closing-soon .pin-cluster-icon,
-.pumpkin-pin.is-opening-soon .pin-cluster-icon,
 .house-pin.is-gem-ring-sparkle .pin-cluster-icon,
 .house-pin.is-gem-ring-diamond .pin-cluster-icon {
   z-index: 6;
-}
-
-@keyframes pin-hours-fade {
-  0%, 100% { opacity: 0.38; }
-  50% { opacity: 0.92; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .house-pin .pin-hours-ring,
-  .pumpkin-pin .pin-hours-ring {
-    animation: none;
-    opacity: 0.85;
-  }
-}
-
-/* Hours-soon badges — preview variants only; map uses .pin-status / .pin-apt-dot slots */
-.pin-hours-badge {
-  pointer-events: none;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-}
-
-.pin-hours-badge.is-opening {
-  background: #22d3ee;
-  color: #1c0e24;
-}
-
-.pin-hours-badge.is-closing {
-  background: #f97316;
-  color: #fff7ed;
-}
-
-.pin-hours-badge.variant-top-pill {
-  position: absolute;
-  z-index: 5;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 2px 7px;
-  border-radius: 999px;
-  border: 1.5px solid #fff7ed;
-  font-size: 9px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-}
-
-.pin-hours-badge.variant-ribbon {
-  position: absolute;
-  z-index: 5;
-  bottom: -13px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 1px 6px;
-  border-radius: 5px;
-  border: 1.5px solid #fff7ed;
-  font-size: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-}
-
-.pin-hours-badge.variant-side-dot {
-  position: absolute;
-  z-index: 5;
-  top: 2px;
-  inset-inline-end: -3px;
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  border: 1.5px solid #fff7ed;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-}
-
-.pin-hours-badge.variant-clock {
-  position: absolute;
-  z-index: 5;
-  top: -5px;
-  inset-inline-end: -5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  border: 1.5px solid #fff7ed;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-}
-
-.pin-hours-badge.variant-clock svg {
-  display: block;
-  width: 14px;
-  height: 14px;
-}
-
-.house-pin.house-pin-dot .pin-hours-badge.variant-top-pill {
-  font-size: 7px;
-  padding: 1px 4px;
-  top: -4px;
-}
-
-.house-pin.house-pin-dot .pin-hours-badge.variant-ribbon {
-  font-size: 6px;
-  bottom: -10px;
-}
-
-.house-pin.house-pin-dot .pin-hours-badge.variant-clock {
-  width: 16px;
-  height: 16px;
-  top: -3px;
-  inset-inline-end: -3px;
-}
-
-.house-pin.house-pin-dot .pin-hours-badge.variant-clock svg {
-  width: 10px;
-  height: 10px;
-}
-
-.house-pin.is-hours-badge-frame.is-opening-soon,
-.pumpkin-pin.is-hours-badge-frame.is-opening-soon {
-  box-shadow:
-    0 0 0 3px #22d3ee,
-    0 2px 6px rgba(0, 0, 0, 0.55);
-}
-
-.house-pin.is-hours-badge-frame.is-closing-soon,
-.pumpkin-pin.is-hours-badge-frame.is-closing-soon {
-  box-shadow:
-    0 0 0 3px #f97316,
-    0 2px 6px rgba(0, 0, 0, 0.55);
-}
-
-.house-pin.house-pin-dot.is-hours-badge-frame.is-opening-soon,
-.house-pin.house-pin-dot.is-hours-badge-frame.is-closing-soon {
-  box-shadow:
-    0 0 0 2px currentColor,
-    0 1px 3px rgba(0, 0, 0, 0.45);
-}
-
-.house-pin.house-pin-dot.is-hours-badge-frame.is-opening-soon {
-  color: #22d3ee;
-}
-
-.house-pin.house-pin-dot.is-hours-badge-frame.is-closing-soon {
-  color: #f97316;
 }
 
 .house-pin .pin-gem-ring,
@@ -1643,61 +1454,6 @@
   border-radius: 999px;
   border: 1.5px solid #fff7ed;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-}
-
-.house-pin .pin-status.pin-hours-badge,
-.pumpkin-pin .pin-status.pin-hours-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  background-image: none;
-  padding: 0;
-}
-
-.pin-apt-dot.pin-hours-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
-  background-image: none;
-}
-
-.house-pin .pin-status.pin-hours-badge.is-opening,
-.pin-apt-dot.pin-hours-badge.is-opening {
-  background-color: #22d3ee;
-  color: #1c0e24;
-}
-
-.house-pin .pin-status.pin-hours-badge.is-closing,
-.pin-apt-dot.pin-hours-badge.is-closing {
-  background-color: #f97316;
-  color: #fff7ed;
-}
-
-.house-pin .pin-status.pin-hours-badge .pin-hours-badge-clock,
-.house-pin .pin-status.pin-hours-badge svg,
-.pin-apt-dot.pin-hours-badge svg {
-  display: block;
-  width: 86%;
-  height: 86%;
-  flex-shrink: 0;
-}
-
-.house-pin.house-pin-dot .pin-status.pin-hours-badge {
-  width: 14px;
-  height: 14px;
-}
-
-.house-pin.house-pin-dot .pin-status.pin-hours-badge svg {
-  width: 86%;
-  height: 86%;
 }
 
 .house-pin .pin-status.is-plenty,

@@ -130,14 +130,8 @@ export default function HoursPreviewPage() {
             חזרה למפה
           </Link>
           <p className="text-base text-violet-200">
-            רעיונות ל<strong className="font-medium text-orange-100">תגים</strong> במקום טבעות מהבהבות על הסיכה:{" "}
-            <Link
-              href="/preview/hours-badges"
-              className="text-orange-300 underline-offset-2 hover:underline"
-            >
-              /preview/hours-badges
-            </Link>
-            .
+            על המפה אין סימון ל<strong className="font-medium text-orange-100">נפתח/נסגר בקרוב</strong> — רק
+            הטקסט בכרטיס הבית (באנר למטה).
           </p>
         </header>
 
@@ -169,19 +163,9 @@ export default function HoursPreviewPage() {
                       </p>
                     ) : null}
                     {item.id === "closing-1" ? (
-                      <div className="mt-3 flex items-center gap-3">
-                        <div
-                          className="house-pin is-closing-soon relative"
-                          style={{ background: "#6d28d9" }}
-                          aria-label="נסגר בקרוב"
-                        >
-                          <i className="pin-hours-ring is-closing" aria-hidden />
-                          <span>🎃</span>
-                        </div>
-                        <p className="text-base text-orange-200">
-                          על המפה: עיגול כתום שנמוג לאט סביב הסיכה בחצי השעה האחרונה. בכרטיס: ״נסגר בקרוב ב־…״ בלי אייקון.
-                        </p>
-                      </div>
+                      <p className="mt-3 text-base text-orange-200">
+                        על המפה: אין סימון מיוחד — רק באנר ״נסגר בקרוב ב־…״ בכרטיס.
+                      </p>
                     ) : null}
                     {item.id === "after" ? (
                       <div className="mt-3 flex items-center gap-3">
@@ -199,19 +183,9 @@ export default function HoursPreviewPage() {
                       </div>
                     ) : null}
                     {item.id === "opens-soon-1" || item.id === "opens-soon-2" ? (
-                      <div className="mt-3 flex items-center gap-3">
-                        <div
-                          className="house-pin is-opening-soon relative"
-                          style={{ background: "#6d28d9" }}
-                          aria-label="נפתח בקרוב"
-                        >
-                          <i className="pin-hours-ring is-opening" aria-hidden />
-                          <span>🎃</span>
-                        </div>
-                        <p className="text-base text-cyan-100">
-                          על המפה: עיגול טורקיז שנמוג לאט סביב הסיכה בחצי השעה שלפני הפתיחה. בכרטיס: ״נפתח בקרוב ב־…״ בלי אייקון.
-                        </p>
-                      </div>
+                      <p className="mt-3 text-base text-cyan-100">
+                        על המפה: אין סימון מיוחד — רק באנר ״נפתח בקרוב ב־…״ בכרטיס.
+                      </p>
                     ) : null}
                   </div>
                 </div>
