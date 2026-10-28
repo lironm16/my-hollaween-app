@@ -470,7 +470,7 @@ export const enMessages: AppMessages = {
   },
   cheer: {
     liked: "Liked",
-    visited: "Great job",
+    visited: "You visited",
   },
   routeComplete: {
     title: "You finished the route",
@@ -898,7 +898,7 @@ export const enMessages: AppMessages = {
   },
   nightPassDialog: {
     deviceConnected: "Device connected",
-    eventConnect: "Connect to event",
+    eventConnect: "Connect",
     removedFromEvent: "House removed from the event — cannot register from this invite.",
     checkFailed: "Could not verify the invite. Try again.",
   },
@@ -935,6 +935,18 @@ export const enMessages: AppMessages = {
     errNoHouseOnDevice: "No editable house found on this device.",
     errLoadPrefill: "Could not load details. Try again.",
     errRegisterFailed: "Registration failed. Try again.",
+    errDeviceAlreadyRegistered: "This device is already registered.",
+    errRegisterFull:
+      "Four devices are already connected. The homeowner must remove a device to free a slot.",
+    errRegisterDuplicateIdentity:
+      "Another device is already registered with these details. Use a different name or phone.",
+    errRegisterCodeReset:
+      "The entry code was reset. Ask the homeowner for the new code or invite link.",
+    errRegisterInvalid:
+      "Invalid entry code. If it was reset recently, ask the homeowner for a new code or invite link.",
+    errRegisterName: "Enter a name (2–40 characters).",
+    errRegisterPhone: "Enter an Israeli mobile number, e.g. 050-1234567.",
+    errRegisterRate: "Too many attempts. Try again in a few minutes.",
     errNoServer: "No server connection. Try again when online.",
     deviceUpdated: "Device updated",
     bannerDismissAria: "Dismiss message",
@@ -948,7 +960,7 @@ export const enMessages: AppMessages = {
     lostDescRemoved: "Ask the homeowner for a new invite to connect again.",
     lostDescReset: "Ask the homeowner for an updated code.",
     stripNotConnected: "Device not connected",
-    stripConnect: "Connect to event",
+    stripConnect: "Connect",
     stripConnected: "Device connected",
     stripActive: "Active",
     stripRegisteredFallback: "Registered",

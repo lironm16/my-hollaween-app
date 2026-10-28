@@ -10,7 +10,6 @@ import {
   formatEditCodeDisplay,
   LEGACY_ALPHABET_ACCESS_CODE_LENGTH,
 } from "@/lib/house-access-code";
-import { houseHeadline } from "@/lib/labels";
 import { useLocale } from "@/hooks/use-locale";
 import { formatMessage } from "@/lib/i18n/format";
 import type { PublicHouse } from "@/lib/types";
@@ -48,7 +47,6 @@ export function EditCodeDialog({
       open={open}
       onClose={onClose}
       title={t("editCodeDialog.title")}
-      subtitle={houseHeadline(house)}
     >
       <div className="space-y-4">
         {!showDevices && showCode ? (
