@@ -18,8 +18,12 @@ const args = new Set(process.argv.slice(2));
 const checkOnly = args.has("--check");
 const fetchMissing = args.has("--fetch");
 
-const { collectEventStreetRoads } = await import("../src/lib/i18n/collect-event-street-roads.ts");
+const { collectEventStreetRoads, collectEventStreetRoadsFromFirestore } = await import(
+  "../src/lib/i18n/collect-event-street-roads.ts"
+);
 const { hasEnglishStreetMapping } = await import("../src/lib/i18n/event-street-labels.ts");
+
+const fromFirestore = args.has("--from-firestore");
 
 const USER_AGENT = "HalloweenNeighborhood/1.0 (street-label sync)";
 const MIN_GAP_MS = 1100;
@@ -83,7 +87,20 @@ function sortLabels(obj) {
 }
 
 const labels = JSON.parse(readFileSync(labelsPath, "utf8"));
-const roads = collectEventStreetRoads();
+let roads = collectEventStreetRoads();
+if (fromFirestore) {
+  try {
+    const firestoreRoads = await collectEventStreetRoadsFromFirestore();
+    if (firestoreRoads.length) {
+      roads = [...new Set([...roads, ...firestoreRoads])].sort((a, b) => a.localeCompare(b, "he"));
+      console.log(`Firestore: ${firestoreRoads.length} distinct roads (${roads.length} total scanned).`);
+    } else {
+      console.warn("Firestore: no houses — check FIREBASE_* env.");
+    }
+  } catch (error) {
+    console.warn("Firestore scan skipped:", error instanceof Error ? error.message : error);
+  }
+}
 const missing = roads.filter((road) => !hasEnglishStreetMapping(road));
 
 if (missing.length === 0) {
@@ -123,7 +140,7 @@ if (added === 0) {
 writeFileSync(labelsPath, `${JSON.stringify(sortLabels(labels), null, 2)}\n`, "utf8");
 console.log(`Wrote ${added} label(s) to data/event-street-labels.json`);
 
-const stillMissing = collectEventStreetRoads().filter((road) => !hasEnglishStreetMapping(road));
+const stillMissing = roads.filter((road) => !hasEnglishStreetMapping(road));
 if (stillMissing.length) {
   console.warn(`Still unmapped (${stillMissing.length}):`, stillMissing.join(", "));
   process.exit(1);

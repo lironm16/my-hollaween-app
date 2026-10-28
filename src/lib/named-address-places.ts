@@ -48,7 +48,14 @@ export function namedPlaceForCampusAddress(
 ): NamedAddressPlace | null {
   const street = streetFromLegacyAddress(address?.trim() ?? "");
   if (!street) return null;
-  return NAMED_ADDRESS_PLACES.find((place) => place.displayName === street) ?? null;
+  const exact = NAMED_ADDRESS_PLACES.find((place) => place.displayName === street);
+  if (exact) return exact;
+  const normalizedStreet = normalizePlaceQuery(street);
+  return (
+    NAMED_ADDRESS_PLACES.find((place) =>
+      placeSearchKeys(place).some((key) => key === normalizedStreet),
+    ) ?? null
+  );
 }
 
 export function schoolCampusNeighborhoodForAddress(

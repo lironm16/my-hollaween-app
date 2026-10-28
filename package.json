@@ -1,6 +1,6 @@
 {
   "name": "halloween-neighborhood",
-  "version": "5.7.2",
+  "version": "5.7.3",
   "private": true,
   "scripts": {
     "dev": "node scripts/allow-preview-origin.mjs && node scripts/build-css.mjs && next dev --webpack --hostname 0.0.0.0 --port 43127",
@@ -42,7 +42,9 @@
     "event-hood-rings": "node scripts/build-event-hood-rings.mjs",
     "deploy:vercel": "node scripts/trigger-vercel.mjs",
     "street-labels:sync": "node --import tsx scripts/sync-event-street-labels.mjs --fetch",
+    "street-labels:sync:firestore": "node --import tsx scripts/sync-event-street-labels.mjs --fetch --from-firestore",
     "street-labels:check": "node --import tsx scripts/sync-event-street-labels.mjs --check",
+    "street-labels:check:firestore": "node --import tsx scripts/sync-event-street-labels.mjs --check --from-firestore",
     "deploy:production": "node scripts/sync-github-deploy.mjs",
     "deploy:preview": "DEPLOY_TARGET=preview node scripts/sync-github-deploy.mjs"
   },

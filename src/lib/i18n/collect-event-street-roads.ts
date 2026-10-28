@@ -30,8 +30,18 @@ function roadFromAddress(address: string): string | null {
   return r || null;
 }
 
+function addRoadsFromHouses(roads: Set<string>, houses: readonly { address?: string }[]) {
+  for (const house of houses) {
+    const road = roadFromAddress(house.address ?? "");
+    if (road) roads.add(road);
+  }
+}
+
 /** Every distinct Hebrew road name used in catalogs, seeds, and OSM footprint keys. */
-export function collectEventStreetRoads(extraCatalogPaths: string[] = []): string[] {
+export function collectEventStreetRoads(
+  extraCatalogPaths: string[] = [],
+  extraHouses: readonly { address?: string }[] = [],
+): string[] {
   const roads = new Set<string>();
   const catalogFiles = [
     "data/seed.json",
@@ -40,13 +50,19 @@ export function collectEventStreetRoads(extraCatalogPaths: string[] = []): strin
     ...extraCatalogPaths,
   ];
   for (const file of catalogFiles) {
-    for (const house of readJsonHouses(file)) {
-      const road = roadFromAddress(house.address ?? "");
-      if (road) roads.add(road);
-    }
+    addRoadsFromHouses(roads, readJsonHouses(file));
   }
+  addRoadsFromHouses(roads, extraHouses);
   for (const road of roadsFromFootprints()) {
     roads.add(road);
   }
   return [...roads].sort((a, b) => a.localeCompare(b, "he"));
+}
+
+/** All home street roads in Firestore (requires Firebase env). */
+export async function collectEventStreetRoadsFromFirestore(): Promise<string[]> {
+  const { readFirestoreCatalog } = await import("@/lib/firestore-db");
+  const remote = await readFirestoreCatalog();
+  if (!remote?.houses?.length) return [];
+  return collectEventStreetRoads([], remote.houses);
 }
