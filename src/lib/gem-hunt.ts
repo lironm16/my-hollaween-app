@@ -82,6 +82,8 @@ export function gemHuntGemStayVisible(
 export const GEM_STILL_SECONDS = 0;
 /** Compass cone — gem may appear when facing within this many degrees of the house. */
 export const GEM_FACING_TOLERANCE_DEG = 60;
+/** Walk nav copy + needle — “ישר” only when nearly aligned (not the wide gem-reveal cone). */
+export const GEM_WALK_STRAIGHT_TOLERANCE_DEG = 22;
 /** Guaranteed gem reveal after this many seconds of panning in range. */
 export const GEM_SCAN_REVEAL_SECONDS = 5;
 /** **גלה לי** center view — inspect360 framing leaves wide orbit margins, so zoom in (iOS + Android DOM overlay). */
@@ -640,6 +642,29 @@ export function relativeWalkBearingDeg(
 /** @deprecated Identity — arrow and walk copy use {@link relativeWalkBearingDeg} directly. */
 export function navTurnBearingForUi(turnBearingDeg: number) {
   return turnBearingDeg;
+}
+
+/** True when walk nav should say “continue straight” and snap the needle upright. */
+export function walkNavFacingStraight(
+  turnBearingDeg: number | null,
+  toleranceDeg = GEM_WALK_STRAIGHT_TOLERANCE_DEG,
+) {
+  return turnBearingDeg != null && Math.abs(turnBearingDeg) <= toleranceDeg;
+}
+
+/** On-screen walk needle: 0° = ahead; snaps up when {@link walkNavFacingStraight}. */
+export function walkNavNeedleDeg(
+  turnBearingDeg: number | null,
+  options?: { mapNorthFallbackDeg?: number | null; phoneRelative?: boolean },
+) {
+  const phoneRelative = options?.phoneRelative !== false;
+  if (phoneRelative) {
+    if (turnBearingDeg == null) return null;
+    if (walkNavFacingStraight(turnBearingDeg)) return 0;
+    return turnBearingDeg;
+  }
+  const mapNorth = options?.mapNorthFallbackDeg;
+  return mapNorth != null && Number.isFinite(mapNorth) ? mapNorth : null;
 }
 
 export type GemAchievement = {

@@ -12,12 +12,12 @@ function t(locale: AppLocale, key: string) {
 export function gemWalkGuideCopy(
   locale: AppLocale,
   huntArrowPhoneRelative: boolean,
-  facingTarget: boolean,
+  walkFacingStraight: boolean,
   turnBearing: number | null,
   gpsBearingToAnchor: number | null,
 ) {
   if (huntArrowPhoneRelative && turnBearing != null) {
-    if (facingTarget) return t(locale, "walkStraight");
+    if (walkFacingStraight) return t(locale, "walkStraight");
     if (Math.abs(turnBearing) >= GEM_BEHIND_TURN_DEG) {
       return t(locale, "walkBehind");
     }

@@ -36,6 +36,8 @@ import {
   GEM_WEBXR_FLOAT_HEIGHT_M,
   GEM_WEBXR_HUNT_METERS,
   relativeWalkBearingDeg,
+  walkNavFacingStraight,
+  walkNavNeedleDeg,
   type GemCampusQueueUi,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
@@ -563,18 +565,20 @@ export function GemHuntWebXrAr({
   const walkNavTarget = gemWalkNavTarget(house);
   const turnBearing =
     liveLoc != null ? relativeWalkBearingDeg(liveLoc, walkNavTarget, heading) : null;
-  const facingTarget =
-    turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
+  const walkFacingStraight = walkNavFacingStraight(turnBearing);
   const gpsBearingToNav =
     liveLoc != null ? bearingDegrees(liveLoc, walkNavTarget) : null;
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const navTurnBearing = turnBearing;
-  const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToNav;
+  const huntArrowDeg = walkNavNeedleDeg(navTurnBearing, {
+    phoneRelative: huntArrowPhoneRelative,
+    mapNorthFallbackDeg: gpsBearingToNav,
+  });
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToNav != null;
   const walkGuideCopy = gemWalkGuideCopy(
     locale,
     huntArrowPhoneRelative,
-    facingTarget,
+    walkFacingStraight,
     navTurnBearing,
     gpsBearingToNav,
   );
@@ -1449,7 +1453,7 @@ export function GemHuntWebXrAr({
             ) : (
               <GemHuntOrientationArrow
                 bearingDeg={huntArrowDeg!}
-                facing={facingTarget}
+                facing={walkFacingStraight}
                 mapNorth={false}
               />
             )}

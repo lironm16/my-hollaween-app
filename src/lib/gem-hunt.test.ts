@@ -8,6 +8,8 @@ import {
   bearingDegrees,
   facingHouse,
   relativeWalkBearingDeg,
+  walkNavFacingStraight,
+  walkNavNeedleDeg,
   navTurnBearingForUi,
   gemAnchorForHouse,
   gemProximity,
@@ -231,6 +233,14 @@ describe("gem hunt geo", () => {
     const target = bearingDegrees(user, house);
     assert.equal(relativeWalkBearingDeg(user, house, target), 0);
     assert.ok(Math.abs(relativeWalkBearingDeg(user, house, target + 90) ?? 0) > 80);
+  });
+
+  it("walk nav straight uses tight tolerance and snaps needle upright", () => {
+    assert.equal(walkNavFacingStraight(0), true);
+    assert.equal(walkNavFacingStraight(20), true);
+    assert.equal(walkNavFacingStraight(40), false);
+    assert.equal(walkNavNeedleDeg(35), 35);
+    assert.equal(walkNavNeedleDeg(18), 0);
   });
 
   it("normalizes heading delta across north", () => {

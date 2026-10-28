@@ -40,6 +40,8 @@ import {
   gemWorldPinApproachVisible,
   gemWorldPinVisible,
   relativeWalkBearingDeg,
+  walkNavFacingStraight,
+  walkNavNeedleDeg,
   type GemMonsterId,
   type GemCollectFinishOptions,
 } from "@/lib/gem-hunt";
@@ -643,8 +645,7 @@ export function GemHuntOverlay({
   const walkNavTarget = gemWalkNavTarget(house);
   const turnBearing =
     liveLoc != null ? relativeWalkBearingDeg(liveLoc, walkNavTarget, heading) : null;
-  const facingTarget =
-    turnBearing != null && Math.abs(turnBearing) <= GEM_FACING_TOLERANCE_DEG;
+  const walkFacingStraight = walkNavFacingStraight(turnBearing);
   /** Real hunt: compass-pinned gem when not in **גלה לי** center mode. */
   const arPinGuideMode = gemVisible && !centerReveal;
   const pinCollectReady =
@@ -692,7 +693,10 @@ export function GemHuntOverlay({
   /** Glowing Navigation arrow — phone-relative when compass works, else map-north bearing. */
   const huntArrowPhoneRelative = heading != null && turnBearing != null;
   const navTurnBearing = turnBearing;
-  const huntArrowDeg = huntArrowPhoneRelative ? navTurnBearing : gpsBearingToNav;
+  const huntArrowDeg = walkNavNeedleDeg(navTurnBearing, {
+    phoneRelative: huntArrowPhoneRelative,
+    mapNorthFallbackDeg: gpsBearingToNav,
+  });
   const huntArrowMapNorth = !huntArrowPhoneRelative && gpsBearingToNav != null;
   const mapsWalkUrl =
     liveLoc != null && !sim
@@ -701,7 +705,7 @@ export function GemHuntOverlay({
   const walkGuideCopy = gemWalkGuideCopy(
     locale,
     huntArrowPhoneRelative,
-    facingTarget,
+    walkFacingStraight,
     navTurnBearing,
     gpsBearingToNav,
   );
@@ -985,7 +989,7 @@ export function GemHuntOverlay({
             ) : (
               <GemHuntOrientationArrow
                 bearingDeg={huntArrowDeg!}
-                facing={facingTarget}
+                facing={walkFacingStraight}
                 mapNorth={false}
               />
             )}
