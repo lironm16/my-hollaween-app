@@ -28,6 +28,7 @@ describe("event settings", () => {
     assert.equal(countdownBannerFromDb(undefined), true);
     assert.equal(countdownBannerFromDb({}), true);
     assert.equal(countdownBannerFromDb({ countdownBanner: false }), false);
+    assert.equal(countdownBannerFromDb({ countdownBanner: true }), true);
     assert.equal(countdownBannerFromCatalog({ countdownBanner: false }), false);
     assert.equal(countdownBannerFromCatalog(undefined), true);
   });
