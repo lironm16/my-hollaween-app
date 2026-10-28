@@ -21,7 +21,15 @@ const fetchMissing = args.has("--fetch");
 const { collectEventStreetRoads, collectEventStreetRoadsFromFirestore } = await import(
   "../src/lib/i18n/collect-event-street-roads.ts"
 );
-const { hasEnglishStreetMapping } = await import("../src/lib/i18n/event-street-labels.ts");
+const { hasEnglishStreetMapping, streetLookupKeys } = await import(
+  "../src/lib/i18n/event-street-labels.ts"
+);
+
+function hasMappingInLabelMap(road, labelMap) {
+  const trimmed = road.trim();
+  if (!trimmed) return true;
+  return streetLookupKeys(trimmed).some((key) => labelMap[key] != null);
+}
 
 const fromFirestore = args.has("--from-firestore");
 
@@ -140,7 +148,7 @@ if (added === 0) {
 writeFileSync(labelsPath, `${JSON.stringify(sortLabels(labels), null, 2)}\n`, "utf8");
 console.log(`Wrote ${added} label(s) to data/event-street-labels.json`);
 
-const stillMissing = roads.filter((road) => !hasEnglishStreetMapping(road));
+const stillMissing = roads.filter((road) => !hasMappingInLabelMap(road, labels));
 if (stillMissing.length) {
   console.warn(`Still unmapped (${stillMissing.length}):`, stillMissing.join(", "));
   process.exit(1);
