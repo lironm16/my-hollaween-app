@@ -171,11 +171,8 @@ export async function saveAdminCountdownBannerSettings(
   await runSyncedWrite((db) => {
     const prev = db.eventSettings ?? {};
     const next = { ...prev, updatedAt: new Date().toISOString() };
-    if (enabled) {
-      delete next.countdownBanner;
-    } else {
-      next.countdownBanner = false;
-    }
+    // Must write explicit `true` — Firestore merge keeps a stale `false` if the field is omitted.
+    next.countdownBanner = enabled;
     db.eventSettings = next;
     db.updatedAt = new Date().toISOString();
   });
