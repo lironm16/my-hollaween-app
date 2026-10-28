@@ -15,7 +15,7 @@ export const helpMessagesEn: AppMessages["help"] = {
     gemPlaceAction: "Imp location",
     gemPlaceHint: "Place the imp outdoors — in a public spot everyone can reach, not inside a building.",
     gemPlaceSave: "Save location",
-    gemFoundCheer: "You found an imp!",
+    gemFoundCheer: "You found an imp",
     gemFoundI: "Found",
     gemNotFoundI: "Not found yet",
   },

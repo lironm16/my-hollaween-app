@@ -119,7 +119,7 @@ export function LanguageSettings() {
   return (
     <div dir={dir} className="space-y-3">
       <SettingsSection title={t("settings.languageSection")}>
-        <SettingsSubsection title={t("settings.interfaceSection")} hint={t("settings.languageHint")}>
+        <SettingsSubsection title={t("settings.interfaceSection")}>
           {APP_LOCALES.map((code) => (
             <LanguageOption
               key={code}
@@ -131,23 +131,12 @@ export function LanguageSettings() {
             />
           ))}
         </SettingsSubsection>
-        <SettingsSubsection title={t("settings.contentSection")} hint={t("settings.contentHint")}>
-          {locale === "en" ? (
-            <>
-              <SettingSwitch
-                title={t("settings.contentTranslateOn")}
-                on={translateUserContent}
-                onChange={setTranslateUserContent}
-              />
-              <p className="px-1 text-sm leading-snug text-violet-300/70">
-                {t("settings.contentTranslateHint")}
-              </p>
-            </>
-          ) : (
-            <p className="rounded-xl bg-[#12081a] px-3 py-3 text-sm leading-snug text-violet-200/85 ring-1 ring-orange-500/15">
-              {t("settings.contentTranslateRequiresEnglish")}
-            </p>
-          )}
+        <SettingsSubsection title={t("settings.contentSection")}>
+          <SettingSwitch
+            title={t("settings.contentTranslateOn")}
+            on={translateUserContent}
+            onChange={setTranslateUserContent}
+          />
         </SettingsSubsection>
       </SettingsSection>
     </div>

@@ -6,17 +6,14 @@ export const heMessages = {
     title: "הגדרות",
     languageSection: "שפה",
     interfaceSection: "ממשק",
-    languageHint:
-      "כפתורים, תפריטים והודעות. שמות השכונות הרשמיות (שיכון ותיקים, חרוזים…) — תרגום קבוע, לא Google.",
+    languageHint: "",
     languageEnglish: "English",
     languageHebrew: "עברית",
     contentSection: "תוכן משתמשים",
-    contentHint:
-      "טקסט ששכנים הזינו: שם בית, תיאור, הערות. שמות השכונות על המפה נשארים כמו בממשק.",
+    contentHint: "",
     contentTranslateOn: "תרגום לאנגלית",
-    contentTranslateHint:
-      "תרגום מכונה כשאפשר. בלי מפתח תרגום בשרת — יוצג המקור בעברית.",
-    contentTranslateRequiresEnglish: "בחרו English תחת ממשק כדי להפעיל תרגום.",
+    contentTranslateHint: "",
+    contentTranslateRequiresEnglish: "",
     notificationsSection: "התראות",
     notificationsIntro:
       "סוגי ההתראות שיישלחו למכשיר. הפעלה/כיבוי מלא דרך סמל הפעמון בראש המסך.",
@@ -471,11 +468,11 @@ export const heMessages = {
     addedByWhoWhen: "נוסף על ידי {who} · {when}",
   },
   cheer: {
-    liked: "אהבתם!",
-    visited: "כל הכבוד!",
+    liked: "אהבתם",
+    visited: "כל הכבוד",
   },
   routeComplete: {
-    title: "סיימתם את המסלול!",
+    title: "סיימתם את המסלול",
     sub: "כל העצירות בוצעו",
   },
   hoursMark: {

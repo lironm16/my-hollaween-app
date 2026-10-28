@@ -6,11 +6,11 @@ import { requestUserContentTranslation } from "@/lib/user-content-translate-clie
 
 /** Community-submitted string, optionally machine-translated when settings allow. */
 export function useTranslatedUserText(source: string): string {
-  const { locale, translateUserContent } = useLocale();
+  const { translateUserContent } = useLocale();
   const [display, setDisplay] = useState(source);
 
   useEffect(() => {
-    if (!translateUserContent || locale !== "en") {
+    if (!translateUserContent) {
       setDisplay(source);
       return;
     }
@@ -27,7 +27,7 @@ export function useTranslatedUserText(source: string): string {
     return () => {
       cancelled = true;
     };
-  }, [source, translateUserContent, locale]);
+  }, [source, translateUserContent]);
 
   return display;
 }

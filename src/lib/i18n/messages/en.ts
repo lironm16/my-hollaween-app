@@ -7,17 +7,14 @@ export const enMessages: AppMessages = {
     title: "Settings",
     languageSection: "Language",
     interfaceSection: "Interface",
-    languageHint:
-      "Buttons, menus, and app messages. Official hood names (Shikun Vatikim, Charuzim…) use fixed translations — not machine translation.",
+    languageHint: "",
     languageEnglish: "English",
     languageHebrew: "עברית",
     contentSection: "User content",
-    contentHint:
-      "Text neighbors typed in: house names, descriptions, notes. Hood names stay as fixed labels on the map.",
+    contentHint: "",
     contentTranslateOn: "Translate to English",
-    contentTranslateHint:
-      "Uses machine translation when available. If the server has no translation key, Hebrew text stays as written.",
-    contentTranslateRequiresEnglish: "Choose English under Interface to enable translation.",
+    contentTranslateHint: "",
+    contentTranslateRequiresEnglish: "",
     notificationsSection: "Notifications",
     notificationsIntro:
       "Which alerts this device receives. Turn all notifications on or off with the bell in the header.",
@@ -472,11 +469,11 @@ export const enMessages: AppMessages = {
     addedByWhoWhen: "Added by {who} · {when}",
   },
   cheer: {
-    liked: "Liked!",
-    visited: "Great job!",
+    liked: "Liked",
+    visited: "Great job",
   },
   routeComplete: {
-    title: "You finished the route!",
+    title: "You finished the route",
     sub: "Every stop is done",
   },
   hoursMark: {
