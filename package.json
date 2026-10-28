@@ -41,6 +41,8 @@
     "gov-neighborhoods:index": "node scripts/build-gov-neighborhood-index.mjs",
     "event-hood-rings": "node scripts/build-event-hood-rings.mjs",
     "deploy:vercel": "node scripts/trigger-vercel.mjs",
+    "street-labels:sync": "node --import tsx scripts/sync-event-street-labels.mjs --fetch",
+    "street-labels:check": "node --import tsx scripts/sync-event-street-labels.mjs --check",
     "deploy:production": "node scripts/sync-github-deploy.mjs",
     "deploy:preview": "DEPLOY_TARGET=preview node scripts/sync-github-deploy.mjs"
   },

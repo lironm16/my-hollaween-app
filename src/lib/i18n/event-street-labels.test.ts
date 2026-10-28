@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { localizedStreetLine, localizedStreetName } from "@/lib/i18n/event-street-labels";
+import { collectEventStreetRoads } from "@/lib/i18n/collect-event-street-roads";
+import {
+  hasEnglishStreetMapping,
+  localizedStreetLine,
+  localizedStreetName,
+} from "@/lib/i18n/event-street-labels";
 
 describe("localizedStreetLine", () => {
   it("maps Hebrew street + number to English when locale is en", () => {
@@ -16,5 +21,14 @@ describe("localizedStreetLine", () => {
     assert.equal(localizedStreetLine("en", "שדרות השושנים 8"), "Sderot HaShoshanim 8");
     assert.equal(localizedStreetName("en", "השקדיה"), "HaShkediya St");
     assert.equal(localizedStreetName("en", "זבוטינסקי"), "Jabotinsky St");
+  });
+
+  it("maps every road in repo catalogs and OSM footprints", () => {
+    const unmapped = collectEventStreetRoads().filter((road) => !hasEnglishStreetMapping(road));
+    assert.deepEqual(
+      unmapped,
+      [],
+      `Add entries to data/event-street-labels.json (or run npm run street-labels:sync): ${unmapped.join(", ")}`,
+    );
   });
 });
