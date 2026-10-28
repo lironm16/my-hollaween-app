@@ -231,6 +231,7 @@ export const HOUSE_ANOMALY_KINDS = [
   "building_address_mismatch",
   "visit_closed_with_hours",
   "missing_arrival",
+  "arrival_high_floor",
   "pin_outside_bounds",
   "empty_display_name",
 ] as const;

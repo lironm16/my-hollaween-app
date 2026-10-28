@@ -1,4 +1,5 @@
 import { parseStreetAndNumber } from "@/lib/address-text";
+import { HIGH_FLOOR_ANOMALY_MIN, isHighFloorArrival } from "@/lib/arrival-floor";
 import { inNeighborhood } from "@/lib/config";
 import { eventOpenHoursScheduleFromDb } from "@/lib/event-settings";
 import { clusterAddressKey, clusterAddressKeyForHouse, clusterMembersForHouse } from "@/lib/house-clusters";
@@ -164,6 +165,15 @@ export function detectHouseAnomalies(
       severity: "info",
       messageHe: "שם הבית נראה כמו כתובת",
       detailHe: house.name.trim(),
+    });
+  }
+
+  if (!isPoiHouse(house) && isHighFloorArrival(house.arrival ?? "")) {
+    out.push({
+      kind: "arrival_high_floor",
+      severity: "warning",
+      messageHe: `קומה ${HIGH_FLOOR_ANOMALY_MIN} ומעלה — בדקו הגעה למפה`,
+      detailHe: house.arrival.trim(),
     });
   }
 
@@ -389,6 +399,7 @@ export const ANOMALY_KIND_LABELS: Record<HouseAnomalyKind, string> = {
   building_address_mismatch: "כתובות בבניין",
   visit_closed_with_hours: "סגור עם שעות",
   missing_arrival: "חסרה הגעה",
+  arrival_high_floor: "קומה גבוהה (4+)",
   pin_outside_bounds: "סיכה מחוץ לאזור",
   empty_display_name: "שם ריק",
 };
