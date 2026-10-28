@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { localizedStreetLine } from "@/lib/i18n/event-street-labels";
+import { localizedStreetLine, localizedStreetName } from "@/lib/i18n/event-street-labels";
 
 describe("localizedStreetLine", () => {
   it("maps Hebrew street + number to English when locale is en", () => {
@@ -10,5 +10,11 @@ describe("localizedStreetLine", () => {
 
   it("keeps Hebrew when locale is he", () => {
     assert.equal(localizedStreetLine("he", "יהודית 15"), "יהודית 15");
+  });
+
+  it("maps Shoshanim and OSM footprint variants", () => {
+    assert.equal(localizedStreetLine("en", "שדרות השושנים 8"), "Sderot HaShoshanim 8");
+    assert.equal(localizedStreetName("en", "השקדיה"), "HaShkediya St");
+    assert.equal(localizedStreetName("en", "זבוטינסקי"), "Jabotinsky St");
   });
 });
