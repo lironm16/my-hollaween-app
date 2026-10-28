@@ -559,6 +559,21 @@ function eventSettingsChanged(
   return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
 }
 
+/** Firestore `set(..., { merge: true })` keeps omitted keys — delete when defaults are restored. */
+export function firestoreEventSettingsFieldDeletes(
+  prev: DbFile["eventSettings"] | undefined,
+  payload: DbFile["eventSettings"],
+): Array<"gemHuntPublic" | "countdownBanner"> {
+  const deletes: Array<"gemHuntPublic" | "countdownBanner"> = [];
+  if (prev?.gemHuntPublic === true && payload.gemHuntPublic !== true) {
+    deletes.push("gemHuntPublic");
+  }
+  if (prev?.countdownBanner === false && payload.countdownBanner !== false) {
+    deletes.push("countdownBanner");
+  }
+  return deletes;
+}
+
 function vapidChanged(prev: VapidKeys | undefined, next: VapidKeys | undefined) {
   return JSON.stringify(prev ?? null) !== JSON.stringify(next ?? null);
 }
@@ -624,14 +639,15 @@ export async function writeFirestoreDb(input: { db: DbFile; prev?: DbFile | null
   const eventChanged = eventSettingsChanged(prev?.eventSettings, db.eventSettings);
   if (eventChanged && db.eventSettings) {
     const payload = { ...db.eventSettings };
-    const clearGemHuntPublic =
-      prev?.eventSettings?.gemHuntPublic === true && payload.gemHuntPublic !== true;
-    if (clearGemHuntPublic) {
-      delete payload.gemHuntPublic;
+    const fieldDeletes = firestoreEventSettingsFieldDeletes(prev?.eventSettings, payload);
+    for (const key of fieldDeletes) {
+      delete payload[key];
     }
     await metaDoc("eventSettings").set(payload, { merge: true });
-    if (clearGemHuntPublic) {
-      await metaDoc("eventSettings").update({ gemHuntPublic: FieldValue.delete() });
+    if (fieldDeletes.length > 0) {
+      await metaDoc("eventSettings").update(
+        Object.fromEntries(fieldDeletes.map((key) => [key, FieldValue.delete()])),
+      );
     }
     const eventUpdatedAt = db.eventSettings.updatedAt ?? db.updatedAt;
     eventSettingsMetaMem = { updatedAt: eventUpdatedAt };
