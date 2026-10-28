@@ -129,6 +129,16 @@ export default function HoursPreviewPage() {
           <Link href="/" className="inline-block text-base text-orange-300 underline-offset-2 hover:underline">
             חזרה למפה
           </Link>
+          <p className="text-base text-violet-200">
+            רעיונות ל<strong className="font-medium text-orange-100">תגים</strong> במקום טבעות מהבהבות על הסיכה:{" "}
+            <Link
+              href="/preview/hours-badges"
+              className="text-orange-300 underline-offset-2 hover:underline"
+            >
+              /preview/hours-badges
+            </Link>
+            .
+          </p>
         </header>
 
         <div className="space-y-4">
