@@ -64,13 +64,23 @@ export function GemClusterSessionSummary({
             );
           })}
         </ul>
-        <Button
-          type="button"
-          className="min-h-12 w-full py-3 text-lg font-semibold bg-orange-500 text-black hover:bg-orange-400"
-          onClick={onOpenStickerBook}
-        >
-          {t("gem.clusterSummaryOpenAlbum")}
-        </Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            className="min-h-12 py-3 text-base font-semibold bg-orange-500 text-black hover:bg-orange-400 sm:text-lg"
+            onClick={onOpenStickerBook}
+          >
+            {t("gem.clusterSummaryOpenAlbum")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-12 border-violet-500/40 py-3 text-base font-semibold text-violet-100 hover:bg-violet-500/10 sm:text-lg"
+            onClick={onClose}
+          >
+            {t("common.close")}
+          </Button>
+        </div>
       </div>
     </HouseEditModal>
   );
