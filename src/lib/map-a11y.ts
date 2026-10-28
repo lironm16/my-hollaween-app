@@ -21,7 +21,7 @@ export function houseSelectionAnnouncement(
   locale: AppLocale = "he",
 ): string {
   const ctx = reveal ?? makeAddressRevealContext({ now: new Date(), isAdmin: true });
-  const address = formatDisplayAddressWithPolicy(house, house.id, ctx);
+  const address = formatDisplayAddressWithPolicy(house, house.id, ctx, locale);
   const visit = visitAnnouncementLabel(locale, house.visit);
   return formatMessage(messagesForLocale(locale).mapUi.selectedHouse, {
     name: house.name,

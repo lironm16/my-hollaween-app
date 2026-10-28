@@ -212,13 +212,16 @@ async function cachedDocument(cache, request) {
   return undefined;
 }
 
+const OFFLINE_FALLBACK_HTML =
+  '<!doctype html><html lang="en"><head><meta charset=utf-8><title>Offline</title></head><body><p>You are offline. Open the app once while online, then try again.</p><p dir=rtl lang=he>אין קשר לשרת. פתחו את האפליקציה פעם אחת כשיש רשת.</p></body></html>';
+
 async function offlineDocument(cache) {
   return (
     (await cache.match("/offline.html")) ||
-    new Response(
-      "<!doctype html><meta charset=utf-8><title>לא מקוון</title><p dir=rtl>אין קשר לשרת. פתחו את האפליקציה פעם אחת כשיש רשת כדי לשמור את רשימת הבתים בטלפון.</p>",
-      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
-    )
+    new Response(OFFLINE_FALLBACK_HTML, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    })
   );
 }
 
@@ -348,7 +351,7 @@ async function networkFirst(request, cacheName) {
   }
   const cached = await cache.match(request);
   if (cached) return cached;
-  return new Response("לא מקוון", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  return new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }
 
 async function staleWhileRevalidate(request, cacheName) {
@@ -366,7 +369,7 @@ async function staleWhileRevalidate(request, cacheName) {
   }
   const res = await network;
   if (res) return res;
-  return new Response("לא מקוון", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  return new Response("Offline", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }
 
 async function cacheFirst(request, cacheName) {

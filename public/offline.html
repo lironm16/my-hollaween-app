@@ -41,10 +41,30 @@
     </style>
   </head>
   <body>
-    <h1>אין חיבור</h1>
-    <p>אין אינטרנט או שהשרת לא זמין. חזרו למפה כשיש קשר — רשימת הבתים לא נשמרת במכשיר.</p>
+    <h1 id="offline-h1">אין חיבור</h1>
+    <p id="offline-p">
+      אין אינטרנט או שהשרת לא זמין. חזרו למפה כשיש קשר — רשימת הבתים לא נשמרת במכשיר.
+    </p>
     <div class="actions">
-      <a href="/">נסו שוב את המפה</a>
+      <a id="offline-a" href="/">נסו שוב את המפה</a>
     </div>
+    <script>
+      (function () {
+        var en = false;
+        try {
+          en = localStorage.getItem("hw-app-locale") === "en";
+        } catch (e) {}
+        var root = document.documentElement;
+        root.lang = en ? "en" : "he";
+        root.dir = en ? "ltr" : "rtl";
+        document.title = en ? "HallowHood · Offline" : "HallowHood · לא מקוון";
+        if (en) {
+          document.getElementById("offline-h1").textContent = "No connection";
+          document.getElementById("offline-p").textContent =
+            "You are offline or the server is unavailable. Return to the map when you are back online — the house list is not stored on this device.";
+          document.getElementById("offline-a").textContent = "Try the map again";
+        }
+      })();
+    </script>
   </body>
 </html>

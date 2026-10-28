@@ -1,4 +1,6 @@
 import { toast } from "sonner";
+import { defaultAppLocale, readStoredAppLocale } from "@/lib/i18n/locale";
+import { translate } from "@/lib/i18n/translate";
 
 export async function copyText(text: string, okMessage: string, failMessage?: string) {
   try {
@@ -6,7 +8,8 @@ export async function copyText(text: string, okMessage: string, failMessage?: st
     toast.success(okMessage);
     return true;
   } catch {
-    toast.error(failMessage ?? "לא הצלחנו להעתיק. אפשר לסמן את הטקסט ידנית.");
+    const locale = readStoredAppLocale() ?? defaultAppLocale();
+    toast.error(failMessage ?? translate(locale, "codesCopy.copyFailed"));
     return false;
   }
 }

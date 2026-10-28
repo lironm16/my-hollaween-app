@@ -70,7 +70,7 @@ export function useAddressReveal(): AddressRevealContext & {
       formatDisplayAddress: (house: PublicHouse) =>
         formatDisplayAddressWithPolicy(house, house.id, ctx, locale),
       formatClusterAddress: (houses: readonly PublicHouse[], fallback: PublicHouse) =>
-        clusterDisplayAddressWithPolicy(houses, fallback, ctx),
+        clusterDisplayAddressWithPolicy(houses, fallback, ctx, locale),
       visibleArrival: (house: PublicHouse) => visibleArrivalWithPolicy(house, house.id, ctx),
       mapsAllowed: (houseId: string) => mapsNavigationAllowed(houseId, ctx),
       distanceAllowed: (houseId: string) => canViewHouseLocationDetails(houseId, ctx),

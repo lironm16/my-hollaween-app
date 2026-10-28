@@ -5,9 +5,12 @@ import { Loader2 } from "lucide-react";
 import { AdminHelpDetails } from "@/components/admin-section";
 import { Button } from "@/components/ui/button";
 import type { AdminNightPassDevicesResponse } from "@/lib/admin-night-pass-devices";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useLocale();
   const [data, setData] = useState<AdminNightPassDevicesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,25 +29,27 @@ export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: b
         setError(
           (json && "error" in json && json.error) ||
             (res.status === 404
-              ? "הנתיב לא נמצא — ודאו שהפריסה האחרונה עלתה (רענון אחרי deploy)."
-              : `טעינה נכשלה (${res.status}).`),
+              ? t("adminNightPassDevices.routeMissing")
+              : formatMessage(t("adminNightPassDevices.loadFailedStatus"), {
+                  status: String(res.status),
+                })),
         );
         setData(null);
         return;
       }
       if (!json || !("houses" in json) || !Array.isArray(json.houses)) {
-        setError("תשובה לא תקינה מהשרת.");
+        setError(t("adminNightPassDevices.invalidResponse"));
         setData(null);
         return;
       }
       setData(json);
     } catch {
-      setError("טעינה נכשלה.");
+      setError(t("adminNightPassDevices.loadFailed"));
       setData(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -56,9 +61,13 @@ export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: b
   }, [data, showZeros]);
 
   const summaryLine = data
-    ? `${data.housesWithDevices} בתים עם מכשיר · ${data.totalConnected} מחוברים (עד ${data.maxDevices} לבית)`
+    ? formatMessage(t("adminNightPassDevices.summary"), {
+        housesWithDevices: String(data.housesWithDevices),
+        totalConnected: String(data.totalConnected),
+        maxDevices: String(data.maxDevices),
+      })
     : loading
-      ? "טוען…"
+      ? t("adminNightPassDevices.loading")
       : "—";
 
   return (
@@ -71,7 +80,7 @@ export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: b
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-orange-100">מכשירים רשומים לפי בית</p>
+        <p className="text-sm font-medium text-orange-100">{t("adminNightPassDevices.title")}</p>
         <Button
           type="button"
           size="sm"
@@ -80,16 +89,16 @@ export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: b
           disabled={loading}
           onClick={() => void load()}
         >
-          {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "רענון"}
+          {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : t("adminNightPassDevices.refresh")}
         </Button>
       </div>
       <p className="text-sm text-violet-300">{summaryLine}</p>
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
       {data && !data.enabled ? (
-        <p className="text-sm text-amber-200/90">קודי כניסה כבויים — הרשמה חדשה לא פעילה, הספירה היא מכשירים שכבר רשומים.</p>
+        <p className="text-sm text-amber-200/90">{t("adminNightPassDevices.codesOff")}</p>
       ) : null}
       {data && rows.length === 0 && !loading ? (
-        <p className="text-sm text-violet-400">אין מכשירים מחוברים עדיין.</p>
+        <p className="text-sm text-violet-400">{t("adminNightPassDevices.noneConnected")}</p>
       ) : null}
       {rows.length > 0 ? (
         <ul className="max-h-52 space-y-1 overflow-y-auto rounded-lg bg-black/25 px-2 py-1.5 ring-1 ring-orange-500/10">
@@ -117,12 +126,11 @@ export function AdminNightPassDeviceSummary({ embedded = false }: { embedded?: b
           className="text-sm text-orange-300 underline underline-offset-2 hover:text-orange-200"
           onClick={() => setShowZeros((value) => !value)}
         >
-          {showZeros ? "הסתר בתים בלי מכשירים" : "הצג את כל הבתים (כולל 0)"}
+          {showZeros ? t("adminNightPassDevices.hideZeros") : t("adminNightPassDevices.showZeros")}
         </button>
       ) : null}
-      <AdminHelpDetails label="איך זה עובד?">
-        ספירה לפי רשימת המכשירים בשרת לכל בית (שם + טלפון בחלון «קוד עריכה ומכשירים»). מנהלים לא
-        נספרים — רק מכשירים שהצטרפו עם קוד.
+      <AdminHelpDetails label={t("adminNightPassDevices.helpLabel")}>
+        {t("adminNightPassDevices.help")}
       </AdminHelpDetails>
     </div>
   );

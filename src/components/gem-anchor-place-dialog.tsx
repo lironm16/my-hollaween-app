@@ -278,7 +278,9 @@ export function GemAnchorPlaceDialog({
               dir="rtl"
               className="gem-anchor-place-map__footer absolute inset-x-2 bottom-2 z-[510] flex max-w-[calc(100%-1rem)] flex-col items-start gap-0.5 rounded-lg bg-black/65 px-2.5 py-1.5 text-start ring-1 ring-orange-500/30 backdrop-blur-sm"
               title={`${mapDistanceLine} · ${coordsText}`}
-              onClick={() => void copyText(coordsText, t("gemAnchor.coordsCopied"))}
+              onClick={() =>
+                void copyText(coordsText, t("gemAnchor.coordsCopied"), t("codesCopy.copyFailed"))
+              }
             >
               <span className="w-full text-sm leading-snug text-violet-100">{mapDistanceLine}</span>
               <span dir="ltr" className="font-mono text-xs tabular-nums text-orange-100">

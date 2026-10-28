@@ -1,6 +1,10 @@
 import { readApiJson } from "@/lib/api-json";
+import { ownerPhoneValidationErrorLocalized } from "@/lib/i18n/owner-phone-i18n";
+import { publishHouseClientError } from "@/lib/i18n/publish-house-errors";
+import { defaultAppLocale, readStoredAppLocale } from "@/lib/i18n/locale";
+import { translate } from "@/lib/i18n/translate";
 import { houseHoursWindows, syncHoursFields } from "@/lib/hours";
-import { normalizeOwnerPhone, ownerPhoneValidationError } from "@/lib/owner-phone";
+import { normalizeOwnerPhone } from "@/lib/owner-phone";
 import type { NightPassClientBrowser, NightPassClientSurface } from "@/lib/night-pass-client-surface";
 import type { HouseInput, PublicHouse } from "@/lib/types";
 
@@ -59,11 +63,12 @@ export async function publishHouse(
     clientBrowser?: NightPassClientBrowser;
   },
 ): Promise<PublishResult> {
+  const locale = readStoredAppLocale() ?? defaultAppLocale();
   const body = readyHouseInput(input);
   const addedBy = options?.addedBy?.trim();
-  if (!addedBy) throw new Error("נא למלא מי מוסיף את הבית.");
+  if (!addedBy) throw new Error(translate(locale, "houseForm.needSubmitter"));
   const ownerPhoneRaw = options?.ownerPhone ?? input.ownerPhone ?? "";
-  const phoneIssue = ownerPhoneValidationError(String(ownerPhoneRaw), true);
+  const phoneIssue = ownerPhoneValidationErrorLocalized(locale, String(ownerPhoneRaw), true);
   if (phoneIssue) throw new Error(phoneIssue);
   const ownerPhone = normalizeOwnerPhone(String(ownerPhoneRaw));
   const adminCreate = Boolean(options?.admin && body.kind === "poi");
@@ -82,10 +87,11 @@ export async function publishHouse(
       }),
     });
   } catch {
-    throw new Error("אין חיבור לשרת. בדקו את הרשת ונסו שוב.");
+    throw new Error(translate(locale, "add.publishNoConnection"));
   }
   const data = await readApiJson<{
     error?: string;
+    code?: string;
     house?: PublicHouse;
     editCode?: string;
     push?: { autoSent?: boolean; title?: string; body?: string };
@@ -101,5 +107,5 @@ export async function publishHouse(
       pushBody: data.push?.body,
     };
   }
-  throw new Error(data.error || "לא הצלחנו לשמור את הבית בשרת. נסו שוב.");
+  throw new Error(publishHouseClientError(locale, data));
 }

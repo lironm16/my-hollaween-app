@@ -1,6 +1,8 @@
 import { config, formatDisplayAddress, resolveNeighborhood, type NeighborhoodId } from "@/lib/config";
 import type { AppLocale } from "@/lib/i18n/locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { displayNeighborhoodName } from "@/lib/i18n/neighborhood-labels";
+import { translate } from "@/lib/i18n/translate";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
 import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
@@ -22,6 +24,15 @@ export type AddressRevealAudience = "everyone" | "registered" | "none";
 
 export const ADDRESS_FOR_REGISTERED_HINT_HE = "הכתובת תיחשף למכשירים רשומים";
 
+export function eventNightDateLabel(locale: AppLocale): string {
+  const { year, month, day } = config.eventNight;
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString(locale === "en" ? "en-US" : "he-IL", {
+    month: "long",
+    day: "numeric",
+  });
+}
+
 /** Local time on event night when street addresses, arrival and visitor notes become public. */
 export function addressRevealTime(
   schedule = mergeAddressRevealSchedule(),
@@ -36,15 +47,26 @@ export function isAddressRevealed(now = new Date(), schedule = mergeAddressRevea
   return now.getTime() >= addressRevealTime(schedule, now).getTime();
 }
 
+export function addressHiddenHint(
+  locale: AppLocale,
+  now = new Date(),
+  schedule = mergeAddressRevealSchedule(),
+  audience: AddressRevealAudience = "everyone",
+) {
+  if (audience === "none") return translate(locale, "addressReveal.hintRegisteredOnly");
+  if (isAddressRevealed(now, schedule)) return "";
+  return formatMessage(translate(locale, "addressReveal.hintRevealsAt"), {
+    date: eventNightDateLabel(locale),
+  });
+}
+
+/** @deprecated Use {@link addressHiddenHint} with locale. */
 export function addressHiddenHintHe(
   now = new Date(),
   schedule = mergeAddressRevealSchedule(),
   audience: AddressRevealAudience = "everyone",
 ) {
-  const { labelHe } = config.eventNight;
-  if (audience === "none") return ADDRESS_FOR_REGISTERED_HINT_HE;
-  if (isAddressRevealed(now, schedule)) return "";
-  return `הכתובת תיחשף ב-${labelHe}`;
+  return addressHiddenHint("he", now, schedule, audience);
 }
 
 export function canViewHouseLocationDetails(
@@ -88,7 +110,7 @@ export function formatDisplayAddressWithPolicy(
   if (canViewHouseLocationDetails(houseId, ctx)) {
     return formatDisplayAddress(house);
   }
-  const hint = addressHiddenHintHe(ctx.now, ctx.addressReveal, ctx.audience);
+  const hint = addressHiddenHint(locale, ctx.now, ctx.addressReveal, ctx.audience);
   const area = resolveNeighborhood(house);
   if (area && hint) {
     return `${displayNeighborhoodName(locale, area)} · ${hint}`;
@@ -101,11 +123,12 @@ export function clusterDisplayAddressWithPolicy(
   houses: readonly PublicHouse[],
   fallback: PublicHouse,
   ctx: AddressRevealContext,
+  locale: AppLocale = "he",
 ): string {
   const open = houses.find(
     (house) => house.address.trim() && canViewHouseLocationDetails(house.id, ctx),
   );
-  return formatDisplayAddressWithPolicy(open ?? fallback, (open ?? fallback).id, ctx);
+  return formatDisplayAddressWithPolicy(open ?? fallback, (open ?? fallback).id, ctx, locale);
 }
 
 export function visibleArrivalWithPolicy(
