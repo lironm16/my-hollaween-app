@@ -16,7 +16,6 @@ import { useGemAnchorOverrides } from "@/hooks/use-gem-anchor-overrides";
 import {
   GEM_CAMPUS_COLLECT_MS,
   GEM_COLLECT_OVERLAY_MS,
-  GEM_FACING_TOLERANCE_DEG,
   gemTellMeCenterModelZoom,
   gemHuntGemStayVisible,
   gemWalkNavTarget,
