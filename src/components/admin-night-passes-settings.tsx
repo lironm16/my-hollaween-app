@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminHelpDetails } from "@/components/admin-section";
 import { refreshNightPassState } from "@/lib/night-pass-client";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 /** Admin switch for night passes (codes per house, addresses only for registered devices). */
 export function AdminNightPassesSettings({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useLocale();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -26,12 +28,7 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
   async function toggle() {
     if (enabled === null) return;
     const next = !enabled;
-    if (
-      next &&
-      !window.confirm(
-        "להפעיל קודי כניסה? כל הבתים יופיעו במפה; כתובות בתים ייפתחו ביום החשיפה רק למכשירים רשומים.",
-      )
-    ) {
+    if (next && !window.confirm(t("adminSettings.nightPasses.confirmEnable"))) {
       return;
     }
     setSaving(true);
@@ -43,7 +40,7 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
       });
       const json = (await res.json().catch(() => null)) as { enabled?: boolean; error?: string } | null;
       if (!res.ok) {
-        toast.error(json?.error ?? "השמירה נכשלה.");
+        toast.error(json?.error ?? t("adminSettings.common.saveFailed"));
         return;
       }
       setEnabled(Boolean(json?.enabled));
@@ -53,6 +50,8 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
     }
   }
 
+  const help = t("adminSettings.nightPasses.help");
+
   return (
     <div
       className={cn(
@@ -61,17 +60,21 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-orange-100">קודי כניסה לאירוע</p>
+        <p className="text-sm font-medium text-orange-100">{t("adminSettings.nightPasses.title")}</p>
         <span className="flex shrink-0 items-center gap-1.5">
           <span className={cn("text-base", enabled ? "text-orange-200" : "text-violet-400")}>
-            {enabled === null ? "…" : enabled ? "פועל" : "כבוי"}
+            {enabled === null
+              ? t("adminSettings.common.statusUnknown")
+              : enabled
+                ? t("adminDryRun.toggleOn")
+                : t("adminDryRun.toggleOff")}
           </span>
           <button
             type="button"
             dir="ltr"
             role="switch"
             aria-checked={Boolean(enabled)}
-            aria-label="קודי כניסה לאירוע"
+            aria-label={t("adminSettings.nightPasses.title")}
             disabled={enabled === null || saving}
             onClick={() => void toggle()}
             className={cn(
@@ -84,15 +87,9 @@ export function AdminNightPassesSettings({ embedded = false }: { embedded?: bool
         </span>
       </div>
       {embedded ? (
-        <AdminHelpDetails label="מה זה?">
-          4 קודי כניסה לכל בית. כל הבתים במפה; כתובות בתים נפתחות בשעת החשיפה רק למכשירים רשומים. «תצוגת
-          משתמש» מציגה את המכשיר הזה כמו מבקר.
-        </AdminHelpDetails>
+        <AdminHelpDetails label={t("adminSettings.common.whatIsThis")}>{help}</AdminHelpDetails>
       ) : (
-        <p className="text-sm text-violet-300">
-          4 קודי כניסה לכל בית. כל הבתים במפה; כתובות בתים נפתחות בשעת החשיפה רק למכשירים רשומים. «תצוגת
-          משתמש» מציגה את המכשיר הזה כמו מבקר.
-        </p>
+        <p className="text-sm text-violet-300">{help}</p>
       )}
     </div>
   );

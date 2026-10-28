@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { config } from "@/lib/config";
+import { eventNightDateLabel } from "@/lib/address-reveal";
 import { FormPrimarySecondaryActions } from "@/components/form-primary-secondary-actions";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 type SettingsResponse = {
@@ -27,6 +29,7 @@ function parseTimeInput(value: string): { hour: number; minute: number } | null 
 }
 
 export function AdminAddressRevealSettings({ embedded = false }: { embedded?: boolean }) {
+  const { locale, t } = useLocale();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -42,18 +45,18 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
       const res = await fetch("/api/admin/event/address-reveal", { cache: "no-store" });
       const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "טעינת ההגדרות נכשלה.");
+        setError(json?.error ?? t("adminSettings.common.loadFailed"));
         return;
       }
       const next = formatTimeInput(json.addressReveal);
       setSavedTimeValue(next);
       setTimeValue(next);
     } catch {
-      setError("טעינת ההגדרות נכשלה.");
+      setError(t("adminSettings.common.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -62,7 +65,7 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
   async function onSave() {
     const parsed = parseTimeInput(timeValue);
     if (!parsed) {
-      setError("יש לבחור שעה תקינה.");
+      setError(t("adminSettings.addressReveal.invalidTime"));
       return;
     }
     setSaving(true);
@@ -75,14 +78,14 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
       });
       const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "שמירה נכשלה.");
+        setError(json?.error ?? t("adminSettings.common.saveFailed"));
         return;
       }
       const next = formatTimeInput(json.addressReveal);
       setSavedTimeValue(next);
       setTimeValue(next);
     } catch {
-      setError("שמירה נכשלה.");
+      setError(t("adminSettings.common.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -93,6 +96,10 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
     setTimeValue(savedTimeValue);
   }
 
+  const title = formatMessage(t("adminSettings.addressReveal.title"), {
+    date: eventNightDateLabel(locale),
+  });
+
   return (
     <div
       className={cn(
@@ -100,12 +107,12 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
         embedded ? "rounded-lg bg-[#14081c]/80 px-2.5 py-2 ring-1 ring-orange-500/10" : "rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20",
       )}
     >
-      <p className="text-sm font-medium text-orange-100">חשיפת כתובות · {config.eventNight.labelHe}</p>
+      <p className="text-sm font-medium text-orange-100">{title}</p>
       {!embedded ? (
-        <p className="text-sm text-violet-400">שעה מקומית · מסונכרן · נפרד משעון בדיקות</p>
+        <p className="text-sm text-violet-400">{t("adminSettings.addressReveal.hint")}</p>
       ) : null}
       <label className={cn("block space-y-1", loading && "opacity-50")}>
-        <span className="text-sm text-violet-300">שעת חשיפה</span>
+        <span className="text-sm text-violet-300">{t("adminSettings.addressReveal.revealTime")}</span>
         <input
           type="time"
           value={timeValue}
@@ -119,8 +126,8 @@ export function AdminAddressRevealSettings({ embedded = false }: { embedded?: bo
       </label>
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
       <FormPrimarySecondaryActions
-        primaryLabel={saving ? "שומר…" : "שמירה"}
-        secondaryLabel="ביטול"
+        primaryLabel={saving ? t("adminSettings.common.saving") : t("adminSettings.common.save")}
+        secondaryLabel={t("adminSettings.common.cancel")}
         onPrimary={() => void onSave()}
         onSecondary={onCancelEdit}
         primaryDisabled={loading || saving || !dirty}

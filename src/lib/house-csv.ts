@@ -2,31 +2,36 @@ import { formatDisplayAddress } from "@/lib/config";
 import { formatHoursLabel } from "@/lib/hours";
 import { candyLevel, offersSensitivity, resolveDecorLevel } from "@/lib/house-state";
 import { formatHouseAddedAt } from "@/lib/house-meta";
-import { decorShort, scareShort, houseHeadline } from "@/lib/labels";
+import { houseHeadline } from "@/lib/labels";
+import { formatMessage } from "@/lib/i18n/format";
+import { localizedExportHouseCountMessage } from "@/lib/i18n/export-copy";
 import type { AppLocale } from "@/lib/i18n/locale";
+import { decorShortForLocale, scareShortForLocale } from "@/lib/i18n/pin-labels";
 import { translate } from "@/lib/i18n/translate";
 import type { WalkingRoute } from "@/lib/route";
 import type { PublicHouse } from "@/lib/types";
 
-const PUBLIC_HEADERS = [
-  "מס'",
-  "שם",
-  "כתובת",
-  "איך מגיעים / דירה",
-  "מה מחכה בבית",
-  "הערות",
-  "שעות",
-  "ממתקים",
-  "פחד",
-  "נגיש",
-  "ללא גלוטן",
-  "ללא אגוזים",
-  "ללא שומשום",
-  "טבעוני",
-  "נוסף על ידי",
-  "טלפון",
-  "תאריך הוספה",
-] as const;
+function exportHeaders(locale: AppLocale): string[] {
+  return [
+    translate(locale, "houseExport.colSerial"),
+    translate(locale, "houseExport.colName"),
+    translate(locale, "houseExport.colAddress"),
+    translate(locale, "houseExport.colArrival"),
+    translate(locale, "houseExport.colDescription"),
+    translate(locale, "houseExport.colNotes"),
+    translate(locale, "houseExport.colHours"),
+    translate(locale, "houseExport.colTreats"),
+    translate(locale, "houseExport.colScare"),
+    translate(locale, "houseExport.colAccessible"),
+    translate(locale, "houseExport.colGluten"),
+    translate(locale, "houseExport.colNuts"),
+    translate(locale, "houseExport.colSesame"),
+    translate(locale, "houseExport.colVegan"),
+    translate(locale, "houseExport.colAddedBy"),
+    translate(locale, "houseExport.colPhone"),
+    translate(locale, "houseExport.colAddedAt"),
+  ];
+}
 
 type HouseExportRow = PublicHouse & {
   addedBy?: string | null;
@@ -61,21 +66,27 @@ function xmlText(value: string | number) {
     .replace(/"/g, "&quot;");
 }
 
-function candyLabel(house: PublicHouse) {
-  if (!house.treats.includes("candy")) return "בלי ממתקים";
+function candyLabel(house: PublicHouse, locale: AppLocale) {
+  if (!house.treats.includes("candy")) return translate(locale, "labels.candyNone");
   const level = candyLevel(house);
-  if (level === "plenty") return "יש";
-  if (level === "low") return "מעט";
-  return "נגמר";
+  if (level === "plenty") return translate(locale, "labels.candyPlenty");
+  if (level === "low") return translate(locale, "labels.candyLow");
+  return translate(locale, "labels.candyOut");
 }
 
-/** Same scale as the form: לא מקושט → לילדים → קצת מפחיד → מפחיד. */
-function scareDecorLabel(house: PublicHouse) {
+/** Same scale as the form: decor none → mild → medium → spicy. */
+function scareDecorLabel(house: PublicHouse, locale: AppLocale) {
+  const decorShort = decorShortForLocale(locale);
+  const scareShort = scareShortForLocale(locale);
   if (resolveDecorLevel(house) === "none") return decorShort.none;
   return scareShort[house.scareLevel];
 }
 
-function houseRow(house: HouseExportRow, index: number): Array<string | number> {
+function yesNo(locale: AppLocale, value: boolean) {
+  return translate(locale, value ? "houseExport.yes" : "houseExport.no");
+}
+
+function houseRow(house: HouseExportRow, index: number, locale: AppLocale): Array<string | number> {
   return [
     index + 1,
     exportDisplayText(house.name),
@@ -84,23 +95,23 @@ function houseRow(house: HouseExportRow, index: number): Array<string | number> 
     exportDisplayText(house.description || ""),
     exportDisplayText(house.notes || ""),
     formatHoursLabel(house),
-    candyLabel(house),
-    scareDecorLabel(house),
-    house.accessible ? "כן" : "לא",
-    offersSensitivity(house, "glutenFree") ? "כן" : "לא",
-    offersSensitivity(house, "nutsFree") ? "כן" : "לא",
-    offersSensitivity(house, "sesameFree") ? "כן" : "לא",
-    offersSensitivity(house, "vegan") ? "כן" : "לא",
+    candyLabel(house, locale),
+    scareDecorLabel(house, locale),
+    yesNo(locale, house.accessible),
+    yesNo(locale, offersSensitivity(house, "glutenFree")),
+    yesNo(locale, offersSensitivity(house, "nutsFree")),
+    yesNo(locale, offersSensitivity(house, "sesameFree")),
+    yesNo(locale, offersSensitivity(house, "vegan")),
     exportDisplayText(house.addedBy?.trim() || ""),
     exportDisplayText(house.ownerPhone?.trim() || ""),
     house.createdAt ? formatHouseAddedAt(house.createdAt) : "",
   ];
 }
 
-export function housesToCsv(houses: PublicHouse[]) {
-  const lines = [[...PUBLIC_HEADERS].join(",")];
+export function housesToCsv(houses: PublicHouse[], locale: AppLocale = "he") {
+  const lines = [exportHeaders(locale).join(",")];
   houses.forEach((house, index) => {
-    lines.push(houseRow(house, index).map(csvCell).join(","));
+    lines.push(houseRow(house, index, locale).map(csvCell).join(","));
   });
   return `\uFEFF${lines.join("\r\n")}\r\n`;
 }
@@ -221,11 +232,12 @@ function xlsxCell(value: string | number, ref: string, header = false) {
 }
 
 /** Real Office Open XML workbook — Excel opens this without a corrupt-file warning. */
-export function housesToXlsx(houses: PublicHouse[]): Uint8Array {
-  const headers = [...PUBLIC_HEADERS];
+export function housesToXlsx(houses: PublicHouse[], locale: AppLocale = "he"): Uint8Array {
+  const headers = exportHeaders(locale);
+  const sheetName = xmlText(translate(locale, "houseExport.xlsxSheetName"));
   const rows = [
     headers as Array<string | number>,
-    ...houses.map((house, index) => houseRow(house, index)),
+    ...houses.map((house, index) => houseRow(house, index, locale)),
   ];
   const lastCol = colLetter(headers.length - 1);
   const sheetRows = rows
@@ -260,7 +272,7 @@ export function housesToXlsx(houses: PublicHouse[]): Uint8Array {
   const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <sheets>
-    <sheet name="בתים" sheetId="1" r:id="rId1"/>
+    <sheet name="${sheetName}" sheetId="1" r:id="rId1"/>
   </sheets>
 </workbook>`;
   const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -327,11 +339,7 @@ export type HouseExportFormat = "xlsx" | "csv" | "txt";
 /** UI export formats (CSV kept for admin API only). */
 export const HOUSE_EXPORT_FORMAT_OPTIONS: ReadonlyArray<{
   id: Extract<HouseExportFormat, "xlsx" | "txt">;
-  labelHe: string;
-}> = [
-  { id: "xlsx", labelHe: "טבלה" },
-  { id: "txt", labelHe: "טקסט" },
-];
+}> = [{ id: "xlsx" }, { id: "txt" }];
 
 const RTL_MARK = "\u200F";
 
@@ -344,13 +352,7 @@ export function exportHouseCountMessage(
   totalInSet: number,
   activeFilterCount: number,
 ) {
-  if (exportCount === 0) {
-    return "אין בתים לשמירה לפי הסינון הנוכחי.";
-  }
-  if (exportCount === totalInSet && activeFilterCount === 0) {
-    return `יישמרו כל ${exportCount} הבתים שמוצגים כרגע במפה/ברשימה.`;
-  }
-  return `יישמרו ${exportCount} בתים מתוך ${totalInSet} — לפי הסינון והמסננים הפעילים.`;
+  return localizedExportHouseCountMessage("he", exportCount, totalInSet, activeFilterCount);
 }
 
 export function csvFilename(kind: "liked" | "list" | "all") {
@@ -369,8 +371,8 @@ export function sheetFilename(kind: "liked" | "list" | "all") {
   return exportFilename(kind, "xlsx");
 }
 
-export function housesToExportTxt(houses: PublicHouse[]) {
-  const lines = ["רשימת בתים — HallowHood", ""];
+export function housesToExportTxt(houses: PublicHouse[], locale: AppLocale = "he") {
+  const lines = [translate(locale, "houseExport.txtListHeading"), ""];
   houses.forEach((house, index) => {
     lines.push(`${index + 1}. ${houseHeadline(house)}`);
     lines.push(`   ${formatDisplayAddress(house)}`);
@@ -380,17 +382,23 @@ export function housesToExportTxt(houses: PublicHouse[]) {
   return plainTextExportRtl(lines);
 }
 
-export function routeToExportTxt(route: WalkingRoute) {
-  const lines = [
-    "מסלול HallowHood — סדר העצירות קבוע (לא תלוי במיקום)",
-    route.originLabel ? `התחלה: ${route.originLabel}` : "",
-    "",
-  ].filter(Boolean);
+export function routeToExportTxt(route: WalkingRoute, locale: AppLocale = "he") {
+  const lines = [translate(locale, "houseExport.routeHeading")];
+  if (route.originLabel) {
+    lines.push(
+      formatMessage(translate(locale, "houseExport.routeOrigin"), { label: route.originLabel }),
+    );
+  }
+  lines.push("");
   for (const stop of route.stops) {
     lines.push(`${stop.order}. ${houseHeadline(stop.house)}`);
     lines.push(`   ${formatDisplayAddress(stop.house)}`);
     if (stop.houses.length > 1) {
-      lines.push(`   (${stop.houses.length} דירות בכתובת)`);
+      lines.push(
+        `   ${formatMessage(translate(locale, "houseExport.unitsAtAddress"), {
+          count: String(stop.houses.length),
+        })}`,
+      );
     }
     lines.push("");
   }
@@ -423,17 +431,18 @@ export function downloadHouseExport(
   houses: PublicHouse[],
   kind: "liked" | "list" | "all",
   format: HouseExportFormat,
+  locale: AppLocale = "he",
 ) {
   const filename = exportFilename(kind, format);
   if (format === "xlsx") {
-    downloadSheet(filename, housesToXlsx(houses));
+    downloadSheet(filename, housesToXlsx(houses, locale));
     return;
   }
   if (format === "csv") {
-    downloadCsv(filename, housesToCsv(houses));
+    downloadCsv(filename, housesToCsv(houses, locale));
     return;
   }
-  downloadTxt(filename, housesToExportTxt(houses));
+  downloadTxt(filename, housesToExportTxt(houses, locale));
 }
 
 export async function downloadOrShareHouseExport(
@@ -442,12 +451,12 @@ export async function downloadOrShareHouseExport(
   format: HouseExportFormat,
   options?: { preferShare?: boolean; locale?: AppLocale },
 ) {
+  const locale = options?.locale ?? "he";
   if (format !== "txt" || !options?.preferShare) {
-    downloadHouseExport(houses, kind, format);
+    downloadHouseExport(houses, kind, format, locale);
     return;
   }
-  const locale = options.locale ?? "he";
-  const text = housesToExportTxt(houses);
+  const text = housesToExportTxt(houses, locale);
   const filename = exportFilename(kind, "txt");
   const shared = await sharePlainTextFile(
     filename,
@@ -462,7 +471,7 @@ export async function downloadOrShareRouteTxt(
   preferShare: boolean,
   locale: AppLocale = "he",
 ) {
-  const text = routeToExportTxt(route);
+  const text = routeToExportTxt(route, locale);
   const day = new Date().toISOString().slice(0, 10);
   const filename = `hallowhood-route-${day}.txt`;
   if (preferShare) {

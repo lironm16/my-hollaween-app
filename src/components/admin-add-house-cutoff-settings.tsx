@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AddHouseCutoffSchedule } from "@/lib/types";
 import { FormPrimarySecondaryActions } from "@/components/form-primary-secondary-actions";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 type SettingsResponse = {
@@ -42,6 +43,7 @@ function parseTimeInput(value: string): Pick<AddHouseCutoffSchedule, "hour" | "m
 }
 
 export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useLocale();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -62,7 +64,7 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
       const res = await fetch("/api/admin/event/add-house-cutoff", { cache: "no-store" });
       const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "טעינת ההגדרות נכשלה.");
+        setError(json?.error ?? t("adminSettings.common.loadFailed"));
         return;
       }
       const nextDate = formatDateInput(json.addHouseCutoff);
@@ -72,11 +74,11 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
       setDateValue(nextDate);
       setTimeValue(nextTime);
     } catch {
-      setError("טעינת ההגדרות נכשלה.");
+      setError(t("adminSettings.common.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -86,7 +88,7 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
     const date = parseDateInput(dateValue);
     const time = parseTimeInput(timeValue);
     if (!date || !time) {
-      setError("יש לבחור תאריך ושעה תקינים.");
+      setError(t("adminSettings.addCutoff.invalidDateTime"));
       return;
     }
     setSaving(true);
@@ -99,7 +101,7 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
       });
       const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "שמירה נכשלה.");
+        setError(json?.error ?? t("adminSettings.common.saveFailed"));
         return;
       }
       const nextDate = formatDateInput(json.addHouseCutoff);
@@ -109,7 +111,7 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
       setDateValue(nextDate);
       setTimeValue(nextTime);
     } catch {
-      setError("שמירה נכשלה.");
+      setError(t("adminSettings.common.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -128,13 +130,13 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
         embedded ? "rounded-lg bg-[#14081c]/80 px-2.5 py-2 ring-1 ring-orange-500/10" : "rounded-xl bg-[#12081a] px-3 py-2 ring-1 ring-orange-500/20",
       )}
     >
-      <p className="text-sm font-medium text-orange-100">סגירת הוספה למבקרים</p>
+      <p className="text-sm font-medium text-orange-100">{t("adminSettings.addCutoff.title")}</p>
       {!embedded ? (
-        <p className="text-sm text-violet-400">מנהלים ממשיכים להוסיף · מסונכרן לכל המכשירים</p>
+        <p className="text-sm text-violet-400">{t("adminSettings.addCutoff.hint")}</p>
       ) : null}
       <div className={cn("grid gap-2 sm:grid-cols-2", loading && "opacity-50")}>
         <label className="block space-y-1">
-          <span className="text-sm text-violet-300">תאריך</span>
+          <span className="text-sm text-violet-300">{t("adminSettings.common.date")}</span>
           <input
             type="date"
             value={dateValue}
@@ -144,7 +146,7 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-sm text-violet-300">שעה</span>
+          <span className="text-sm text-violet-300">{t("adminSettings.common.time")}</span>
           <input
             type="time"
             value={timeValue}
@@ -159,8 +161,8 @@ export function AdminAddHouseCutoffSettings({ embedded = false }: { embedded?: b
       </div>
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
       <FormPrimarySecondaryActions
-        primaryLabel={saving ? "שומר…" : "שמירה"}
-        secondaryLabel="ביטול"
+        primaryLabel={saving ? t("adminSettings.common.saving") : t("adminSettings.common.save")}
+        secondaryLabel={t("adminSettings.common.cancel")}
         onPrimary={() => void onSave()}
         onSecondary={onCancelEdit}
         primaryDisabled={loading || saving || !dirty}

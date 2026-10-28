@@ -5,8 +5,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ANOMALY_KIND_LABELS, type AnomalyListItem } from "@/lib/house-anomalies";
-import { HOUSE_SET_LABELS, HOUSE_SETS, type HouseSet } from "@/lib/house-set";
+import { HOUSE_SETS, type HouseSet } from "@/lib/house-set";
 import { useHouseSet } from "@/hooks/use-house-set";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
 import type { EventOpenHoursSchedule, HouseAnomalyKind } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +24,14 @@ function itemKey(item: AnomalyListItem) {
   return item.clusterKey ? `${item.kind}:${item.clusterKey}` : `${item.houseId}:${item.kind}`;
 }
 
+function houseSetLabel(t: (key: string) => string, id: HouseSet) {
+  if (id === "real") return t("adminSettings.houseSet.real");
+  if (id === "stubs") return t("adminSettings.houseSet.stubs");
+  return t("adminSettings.houseSet.all");
+}
+
 export function AdminHouseAnomaliesPanel() {
+  const { t } = useLocale();
   const { houseSet, setHouseSet } = useHouseSet();
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
@@ -39,16 +48,16 @@ export function AdminHouseAnomaliesPanel() {
       });
       const json = (await res.json().catch(() => null)) as AnomaliesResponse & { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "טעינה נכשלה.");
+        setError(json?.error ?? t("adminSettings.anomalies.loadFailed"));
         return;
       }
       setData(json);
     } catch {
-      setError("טעינה נכשלה.");
+      setError(t("adminSettings.anomalies.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [houseSet]);
+  }, [houseSet, t]);
 
   useEffect(() => {
     void load();
@@ -76,12 +85,12 @@ export function AdminHouseAnomaliesPanel() {
       });
       const json = (await res.json().catch(() => null)) as { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "עדכון נכשל.");
+        setError(json?.error ?? t("adminSettings.anomalies.updateFailed"));
         return;
       }
       await load();
     } catch {
-      setError("עדכון נכשל.");
+      setError(t("adminSettings.anomalies.updateFailed"));
     } finally {
       setActing(null);
     }
@@ -93,18 +102,24 @@ export function AdminHouseAnomaliesPanel() {
         <div>
           <p className="text-sm text-violet-300">
             {loading
-              ? "סורק בתים…"
-              : `${items.length} חריגות פתוחות · ${data?.houseCount ?? 0} בתים`}
+              ? t("adminSettings.anomalies.scanning")
+              : formatMessage(t("adminSettings.anomalies.summary"), {
+                  open: String(items.length),
+                  houses: String(data?.houseCount ?? 0),
+                })}
           </p>
           {data?.eventOpenHours ? (
             <p className="text-xs text-violet-500">
-              חלון אירוע: {data.eventOpenHours.openFrom}–{data.eventOpenHours.openTo}
+              {formatMessage(t("adminSettings.anomalies.eventWindow"), {
+                from: data.eventOpenHours.openFrom,
+                to: data.eventOpenHours.openTo,
+              })}
             </p>
           ) : null}
         </div>
         <Button type="button" size="sm" variant="outline" disabled={loading} onClick={() => void load()}>
           <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
-          רענון
+          {t("adminSettings.anomalies.refresh")}
         </Button>
       </div>
 
@@ -119,7 +134,7 @@ export function AdminHouseAnomaliesPanel() {
               houseSet === id ? "bg-orange-500/20 text-orange-100" : "text-violet-400",
             )}
           >
-            {HOUSE_SET_LABELS[id]}
+            {houseSetLabel(t, id)}
           </button>
         ))}
       </div>
@@ -133,7 +148,7 @@ export function AdminHouseAnomaliesPanel() {
             filter === "all" ? "bg-orange-500/20 text-orange-100" : "text-violet-400",
           )}
         >
-          הכל
+          {t("adminSettings.anomalies.all")}
         </button>
         <button
           type="button"
@@ -143,7 +158,7 @@ export function AdminHouseAnomaliesPanel() {
             filter === "warning" ? "bg-orange-500/20 text-orange-100" : "text-violet-400",
           )}
         >
-          דחוף
+          {t("adminSettings.anomalies.urgent")}
         </button>
       </div>
 
@@ -151,7 +166,7 @@ export function AdminHouseAnomaliesPanel() {
 
       {!loading && items.length === 0 ? (
         <p className="rounded-lg bg-[#14081c] px-3 py-4 text-sm text-violet-300 ring-1 ring-orange-500/10">
-          אין חריגות פתוחות — כל הכבוד.
+          {t("adminSettings.anomalies.noneOpen")}
         </p>
       ) : null}
 
@@ -187,14 +202,14 @@ export function AdminHouseAnomaliesPanel() {
                       href={`/house/${encodeURIComponent(item.houseId)}`}
                       className="inline-flex items-center gap-1 text-xs text-orange-300 underline-offset-2 hover:underline"
                     >
-                      צפייה בבית
+                      {t("adminSettings.anomalies.viewHouse")}
                       <ExternalLink className="size-3" />
                     </Link>
                     <Link
                       href={`/edit/${encodeURIComponent(item.houseId)}`}
                       className="text-xs text-orange-300 underline-offset-2 hover:underline"
                     >
-                      עריכה
+                      {t("adminSettings.anomalies.edit")}
                     </Link>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-2">
@@ -204,7 +219,7 @@ export function AdminHouseAnomaliesPanel() {
                       disabled={busy}
                       onClick={() => void review(item.houseId, item.kind, "fixed")}
                     >
-                      {busy ? "…" : "טופל"}
+                      {busy ? t("adminSettings.anomalies.busy") : t("adminSettings.anomalies.resolved")}
                     </Button>
                     <Button
                       type="button"
@@ -213,7 +228,7 @@ export function AdminHouseAnomaliesPanel() {
                       disabled={busy}
                       onClick={() => void review(item.houseId, item.kind, "not_an_issue")}
                     >
-                      לא בעיה
+                      {t("adminSettings.anomalies.notIssue")}
                     </Button>
                   </div>
                 </div>

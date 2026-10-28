@@ -13,6 +13,9 @@ import { senderPushEndpoint, showLocalPush } from "@/lib/push-client";
 import { PUSH_TEMPLATE_DISPLAY_ORDER, PushTemplateSign } from "@/components/push-template-signs";
 import { fillPushTemplate } from "@/lib/push-templates";
 import type { PushKind, PushTemplateMeta } from "@/lib/push-templates";
+import { useLocale } from "@/hooks/use-locale";
+import { formatMessage } from "@/lib/i18n/format";
+import { messagesForLocale } from "@/lib/i18n/translate";
 
 const PREVIEW_HOUSE = {
   name: "בית הדלעת",
@@ -23,10 +26,11 @@ const PREVIEW_HOUSE = {
 };
 
 function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; disabled?: boolean }) {
+  const { t } = useLocale();
   return (
     <span className="flex shrink-0 items-center gap-1.5">
       <span className={cn("text-base", on ? "text-orange-200" : "text-violet-400")}>
-        {on ? "פועל" : "כבוי"}
+        {on ? t("adminDryRun.toggleOn") : t("adminDryRun.toggleOff")}
       </span>
       <button
         type="button"
@@ -47,6 +51,7 @@ function Toggle({ on, onClick, disabled }: { on: boolean; onClick: () => void; d
 }
 
 export function AdminPushPanel() {
+  const { locale, t } = useLocale();
   const [templates, setTemplates] = useState<PushTemplateMeta[]>([]);
   const [busy, setBusy] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -73,12 +78,12 @@ export function AdminPushPanel() {
         const data = (await res.json()) as { templates?: PushTemplateMeta[]; error?: string };
         if (cancelled || gen !== loadGen.current || savingRef.current) return;
         if (!res.ok) {
-          toast.error(data.error ?? "לא הצלחנו לטעון תבניות");
+          toast.error(data.error ?? t("adminSettings.push.loadTemplatesFailed"));
           return;
         }
         if (Array.isArray(data.templates)) setTemplates(data.templates);
       } catch {
-        if (!cancelled && gen === loadGen.current) toast.error("אין קשר לשרת");
+        if (!cancelled && gen === loadGen.current) toast.error(t("adminSettings.common.noServer"));
       }
     }
     void load();
@@ -90,7 +95,7 @@ export function AdminPushPanel() {
       cancelled = true;
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, []);
+  }, [t]);
 
   async function persist(next: PushTemplateMeta[], rollback?: PushTemplateMeta[]) {
     const prev = rollback ?? templates;
@@ -115,7 +120,7 @@ export function AdminPushPanel() {
       const data = await readApiJson<{ error?: string; templates?: PushTemplateMeta[] }>(res);
       if (!res.ok) {
         setTemplates(prev);
-        toast.error(data.error ?? "השמירה נכשלה");
+        toast.error(data.error ?? t("adminSettings.common.saveFailed"));
         return false;
       }
       if (Array.isArray(data.templates) && data.templates.length > 0) {
@@ -129,7 +134,7 @@ export function AdminPushPanel() {
       return true;
     } catch {
       setTemplates(prev);
-      toast.error("אין קשר לשרת");
+      toast.error(t("adminSettings.common.noServer"));
       return false;
     } finally {
       savingRef.current = false;
@@ -169,7 +174,7 @@ export function AdminPushPanel() {
         ),
       );
       if (ok) {
-        toast.success("התבנית נשמרה");
+        toast.success(t("adminSettings.push.templateSaved"));
         cancelEdit();
       }
     } finally {
@@ -200,25 +205,33 @@ export function AdminPushPanel() {
         body?: string;
       }>(res);
       if (!res.ok) {
-        toast.error(data.error ?? "השליחה נכשלה");
+        toast.error(data.error ?? t("adminSettings.common.sendFailed"));
         return;
       }
       const sent = data.sent ?? 0;
       const attempted = data.attempted ?? sent;
       if (attempted === 0) {
-        toast.warning("אין מנויי התראות רשומים — ההודעה לא נשלחה.");
+        toast.warning(t("adminSettings.push.noSubscribers"));
       } else if (sent === 0) {
-        toast.error("השליחה נכשלה לכל המנויים. בדקו הגדרות VAPID או הרשאות התראות.");
+        toast.error(t("adminSettings.push.allSubscribersFailed"));
       } else if (sent < attempted) {
-        toast.warning(`נשלח ל־${sent} מתוך ${attempted} מכשירים (${data.failed ?? attempted - sent} נכשלו)`);
+        toast.warning(
+          formatMessage(t("adminSettings.push.partialSent"), {
+            sent: String(sent),
+            attempted: String(attempted),
+            failed: String(data.failed ?? attempted - sent),
+          }),
+        );
       } else {
-        toast.success(`נשלח ל־${sent} מכשירים`);
+        toast.success(
+          formatMessage(t("adminSettings.common.sentCount"), { count: String(sent) }),
+        );
       }
       await showLocalPush(data.title ?? title.trim(), data.body ?? body.trim());
       setTitle("");
       setBody("");
     } catch {
-      toast.error("אין קשר לשרת");
+      toast.error(t("adminSettings.common.noServer"));
     } finally {
       setSending(false);
     }
@@ -229,6 +242,7 @@ export function AdminPushPanel() {
   );
 
   function renderTemplate(item: PushTemplateMeta) {
+    const kindLabel = messagesForLocale(locale).pushKinds[item.id] ?? item.label;
     const open = expanded === item.id;
     const draftChanged =
       open &&
@@ -247,10 +261,10 @@ export function AdminPushPanel() {
       >
         <div className="space-y-1.5">
           <p className="flex items-center gap-1.5 text-base font-medium text-orange-100">
-            <span>{item.label}</span>
+            <span>{kindLabel}</span>
             {item.auto ? (
               <span className="shrink-0 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-sm font-medium text-orange-200">
-                אוטומטי
+                {t("adminSettings.push.auto")}
               </span>
             ) : null}
           </p>
@@ -258,7 +272,11 @@ export function AdminPushPanel() {
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                aria-label={open ? "סגירת עריכה" : `עריכת ${item.label}`}
+                aria-label={
+                  open
+                    ? t("adminSettings.push.closeEdit")
+                    : formatMessage(t("adminSettings.push.editTemplate"), { label: kindLabel })
+                }
                 aria-pressed={open}
                 className={cn(
                   "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-orange-200 ring-1 ring-orange-500/20 hover:bg-orange-500/15",
@@ -277,8 +295,8 @@ export function AdminPushPanel() {
                     ? "bg-orange-500/20 text-orange-100 ring-orange-400/50"
                     : "text-violet-300 ring-orange-500/20 hover:bg-orange-500/10 hover:text-orange-100",
                 )}
-                aria-label="הסבר"
-                title="הסבר"
+                aria-label={t("adminSettings.push.explainAria")}
+                title={t("adminSettings.push.explainTitle")}
               >
                 <Info className="size-3.5" />
               </button>
@@ -332,7 +350,7 @@ export function AdminPushPanel() {
                 disabled={savingEdit || !draftTitle.trim() || !draftBody.trim() || !draftChanged}
                 className="min-h-10 flex-1 bg-orange-500 text-black hover:bg-orange-400"
               >
-                {savingEdit ? "שומרים…" : "שמירה"}
+                {savingEdit ? t("adminSettings.push.saving") : t("adminSettings.common.save")}
               </Button>
               <Button
                 type="button"
@@ -342,7 +360,7 @@ export function AdminPushPanel() {
                 className="min-h-10 flex-1 text-violet-200"
                 onClick={cancelEdit}
               >
-                סגור
+                {t("adminSettings.push.close")}
               </Button>
             </div>
           </form>
@@ -362,18 +380,18 @@ export function AdminPushPanel() {
           void sendBroadcast();
         }}
       >
-        <p className="text-base font-medium text-amber-100">הודעה חד־פעמית לכולם</p>
+        <p className="text-base font-medium text-amber-100">{t("adminSettings.push.oneShotTitle")}</p>
         <Input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="כותרת"
+          placeholder={t("adminSettings.common.titlePlaceholder")}
           maxLength={80}
           className="h-9 bg-[#12081a] text-base"
         />
         <Textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          placeholder="למשל: הגשם מתחיל, הממתקים בחוץ עד 21:00"
+          placeholder={t("adminSettings.common.bodyPlaceholder")}
           maxLength={280}
           rows={2}
           className="min-h-[4rem] bg-[#12081a] text-base"
@@ -384,14 +402,14 @@ export function AdminPushPanel() {
           disabled={sending || !title.trim() || !body.trim()}
           className="bg-orange-500 text-black hover:bg-orange-400"
         >
-          {sending ? "שולחים…" : "שליחה לכולם"}
+          {sending ? t("adminSettings.common.sending") : t("adminSettings.common.sendToAll")}
         </Button>
       </form>
 
       <div className="space-y-2 rounded-xl bg-black/25 p-3">
-        <p className="text-base font-medium text-amber-100">תבניות התראות</p>
+        <p className="text-base font-medium text-amber-100">{t("adminSettings.push.templatesTitle")}</p>
         {templates.length === 0 ? (
-          <p className="text-base text-violet-400">טוענים תבניות…</p>
+          <p className="text-base text-violet-400">{t("adminSettings.push.loadingTemplates")}</p>
         ) : (
           <div className="space-y-1.5">{sortedTemplates.map(renderTemplate)}</div>
         )}

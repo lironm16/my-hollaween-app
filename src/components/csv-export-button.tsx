@@ -59,7 +59,7 @@ export function HouseExportDialog({
     if (selected === "txt") {
       await downloadOrShareHouseExport(houses, kind, selected, { preferShare: true, locale });
     } else {
-      downloadHouseExport(houses, kind, selected);
+      downloadHouseExport(houses, kind, selected, locale);
     }
     onOpenChange(false);
   }

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminHelpDetails } from "@/components/admin-section";
 import { notifyCatalogChanged } from "@/lib/offline-db";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 /** Show or hide the pre-event countdown bar and full-screen intro (default on). */
 export function AdminCountdownBannerSettings({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useLocale();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -27,8 +29,8 @@ export function AdminCountdownBannerSettings({ embedded = false }: { embedded?: 
     if (enabled === null) return;
     const next = !enabled;
     const question = next
-      ? "להציג שוב את באנר הספירה לאחור והמסך המלא לפני האירוע?"
-      : "להסתיר את באנר הספירה לאחור והמסך המלא? (האירוע ממשיך בלוח הזמנים הרגיל.)";
+      ? t("adminSettings.countdownBanner.confirmShow")
+      : t("adminSettings.countdownBanner.confirmHide");
     if (!window.confirm(question)) return;
     setSaving(true);
     try {
@@ -39,7 +41,7 @@ export function AdminCountdownBannerSettings({ embedded = false }: { embedded?: 
       });
       const json = (await res.json().catch(() => null)) as { enabled?: boolean; error?: string } | null;
       if (!res.ok) {
-        toast.error(json?.error ?? "השמירה נכשלה.");
+        toast.error(json?.error ?? t("adminSettings.common.saveFailed"));
         return;
       }
       setEnabled(Boolean(json?.enabled));
@@ -49,6 +51,8 @@ export function AdminCountdownBannerSettings({ embedded = false }: { embedded?: 
     }
   }
 
+  const help = t("adminSettings.countdownBanner.help");
+
   return (
     <div
       className={cn(
@@ -57,17 +61,21 @@ export function AdminCountdownBannerSettings({ embedded = false }: { embedded?: 
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-orange-100">באנר ספירה לאחור</p>
+        <p className="text-sm font-medium text-orange-100">{t("adminSettings.countdownBanner.title")}</p>
         <span className="flex shrink-0 items-center gap-1.5">
           <span className={cn("text-base", enabled ? "text-orange-200" : "text-violet-400")}>
-            {enabled === null ? "…" : enabled ? "מוצג" : "מוסתר"}
+            {enabled === null
+              ? t("adminSettings.common.statusUnknown")
+              : enabled
+                ? t("adminSettings.countdownBanner.shown")
+                : t("adminSettings.countdownBanner.hidden")}
           </span>
           <button
             type="button"
             dir="ltr"
             role="switch"
             aria-checked={Boolean(enabled)}
-            aria-label="באנר ספירה לאחור"
+            aria-label={t("adminSettings.countdownBanner.title")}
             disabled={enabled === null || saving}
             onClick={() => void toggle()}
             className={cn(
@@ -80,13 +88,9 @@ export function AdminCountdownBannerSettings({ embedded = false }: { embedded?: 
         </span>
       </div>
       {embedded ? (
-        <AdminHelpDetails label="מה זה?">
-          הפס התחתון והמסך המלא לפני ליל האירוע. כבוי = לא מופיע למשתמשים; ברירת המחדל מוצג.
-        </AdminHelpDetails>
+        <AdminHelpDetails label={t("adminSettings.common.whatIsThis")}>{help}</AdminHelpDetails>
       ) : (
-        <p className="text-sm text-violet-300">
-          הפס התחתון והמסך המלא לפני ליל האירוע. כבוי = לא מופיע למשתמשים; ברירת המחדל מוצג.
-        </p>
+        <p className="text-sm text-violet-300">{help}</p>
       )}
     </div>
   );

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EventOpenHoursSchedule } from "@/lib/types";
 import { FormPrimarySecondaryActions } from "@/components/form-primary-secondary-actions";
+import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
 type SettingsResponse = {
@@ -28,6 +29,7 @@ function parseDateInput(value: string): Pick<EventOpenHoursSchedule, "year" | "m
 }
 
 export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useLocale();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -53,7 +55,7 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
       const res = await fetch("/api/admin/event/open-hours", { cache: "no-store" });
       const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "טעינת ההגדרות נכשלה.");
+        setError(json?.error ?? t("adminSettings.common.loadFailed"));
         return;
       }
       setSaved(json);
@@ -61,11 +63,11 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
       setFromValue(json.eventOpenHours.openFrom);
       setToValue(json.eventOpenHours.openTo);
     } catch {
-      setError("טעינת ההגדרות נכשלה.");
+      setError(t("adminSettings.common.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -74,7 +76,7 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
   async function onSave() {
     const date = parseDateInput(dateValue);
     if (!date || !fromValue.trim() || !toValue.trim()) {
-      setError("יש למלא תאריך ושעות תקינים.");
+      setError(t("adminSettings.eventHours.invalidFields"));
       return;
     }
     setSaving(true);
@@ -87,7 +89,7 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
       });
       const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "שמירה נכשלה.");
+        setError(json?.error ?? t("adminSettings.common.saveFailed"));
         return;
       }
       setSaved(json);
@@ -95,7 +97,7 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
       setFromValue(json.eventOpenHours.openFrom);
       setToValue(json.eventOpenHours.openTo);
     } catch {
-      setError("שמירה נכשלה.");
+      setError(t("adminSettings.common.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -112,7 +114,7 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
       });
       const json = (await res.json().catch(() => null)) as SettingsResponse & { error?: string };
       if (!res.ok) {
-        setError(json?.error ?? "איפוס נכשל.");
+        setError(json?.error ?? t("adminSettings.common.resetFailed"));
         return;
       }
       setSaved(json);
@@ -120,7 +122,7 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
       setFromValue(json.eventOpenHours.openFrom);
       setToValue(json.eventOpenHours.openTo);
     } catch {
-      setError("איפוס נכשל.");
+      setError(t("adminSettings.common.resetFailed"));
     } finally {
       setSaving(false);
     }
@@ -128,14 +130,12 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
 
   return (
     <div className={cn("space-y-2", embedded ? "" : "rounded-xl bg-[#1a0a24] p-3 ring-1 ring-orange-500/20")}>
-      <p className="text-sm font-medium text-orange-100">ליל האירוע · שעות ברירת מחדל</p>
-      <p className="text-xs text-violet-400">
-        משפיע על ברירת המחדל ב&quot;הוספת בית&quot; ועל בדיקת חריגות בשעות.
-      </p>
-      {loading ? <p className="text-sm text-violet-300">טוען…</p> : null}
+      <p className="text-sm font-medium text-orange-100">{t("adminSettings.eventHours.title")}</p>
+      <p className="text-xs text-violet-400">{t("adminSettings.eventHours.hint")}</p>
+      {loading ? <p className="text-sm text-violet-300">{t("adminSettings.common.loading")}</p> : null}
       {error ? <p className="text-sm text-amber-300">{error}</p> : null}
       <label className="block space-y-1">
-        <span className="text-sm text-violet-300">תאריך האירוע</span>
+        <span className="text-sm text-violet-300">{t("adminSettings.eventHours.eventDate")}</span>
         <input
           type="date"
           value={dateValue}
@@ -146,7 +146,7 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
       </label>
       <div className="grid grid-cols-2 gap-2">
         <label className="block space-y-1">
-          <span className="text-sm text-violet-300">פתיחה</span>
+          <span className="text-sm text-violet-300">{t("adminSettings.eventHours.open")}</span>
           <input
             type="time"
             value={fromValue}
@@ -156,7 +156,7 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-sm text-violet-300">סגירה</span>
+          <span className="text-sm text-violet-300">{t("adminSettings.eventHours.close")}</span>
           <input
             type="time"
             value={toValue}
@@ -167,10 +167,10 @@ export function AdminEventOpenHoursSettings({ embedded = false }: { embedded?: b
         </label>
       </div>
       <FormPrimarySecondaryActions
-        primaryLabel={saving ? "שומר…" : "שמירה"}
+        primaryLabel={saving ? t("adminSettings.common.saving") : t("adminSettings.common.save")}
         primaryDisabled={!dirty || saving || loading}
         onPrimary={() => void onSave()}
-        secondaryLabel="ברירת מחדל"
+        secondaryLabel={t("adminSettings.eventHours.resetDefault")}
         secondaryDisabled={saving || loading || !saved?.customized}
         onSecondary={() => void onReset()}
       />

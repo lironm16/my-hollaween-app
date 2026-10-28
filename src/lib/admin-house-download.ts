@@ -1,3 +1,6 @@
+import { defaultAppLocale, readStoredAppLocale } from "@/lib/i18n/locale";
+import { translate } from "@/lib/i18n/translate";
+
 function triggerDownload(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -17,10 +20,15 @@ function datedFilename(prefix: string, ext: string) {
 export type AdminHouseDownloadFormat = "json" | "xlsx" | "csv";
 
 export async function downloadAdminHouseExport(format: AdminHouseDownloadFormat): Promise<void> {
+  const locale = readStoredAppLocale() ?? defaultAppLocale();
+  const adminRequired = translate(locale, "adminSettings.download.adminRequired");
+  const backupFailed = translate(locale, "adminSettings.download.backupFailed");
+  const fileFailed = translate(locale, "adminSettings.download.fileFailed");
+
   if (format === "json") {
     const res = await fetch("/api/admin/houses", { credentials: "include", cache: "no-store" });
     if (!res.ok) {
-      throw new Error(res.status === 401 ? "נדרשת הרשאת מנהל." : "לא הצלחנו להוריד את הגיבוי.");
+      throw new Error(res.status === 401 ? adminRequired : backupFailed);
     }
     const payload = await res.json();
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -35,7 +43,7 @@ export async function downloadAdminHouseExport(format: AdminHouseDownloadFormat)
     cache: "no-store",
   });
   if (!res.ok) {
-    throw new Error(res.status === 401 ? "נדרשת הרשאת מנהל." : "לא הצלחנו להוריד את הקובץ.");
+    throw new Error(res.status === 401 ? adminRequired : fileFailed);
   }
   const blob = await res.blob();
   const ext = format === "csv" ? "csv" : "xlsx";
