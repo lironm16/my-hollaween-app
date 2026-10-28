@@ -1,6 +1,7 @@
 import { config, formatDisplayAddress, resolveNeighborhood, type NeighborhoodId } from "@/lib/config";
 import type { AppLocale } from "@/lib/i18n/locale";
 import { formatMessage } from "@/lib/i18n/format";
+import { localizedFormatDisplayAddress } from "@/lib/i18n/display-address";
 import { displayNeighborhoodName } from "@/lib/i18n/neighborhood-labels";
 import { translate } from "@/lib/i18n/translate";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
@@ -108,7 +109,7 @@ export function formatDisplayAddressWithPolicy(
   locale: AppLocale = "he",
 ): string {
   if (canViewHouseLocationDetails(houseId, ctx)) {
-    return formatDisplayAddress(house);
+    return localizedFormatDisplayAddress(locale, house);
   }
   const hint = addressHiddenHint(locale, ctx.now, ctx.addressReveal, ctx.audience);
   const area = resolveNeighborhood(house);

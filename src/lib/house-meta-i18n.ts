@@ -7,10 +7,12 @@ import type { PublicHouse } from "@/lib/types";
 export function houseAddedMetaLineLocalized(
   locale: AppLocale,
   house: Pick<PublicHouse, "createdAt"> & { addedBy?: string | null },
-  options?: { showSubmitterName?: boolean },
+  options?: { showSubmitterName?: boolean; submitterDisplayName?: string },
 ): string | null {
   const when = house.createdAt ? formatHouseAddedAt(house.createdAt, locale) : "";
-  const who = options?.showSubmitterName ? house.addedBy?.trim() : "";
+  const who = options?.showSubmitterName
+    ? (options.submitterDisplayName?.trim() || house.addedBy?.trim())
+    : "";
   if (who && when) {
     return formatMessage(translate(locale, "houseMeta.addedByWhoWhen"), { who, when });
   }

@@ -469,7 +469,7 @@ export const heMessages = {
   },
   cheer: {
     liked: "אהבתם",
-    visited: "כל הכבוד",
+    visited: "ביקרתם",
   },
   routeComplete: {
     title: "סיימתם את המסלול",
@@ -896,7 +896,7 @@ export const heMessages = {
   },
   nightPassDialog: {
     deviceConnected: "מכשיר מחובר",
-    eventConnect: "חיבור לאירוע",
+    eventConnect: "חיבור",
     removedFromEvent: "הבית הוסר מהאירוע — לא ניתן להירשם מהזמנה הזו.",
     checkFailed: "לא הצלחנו לבדוק את ההזמנה. נסו שוב.",
   },
@@ -933,6 +933,18 @@ export const heMessages = {
     errNoHouseOnDevice: "לא נמצא בית לעריכה במכשיר הזה.",
     errLoadPrefill: "לא הצלחנו לטעון פרטים. נסו שוב.",
     errRegisterFailed: "ההרשמה נכשלה. נסו שוב.",
+    errDeviceAlreadyRegistered: "המכשיר כבר רשום.",
+    errRegisterFull:
+      "כבר מחוברים 4 מכשירים. בעלי הבית צריכים להסיר מכשיר מהרשימה כדי לפנות מקום.",
+    errRegisterDuplicateIdentity:
+      "מכשיר אחר כבר רשום עם פרטים אלו. הכנס שם או טלפון אחר.",
+    errRegisterCodeReset:
+      "קוד הכניסה אופס. בקשו מבעל הבית את הקוד החדש או קישור הזמנה.",
+    errRegisterInvalid:
+      "קוד הכניסה לא תקף. אם אופס לאחרונה — בקשו מבעל הבית קוד חדש או קישור הזמנה.",
+    errRegisterName: "נא לכתוב שם (2–40 תווים).",
+    errRegisterPhone: "נא לכתוב מספר נייד ישראלי, למשל 050-1234567.",
+    errRegisterRate: "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.",
     errNoServer: "אין חיבור לשרת. נסו שוב כשיש קליטה.",
     deviceUpdated: "המכשיר עודכן",
     bannerDismissAria: "סגירת ההודעה",
@@ -946,7 +958,7 @@ export const heMessages = {
     lostDescRemoved: "אפשר לבקש מבעלי הבית הזמנה להתחבר שוב.",
     lostDescReset: "פנו לבעלי הבית לקוד מעודכן.",
     stripNotConnected: "מכשיר לא מחובר",
-    stripConnect: "חיבור לאירוע",
+    stripConnect: "חיבור",
     stripConnected: "מכשיר מחובר",
     stripActive: "פעיל",
     stripRegisteredFallback: "רשומים",

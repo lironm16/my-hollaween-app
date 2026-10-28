@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useAdminSession } from "@/hooks/use-admin-session";
 import { useNightPass } from "@/hooks/use-night-pass";
 import { useLocale } from "@/hooks/use-locale";
+import { resolveNightPassRegisterError } from "@/lib/i18n/night-pass-register-errors-client";
 import { formatMessage } from "@/lib/i18n/format";
 import {
   notifyNightPassSlotsChanged,
@@ -72,7 +73,7 @@ export function NightPassRegisterPanel({
 }: Props) {
   const pass = useNightPass();
   const { admin } = useAdminSession();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const [checked, setChecked] = useState(false);
   const [code, setCode] = useState(initialCode);
   const [name, setName] = useState("");
@@ -239,7 +240,7 @@ export function NightPassRegisterPanel({
             }
           }
         }
-        setError(json?.error ?? t("nightPass.errRegisterFailed"));
+        setError(resolveNightPassRegisterError(locale, json));
         return;
       }
       if (json?.houseId) {

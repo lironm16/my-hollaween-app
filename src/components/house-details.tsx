@@ -346,6 +346,8 @@ export function HouseDetails({
   const showPrivateFields = adminShowsPrivateHouseFields(admin, previewAsUser);
   const editorHouse = viewHouse as EditorHouse;
   const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
+  const addedByRaw = showPrivateFields ? editorHouse.addedBy?.trim() ?? "" : "";
+  const addedByDisplay = useTranslatedUserText(addedByRaw);
   const displayAddress = addressReveal.formatDisplayAddress(viewHouse);
   const arrivalText = addressReveal.visibleArrival(viewHouse);
   const showMaps = addressReveal.mapsAllowed(viewHouse.id) && houseServerDetailReady(viewHouse);
@@ -353,6 +355,7 @@ export function HouseDetails({
     addressReveal.distanceAllowed(viewHouse.id) && distanceM !== undefined;
   const addedMeta = houseAddedMetaLineLocalized(locale, editorHouse, {
     showSubmitterName: showPrivateFields,
+    submitterDisplayName: addedByDisplay,
   });
   const [showPhoto, setShowPhoto] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
