@@ -24,14 +24,16 @@ export function readDevicePitch(event: DeviceOrientationEvent): number | null {
   return 90 - angle;
 }
 
-function readHeading(event: OrientationLike): number | null {
+/**
+ * Map-north compass heading (0 = north, clockwise), aligned with iOS `webkitCompassHeading`
+ * and Android `deviceorientationabsolute`. Relative `deviceorientation` alpha is ignored —
+ * it is not a compass and makes the walk needle misleading.
+ */
+export function readDeviceCompassHeading(event: OrientationLike): number | null {
   if (typeof event.webkitCompassHeading === "number" && Number.isFinite(event.webkitCompassHeading)) {
     return normalizeHeading(event.webkitCompassHeading);
   }
   if (event.absolute && typeof event.alpha === "number" && Number.isFinite(event.alpha)) {
-    return normalizeHeading(360 - event.alpha);
-  }
-  if (typeof event.alpha === "number" && Number.isFinite(event.alpha)) {
     return normalizeHeading(360 - event.alpha);
   }
   return null;
@@ -69,7 +71,7 @@ export function useDeviceHeading(active: boolean, retryToken = 0) {
       lastPitchRef.current = smoothed;
       setPitch(smoothed);
     }
-    const value = readHeading(orient);
+    const value = readDeviceCompassHeading(orient);
     if (value == null) return;
     const prev = lastValueRef.current;
     const now = performance.now();
@@ -87,6 +89,7 @@ export function useDeviceHeading(active: boolean, retryToken = 0) {
   useEffect(() => {
     if (!active) {
       window.removeEventListener("deviceorientation", onOrientation, true);
+      window.removeEventListener("deviceorientationabsolute", onOrientation, true);
       lastUiRef.current = 0;
       lastValueRef.current = null;
       lastPitchRef.current = null;
@@ -112,8 +115,10 @@ export function useDeviceHeading(active: boolean, retryToken = 0) {
 
     setStatus("pending");
     window.addEventListener("deviceorientation", onOrientation, true);
+    window.addEventListener("deviceorientationabsolute", onOrientation, true);
     return () => {
       window.removeEventListener("deviceorientation", onOrientation, true);
+      window.removeEventListener("deviceorientationabsolute", onOrientation, true);
     };
   }, [active, onOrientation, retryToken]);
 
