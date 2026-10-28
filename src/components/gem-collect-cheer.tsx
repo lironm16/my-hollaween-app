@@ -21,7 +21,7 @@ export function GemCollectCheer({
           <i /><i /><i /><i /><i /><i />
         </span>
         <ImpMenuActiveGlyph className="gem-collect-cheer__gem-icon" />
-        <span className="gem-collect-cheer__text">{t("help.product.gemFoundCheer")}</span>
+        <span className="gem-collect-cheer__text hw-cheer-display">{t("help.product.gemFoundCheer")}</span>
       </div>
     </div>
   );

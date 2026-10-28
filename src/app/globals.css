@@ -4063,6 +4063,44 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   animation: visit-cheer-pop 1.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
 }
 
+/* Map / bag “good job” toasts — English uses Creepster; Hebrew keeps Rubik weight on card. */
+.hw-cheer-display {
+  display: block;
+  line-height: 1.12;
+  text-align: center;
+}
+
+html[lang="en"] .hw-cheer-display {
+  font-family: var(--font-creepster), Creepster, cursive;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.14);
+}
+
+html[lang="en"] .visit-cheer-card .hw-cheer-display,
+html[lang="en"] .like-cheer-card .hw-cheer-display,
+html[lang="en"] .gem-cheer-card .hw-cheer-display,
+html[lang="en"] .gem-collect-cheer__text.hw-cheer-display {
+  font-size: 1.65rem;
+}
+
+html[lang="en"] .route-complete-cheer-title.hw-cheer-display {
+  font-size: 1.7rem;
+}
+
+html[lang="en"] .route-complete-cheer-sub.hw-cheer-display {
+  font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  text-shadow: none;
+}
+
+html[lang="en"] .gem-bag-milestone__title.hw-cheer-display {
+  font-size: 1.75rem;
+  letter-spacing: 0.03em;
+}
+
 .visit-cheer-check {
   width: 36px;
   height: 36px;

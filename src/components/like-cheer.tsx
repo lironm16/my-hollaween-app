@@ -15,7 +15,7 @@ export function LikeCheer({ show }: { show: boolean }) {
         <span className="like-cheer-heart" aria-hidden="true">
           <Heart className="size-5 fill-current" strokeWidth={2.2} />
         </span>
-        {t("cheer.liked")}
+        <span className="hw-cheer-display">{t("cheer.liked")}</span>
       </div>
     </div>
   );

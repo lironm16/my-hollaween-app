@@ -73,7 +73,7 @@ export function GemBagMilestoneCelebration({
         <Sparkles className="gem-bag-milestone__spark size-8 text-amber-300" aria-hidden />
         <ImpMarkerGlyph className="gem-bag-milestone__gem size-10 text-violet-200" />
         <p className="gem-bag-milestone__kicker">{copy.kicker}</p>
-        <h2 className="gem-bag-milestone__title">{copy.title}</h2>
+        <h2 className="gem-bag-milestone__title hw-cheer-display">{copy.title}</h2>
         <p className="gem-bag-milestone__sub">{copy.sub}</p>
         <button
           type="button"

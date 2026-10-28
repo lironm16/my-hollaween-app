@@ -647,6 +647,9 @@
   .mt-1 {
     margin-top: var(--spacing);
   }
+  .mt-1\.5 {
+    margin-top: calc(var(--spacing) * 1.5);
+  }
   .mt-2 {
     margin-top: calc(var(--spacing) * 2);
   }
@@ -1850,6 +1853,9 @@
   }
   .bg-\[\#1a0d24\] {
     background-color: #1a0d24;
+  }
+  .bg-\[\#1a0d24\]\/90 {
+    background-color: color-mix(in oklab, #1a0d24 90%, transparent);
   }
   .bg-\[\#1a1024\] {
     background-color: #1a1024;
@@ -9323,6 +9329,37 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
   font-weight: 800;
   box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.45), 0 16px 44px rgba(5, 150, 105, 0.5);
   animation: visit-cheer-pop 1.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards;
+}
+.hw-cheer-display {
+  display: block;
+  line-height: 1.12;
+  text-align: center;
+}
+html[lang="en"] .hw-cheer-display {
+  font-family: var(--font-creepster), Creepster, cursive;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.14);
+}
+html[lang="en"] .visit-cheer-card .hw-cheer-display,
+html[lang="en"] .like-cheer-card .hw-cheer-display,
+html[lang="en"] .gem-cheer-card .hw-cheer-display,
+html[lang="en"] .gem-collect-cheer__text.hw-cheer-display {
+  font-size: 1.65rem;
+}
+html[lang="en"] .route-complete-cheer-title.hw-cheer-display {
+  font-size: 1.7rem;
+}
+html[lang="en"] .route-complete-cheer-sub.hw-cheer-display {
+  font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  text-shadow: none;
+}
+html[lang="en"] .gem-bag-milestone__title.hw-cheer-display {
+  font-size: 1.75rem;
+  letter-spacing: 0.03em;
 }
 .visit-cheer-check {
   width: 36px;

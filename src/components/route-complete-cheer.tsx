@@ -12,8 +12,8 @@ export function RouteCompleteCheer({ show }: { show: boolean }) {
           <i /><i /><i /><i /><i /><i /><i /><i />
         </span>
         <span className="route-complete-cheer-flag" aria-hidden="true" />
-        <span className="route-complete-cheer-title">{t("routeComplete.title")}</span>
-        <span className="route-complete-cheer-sub">{t("routeComplete.sub")}</span>
+        <span className="route-complete-cheer-title hw-cheer-display">{t("routeComplete.title")}</span>
+        <span className="route-complete-cheer-sub hw-cheer-display">{t("routeComplete.sub")}</span>
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ export function GemCheer({
         <span className="gem-cheer-gem" aria-hidden="true">
           <ImpMenuActiveGlyph className="size-10" />
         </span>
-        {t("help.product.gemFoundCheer")}
+        <span className="hw-cheer-display">{t("help.product.gemFoundCheer")}</span>
       </div>
     </div>
   );

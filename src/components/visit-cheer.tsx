@@ -12,7 +12,7 @@ export function VisitCheer({ show }: { show: boolean }) {
           <i /><i /><i /><i /><i /><i />
         </span>
         <span className="visit-cheer-check" aria-hidden="true" />
-        {t("cheer.visited")}
+        <span className="hw-cheer-display">{t("cheer.visited")}</span>
       </div>
     </div>
   );
