@@ -82,8 +82,28 @@ function SettingsSection({ title, children }: { title: string; children: React.R
   return (
     <section className="rounded-2xl bg-[#241332] p-2.5 ring-1 ring-white/10">
       <h2 className="mb-2 text-base font-semibold text-orange-400">{title}</h2>
-      <div className="grid gap-2">{children}</div>
+      <div className="grid gap-3">{children}</div>
     </section>
+  );
+}
+
+function SettingsSubsection({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl bg-[#1a0d24]/90 p-2 ring-1 ring-orange-500/10">
+      <h3 className="px-1 text-sm font-semibold tracking-wide text-violet-200/95">{title}</h3>
+      {hint ? (
+        <p className="mt-1 px-1 text-sm leading-snug text-violet-300/80">{hint}</p>
+      ) : null}
+      <div className={cn("grid gap-2", hint ? "mt-2" : "mt-1.5")}>{children}</div>
+    </div>
   );
 }
 
@@ -99,23 +119,36 @@ export function LanguageSettings() {
   return (
     <div dir={dir} className="space-y-3">
       <SettingsSection title={t("settings.languageSection")}>
-        {APP_LOCALES.map((code) => (
-          <LanguageOption
-            key={code}
-            active={locale === code}
-            label={LOCALE_LABELS[code]}
-            onSelect={() => {
-              if (code !== locale) setLocale(code);
-            }}
-          />
-        ))}
-        {locale === "en" ? (
-          <SettingSwitch
-            title={t("settings.contentTranslateOn")}
-            on={translateUserContent}
-            onChange={setTranslateUserContent}
-          />
-        ) : null}
+        <SettingsSubsection title={t("settings.interfaceSection")} hint={t("settings.languageHint")}>
+          {APP_LOCALES.map((code) => (
+            <LanguageOption
+              key={code}
+              active={locale === code}
+              label={LOCALE_LABELS[code]}
+              onSelect={() => {
+                if (code !== locale) setLocale(code);
+              }}
+            />
+          ))}
+        </SettingsSubsection>
+        <SettingsSubsection title={t("settings.contentSection")} hint={t("settings.contentHint")}>
+          {locale === "en" ? (
+            <>
+              <SettingSwitch
+                title={t("settings.contentTranslateOn")}
+                on={translateUserContent}
+                onChange={setTranslateUserContent}
+              />
+              <p className="px-1 text-sm leading-snug text-violet-300/70">
+                {t("settings.contentTranslateHint")}
+              </p>
+            </>
+          ) : (
+            <p className="rounded-xl bg-[#12081a] px-3 py-3 text-sm leading-snug text-violet-200/85 ring-1 ring-orange-500/15">
+              {t("settings.contentTranslateRequiresEnglish")}
+            </p>
+          )}
+        </SettingsSubsection>
       </SettingsSection>
     </div>
   );

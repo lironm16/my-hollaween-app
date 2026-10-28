@@ -6,17 +6,18 @@ export const enMessages: AppMessages = {
   settings: {
     title: "Settings",
     languageSection: "Language",
+    interfaceSection: "Interface",
     languageHint:
-      "Buttons, menus, and app messages. Official hood names (Shikun Vatikim, Charuzim…) use fixed translations for your interface language — not Google Translate.",
+      "Buttons, menus, and app messages. Official hood names (Shikun Vatikim, Charuzim…) use fixed translations — not machine translation.",
     languageEnglish: "English",
     languageHebrew: "עברית",
-    contentSection: "Community content",
+    contentSection: "User content",
     contentHint:
-      "House names, visitor notes, and similar neighbor-entered text — not the official hood names.",
-    contentTranslateOn: "Translate neighbor text",
+      "Text neighbors typed in: house names, descriptions, notes. Hood names stay as fixed labels on the map.",
+    contentTranslateOn: "Translate to English",
     contentTranslateHint:
-      "When the interface is English, show machine translations of neighbor-submitted text. Without a server translation key, originals are shown.",
-    contentTranslateRequiresEnglish: "Switch the interface to English first to translate community content.",
+      "Uses machine translation when available. If the server has no translation key, Hebrew text stays as written.",
+    contentTranslateRequiresEnglish: "Choose English under Interface to enable translation.",
     notificationsSection: "Notifications",
     notificationsIntro:
       "Which alerts this device receives. Turn all notifications on or off with the bell in the header.",

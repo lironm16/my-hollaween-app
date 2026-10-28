@@ -5,17 +5,18 @@ export const heMessages = {
   settings: {
     title: "הגדרות",
     languageSection: "שפה",
+    interfaceSection: "ממשק",
     languageHint:
-      "כפתורים, תפריטים והודעות. שמות השכונות הרשמיות (שיכון ותיקים, חרוזים…) מוצגים בשפת הממשק — תרגום קבוע, לא Google.",
+      "כפתורים, תפריטים והודעות. שמות השכונות הרשמיות (שיכון ותיקים, חרוזים…) — תרגום קבוע, לא Google.",
     languageEnglish: "English",
     languageHebrew: "עברית",
-    contentSection: "תוכן מהקהילה",
+    contentSection: "תוכן משתמשים",
     contentHint:
-      "שמות בתים, הערות למבקרים וטקסט דומה ששכנים הזינו — לא שמות השכונות הרשמיות.",
-    contentTranslateOn: "תרגום תוכן שכנים",
+      "טקסט ששכנים הזינו: שם בית, תיאור, הערות. שמות השכונות על המפה נשארים כמו בממשק.",
+    contentTranslateOn: "תרגום לאנגלית",
     contentTranslateHint:
-      "כשהממשק באנגלית — מציגים תרגום (מכונה) של טקסט ששכנים הזינו. בלי מפתח תרגום בשרת יוצג המקור.",
-    contentTranslateRequiresEnglish: "הפעילו קודם ממשק באנגלית כדי לתרגם תוכן קהילתי.",
+      "תרגום מכונה כשאפשר. בלי מפתח תרגום בשרת — יוצג המקור בעברית.",
+    contentTranslateRequiresEnglish: "בחרו English תחת ממשק כדי להפעיל תרגום.",
     notificationsSection: "התראות",
     notificationsIntro:
       "סוגי ההתראות שיישלחו למכשיר. הפעלה/כיבוי מלא דרך סמל הפעמון בראש המסך.",
