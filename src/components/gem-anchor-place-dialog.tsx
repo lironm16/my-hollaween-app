@@ -29,7 +29,6 @@ import { useLocale } from "@/hooks/use-locale";
 import { formatMessage } from "@/lib/i18n/format";
 import { notePlacedGemAnchor } from "@/lib/gem-placed-anchors";
 import { distanceMeters } from "@/lib/geo";
-import { houseHeadline } from "@/lib/labels";
 import { notifyCatalogChanged } from "@/lib/offline-db";
 import type { LatLng } from "@/lib/route";
 import type { GemAnchorPlacement, PublicHouse } from "@/lib/types";
@@ -237,7 +236,6 @@ export function GemAnchorPlaceDialog({
       open={open}
       onClose={onClose}
       title={t("help.product.gemPlaceAction")}
-      subtitle={houseHeadline(house)}
     >
       <div className="space-y-3">
         <GemAnchorPlaceHint />

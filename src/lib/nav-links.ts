@@ -91,10 +91,9 @@ export function editCodeSharePayload(
   editCode: string,
   locale: AppLocale = "he",
 ) {
-  const name = houseHeadline(house);
   const s = messagesForLocale(locale).shareAccess;
-  const title = formatMessage(s.familyCodeTitle, { name });
-  const text = formatMessage(s.familyCodeBody, { name, code: editCode });
+  const title = s.familyCodeTitle;
+  const text = formatMessage(s.familyCodeBody, { code: editCode });
   return { title, text };
 }
 
@@ -111,9 +110,8 @@ export async function shareHouseAccessInvite(
     if (!res.ok || !json?.url) return "failed";
     const url =
       json.url.startsWith("http") ? json.url : `${(origin ?? window.location.origin).replace(/\/$/, "")}${json.url}`;
-    const name = houseHeadline(house);
     const s = messagesForLocale(locale).shareAccess;
-    const title = formatMessage(s.inviteTitle, { name });
+    const title = s.inviteTitle;
     const text = formatMessage(s.inviteBody, { url });
     if (navigator.share) {
       await navigator.share({ title, text, url });

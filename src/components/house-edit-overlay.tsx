@@ -31,7 +31,7 @@ export function HouseEditOverlay({
       aria-modal="true"
       aria-label={t("houseEditOverlay.title")}
     >
-      <OverlayCloseBar onClose={onClose} title={t("houseEditOverlay.title")} subtitle={house.name} />
+      <OverlayCloseBar onClose={onClose} title={t("houseEditOverlay.title")} />
       <div className="house-edit-overlay-body">
         <div className="mx-auto w-full max-w-lg space-y-4 px-4 pb-8">
           <NightDesk

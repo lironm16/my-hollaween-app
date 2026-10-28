@@ -225,7 +225,7 @@ describe("temporarySkipRestoreMet", () => {
 });
 
 describe("temporaryRestoreAlertText", () => {
-  it("mentions the house and restore trigger", () => {
+  it("mentions the restore trigger", () => {
     assert.match(
       temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), {
         reason: "not-open",
@@ -233,7 +233,7 @@ describe("temporaryRestoreAlertText", () => {
         statusKey: "x",
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
-      /משפחת לוין חזר לרשימה — הבית פתוח/,
+      /חזר לרשימה — הבית פתוח/,
     );
     assert.match(
       temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), {
@@ -242,7 +242,7 @@ describe("temporaryRestoreAlertText", () => {
         statusKey: "x",
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
-      /משפחת לוין חזר לרשימה — יש ממתקים/,
+      /חזר לרשימה — יש ממתקים/,
     );
     assert.match(
       temporaryRestoreAlertText(stub({ name: "משפחת לוין" }), {
@@ -252,7 +252,7 @@ describe("temporaryRestoreAlertText", () => {
         statusKey: "x",
         skippedAt: "2026-01-01T00:00:00.000Z",
       }),
-      /משפחת לוין חזר לרשימה — הבית פתוח ויש ממתקים/,
+      /חזר לרשימה — הבית פתוח ויש ממתקים/,
     );
   });
 });

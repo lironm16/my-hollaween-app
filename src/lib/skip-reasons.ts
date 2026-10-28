@@ -1,6 +1,5 @@
 import { candyPinDot, effectiveVisit, isOwnerFrozen } from "@/lib/house-state";
 import { isOnBreak, isOpenNowForFilter } from "@/lib/hours";
-import { houseHeadline } from "@/lib/labels";
 import type { HouseFiltersState, SkippedHouseMeta } from "@/lib/offline-db";
 import { resolveVisitWindow } from "@/lib/visit-window";
 import type { PublicHouse } from "@/lib/types";
@@ -145,15 +144,14 @@ export function skipMetaSummary(meta: SkippedHouseMeta) {
   return "דילגתם";
 }
 
-export function temporaryRestoreAlertText(house: PublicHouse, meta: SkippedHouseMeta) {
-  const name = houseHeadline(house);
+export function temporaryRestoreAlertText(_house: PublicHouse, meta: SkippedHouseMeta) {
   const triggers = metaRestoreTriggers(meta);
   if (triggers.includes("not-open") && triggers.includes("candy-out")) {
-    return `${name} חזר לרשימה — הבית פתוח ויש ממתקים`;
+    return "חזר לרשימה — הבית פתוח ויש ממתקים";
   }
-  if (triggers.includes("not-open")) return `${name} חזר לרשימה — הבית פתוח`;
-  if (triggers.includes("candy-out")) return `${name} חזר לרשימה — יש ממתקים`;
-  return `${name} חזר לרשימה`;
+  if (triggers.includes("not-open")) return "חזר לרשימה — הבית פתוח";
+  if (triggers.includes("candy-out")) return "חזר לרשימה — יש ממתקים";
+  return "חזר לרשימה";
 }
 
 /** Restore triggers that applied at skip time (from statusKey snapshot). */
@@ -210,16 +208,15 @@ export function skipReturnAutoDisplayLabel(meta: SkippedHouseMeta) {
   return trigger ? skipReturnOfferLabel(trigger) : null;
 }
 
-export function skipRestoreUndoPromptMessage(house: PublicHouse, meta: SkippedHouseMeta) {
-  const name = houseHeadline(house);
+export function skipRestoreUndoPromptMessage(_house: PublicHouse, meta: SkippedHouseMeta) {
   const trigger = metaRestoreTriggers(meta)[0];
   if (trigger === "not-open") {
-    return `${name} — דילגתם כשהבית לא היה פתוח. עכשיו הוא פתוח. לבטל את הדילוג?`;
+    return "דילגתם כשהבית לא היה פתוח. עכשיו הוא פתוח. לבטל את הדילוג?";
   }
   if (trigger === "candy-out") {
-    return `${name} — דילגתם כשלא היו ממתקים. עכשיו יש ממתקים. לבטל את הדילוג?`;
+    return "דילגתם כשלא היו ממתקים. עכשיו יש ממתקים. לבטל את הדילוג?";
   }
-  return `${name} — התנאי להחזרה התקיים. לבטל את הדילוג?`;
+  return "התנאי להחזרה התקיים. לבטל את הדילוג?";
 }
 
 export function defaultRestoreTriggersFromSnapshot(

@@ -222,7 +222,6 @@ export function QuickUpdateOverlay({
       open={open}
       onClose={onClose}
       title={t("quickUpdate.title")}
-      subtitle={house.name}
       className="w-[min(100%-2rem,26rem)]"
     >
       <div className="space-y-5">
