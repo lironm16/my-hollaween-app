@@ -7200,8 +7200,15 @@ svg.leaflet-zoom-animated {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
   background-image: none;
   padding: 0;
+}
+.house-pin .pin-status.pin-hours-badge,
+.pumpkin-pin .pin-status.pin-hours-badge {
+  width: 24px;
+  height: 24px;
 }
 .house-pin .pin-status.pin-hours-badge.is-opening,
 .pin-apt-dot.pin-hours-badge.is-opening {
@@ -7217,13 +7224,13 @@ svg.leaflet-zoom-animated {
 .house-pin .pin-status.pin-hours-badge svg,
 .pin-apt-dot.pin-hours-badge svg {
   display: block;
+  width: 86%;
+  height: 86%;
+  flex-shrink: 0;
+}
+.house-pin.house-pin-dot .pin-status.pin-hours-badge {
   width: 14px;
   height: 14px;
-}
-.house-pin.house-pin-dot .pin-status.pin-hours-badge svg,
-.house-pin.is-apt .pin-status.pin-hours-badge svg {
-  width: 11px;
-  height: 11px;
 }
 .house-pin .pin-status.is-plenty,
 .house-pin .pin-status.is-low,

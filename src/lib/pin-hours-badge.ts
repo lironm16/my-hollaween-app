@@ -3,7 +3,7 @@
 export type PinHoursBadgeKind = "opening" | "closing";
 
 const CLOCK_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="2.1"/><path d="M12 7.2v5.1l3.4 2" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.35"/><path d="M12 6.8v5.4l3.6 2.1" fill="none" stroke="currentColor" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 export function pinHoursBadgeHtml(kind: PinHoursBadgeKind, ariaLabel?: string) {
   const label = ariaLabel ? ` aria-label="${ariaLabel.replace(/"/g, "&quot;")}"` : ' aria-hidden="true"';

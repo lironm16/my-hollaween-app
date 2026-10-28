@@ -3,12 +3,12 @@ import { cn } from "@/lib/utils";
 function ClockGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className={className}>
-      <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" strokeWidth="2.1" />
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.35" />
       <path
-        d="M12 7.2v5.1l3.4 2"
+        d="M12 6.8v5.4l3.6 2.1"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2.1"
+        strokeWidth="2.35"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
