@@ -63,6 +63,35 @@ function useMultilineText(text: string, resetKey: string) {
   return { measureRef, multiline };
 }
 
+/** Detect overflow for line-clamp — measure full text off-screen (clamp breaks scrollHeight). */
+function useTextExceedsMaxLines(text: string, maxLines: number, resetKey: string) {
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [exceeds, setExceeds] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = measureRef.current;
+    if (!text || !el) {
+      setExceeds(false);
+      return;
+    }
+    const check = () => {
+      const style = getComputedStyle(el);
+      const lineHeight = Number.parseFloat(style.lineHeight);
+      if (!Number.isFinite(lineHeight) || lineHeight <= 0) {
+        setExceeds(el.scrollHeight > el.clientHeight + 1);
+        return;
+      }
+      setExceeds(el.scrollHeight > lineHeight * maxLines + 2);
+    };
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [text, maxLines, resetKey]);
+
+  return { measureRef, exceeds };
+}
+
 function CompactTextSection({
   title,
   text,
@@ -234,26 +263,11 @@ function HouseDescriptionSection({
   const text = description?.trim() ?? "";
   const displayText = useTranslatedUserText(text);
   const [textExpanded, setTextExpanded] = useState(false);
-  const [overflows, setOverflows] = useState(false);
-  const clampRef = useRef<HTMLDivElement>(null);
+  const { measureRef, exceeds: overflows } = useTextExceedsMaxLines(displayText, 3, houseId);
 
   useEffect(() => {
     setTextExpanded(false);
-  }, [houseId, text]);
-
-  useLayoutEffect(() => {
-    if (!text || textExpanded) {
-      setOverflows(false);
-      return;
-    }
-    const el = clampRef.current;
-    if (!el) return;
-    const check = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
-    check();
-    const observer = new ResizeObserver(check);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [text, textExpanded]);
+  }, [houseId, displayText]);
 
   if (!text) return null;
 
@@ -266,14 +280,22 @@ function HouseDescriptionSection({
       titleClassName="text-violet-200/80"
       bodyClassName="text-violet-50"
     >
-      <div
-        ref={clampRef}
-        className={cn(
-          "leading-relaxed [overflow-wrap:anywhere]",
-          !textExpanded && "line-clamp-3",
-        )}
-      >
-        {displayText}
+      <div className="relative">
+        <div
+          ref={measureRef}
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 opacity-0 leading-relaxed [overflow-wrap:anywhere]"
+        >
+          {displayText}
+        </div>
+        <div
+          className={cn(
+            "leading-relaxed [overflow-wrap:anywhere]",
+            !textExpanded && "line-clamp-3",
+          )}
+        >
+          {displayText}
+        </div>
       </div>
       {showToggle ? (
         <button
