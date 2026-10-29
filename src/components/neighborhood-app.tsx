@@ -489,6 +489,18 @@ export function NeighborhoodApp({
   const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
 
+  /** Keep the selected pin on the map when opening from list (layer/filter mismatch). */
+  const mapHousesForMapPins = useMemo(() => {
+    const selectedKey = selection.selectedId;
+    if (!selectedKey || selectedKey === "closed") return mapHousesForMap;
+    if (mapHousesForMap.some((house) => house.id === selectedKey)) return mapHousesForMap;
+    const extra =
+      mapListHouses.find((house) => house.id === selectedKey) ??
+      visible.find((house) => house.id === selectedKey) ??
+      houses.find((house) => house.id === selectedKey);
+    return extra ? [...mapHousesForMap, extra] : mapHousesForMap;
+  }, [mapHousesForMap, selection.selectedId, mapListHouses, visible, houses]);
+
   const bootMapGemHunt = useCallback(
     async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
       const gen = ++mapGemOpenGenRef.current;
@@ -1237,15 +1249,21 @@ export function NeighborhoodApp({
     });
   }
 
-  function openOnMap(id: string) {
-    const house =
-      houses.find((item) => item.id === id) ??
-      visible.find((item) => item.id === id) ??
-      mapListHouses.find((item) => item.id === id);
-    if (house) selection.selectOnMap(house, { clusterOverview: false });
-    else selection.showOnMap(id);
-    setView("map");
-  }
+  const openOnMap = useCallback(
+    (id: string) => {
+      const house =
+        houses.find((item) => item.id === id) ??
+        visible.find((item) => item.id === id) ??
+        mapListHouses.find((item) => item.id === id);
+      flushSync(() => {
+        if (house) selection.selectOnMap(house, { clusterOverview: false });
+        else selection.showOnMap(id);
+        selection.clearListFocus();
+        setView("map");
+      });
+    },
+    [houses, visible, mapListHouses, selection],
+  );
 
   function handleHouseDeleted(id: string) {
     editFlow.close();
@@ -1472,6 +1490,7 @@ export function NeighborhoodApp({
     nightPass.houseId,
     editCodeById,
     editFlow.flow?.house.id,
+    openOnMap,
     selection.showInListFromMap,
   ]);
 
@@ -1632,7 +1651,7 @@ export function NeighborhoodApp({
             aria-hidden={view !== "map"}
           >
                 <HouseMapDynamic
-                  houses={mapHousesForMap}
+                  houses={mapHousesForMapPins}
                   matchedIds={matchedIds}
                   selectedId={originPick.originPickActive ? null : selection.selected?.id}
                   clusterOverview={selection.clusterOverview}
