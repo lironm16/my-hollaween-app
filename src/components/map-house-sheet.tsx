@@ -192,12 +192,18 @@ export function MapHouseSheet({
     if (currentH > 0) {
       setOpenH(currentH);
       publishSheetHeight(currentH, clusterShell);
+    } else if (clusterDetail) {
+      const cap = Math.max(peekPx(), clusterSheetHeightRef.current ?? 0);
+      naturalH.current = cap;
+      setOpenH(cap);
+      publishSheetHeight(cap, clusterShell);
+      detailHeightLockedRef.current = true;
     }
   }, [clusterKey, overview, clusterHouses.length, clusterShell, clusterDetail]);
 
   useLayoutEffect(() => {
     if (overview) return;
-    if (detailHeightLockedRef.current || clusterDetail) {
+    if (detailHeightLockedRef.current) {
       scrollSheetContentTop();
       return;
     }

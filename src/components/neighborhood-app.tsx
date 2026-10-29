@@ -489,6 +489,13 @@ export function NeighborhoodApp({
   const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
 
+  const mapPinSelectedId =
+    selection.selectedId === "closed" || selection.selectedId == null
+      ? null
+      : typeof selection.selectedId === "string"
+        ? selection.selectedId
+        : selection.selected?.id ?? null;
+
   /** Keep the selected pin on the map when opening from list (layer/filter mismatch). */
   const mapHousesForMapPins = useMemo(() => {
     const selectedKey = selection.selectedId;
@@ -1662,7 +1669,7 @@ export function NeighborhoodApp({
                 <HouseMapDynamic
                   houses={mapHousesForMapPins}
                   matchedIds={matchedIds}
-                  selectedId={originPick.originPickActive ? null : selection.selected?.id}
+                  selectedId={originPick.originPickActive ? null : mapPinSelectedId}
                   clusterOverview={selection.clusterOverview}
                   onSelect={(house, opts) => {
                     if (originPick.originPickActive) return;
