@@ -7,7 +7,10 @@ import footprintData from "../../public/osm-building-footprints.json";
 
 /** Skip nudging pins already this close to the OSM building footprint. */
 export const FOOTPRINT_ALIGN_MIN_METERS = 4;
-/** Do not snap pins farther than this — likely intentional drag or bad address. */
+/**
+ * Legacy cap kept for tests/docs — known footprints always snap regardless of geocoder offset
+ * (e.g. ז'בוטינסקי 105 landing near #112 ~580 m away).
+ */
 export const FOOTPRINT_ALIGN_MAX_METERS = 55;
 
 type FootprintFile = {
@@ -58,7 +61,7 @@ export function alignPublicHouseCoords<T extends Pick<PublicHouse, "address" | "
   const footprint = osmFootprintForAddress(house.address);
   if (!footprint) return house;
   const offsetM = haversineMeters(house, footprint);
-  if (offsetM < FOOTPRINT_ALIGN_MIN_METERS || offsetM > FOOTPRINT_ALIGN_MAX_METERS) {
+  if (offsetM < FOOTPRINT_ALIGN_MIN_METERS) {
     return house;
   }
   if (house.lat === footprint.lat && house.lng === footprint.lng) return house;
