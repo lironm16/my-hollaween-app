@@ -3863,6 +3863,7 @@ input[type="time"].filter-time-input::-webkit-datetime-edit-minute-field {
 
 .house-action-menu-panel--floating {
   position: fixed;
+  z-index: 750;
 }
 
 .house-action-menu-item {

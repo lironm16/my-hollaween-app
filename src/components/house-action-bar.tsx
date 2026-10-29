@@ -51,6 +51,8 @@ type MenuItem = {
 
 const MENU_ICON_CLASS = "size-7";
 const MENU_ACTIVE_ICON_CLASS = "size-8";
+/** Floating ⋮ menu must sit above `.map-house-sheet` (z-index 700) so items stay clickable. */
+const HOUSE_ACTION_MENU_Z_INDEX = 750;
 
 export function HouseActionBar({
   house,
@@ -227,7 +229,7 @@ export function HouseActionBar({
         setPanelStyle((prev) => ({
           ...prev,
           position: "fixed",
-          zIndex: 120,
+          zIndex: HOUSE_ACTION_MENU_Z_INDEX,
           visibility: "visible",
         }));
         return;
@@ -260,7 +262,7 @@ export function HouseActionBar({
         position: "fixed",
         top,
         left,
-        zIndex: 120,
+        zIndex: HOUSE_ACTION_MENU_Z_INDEX,
         visibility: "visible",
       });
     };
@@ -280,6 +282,11 @@ export function HouseActionBar({
 
   function runItem(item: MenuItem) {
     setOpen(false);
+    // Defer map/list jumps so Leaflet map dismiss does not run in the same click turn.
+    if (item.id === "map" || item.id === "list") {
+      queueMicrotask(() => item.onClick?.());
+      return;
+    }
     item.onClick?.();
   }
 
@@ -373,7 +380,7 @@ export function HouseActionBar({
                 position: "fixed",
                 top: triggerRect.bottom + 8,
                 left: Math.max(10, triggerRect.right - 220),
-                zIndex: 120,
+                zIndex: HOUSE_ACTION_MENU_Z_INDEX,
                 visibility: "visible",
               });
             }

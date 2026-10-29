@@ -1189,22 +1189,18 @@ export function NeighborhoodApp({
   }
 
   useEffect(() => {
-    const reset = () => {
-      editFlow.close();
-      resetForNavigation();
-    };
     const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) reset();
+      if (event.persisted) {
+        editFlow.close();
+        resetForNavigation();
+      }
       if (readHomeView() === "map" || Boolean(mapGemHouse)) {
         setWatchEnabled(true);
         void geo.refresh();
       }
     };
     window.addEventListener("pageshow", onPageShow);
-    return () => {
-      window.removeEventListener("pageshow", onPageShow);
-      reset();
-    };
+    return () => window.removeEventListener("pageshow", onPageShow);
   }, [editFlow.close, geo.refresh, mapGemHouse, resetForNavigation, setWatchEnabled]);
 
   function handleHouseUpdated(next: PublicHouse) {
@@ -1364,8 +1360,12 @@ export function NeighborhoodApp({
       }
     };
     scrollToHouse();
-    const t = window.setTimeout(scrollToHouse, 150);
-    return () => window.clearTimeout(t);
+    const t1 = window.setTimeout(scrollToHouse, 150);
+    const t2 = window.setTimeout(scrollToHouse, 400);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
   }, [view, selection.listFocusId, listContentObscured, visible.length]);
 
   const selectedFilterReasons = selected
