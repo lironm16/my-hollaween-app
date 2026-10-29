@@ -1265,6 +1265,21 @@ export function NeighborhoodApp({
     [houses, visible, mapListHouses, selection],
   );
 
+  const openInList = useCallback(
+    (id: string) => {
+      const listed =
+        visible.some((house) => house.id === id) ||
+        mapListHouses.some((house) => house.id === id) ||
+        houses.some((house) => house.id === id);
+      if (!listed) return;
+      flushSync(() => {
+        selection.showInListFromMap(id);
+        setView("list");
+      });
+    },
+    [houses, visible, mapListHouses, selection],
+  );
+
   function handleHouseDeleted(id: string) {
     editFlow.close();
     removeAdminHouse(id);
@@ -1328,6 +1343,7 @@ export function NeighborhoodApp({
 
   useLayoutEffect(() => {
     if (listContentObscured || view !== "list") return;
+    if (selection.listFocusId) return;
     const el = listScrollRef.current;
     if (!el) return;
     const y = savedListScrollTopRef.current;
@@ -1335,7 +1351,7 @@ export function NeighborhoodApp({
     requestAnimationFrame(() => {
       el.scrollTop = y;
     });
-  }, [listContentObscured, view, routeMode, visible.length, gems.collectedIds.length]);
+  }, [listContentObscured, view, routeMode, visible.length, gems.collectedIds.length, selection.listFocusId]);
 
   useEffect(() => {
     const focusId = selection.listFocusId;
@@ -1380,14 +1396,7 @@ export function NeighborhoodApp({
         view === "list"
           ? openOnMap
           : undefined,
-      onShowInList:
-        view === "map"
-          ? (id) => {
-              if (!matchedIds.has(id)) return;
-              selection.showInListFromMap(id);
-              setView("list");
-            }
-          : undefined,
+      onShowInList: view === "map" ? openInList : undefined,
       onClusterVisitAll: handleClusterVisitAll,
       onClusterUnvisitAll: applyClusterUnvisitAll,
       onClusterSkipAll: handleClusterSkipAll,
@@ -1491,7 +1500,7 @@ export function NeighborhoodApp({
     editCodeById,
     editFlow.flow?.house.id,
     openOnMap,
-    selection.showInListFromMap,
+    openInList,
   ]);
 
   const houseDetailCommon = selected
