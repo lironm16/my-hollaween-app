@@ -3,6 +3,10 @@ import {
   formatDuplicateApartmentPairDetail,
   housesSuspectDuplicateApartment,
 } from "@/lib/house-anomaly-duplicate";
+import {
+  lobbyOrEntranceMentionSnippet,
+  textMentionsLobbyOrMainEntrance,
+} from "@/lib/house-anomaly-accessible-text";
 import { HIGH_FLOOR_ANOMALY_MIN, isHighFloorArrival } from "@/lib/arrival-floor";
 import { inNeighborhood } from "@/lib/config";
 import { eventOpenHoursScheduleFromDb } from "@/lib/event-settings";
@@ -183,6 +187,19 @@ export function detectHouseAnomalies(
       severity: "warning",
       messageHe: `קומה ${HIGH_FLOOR_ANOMALY_MIN}+ ולא נגיש — בדקו הגעה למפה`,
       detailHe: house.arrival.trim(),
+    });
+  }
+
+  if (
+    !isPoiHouse(house) &&
+    !house.accessible &&
+    textMentionsLobbyOrMainEntrance(house.arrival, house.description, house.notes)
+  ) {
+    out.push({
+      kind: "mentions_lobby_entrance_not_accessible",
+      severity: "warning",
+      messageHe: "מוזכר לובי או כניסה (לובי/ראשית) — הבית לא מסומן נגיש",
+      detailHe: lobbyOrEntranceMentionSnippet(house),
     });
   }
 
@@ -437,6 +454,7 @@ export const ANOMALY_KIND_LABELS: Record<HouseAnomalyKind, string> = {
   visit_closed_with_hours: "סגור עם שעות",
   missing_arrival: "חסרה הגעה",
   arrival_high_floor: "קומה 4+ ולא נגיש",
+  mentions_lobby_entrance_not_accessible: "לובי/כניסה ולא נגיש",
   pin_outside_bounds: "סיכה מחוץ לאזור",
   empty_display_name: "שם ריק",
 };

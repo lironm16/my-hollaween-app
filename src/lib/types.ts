@@ -233,6 +233,7 @@ export const HOUSE_ANOMALY_KINDS = [
   "visit_closed_with_hours",
   "missing_arrival",
   "arrival_high_floor",
+  "mentions_lobby_entrance_not_accessible",
   "pin_outside_bounds",
   "empty_display_name",
 ] as const;

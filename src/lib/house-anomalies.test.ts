@@ -81,6 +81,38 @@ describe("house-anomalies", () => {
     );
   });
 
+  it("flags lobby or entrance mention when house is not accessible", () => {
+    const accessible = house({
+      accessible: true,
+      arrival: "Lobby entrance, ground floor",
+    });
+    assert.equal(
+      detectHouseAnomalies(accessible, [accessible], ctx).some(
+        (a) => a.kind === "mentions_lobby_entrance_not_accessible",
+      ),
+      false,
+    );
+    const flagged = house({
+      accessible: false,
+      description: "Trick-or-treat at the lobby entrance",
+    });
+    assert.ok(
+      detectHouseAnomalies(flagged, [flagged], ctx).some(
+        (a) => a.kind === "mentions_lobby_entrance_not_accessible",
+      ),
+    );
+    const yardOnly = house({
+      accessible: false,
+      arrival: "קומה 2, דירה 5, כניסה מהחצר",
+    });
+    assert.equal(
+      detectHouseAnomalies(yardOnly, [yardOnly], ctx).some(
+        (a) => a.kind === "mentions_lobby_entrance_not_accessible",
+      ),
+      false,
+    );
+  });
+
   it("flags name that looks like an address", () => {
     const h = house({ name: "חרוזים 12" });
     assert.ok(detectHouseAnomalies(h, [h], ctx).some((a) => a.kind === "name_looks_like_address"));
