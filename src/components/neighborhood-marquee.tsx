@@ -43,7 +43,7 @@ export function PingPongMarquee({
       className={cn(
         "neighborhood-marquee block w-full min-w-0 self-stretch text-start",
         shift > 0 && "is-overflow",
-        dir === "rtl" && "is-rtl",
+        dir === "rtl" ? "is-rtl" : "is-ltr",
         className,
       )}
     >
