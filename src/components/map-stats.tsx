@@ -9,6 +9,7 @@ import type { WalkingRoute } from "@/lib/route";
 import { ImpMarkerGlyph } from "@/components/imp-marker-glyph";
 import { useLocale } from "@/hooks/use-locale";
 import { formatMessage } from "@/lib/i18n/format";
+import { formatRouteDurationChip } from "@/lib/route-duration-display";
 import { cn } from "@/lib/utils";
 
 function HouseIcon() {
@@ -189,15 +190,14 @@ export function StatsSummary({
   heading?: boolean;
   compact?: boolean;
 }) {
-  const { t, dir } = useLocale();
+  const { t, dir, locale } = useLocale();
   const walk = route
     ? distanceParts(route.totalMeters, t("mapStats.meters"), t("mapStats.km"))
     : null;
+  const durationChip = route ? formatRouteDurationChip(route.totalMinutes, locale) : null;
   const houseIcon = <HouseIcon />;
   const routeTitle = route?.accessible ? t("mapStats.routeAccessible") : t("mapStats.route");
   const kmFallback = t("mapStats.km");
-  const minLabel = t("mapStats.minutes");
-  const approx = t("mapStats.approx");
 
   if (compact) {
     return (
@@ -218,8 +218,8 @@ export function StatsSummary({
             />
             <CompactChip
               icon={<ClockIcon />}
-              value={route ? `${approx}${route.totalMinutes}` : "—"}
-              label={minLabel}
+              value={durationChip?.value ?? "—"}
+              label={durationChip?.label ?? t("mapStats.minutes")}
             />
             {route ? (
               <>
@@ -281,8 +281,8 @@ export function StatsSummary({
           />
           <RouteChip
             icon={<ClockIcon />}
-            value={route ? `${approx}${route.totalMinutes}` : "—"}
-            label={minLabel}
+            value={durationChip?.value ?? "—"}
+            label={durationChip?.label ?? t("mapStats.minutes")}
           />
           {route ? (
             <>

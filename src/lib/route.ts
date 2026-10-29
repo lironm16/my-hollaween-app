@@ -8,6 +8,7 @@ import { distanceMeters, formatDistance } from "@/lib/geo";
 import { formatMessage } from "@/lib/i18n/format";
 import type { AppLocale } from "@/lib/i18n/locale";
 import { translate } from "@/lib/i18n/translate";
+import { formatRouteDurationPhrase } from "@/lib/route-duration-display";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import { houseHeadline } from "@/lib/labels";
 import type { PublicHouse } from "@/lib/types";
@@ -423,7 +424,7 @@ export function formatRouteSummary(route: WalkingRoute, locale: AppLocale = "he"
   const base = formatMessage(translate(locale, "routeSummary.line"), {
     stops: String(route.stops.length),
     distance: formatDistance(route.totalMeters, locale),
-    minutes: String(route.totalMinutes),
+    duration: formatRouteDurationPhrase(route.totalMinutes, locale),
   });
   return route.accessible
     ? translate(locale, "routeSummary.accessiblePrefix") + base

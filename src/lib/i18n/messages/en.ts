@@ -307,6 +307,8 @@ export const enMessages: AppMessages = {
     houses: "Houses",
     stops: "Stops",
     minutes: "min",
+    hours: "hr",
+    hoursAndMinutes: "hr {minutes} min",
     km: "km",
     meters: "m",
     approx: "~",
@@ -697,7 +699,7 @@ export const enMessages: AppMessages = {
   },
   routeSummary: {
     accessiblePrefix: "Accessible route · ",
-    line: "{stops} stops · {distance} · ~{minutes} min",
+    line: "{stops} stops · {distance} · {duration}",
   },
   skipReason: {
     restoreWhenOpen: "Return when the house opens",

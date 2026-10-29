@@ -306,6 +306,8 @@ export const heMessages = {
     houses: "בתים",
     stops: "עצירות",
     minutes: "דק׳",
+    hours: "שע׳",
+    hoursAndMinutes: "שע׳ {minutes} דק׳",
     km: "ק״מ",
     meters: "מ׳",
     approx: "כ־",
@@ -694,7 +696,7 @@ export const heMessages = {
   },
   routeSummary: {
     accessiblePrefix: "מסלול נגיש · ",
-    line: "{stops} עצירות · {distance} · כ־{minutes} דק׳",
+    line: "{stops} עצירות · {distance} · {duration}",
   },
   skipReason: {
     restoreWhenOpen: "החזר את הבית כאשר הוא נפתח",
