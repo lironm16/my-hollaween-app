@@ -27,3 +27,13 @@ test("alignPublicHouseCoords leaves pins already on the footprint", () => {
   assert.equal(aligned.lat, house.lat);
   assert.equal(aligned.lng, house.lng);
 });
+
+test("alignPublicHouseCoords snaps Jabotinsky 105 from far wrong-side geocode", () => {
+  const aligned = alignPublicHouseCoords({
+    address: "ז'בוטינסקי 105, הגפן",
+    lat: 32.08918,
+    lng: 34.8182,
+  });
+  assert.equal(aligned.lat, 32.08925);
+  assert.equal(aligned.lng, 34.81205);
+});
