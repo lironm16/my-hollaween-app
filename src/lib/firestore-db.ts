@@ -563,13 +563,10 @@ function eventSettingsChanged(
 export function firestoreEventSettingsFieldDeletes(
   prev: DbFile["eventSettings"] | undefined,
   payload: NonNullable<DbFile["eventSettings"]>,
-): Array<"gemHuntPublic" | "countdownBanner"> {
-  const deletes: Array<"gemHuntPublic" | "countdownBanner"> = [];
+): Array<"gemHuntPublic"> {
+  const deletes: Array<"gemHuntPublic"> = [];
   if (prev?.gemHuntPublic === true && payload.gemHuntPublic !== true) {
     deletes.push("gemHuntPublic");
-  }
-  if (prev?.countdownBanner === false && payload.countdownBanner !== false) {
-    deletes.push("countdownBanner");
   }
   return deletes;
 }

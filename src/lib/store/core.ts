@@ -227,6 +227,7 @@ export function normalizeDb(db: DbFile): DbFile {
       db.eventSettings?.addHouseCutoff ||
       db.eventSettings?.gemHuntPublic === true ||
       db.eventSettings?.countdownBanner === false ||
+      db.eventSettings?.countdownBanner === true ||
       db.eventSettings?.eventOpenHours
         ? {
             ...(db.eventSettings.updatedAt ? { updatedAt: db.eventSettings.updatedAt } : {}),
@@ -246,7 +247,9 @@ export function normalizeDb(db: DbFile): DbFile {
               : {}),
             ...(db.eventSettings.countdownBanner === false
               ? { countdownBanner: false as const }
-              : {}),
+              : db.eventSettings.countdownBanner === true
+                ? { countdownBanner: true as const }
+                : {}),
             ...(db.eventSettings.eventOpenHours
               ? { eventOpenHours: { ...db.eventSettings.eventOpenHours } }
               : {}),

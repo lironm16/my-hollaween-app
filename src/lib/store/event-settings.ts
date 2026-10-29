@@ -232,6 +232,7 @@ export async function clearAdminEventOpenHoursSchedule(): Promise<AdminEventOpen
       keep.addHouseCutoff ||
       keep.gemHuntPublic === true ||
       keep.countdownBanner === false ||
+      keep.countdownBanner === true ||
       Object.keys(keep).length > 1
         ? { ...keep, updatedAt: new Date().toISOString() }
         : { updatedAt: new Date().toISOString() };
