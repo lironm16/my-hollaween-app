@@ -562,7 +562,7 @@ function eventSettingsChanged(
 /** Firestore `set(..., { merge: true })` keeps omitted keys — delete when defaults are restored. */
 export function firestoreEventSettingsFieldDeletes(
   prev: DbFile["eventSettings"] | undefined,
-  payload: DbFile["eventSettings"],
+  payload: NonNullable<DbFile["eventSettings"]>,
 ): Array<"gemHuntPublic" | "countdownBanner"> {
   const deletes: Array<"gemHuntPublic" | "countdownBanner"> = [];
   if (prev?.gemHuntPublic === true && payload.gemHuntPublic !== true) {
