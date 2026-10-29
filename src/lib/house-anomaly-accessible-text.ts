@@ -37,3 +37,32 @@ export function lobbyOrEntranceMentionSnippet(fields: AccessibleHintTextFields):
   }
   return undefined;
 }
+
+function textNegatesElevator(blob: string): boolean {
+  if (/(?:^|[\s,.(—-])(?:אין|בלי|ללא)\s*מעלית/u.test(blob)) return true;
+  if (/\bno\s+elevator\b/i.test(blob)) return true;
+  if (/\bwithout\s+(?:an?\s+)?elevator\b/i.test(blob)) return true;
+  return false;
+}
+
+/** True when copy mentions an elevator as part of directions (not “no elevator”). */
+export function textMentionsElevator(...fields: (string | undefined)[]): boolean {
+  const blob = fields
+    .map((field) => field?.trim())
+    .filter(Boolean)
+    .join("\n");
+  if (!blob || textNegatesElevator(blob)) return false;
+
+  if (/מעלית/u.test(blob)) return true;
+  if (/\b(?:elevators?|lifts?)\b/i.test(blob)) return true;
+  return false;
+}
+
+export function elevatorMentionSnippet(fields: AccessibleHintTextFields): string | undefined {
+  for (const field of [fields.arrival, fields.description, fields.notes]) {
+    const trimmed = field?.trim();
+    if (!trimmed) continue;
+    if (textMentionsElevator(trimmed)) return trimmed.slice(0, 120);
+  }
+  return undefined;
+}

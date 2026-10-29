@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   lobbyOrEntranceMentionSnippet,
+  textMentionsElevator,
   textMentionsLobbyOrMainEntrance,
 } from "@/lib/house-anomaly-accessible-text";
 
@@ -24,5 +25,12 @@ describe("house-anomaly-accessible-text", () => {
       lobbyOrEntranceMentionSnippet({ arrival: "Lobby entrance on HaGefen" }),
       "Lobby entrance on HaGefen",
     );
+  });
+
+  it("detects elevator mentions but not negated lines", () => {
+    assert.equal(textMentionsElevator("קומה 5, מעלית ואז שמאלה"), true);
+    assert.equal(textMentionsElevator("Take the elevator to floor 3"), true);
+    assert.equal(textMentionsElevator("אין מעלית — רק מדרגות"), false);
+    assert.equal(textMentionsElevator("No elevator, stairs only"), false);
   });
 });

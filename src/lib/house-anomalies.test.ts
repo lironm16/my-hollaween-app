@@ -113,6 +113,27 @@ describe("house-anomalies", () => {
     );
   });
 
+  it("flags elevator mention when house is not accessible", () => {
+    const ok = house({ accessible: true, arrival: "מעלית לקומה 3" });
+    assert.equal(
+      detectHouseAnomalies(ok, [ok], ctx).some((a) => a.kind === "mentions_elevator_not_accessible"),
+      false,
+    );
+    const flagged = house({ accessible: false, arrival: "מעלית ואז ימינה לדירה 8" });
+    assert.ok(
+      detectHouseAnomalies(flagged, [flagged], ctx).some(
+        (a) => a.kind === "mentions_elevator_not_accessible",
+      ),
+    );
+    const noLift = house({ accessible: false, arrival: "אין מעלית, קומה 4" });
+    assert.equal(
+      detectHouseAnomalies(noLift, [noLift], ctx).some(
+        (a) => a.kind === "mentions_elevator_not_accessible",
+      ),
+      false,
+    );
+  });
+
   it("flags name that looks like an address", () => {
     const h = house({ name: "חרוזים 12" });
     assert.ok(detectHouseAnomalies(h, [h], ctx).some((a) => a.kind === "name_looks_like_address"));

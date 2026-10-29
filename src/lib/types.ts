@@ -234,6 +234,7 @@ export const HOUSE_ANOMALY_KINDS = [
   "missing_arrival",
   "arrival_high_floor",
   "mentions_lobby_entrance_not_accessible",
+  "mentions_elevator_not_accessible",
   "pin_outside_bounds",
   "empty_display_name",
 ] as const;
