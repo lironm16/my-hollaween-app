@@ -7,12 +7,6 @@ import footprintData from "../../public/osm-building-footprints.json";
 
 /** Skip nudging pins already this close to the OSM building footprint. */
 export const FOOTPRINT_ALIGN_MIN_METERS = 4;
-/**
- * Legacy cap kept for tests/docs — known footprints always snap regardless of geocoder offset
- * (e.g. ז'בוטינסקי 105 landing near #112 ~580 m away).
- */
-export const FOOTPRINT_ALIGN_MAX_METERS = 55;
-
 type FootprintFile = {
   footprints?: Record<string, { lat: number; lng: number }>;
 };
