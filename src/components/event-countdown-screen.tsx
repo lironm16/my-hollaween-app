@@ -7,6 +7,7 @@ import { CountdownDecor } from "@/components/countdown-decor";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import type { EventCountdownParts } from "@/lib/event-countdown";
 import { eventCountdownDateBadgeLabel } from "@/lib/event-countdown-display";
+import type { AddressRevealSchedule } from "@/lib/types";
 import { config } from "@/lib/config";
 import { neighborhoodMarqueeText } from "@/lib/i18n/neighborhood-labels";
 import { isStandaloneDisplay } from "@/lib/push-client";
@@ -16,9 +17,11 @@ import { cn } from "@/lib/utils";
 
 export function EventCountdownScreen({
   parts,
+  addressReveal,
   onClose,
 }: {
   parts: EventCountdownParts;
+  addressReveal?: AddressRevealSchedule | null;
   onClose: () => void;
 }) {
   const { dir, locale, t } = useLocale();
@@ -175,7 +178,9 @@ export function EventCountdownScreen({
             </div>
 
             <div className="countdown-footer-cluster flex w-full max-w-md flex-col items-center">
-              <div className="countdown-date-badge font-bold text-white">{eventCountdownDateBadgeLabel()}</div>
+              <div className="countdown-date-badge font-bold text-white">
+                {eventCountdownDateBadgeLabel(addressReveal)}
+              </div>
 
               <button
                 type="button"
