@@ -1,4 +1,8 @@
 import { parseStreetAndNumber } from "@/lib/address-text";
+import {
+  formatDuplicateApartmentPairDetail,
+  housesSuspectDuplicateApartment,
+} from "@/lib/house-anomaly-duplicate";
 import { HIGH_FLOOR_ANOMALY_MIN, isHighFloorArrival } from "@/lib/arrival-floor";
 import { inNeighborhood } from "@/lib/config";
 import { eventOpenHoursScheduleFromDb } from "@/lib/event-settings";
@@ -43,6 +47,7 @@ export type AnomalyListItem = DetectedHouseAnomaly & {
 const CLUSTER_DEDUPE_KINDS = new Set<HouseAnomalyKind>([
   "building_accessible_mismatch",
   "building_address_mismatch",
+  "duplicate_apartment_suspected",
 ]);
 
 export function anomalyHouseSetFilter(set: HouseSet): (house: House) => boolean {
@@ -233,6 +238,18 @@ export function detectHouseAnomalies(
         detailHe: [house.address, ...members.map((m) => m.address)].filter(Boolean).join(" · "),
       });
     }
+
+    const duplicatePeers = members.filter((m) => housesSuspectDuplicateApartment(house, m));
+    if (duplicatePeers.length > 0) {
+      out.push({
+        kind: "duplicate_apartment_suspected",
+        severity: "warning",
+        messageHe: "ייתכן תיקצ'ר כפול — דירות דומות באותו בניין",
+        detailHe: duplicatePeers
+          .map((peer) => formatDuplicateApartmentPairDetail(house, peer))
+          .join(" · "),
+      });
+    }
   }
 
   const deduped = new Map<HouseAnomalyKind, DetectedHouseAnomaly>();
@@ -311,6 +328,21 @@ function dedupeClusterAnomalies(items: AnomalyListItem[], houses: House[]): Anom
       const accessibleCount = members.filter((m) => m.accessible).length;
       const notCount = members.length - accessibleCount;
       detailHe = `${accessibleCount} נגיש · ${notCount} לא נגיש · ${members.length} בתים בבניין`;
+    } else if (item.kind === "duplicate_apartment_suspected" && members.length > 1) {
+      const pairLines: string[] = [];
+      const seenPair = new Set<string>();
+      for (let i = 0; i < members.length; i++) {
+        for (let j = i + 1; j < members.length; j++) {
+          const left = members[i]!;
+          const right = members[j]!;
+          if (!housesSuspectDuplicateApartment(left, right)) continue;
+          const pairKey = [left.id, right.id].sort((x, y) => x.localeCompare(y, "he")).join(":");
+          if (seenPair.has(pairKey)) continue;
+          seenPair.add(pairKey);
+          pairLines.push(formatDuplicateApartmentPairDetail(left, right));
+        }
+      }
+      if (pairLines.length > 0) detailHe = pairLines.join(" · ");
     } else if (affectedHouseIds.length > 1) {
       detailHe = detailHe
         ? `${detailHe} · ${affectedHouseIds.length} בתים בבניין`
@@ -401,6 +433,7 @@ export const ANOMALY_KIND_LABELS: Record<HouseAnomalyKind, string> = {
   name_looks_like_address: "שם כמו כתובת",
   building_accessible_mismatch: "נגישות בבניין",
   building_address_mismatch: "כתובות בבניין",
+  duplicate_apartment_suspected: "דירה כפולה?",
   visit_closed_with_hours: "סגור עם שעות",
   missing_arrival: "חסרה הגעה",
   arrival_high_floor: "קומה 4+ ולא נגיש",
