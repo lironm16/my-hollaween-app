@@ -15,11 +15,13 @@ export function HouseCardActionMenu({
   house,
   actionContext,
   menuPlacement = "bottom",
+  navOnly = false,
   className,
 }: {
   house: PublicHouse;
   actionContext: HouseCardActionContext;
   menuPlacement?: ComponentProps<typeof HouseActionBar>["menuPlacement"];
+  navOnly?: boolean;
   className?: string;
 }) {
   void useCatalogRemoved(house.id);
@@ -33,6 +35,7 @@ export function HouseCardActionMenu({
         onShowInList={undefined}
         editCode={undefined}
         editing={false}
+        navOnly={navOnly}
         menuPlacement={menuPlacement}
         className={className}
       />
@@ -41,6 +44,7 @@ export function HouseCardActionMenu({
   return (
     <HouseActionBar
       {...props}
+      navOnly={navOnly}
       menuPlacement={menuPlacement}
       className={className}
     />

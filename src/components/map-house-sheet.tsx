@@ -10,6 +10,7 @@ import {
   clusterHouseIndex,
 } from "@/components/cluster-house-list";
 import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
+import { ClusterOverviewNavMenu } from "@/components/cluster-overview-nav-menu";
 import { boothNumberForHouse, clusterBoothLabel } from "@/lib/cluster-booth";
 import { clusterOverviewSubtitle, usesSchoolCampusClusterChrome } from "@/lib/school-campus";
 import { useAddressReveal } from "@/hooks/use-address-reveal";
@@ -448,6 +449,7 @@ export function MapHouseSheet({
                   }
                   className="min-w-0 flex-1"
                 />
+                <ClusterOverviewNavMenu houses={clusterHouses} actionContext={actionContext} />
               </div>
               <div className="mb-3 min-w-0">
                 <p className="map-house-sheet-kicker">
