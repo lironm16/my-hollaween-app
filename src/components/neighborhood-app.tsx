@@ -1844,7 +1844,6 @@ export function NeighborhoodApp({
           kind={visitSkipConflict.kind}
           house={visitSkipConflict.house}
           cluster={visitSkipConflict.cluster}
-          clusterHouses={visitSkipConflict.clusterHouses}
           onConfirm={confirmVisitSkipConflict}
           onCancel={() => setVisitSkipConflict(null)}
         />

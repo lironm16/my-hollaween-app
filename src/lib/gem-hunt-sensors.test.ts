@@ -9,7 +9,7 @@ import {
 describe("gem-hunt-sensors camera acquire", () => {
   it("prepareGemHuntSensors returns no camera after revoke during async gap", async () => {
     const original = globalThis.navigator;
-    let resolveMedia: ((stream: MediaStream) => void) | null = null;
+    let resolveMedia!: (stream: MediaStream) => void;
     const pending = new Promise<MediaStream>((resolve) => {
       resolveMedia = resolve;
     });
@@ -25,7 +25,7 @@ describe("gem-hunt-sensors camera acquire", () => {
     try {
       const prepared = prepareGemHuntSensors({ requestCamera: true, requestOrientation: false });
       revokeGemHuntCameraAcquire();
-      resolveMedia?.({
+      resolveMedia({
         getVideoTracks: () => [{ stop() {} }],
       } as unknown as MediaStream);
       const result = await prepared;

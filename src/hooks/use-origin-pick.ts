@@ -9,6 +9,10 @@ import { isStandaloneDisplay } from "@/lib/push-client";
 import { writeHomeView, type HomeView } from "@/lib/home-view";
 import type { DistanceOriginChoice, ResolvedOrigin } from "@/lib/distance-origin";
 import { useLocale } from "@/hooks/use-locale";
+import {
+  localizedCustomOriginLabel,
+  localizedReversePinOriginLabel,
+} from "@/lib/i18n/origin-copy";
 
 type GeoState = {
   status: string;
@@ -51,7 +55,8 @@ export function useOriginPick({
   const [originPickerOpen, setOriginPickerOpen] = useState(false);
   const [originPickActive, setOriginPickActive] = useState(false);
   const [originDraft, setOriginDraft] = useState<{ lat: number; lng: number } | null>(null);
-  const [originDraftLabel, setOriginDraftLabel] = useState("נקודה במפה");
+  const { locale, t } = useLocale();
+  const [originDraftLabel, setOriginDraftLabel] = useState(() => t("mapUi.mapPickPoint"));
   const [panTo, setPanTo] = useState<{ lat: number; lng: number } | null>(null);
   const [panTick, setPanTick] = useState(0);
   const [outsideBanner, setOutsideBanner] = useState(false);
@@ -64,7 +69,6 @@ export function useOriginPick({
     gps && askedLocation && panTick > 0 && !inNeighborhood(gps.lat, gps.lng),
   );
 
-  const { locale, t } = useLocale();
   const routeTicker = originPickActive ? t("originPicker.pickOnMapHint") : null;
 
   useEffect(
@@ -78,12 +82,12 @@ export function useOriginPick({
     if (!originPickActive || !originDraft) return;
     let cancelled = false;
     void reversePin(originDraft.lat, originDraft.lng).then((hit) => {
-      if (!cancelled && hit?.label) setOriginDraftLabel(hit.label);
+      if (!cancelled && hit?.label) setOriginDraftLabel(localizedReversePinOriginLabel(locale, hit));
     });
     return () => {
       cancelled = true;
     };
-  }, [originPickActive, originDraft]);
+  }, [originPickActive, originDraft, locale]);
 
   useEffect(() => {
     if (!outsideNeighborhood) {
@@ -184,9 +188,13 @@ export function useOriginPick({
     writeHomeView("map");
     onBeforePick();
     setOriginDraft({ lat: origin.lat, lng: origin.lng });
-    setOriginDraftLabel(origin.kind === "custom" ? origin.label : t("mapUi.mapPickPoint"));
+    setOriginDraftLabel(
+      origin.kind === "custom"
+        ? localizedCustomOriginLabel(locale, origin.label)
+        : t("mapUi.mapPickPoint"),
+    );
     setOriginPickActive(true);
-  }, [view, onBeforePick, origin]);
+  }, [view, onBeforePick, origin, locale, t]);
 
   const saveOriginPick = useCallback(async () => {
     if (!originDraft) return;
@@ -201,10 +209,13 @@ export function useOriginPick({
     exitOriginPick();
   }, [originDraft, originDraftLabel, setOriginChoice, exitOriginPick]);
 
-  const onOriginMapPick = useCallback((lat: number, lng: number) => {
-    setOriginDraft({ lat, lng });
-    setOriginDraftLabel("נקודה במפה");
-  }, []);
+  const onOriginMapPick = useCallback(
+    (lat: number, lng: number) => {
+      setOriginDraft({ lat, lng });
+      setOriginDraftLabel(t("mapUi.mapPickPoint"));
+    },
+    [t],
+  );
 
   return {
     originPickerOpen,
