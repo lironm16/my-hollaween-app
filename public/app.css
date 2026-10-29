@@ -983,9 +983,6 @@
   .max-h-8 {
     max-height: calc(var(--spacing) * 8);
   }
-  .max-h-40 {
-    max-height: calc(var(--spacing) * 40);
-  }
   .max-h-48 {
     max-height: calc(var(--spacing) * 48);
   }
@@ -7464,6 +7461,7 @@ svg.leaflet-zoom-animated {
   display: inline-block;
   max-width: 100%;
   white-space: nowrap;
+  text-align: start;
 }
 .neighborhood-marquee-text.is-scroll {
   max-width: none;
@@ -7475,7 +7473,7 @@ svg.leaflet-zoom-animated {
     transform: translateX(0);
   }
   to {
-    transform: translateX(var(--marquee-shift, 0px));
+    transform: translateX(calc(-1 * var(--marquee-shift, 0px)));
   }
 }
 @media (prefers-reduced-motion: reduce) {

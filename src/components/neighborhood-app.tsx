@@ -489,6 +489,18 @@ export function NeighborhoodApp({
   const selection = useHouseSelection({ focusId, visible, houses: mapListHouses, clusterHouses: mapHouses });
   const { resetForNavigation } = selection;
 
+  /** Keep the selected pin on the map when opening from list (layer/filter mismatch). */
+  const mapHousesForMapPins = useMemo(() => {
+    const selectedKey = selection.selectedId;
+    if (!selectedKey || selectedKey === "closed") return mapHousesForMap;
+    if (mapHousesForMap.some((house) => house.id === selectedKey)) return mapHousesForMap;
+    const extra =
+      mapListHouses.find((house) => house.id === selectedKey) ??
+      visible.find((house) => house.id === selectedKey) ??
+      houses.find((house) => house.id === selectedKey);
+    return extra ? [...mapHousesForMap, extra] : mapHousesForMap;
+  }, [mapHousesForMap, selection.selectedId, mapListHouses, visible, houses]);
+
   const bootMapGemHunt = useCallback(
     async (house: PublicHouse, clusterMembers: PublicHouse[] | null) => {
       const gen = ++mapGemOpenGenRef.current;
@@ -1237,15 +1249,36 @@ export function NeighborhoodApp({
     });
   }
 
-  function openOnMap(id: string) {
-    const house =
-      houses.find((item) => item.id === id) ??
-      visible.find((item) => item.id === id) ??
-      mapListHouses.find((item) => item.id === id);
-    if (house) selection.selectOnMap(house, { clusterOverview: false });
-    else selection.showOnMap(id);
-    setView("map");
-  }
+  const openOnMap = useCallback(
+    (id: string) => {
+      const house =
+        houses.find((item) => item.id === id) ??
+        visible.find((item) => item.id === id) ??
+        mapListHouses.find((item) => item.id === id);
+      flushSync(() => {
+        if (house) selection.selectOnMap(house, { clusterOverview: false });
+        else selection.showOnMap(id);
+        selection.clearListFocus();
+        setView("map");
+      });
+    },
+    [houses, visible, mapListHouses, selection],
+  );
+
+  const openInList = useCallback(
+    (id: string) => {
+      const listed =
+        visible.some((house) => house.id === id) ||
+        mapListHouses.some((house) => house.id === id) ||
+        houses.some((house) => house.id === id);
+      if (!listed) return;
+      flushSync(() => {
+        selection.showInListFromMap(id);
+        setView("list");
+      });
+    },
+    [houses, visible, mapListHouses, selection],
+  );
 
   function handleHouseDeleted(id: string) {
     editFlow.close();
@@ -1310,6 +1343,7 @@ export function NeighborhoodApp({
 
   useLayoutEffect(() => {
     if (listContentObscured || view !== "list") return;
+    if (selection.listFocusId) return;
     const el = listScrollRef.current;
     if (!el) return;
     const y = savedListScrollTopRef.current;
@@ -1317,7 +1351,7 @@ export function NeighborhoodApp({
     requestAnimationFrame(() => {
       el.scrollTop = y;
     });
-  }, [listContentObscured, view, routeMode, visible.length, gems.collectedIds.length]);
+  }, [listContentObscured, view, routeMode, visible.length, gems.collectedIds.length, selection.listFocusId]);
 
   useEffect(() => {
     const focusId = selection.listFocusId;
@@ -1362,14 +1396,7 @@ export function NeighborhoodApp({
         view === "list"
           ? openOnMap
           : undefined,
-      onShowInList:
-        view === "map"
-          ? (id) => {
-              if (!matchedIds.has(id)) return;
-              selection.showInListFromMap(id);
-              setView("list");
-            }
-          : undefined,
+      onShowInList: view === "map" ? openInList : undefined,
       onClusterVisitAll: handleClusterVisitAll,
       onClusterUnvisitAll: applyClusterUnvisitAll,
       onClusterSkipAll: handleClusterSkipAll,
@@ -1472,7 +1499,8 @@ export function NeighborhoodApp({
     nightPass.houseId,
     editCodeById,
     editFlow.flow?.house.id,
-    selection.showInListFromMap,
+    openOnMap,
+    openInList,
   ]);
 
   const houseDetailCommon = selected
@@ -1632,7 +1660,7 @@ export function NeighborhoodApp({
             aria-hidden={view !== "map"}
           >
                 <HouseMapDynamic
-                  houses={mapHousesForMap}
+                  houses={mapHousesForMapPins}
                   matchedIds={matchedIds}
                   selectedId={originPick.originPickActive ? null : selection.selected?.id}
                   clusterOverview={selection.clusterOverview}
@@ -1844,7 +1872,6 @@ export function NeighborhoodApp({
           kind={visitSkipConflict.kind}
           house={visitSkipConflict.house}
           cluster={visitSkipConflict.cluster}
-          clusterHouses={visitSkipConflict.clusterHouses}
           onConfirm={confirmVisitSkipConflict}
           onCancel={() => setVisitSkipConflict(null)}
         />

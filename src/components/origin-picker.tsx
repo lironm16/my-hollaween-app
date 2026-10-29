@@ -10,7 +10,7 @@ import {
   SheetHeader,
 } from "@/components/ui/sheet";
 import type { DistanceOriginChoice } from "@/lib/distance-origin";
-import { originLabel } from "@/lib/distance-origin";
+import { localizedCustomOriginLabel } from "@/lib/i18n/origin-copy";
 import { ToolbarBadge } from "@/components/filter-menu";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
 import { inNeighborhood } from "@/lib/config";
@@ -70,7 +70,7 @@ export function OriginPickerSheet({
   onChooseCustom: (lat: number, lng: number, label: string) => void;
   onPickOnMap: () => void;
 }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const [address, setAddress] = useState("");
   const [addressOk, setAddressOk] = useState(false);
 
@@ -109,7 +109,11 @@ export function OriginPickerSheet({
             active={choice.kind === "custom"}
             icon={<MapPin className="size-4" />}
             label={t("originPicker.pickOnMap")}
-            hint={choice.kind === "custom" ? originLabel(choice) : undefined}
+            hint={
+              choice.kind === "custom"
+                ? localizedCustomOriginLabel(locale, choice.label)
+                : undefined
+            }
             onClick={onPickOnMap}
           />
           <div className="rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">

@@ -1960,6 +1960,7 @@
   display: inline-block;
   max-width: 100%;
   white-space: nowrap;
+  text-align: start;
 }
 
 .neighborhood-marquee-text.is-scroll {
@@ -1969,8 +1970,12 @@
 }
 
 @keyframes neighborhood-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(var(--marquee-shift, 0px)); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-1 * var(--marquee-shift, 0px)));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
