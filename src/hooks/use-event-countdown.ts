@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { appNow, CLOCK_EVENT, readRehearsalScene } from "@/lib/app-clock";
 import { eventCountdownRemaining, shouldShowEventCountdown } from "@/lib/event-countdown";
+import type { AddressRevealSchedule } from "@/lib/types";
 
 /** Wall clock for countdown — live seconds. Rehearsal scenes use the sim clock. */
 function countdownNow(stamp: number) {
@@ -11,17 +12,20 @@ function countdownNow(stamp: number) {
   return appNow();
 }
 
-/** Live countdown to event night 17:00 — ticks every second only while the bar or screen is shown. */
-export function useEventCountdown({ screenOpen = false }: { screenOpen?: boolean } = {}) {
+/** Live countdown to address reveal — ticks every second only while the bar or screen is shown. */
+export function useEventCountdown({
+  screenOpen = false,
+  addressReveal,
+}: { screenOpen?: boolean; addressReveal?: AddressRevealSchedule | null } = {}) {
   const [stamp, setStamp] = useState(() => Date.now());
 
   const state = useMemo(() => {
     const now = countdownNow(stamp);
     return {
-      active: shouldShowEventCountdown(now),
-      parts: eventCountdownRemaining(now),
+      active: shouldShowEventCountdown(now, addressReveal),
+      parts: eventCountdownRemaining(now, addressReveal),
     };
-  }, [stamp]);
+  }, [stamp, addressReveal]);
 
   const shouldTick = state.parts !== null && (state.active || screenOpen);
 

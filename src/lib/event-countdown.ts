@@ -1,5 +1,7 @@
+import { addressRevealTime } from "@/lib/address-reveal";
 import { appNow } from "@/lib/app-clock";
-import { addHouseCutoffTime } from "@/lib/hours";
+import { mergeAddressRevealSchedule } from "@/lib/event-settings";
+import type { AddressRevealSchedule } from "@/lib/types";
 
 export type EventCountdownParts = {
   days: number;
@@ -50,24 +52,33 @@ export function formatEventCountdownParts(totalMs: number): EventCountdownParts 
   return formatEventCountdownPartsFromDates(from, to);
 }
 
-/** Countdown target — same moment as the public add-house cutoff. */
-export function eventCountdownTarget(now = appNow()) {
+/** Countdown target — address reveal on event night (catalog override when set). */
+export function eventCountdownTarget(
+  now = appNow(),
+  schedule?: AddressRevealSchedule | null,
+) {
   void now;
-  return addHouseCutoffTime();
+  return addressRevealTime(mergeAddressRevealSchedule(schedule ?? undefined));
 }
 
-/** True until add-house cutoff — then live house status takes over. */
-export function shouldShowEventCountdown(now = appNow()) {
-  return now.getTime() < eventCountdownTarget(now).getTime();
+/** True until address reveal — then live house status takes over. */
+export function shouldShowEventCountdown(
+  now = appNow(),
+  schedule?: AddressRevealSchedule | null,
+) {
+  return now.getTime() < eventCountdownTarget(now, schedule).getTime();
 }
 
-export function eventCountdownRemaining(now = appNow()): EventCountdownParts | null {
-  const target = eventCountdownTarget(now);
+export function eventCountdownRemaining(
+  now = appNow(),
+  schedule?: AddressRevealSchedule | null,
+): EventCountdownParts | null {
+  const target = eventCountdownTarget(now, schedule);
   if (target.getTime() <= now.getTime()) return null;
   return formatEventCountdownPartsFromDates(now, target);
 }
 
-/** Last tick before cutoff — `0 Days · 00:00:00`. */
+/** Last tick before reveal — `0 Days · 00:00:00`. */
 export function eventCountdownIsZero(parts: EventCountdownParts): boolean {
   return parts.days === 0 && parts.hours === 0 && parts.minutes === 0 && parts.seconds === 0;
 }

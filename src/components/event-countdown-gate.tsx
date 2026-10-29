@@ -9,25 +9,27 @@ import { countdownBannerFromCatalog } from "@/lib/event-settings";
 
 /**
  * Mount countdown UI only while the pre-event window is open.
- * After 17:00 (or finale completes) the whole layer is removed — no tickers, no hooks.
+ * After address reveal (or finale completes) the whole layer is removed — no tickers, no hooks.
  */
 export function EventCountdownGate() {
   const { catalog } = useCatalog();
+  const addressReveal = catalog?.eventSettings?.addressReveal;
   const bannerAllowed = useMemo(
     () => countdownBannerFromCatalog(catalog?.eventSettings),
     [catalog?.eventSettings],
   );
-  const [active, setActive] = useState(() => shouldShowEventCountdown());
+  const [active, setActive] = useState(() => shouldShowEventCountdown(undefined, addressReveal));
 
   useEffect(() => {
-    const sync = () => setActive(shouldShowEventCountdown());
+    const sync = () => setActive(shouldShowEventCountdown(undefined, addressReveal));
+    sync();
     window.addEventListener(CLOCK_EVENT, sync);
     return () => window.removeEventListener(CLOCK_EVENT, sync);
-  }, []);
+  }, [addressReveal]);
 
   const onComplete = useCallback(() => setActive(false), []);
 
   if (!bannerAllowed || !active) return null;
 
-  return <EventCountdownLayer onComplete={onComplete} />;
+  return <EventCountdownLayer addressReveal={addressReveal} onComplete={onComplete} />;
 }

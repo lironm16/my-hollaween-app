@@ -16,26 +16,32 @@ test("formatEventCountdownParts", () => {
   assert.equal(parts.label, "91 Days · 07:22:32");
 });
 
-test("shouldShowEventCountdown until add-house cutoff (30 Oct 23:59)", () => {
+test("shouldShowEventCountdown until address reveal (31 Oct 12:00 default)", () => {
   assert.equal(shouldShowEventCountdown(new Date(2026, 8, 2, 12, 0)), true);
-  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 30, 10, 0)), true);
-  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 30, 23, 58, 59)), true);
-  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 30, 23, 59, 0)), false);
-  assert.equal(shouldShowEventCountdown(new Date(2026, 10, 1, 10, 0)), false);
+  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 30, 23, 59, 0)), true);
+  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 31, 11, 59, 59)), true);
+  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 31, 12, 0, 0)), false);
+  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 31, 13, 0, 0)), false);
+});
+
+test("shouldShowEventCountdown follows catalog address reveal time", () => {
+  const lateReveal = { hour: 18, minute: 30 };
+  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 31, 12, 0, 0), lateReveal), true);
+  assert.equal(shouldShowEventCountdown(new Date(2026, 9, 31, 18, 30, 0), lateReveal), false);
 });
 
 test("eventCountdownRemaining on Oct 30 morning", () => {
   const parts = eventCountdownRemaining(new Date(2026, 9, 30, 10, 0));
   assert.ok(parts);
-  assert.equal(parts!.days, 0);
-  assert.equal(parts!.time, "13:59:00");
+  assert.equal(parts!.days, 1);
+  assert.equal(parts!.time, "02:00:00");
 });
 
-test("eventCountdownRemaining counts down to 30 Oct 23:59", () => {
+test("eventCountdownRemaining counts down to 31 Oct 12:00", () => {
   const parts = eventCountdownRemaining(new Date(2026, 8, 2, 12, 0));
   assert.ok(parts);
-  assert.equal(parts!.days, 58);
-  assert.equal(parts!.time, "11:59:00");
+  assert.equal(parts!.days, 59);
+  assert.equal(parts!.time, "00:00:00");
 });
 
 test("eventCountdownIsZero", () => {
@@ -67,5 +73,5 @@ test("eventCountdownRemaining uses local calendar days across DST (Israel)", () 
   const parts = eventCountdownRemaining(new Date(2026, 8, 23, 14, 6, 0));
   assert.ok(parts);
   assert.equal(parts!.days, 37);
-  assert.equal(parts!.time, "09:53:00");
+  assert.equal(parts!.time, "21:54:00");
 });
