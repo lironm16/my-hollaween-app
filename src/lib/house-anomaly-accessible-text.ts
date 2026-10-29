@@ -38,23 +38,36 @@ export function lobbyOrEntranceMentionSnippet(fields: AccessibleHintTextFields):
   return undefined;
 }
 
-function textNegatesElevator(blob: string): boolean {
-  if (/(?:^|[\s,.(—-])(?:אין|בלי|ללא)\s*מעלית/u.test(blob)) return true;
-  if (/\bno\s+elevator\b/i.test(blob)) return true;
-  if (/\bwithout\s+(?:an?\s+)?elevator\b/i.test(blob)) return true;
-  return false;
+/** Strip “no / broken elevator” phrases before checking for usable-elevator directions. */
+export function scrubNonUsableElevatorMentions(text: string): string {
+  let scrubbed = text;
+  scrubbed = scrubbed.replace(
+    /(?:^|[\s,.(—\-]|^)(?:אין|בלי|ללא)\s+מעלית/giu,
+    " ",
+  );
+  scrubbed = scrubbed.replace(
+    /ה?מעלית\s+לא\s+(?:עובד(?:ת)?|תקינ(?:ה)?|פעיל(?:ה)?|פועל(?:ת)?)/giu,
+    " ",
+  );
+  scrubbed = scrubbed.replace(/\b(?:no|without)\s+(?:an?\s+)?(?:elevator|lift)s?\b/giu, " ");
+  scrubbed = scrubbed.replace(
+    /\b(?:elevator|lift)s?\s+(?:not\s+working|broken|out\s+of\s+order|doesn'?t\s+work)\b/giu,
+    " ",
+  );
+  return scrubbed;
 }
 
-/** True when copy mentions an elevator as part of directions (not “no elevator”). */
+/** True when copy mentions an elevator as part of directions (not “no / broken elevator”). */
 export function textMentionsElevator(...fields: (string | undefined)[]): boolean {
   const blob = fields
     .map((field) => field?.trim())
     .filter(Boolean)
     .join("\n");
-  if (!blob || textNegatesElevator(blob)) return false;
+  if (!blob) return false;
 
-  if (/מעלית/u.test(blob)) return true;
-  if (/\b(?:elevators?|lifts?)\b/i.test(blob)) return true;
+  const scrubbed = scrubNonUsableElevatorMentions(blob);
+  if (/מעלית/u.test(scrubbed)) return true;
+  if (/\b(?:elevators?|lifts?)\b/i.test(scrubbed)) return true;
   return false;
 }
 

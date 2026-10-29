@@ -30,7 +30,11 @@ describe("house-anomaly-accessible-text", () => {
   it("detects elevator mentions but not negated lines", () => {
     assert.equal(textMentionsElevator("קומה 5, מעלית ואז שמאלה"), true);
     assert.equal(textMentionsElevator("Take the elevator to floor 3"), true);
+    assert.equal(textMentionsElevator("אין מעלית"), false);
     assert.equal(textMentionsElevator("אין מעלית — רק מדרגות"), false);
+    assert.equal(textMentionsElevator("מעלית לא עובדת, עולים במדרגות"), false);
+    assert.equal(textMentionsElevator("המעלית לא תקינה"), false);
     assert.equal(textMentionsElevator("No elevator, stairs only"), false);
+    assert.equal(textMentionsElevator("Elevator not working — use stairs"), false);
   });
 });
