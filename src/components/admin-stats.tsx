@@ -335,7 +335,7 @@ function StatTile({
       >
         {icon}
       </span>
-      <span className="min-w-0 flex-1 text-end">
+      <span className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
         <span className="block text-base leading-tight text-violet-300">{label}</span>
         {hint ? <span className="block text-sm leading-tight text-violet-400">{hint}</span> : null}
         <span className={cn("block text-2xl font-bold leading-none tabular-nums text-orange-50", valueClass)}>
