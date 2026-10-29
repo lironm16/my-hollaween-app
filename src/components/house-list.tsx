@@ -115,7 +115,7 @@ export function HouseList({
     );
   }
 
-  const showPerCardRemove = onRemoveFromDevice && !selection;
+  const showPerCardRemove = Boolean(onRemoveFromDevice);
 
   return (
     <div

@@ -30,6 +30,8 @@ import { resolveCatalogHouses } from "@/lib/catalog-houses";
 import {
   deviceMayEditHouseOnClient,
   forgetPublishedHouse,
+  hideHouseFromMineTab,
+  isHouseHiddenFromMineTab,
   loadCatalogCacheSync,
   localHouseEditCodeFor,
   notifyCatalogChanged,
@@ -156,6 +158,7 @@ function MyCollectionsPageContent() {
   useEffect(() => {
     if (!nightPass.registered || !nightPass.houseId) return;
     const id = nightPass.houseId;
+    if (isHouseHiddenFromMineTab(id)) return;
     if (owned.some((item) => item.id === id)) return;
     saveOwnedHouse({
       id,
@@ -165,9 +168,23 @@ function MyCollectionsPageContent() {
     });
   }, [nightPass.registered, nightPass.houseId, nightPass.houseName, catalogHouses, owned]);
 
+  const removeHouseFromMineDevice = useCallback((id: string) => {
+    removeOwnedHouse(id);
+    forgetPublishedHouse(id);
+    hideHouseFromMineTab(id);
+    notifyCatalogChanged();
+    setSelectedIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
   const mineHouses = useMemo(() => {
     const byId = new Map<string, PublicHouse>();
     for (const item of owned) {
+      if (isHouseHiddenFromMineTab(item.id)) continue;
       const house = mineHouseFromOwned(
         item,
         catalogHouses,
@@ -175,7 +192,12 @@ function MyCollectionsPageContent() {
       );
       if (house) byId.set(house.id, house);
     }
-    if (nightPass.registered && nightPass.houseId && !byId.has(nightPass.houseId)) {
+    if (
+      nightPass.registered &&
+      nightPass.houseId &&
+      !byId.has(nightPass.houseId) &&
+      !isHouseHiddenFromMineTab(nightPass.houseId)
+    ) {
       const fromOwned = owned.find((item) => item.id === nightPass.houseId);
       const house = fromOwned
         ? mineHouseFromOwned(fromOwned, catalogHouses, nightPass.houseName)
@@ -422,8 +444,8 @@ function MyCollectionsPageContent() {
     for (const id of ids) {
       switch (tab) {
         case "mine":
-          removeOwnedHouse(id);
-          break;
+          removeHouseFromMineDevice(id);
+          continue;
         case "saved":
           if (likes.liked(id)) likes.toggle(id);
           break;
@@ -441,7 +463,6 @@ function MyCollectionsPageContent() {
       }
     }
 
-    if (tab === "mine") notifyCatalogChanged();
     setSelectedIds(new Set());
   }
 
@@ -473,6 +494,7 @@ function MyCollectionsPageContent() {
             emptyKind={emptyKind}
             showSort={tab !== "mine"}
             insetX="flush"
+            onRemoveFromDevice={tab === "mine" ? removeHouseFromMineDevice : undefined}
             selection={{
               selectedIds,
               onToggleId: toggleSelected,
@@ -501,10 +523,8 @@ function MyCollectionsPageContent() {
         onClose={editFlow.close}
         onUpdated={handleUpdated}
         onDeleted={(id) => {
-          forgetPublishedHouse(id);
-          removeOwnedHouse(id);
+          removeHouseFromMineDevice(id);
           editFlow.close();
-          notifyCatalogChanged();
           void refresh(true);
         }}
       />

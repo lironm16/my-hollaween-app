@@ -242,6 +242,8 @@ export async function loadCatalogCache(): Promise<Catalog | null> {
 }
 
 const MY_HOUSES_KEY = "hw-my-houses";
+/** Houses the user removed from **במכשיר שלי** — blocks night-pass auto re-add. */
+const MY_HOUSES_HIDDEN_KEY = "hw-my-houses-hidden";
 
 export type OwnedHouse = {
   id: string;
@@ -273,11 +275,55 @@ export function refreshStaleOwnedPreviews(catalogHouses: readonly PublicHouse[])
   }
 }
 
+export function loadHiddenMineHouseIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(MY_HOUSES_HIDDEN_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id): id is string => typeof id === "string" && id.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+export function isHouseHiddenFromMineTab(id: string): boolean {
+  return loadHiddenMineHouseIds().includes(id);
+}
+
+function persistHiddenMineHouseIds(ids: string[]) {
+  localStorage.setItem(MY_HOUSES_HIDDEN_KEY, JSON.stringify(ids.slice(0, 40)));
+  window.dispatchEvent(new Event("hw-owned-changed"));
+}
+
+/** User removed a row from **במכשיר שלי** — stay off until they add/save the house again. */
+export function hideHouseFromMineTab(id: string) {
+  if (typeof window === "undefined" || !id.trim()) return;
+  try {
+    const next = [...new Set([...loadHiddenMineHouseIds(), id.trim()])];
+    persistHiddenMineHouseIds(next);
+  } catch {
+    /* private mode */
+  }
+}
+
+function clearHouseHiddenFromMineTab(id: string) {
+  if (typeof window === "undefined" || !id.trim()) return;
+  try {
+    const next = loadHiddenMineHouseIds().filter((item) => item !== id);
+    if (next.length === loadHiddenMineHouseIds().length) return;
+    persistHiddenMineHouseIds(next);
+  } catch {
+    /* private mode */
+  }
+}
+
 export function saveOwnedHouse(house: OwnedHouse) {
   try {
     if (house.editCode?.trim()) {
       clearHouseEditAccessRevoked(house.id);
     }
+    clearHouseHiddenFromMineTab(house.id);
     const next = loadOwnedHouses().filter((h) => h.id !== house.id);
     next.unshift(house);
     localStorage.setItem(MY_HOUSES_KEY, JSON.stringify(next.slice(0, 20)));
