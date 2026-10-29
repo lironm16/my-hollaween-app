@@ -11,6 +11,7 @@ describe("localizedStreetLine", () => {
   it("maps Hebrew street + number to English when locale is en", () => {
     assert.equal(localizedStreetLine("en", "יהודית 15"), "Yehudit St 15");
     assert.equal(localizedStreetLine("en", "חרוזים 8"), "Charuzim St 8");
+    assert.equal(localizedStreetLine("en", "2 מורדי הגטאות"), "Mordei HaGetaot St 2");
   });
 
   it("keeps Hebrew when locale is he", () => {
