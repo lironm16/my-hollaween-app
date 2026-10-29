@@ -3,6 +3,7 @@
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ClusterHouseActionMenu } from "@/components/cluster-house-action-menu";
+import { ClusterOverviewNavMenu } from "@/components/cluster-overview-nav-menu";
 import { HouseCardActionMenu } from "@/components/house-card-action-menu";
 import type { HouseCardActionContext } from "@/components/house-card-actions";
 import { OverlayCloseBar } from "@/components/overlay-close-button";
@@ -180,6 +181,7 @@ export function HouseDetailOverlay({
                 }
                 className="min-w-0 flex-1"
               />
+              <ClusterOverviewNavMenu houses={clusterHouses!} actionContext={actionContext} />
             </div>
             <div className="mb-3 min-w-0">
               <p className="map-house-sheet-kicker">
