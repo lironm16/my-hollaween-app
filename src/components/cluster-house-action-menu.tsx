@@ -22,6 +22,7 @@ export function ClusterHouseActionMenu({
   gemCollected,
   onFindAllGems,
   onResetAllGems,
+  gemHuntEligible,
   className,
 }: {
   houses: PublicHouse[];
@@ -37,6 +38,8 @@ export function ClusterHouseActionMenu({
   gemCollected?: (id: string) => boolean;
   onFindAllGems?: () => void;
   onResetAllGems?: () => void;
+  /** Same gate as per-house **מצא שדון** (location revealed + hunt set). */
+  gemHuntEligible?: (house: PublicHouse) => boolean;
   menuPlacement?: "top" | "bottom";
   className?: string;
 }) {
@@ -46,7 +49,9 @@ export function ClusterHouseActionMenu({
   const allVisited = houses.length > 0 && houses.every((house) => visited(house.id));
   const allSkipped = houses.length > 0 && houses.every((house) => skipped(house.id));
   const allLiked = houses.length > 0 && houses.every((house) => liked(house.id));
-  const gemHouses = houses.filter((house) => addressReveal.canViewDetails(house.id));
+  const gemHouses = houses.filter((house) =>
+    gemHuntEligible ? gemHuntEligible(house) : addressReveal.canViewDetails(house.id),
+  );
   const allGemsCollected =
     gemHouses.length >= 2 && gemHouses.every((house) => readGemCollected(house.id));
   const showGemActions =
