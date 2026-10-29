@@ -1410,7 +1410,7 @@ export function NeighborhoodApp({
       onClusterRestoreAll: applyClusterRestoreAll,
       onClusterLikeAll: applyClusterLikeAll,
       onClusterUnlikeAll: applyClusterUnlikeAll,
-      onClusterFindAllGems: gemAdminTools ? openGemHuntForCluster : undefined,
+      onClusterFindAllGems: gemUi ? openGemHuntForCluster : undefined,
       onClusterResetAllGems: gemAdminTools ? handleClusterResetAllGems : undefined,
       canEdit: (id) =>
         Boolean(

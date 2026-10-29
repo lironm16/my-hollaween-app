@@ -447,6 +447,7 @@ export function MapHouseSheet({
                       ? () => actionContext.onClusterResetAllGems!(clusterHouses)
                       : undefined
                   }
+                  gemHuntEligible={actionContext.gemQuickActionEligible}
                   className="min-w-0 flex-1"
                 />
                 <ClusterOverviewNavMenu houses={clusterHouses} actionContext={actionContext} />
