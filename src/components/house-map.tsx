@@ -430,8 +430,9 @@ function clusterIcon(
       : "";
   const clusterShell =
     schoolCampus && routeOrder == null ? "" : " is-cluster-shell";
+  const selectedPinClass = selectedHere ? " is-selected" : "";
   const wrapped = wrapRoutePin(
-    `<div class="house-pin is-building${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
+    `<div class="house-pin is-building${selectedPinClass}${clusterKindClass}${campusClass}${tourRing.classSuffix}${clusterRing.hoursSoonClass}"${pinStyleAttr} role="img" aria-label="${clusterLabel}">${clusterIconHtml}${clusterAptDotsHtml(houses, now, gemCtx.addressReveal, matchedIds, skippedIds, schoolCampus)}</div>`,
     locale,
     routeOrder,
     clusterShell,
