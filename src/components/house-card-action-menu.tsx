@@ -44,6 +44,8 @@ export function HouseCardActionMenu({
   return (
     <HouseActionBar
       {...props}
+      onShowOnMap={navOnly ? undefined : props.onShowOnMap}
+      onShowInList={navOnly ? undefined : props.onShowInList}
       navOnly={navOnly}
       menuPlacement={menuPlacement}
       className={className}

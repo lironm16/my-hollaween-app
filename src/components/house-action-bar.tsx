@@ -149,7 +149,7 @@ export function HouseActionBar({
       external: true,
     });
   }
-  if (onShowOnMap) {
+  if (!navOnly && onShowOnMap) {
     items.push({
       id: "map",
       label: t("houseActions.showOnMap"),
@@ -157,7 +157,7 @@ export function HouseActionBar({
       onClick: onShowOnMap,
     });
   }
-  if (onShowInList) {
+  if (!navOnly && onShowInList) {
     items.push({
       id: "list",
       label: t("houseActions.showInList"),
