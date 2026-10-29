@@ -7461,6 +7461,7 @@ svg.leaflet-zoom-animated {
   display: inline-block;
   max-width: 100%;
   white-space: nowrap;
+  text-align: start;
 }
 .neighborhood-marquee-text.is-scroll {
   max-width: none;
