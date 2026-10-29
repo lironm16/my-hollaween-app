@@ -104,6 +104,28 @@ describe("house-anomalies", () => {
     assert.equal(isAnomalyActionable(newer, anomaly), true);
   });
 
+  it("flags similar apartments in the same building cluster", () => {
+    const shared = { lat: 32.0919, lng: 34.8112, address: "חרוזים 8" };
+    const a = house({
+      id: "בית-3001",
+      ...shared,
+      name: "דירת הדלעות",
+      arrival: "קומה 2, דירה 5",
+      addedBy: "משפחת לוי",
+    });
+    const b = house({
+      id: "בית-3002",
+      ...shared,
+      name: "דירת דלעות",
+      arrival: "דירה 5, קומה 2",
+      addedBy: "משפחת לוי",
+    });
+    const items = listAllActionableAnomalies([a, b], ctx, { houseSet: "all" });
+    const dupes = items.filter((i) => i.kind === "duplicate_apartment_suspected");
+    assert.equal(dupes.length, 1);
+    assert.equal(dupes[0]?.affectedHouseIds?.length, 2);
+  });
+
   it("dedupes building accessibility to one row per cluster", () => {
     const shared = { lat: 32.0919, lng: 34.8112, address: "חרוזים 8" };
     const a = house({

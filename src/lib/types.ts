@@ -229,6 +229,7 @@ export const HOUSE_ANOMALY_KINDS = [
   "name_looks_like_address",
   "building_accessible_mismatch",
   "building_address_mismatch",
+  "duplicate_apartment_suspected",
   "visit_closed_with_hours",
   "missing_arrival",
   "arrival_high_floor",
