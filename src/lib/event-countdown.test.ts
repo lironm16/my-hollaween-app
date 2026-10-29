@@ -6,6 +6,7 @@ import {
   formatEventCountdownParts,
   shouldShowEventCountdown,
 } from "@/lib/event-countdown";
+import { eventCountdownDateBadgeLabel } from "@/lib/event-countdown-display";
 
 test("formatEventCountdownParts", () => {
   const parts = formatEventCountdownParts(
@@ -74,4 +75,18 @@ test("eventCountdownRemaining uses local calendar days across DST (Israel)", () 
   assert.ok(parts);
   assert.equal(parts!.days, 37);
   assert.equal(parts!.time, "21:54:00");
+});
+
+test("eventCountdownDateBadgeLabel shows evening jump start, not address reveal", () => {
+  assert.equal(eventCountdownDateBadgeLabel(), "17:00 · 31.10");
+  assert.equal(
+    eventCountdownDateBadgeLabel({
+      year: 2026,
+      month: 10,
+      day: 31,
+      openFrom: "17:00",
+      openTo: "21:00",
+    }),
+    "17:00 · 31.10",
+  );
 });

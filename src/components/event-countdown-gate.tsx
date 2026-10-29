@@ -14,6 +14,7 @@ import { countdownBannerFromCatalog } from "@/lib/event-settings";
 export function EventCountdownGate() {
   const { catalog } = useCatalog();
   const addressReveal = catalog?.eventSettings?.addressReveal;
+  const eventOpenHours = catalog?.eventSettings?.eventOpenHours;
   const bannerAllowed = useMemo(
     () => countdownBannerFromCatalog(catalog?.eventSettings),
     [catalog?.eventSettings],
@@ -31,5 +32,11 @@ export function EventCountdownGate() {
 
   if (!bannerAllowed || !active) return null;
 
-  return <EventCountdownLayer addressReveal={addressReveal} onComplete={onComplete} />;
+  return (
+    <EventCountdownLayer
+      addressReveal={addressReveal}
+      eventOpenHours={eventOpenHours}
+      onComplete={onComplete}
+    />
+  );
 }
