@@ -1,5 +1,12 @@
 import { parseArrivalFloor } from "@/lib/arrival-floor";
-import type { House } from "@/lib/types";
+
+/** Fields used for duplicate-apartment heuristics — works with House and PublicHouse. */
+export type DuplicateApartmentCompareFields = {
+  id: string;
+  name: string;
+  arrival?: string;
+  addedBy?: string | null;
+};
 
 /** Loose text normalize for comparing names, arrival, submitter. */
 export function normalizeDuplicateCompareText(raw: string): string {
@@ -62,13 +69,13 @@ export function parseArrivalApartmentNumber(text: string): number | null {
   return candidates[0]!;
 }
 
-function sameSubmitter(a: House, b: House): boolean {
+function sameSubmitter(a: DuplicateApartmentCompareFields, b: DuplicateApartmentCompareFields): boolean {
   const aa = normalizeDuplicateCompareText(a.addedBy ?? "");
   const bb = normalizeDuplicateCompareText(b.addedBy ?? "");
   return aa.length >= 2 && aa === bb;
 }
 
-function sameApartmentLocation(a: House, b: House): boolean {
+function sameApartmentLocation(a: DuplicateApartmentCompareFields, b: DuplicateApartmentCompareFields): boolean {
   const aptA = parseArrivalApartmentNumber(a.arrival ?? "");
   const aptB = parseArrivalApartmentNumber(b.arrival ?? "");
   if (aptA === null || aptB === null || aptA !== aptB) return false;
@@ -79,7 +86,10 @@ function sameApartmentLocation(a: House, b: House): boolean {
 }
 
 /** Two houses at the same pin may be duplicate registrations. */
-export function housesSuspectDuplicateApartment(a: House, b: House): boolean {
+export function housesSuspectDuplicateApartment(
+  a: DuplicateApartmentCompareFields,
+  b: DuplicateApartmentCompareFields,
+): boolean {
   if (a.id === b.id) return false;
 
   const nameSimilar = duplicateCompareTextsSimilar(a.name, b.name);
@@ -94,7 +104,10 @@ export function housesSuspectDuplicateApartment(a: House, b: House): boolean {
   return false;
 }
 
-export function formatDuplicateApartmentPairDetail(a: House, b: House): string {
+export function formatDuplicateApartmentPairDetail(
+  a: DuplicateApartmentCompareFields,
+  b: DuplicateApartmentCompareFields,
+): string {
   const left = a.name.trim() || a.id;
   const right = b.name.trim() || b.id;
   const bits = [`${left} ↔ ${right}`];
