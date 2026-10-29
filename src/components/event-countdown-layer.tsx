@@ -6,7 +6,7 @@ import { EventCountdownBar } from "@/components/event-countdown-bar";
 import { EventCountdownFinale } from "@/components/event-countdown-finale";
 import { useEventCountdown } from "@/hooks/use-event-countdown";
 import { eventCountdownIsZero } from "@/lib/event-countdown";
-import type { AddressRevealSchedule } from "@/lib/types";
+import type { AddressRevealSchedule, EventOpenHoursSchedule } from "@/lib/types";
 import {
   markEventCountdownIntroSeen,
   readEventCountdownIntroSeen,
@@ -20,9 +20,11 @@ const EventCountdownScreen = dynamic(
 /** Bottom countdown bar + full-screen overlay — extracted from neighborhood-app. */
 export function EventCountdownLayer({
   addressReveal,
+  eventOpenHours,
   onComplete,
 }: {
   addressReveal?: AddressRevealSchedule | null;
+  eventOpenHours?: EventOpenHoursSchedule | null;
   onComplete: () => void;
 }) {
   const [screenOpen, setScreenOpen] = useState(false);
@@ -73,7 +75,7 @@ export function EventCountdownLayer({
       {screenOpen ? (
         <EventCountdownScreen
           parts={eventCountdown.parts}
-          addressReveal={addressReveal}
+          eventOpenHours={eventOpenHours}
           onClose={closeScreen}
         />
       ) : null}
