@@ -3,11 +3,16 @@ import { describe, it } from "node:test";
 import {
   houseOpenDuringVisitWindow,
   hoursStatus,
+  hoursWindowsIssue,
   isHouseClosedBeforeOpening,
+  isHoursNightOver,
   isOpenDuringCustomVisitForFilter,
+  isOpenNow,
   isOpenNowForFilter,
   isAddHouseOpen,
   isOpeningSoon,
+  isOvernightHoursWindow,
+  isValidHoursWindow,
   openingSoonAt,
   visitWindowIssue,
 } from "@/lib/hours";
@@ -74,6 +79,28 @@ describe("openingSoon before event night", () => {
   it("shows opening soon on event night within 30 minutes", () => {
     assert.equal(openingSoonAt(house, eventNightSoon), "17:00");
     assert.equal(isOpeningSoon(house, eventNightSoon), true);
+  });
+});
+
+describe("overnight house hours", () => {
+  it("accepts closing after midnight on the form", () => {
+    assert.equal(isValidHoursWindow({ from: "16:30", to: "00:30" }), true);
+    assert.equal(hoursWindowsIssue([{ from: "16:30", to: "00:30" }]), null);
+    assert.equal(isOvernightHoursWindow(16 * 60 + 30, 30), true);
+  });
+
+  it("treats the house as open after midnight within the window", () => {
+    const house = { openFrom: "16:30", openTo: "00:30", visit: "come" as const };
+    const afterMidnight = new Date(2026, 9, 31, 0, 15, 0, 0);
+    assert.equal(isOpenNow(house, afterMidnight), true);
+    const status = hoursStatus(house, afterMidnight);
+    assert.equal(status.kind === "open" || status.kind === "closingSoon", true);
+  });
+
+  it("ends the night in the gap after an overnight close", () => {
+    const house = { openFrom: "16:30", openTo: "00:30", visit: "come" as const };
+    const afterClose = new Date(2026, 9, 31, 1, 0, 0, 0);
+    assert.equal(isHoursNightOver(house, afterClose), true);
   });
 });
 
