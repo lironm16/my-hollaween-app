@@ -414,6 +414,7 @@ export function HouseDetails({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            key={house.photoUrl}
             src={house.photoUrl}
             alt=""
             loading="lazy"
@@ -529,6 +530,7 @@ export function HouseDetails({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                key={house.photoUrl}
                 src={house.photoUrl}
                 alt=""
                 className="max-h-full max-w-full rounded-xl object-contain"
