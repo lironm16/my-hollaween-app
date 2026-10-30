@@ -209,11 +209,22 @@ export function NightDesk({
       ...(extras?.clearPhoto && !extras.photoDataUrl ? { photoUrl: "" } : {}),
     });
     if (!saved) return;
-    const code = editCode;
-    if (extras?.photoDataUrl && code) {
+    if (extras?.photoDataUrl) {
       try {
-        const withPhoto = await publishHousePhoto(house.id, code, extras.photoDataUrl);
+        const withPhoto = await publishHousePhoto(house.id, editCode, extras.photoDataUrl, {
+          previousPhotoUrl: house.photoUrl,
+        });
         onUpdated(withPhoto);
+        rememberSessionHouseDetail(withPhoto);
+        rememberPublishedHouse(withPhoto);
+        if (!admin && editCode) {
+          saveOwnedHouse({
+            id: withPhoto.id,
+            name: withPhoto.name,
+            editCode,
+            preview: withPhoto,
+          });
+        }
         notifyCatalogChanged();
       } catch {
         toast.warning(t("nightDesk.photoSavedNoImage"));
