@@ -26,9 +26,10 @@ export type HoursStatus =
 const CLOSING_SOON_MINUTES = 30;
 const OPENS_SOON_MINUTES = 30;
 const MAX_WINDOWS = 6;
+const MINUTES_PER_DAY = 24 * 60;
 
 export function parseClockMinutes(value: string): number | null {
-  const match = /^(\d{2}):(\d{2})$/.exec(value.trim());
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
   if (!match) return null;
   const hours = Number(match[1]);
   const minutes = Number(match[2]);
@@ -36,10 +37,69 @@ export function parseClockMinutes(value: string): number | null {
   return hours * 60 + minutes;
 }
 
+/** Closing time at or before opening on the clock → runs past midnight on event night. */
+export function isOvernightHoursWindow(from: number, to: number): boolean {
+  return to <= from;
+}
+
+export function hoursWindowDurationMinutes(from: number, to: number): number {
+  if (from === to) return 0;
+  return to > from ? to - from : MINUTES_PER_DAY - from + to;
+}
+
+export function isNowInHoursWindow(nowMin: number, from: number, to: number): boolean {
+  if (from === to) return false;
+  if (to > from) return nowMin >= from && nowMin < to;
+  return nowMin >= from || nowMin < to;
+}
+
+export function isHoursWindowEnded(nowMin: number, from: number, to: number): boolean {
+  if (to > from) return nowMin >= to;
+  return nowMin >= to && nowMin < from;
+}
+
+function minutesUntilHoursWindowClose(nowMin: number, from: number, to: number): number | null {
+  if (!isNowInHoursWindow(nowMin, from, to)) return null;
+  if (to > from) return to - nowMin;
+  if (nowMin >= from) return MINUTES_PER_DAY - nowMin + to;
+  return to - nowMin;
+}
+
+function hoursWindowMinuteSpans(from: number, to: number): Array<[number, number]> {
+  if (from === to) return [];
+  if (to > from) return [[from, to]];
+  return [
+    [from, MINUTES_PER_DAY],
+    [0, to],
+  ];
+}
+
+export function hoursWindowMinutesOverlap(
+  aFrom: number,
+  aTo: number,
+  bFrom: number,
+  bTo: number,
+): boolean {
+  for (const [a0, a1] of hoursWindowMinuteSpans(aFrom, aTo)) {
+    for (const [b0, b1] of hoursWindowMinuteSpans(bFrom, bTo)) {
+      if (a0 < b1 && b0 < a1) return true;
+    }
+  }
+  return false;
+}
+
+function isNowWithinHouseHours(nowMin: number, windows: HoursWindow[]): boolean {
+  return windows.some((window) => {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    return from !== null && to !== null && isNowInHoursWindow(nowMin, from, to);
+  });
+}
+
 export function isValidHoursWindow(window: HoursWindow): boolean {
   const from = parseClockMinutes(window.from);
   const to = parseClockMinutes(window.to);
-  return from !== null && to !== null && to > from;
+  return from !== null && to !== null && from !== to;
 }
 
 /** True when two or more windows share any open minute (adjacent is fine). */
@@ -49,10 +109,20 @@ export function hoursWindowsOverlap(windows: HoursWindow[]): boolean {
       from: parseClockMinutes(window.from),
       to: parseClockMinutes(window.to),
     }))
-    .filter((window): window is { from: number; to: number } => window.from !== null && window.to !== null)
-    .sort((a, b) => a.from - b.from);
-  for (let i = 1; i < parsed.length; i++) {
-    if (parsed[i]!.from < parsed[i - 1]!.to) return true;
+    .filter((window): window is { from: number; to: number } => window.from !== null && window.to !== null);
+  for (let i = 0; i < parsed.length; i++) {
+    for (let j = i + 1; j < parsed.length; j++) {
+      if (
+        hoursWindowMinutesOverlap(
+          parsed[i]!.from,
+          parsed[i]!.to,
+          parsed[j]!.from,
+          parsed[j]!.to,
+        )
+      ) {
+        return true;
+      }
+    }
   }
   return false;
 }
@@ -72,7 +142,7 @@ export function hoursWindowsIssueId(windows: HoursWindow[]): HoursWindowsIssueId
     const from = parseClockMinutes(window.from);
     const to = parseClockMinutes(window.to);
     if (from === null || to === null) return "incomplete";
-    if (to <= from) return "closeAfterOpen";
+    if (from === to) return "closeAfterOpen";
   }
   if (hoursWindowsOverlap(windows)) return "overlap";
   return null;
@@ -249,22 +319,30 @@ export function houseOpenDuringVisitWindow(
   const vt = visitWindowTo ? parseClockMinutes(visitWindowTo) : null;
   if (vf === null && vt === null) return true;
 
-  const windows = houseHoursWindows(house).flatMap((window) => {
-    const from = parseClockMinutes(window.from);
-    const to = parseClockMinutes(window.to);
-    if (from === null || to === null) return [];
-    return [{ from, to }];
-  });
+  const windows = houseHoursWindows(house);
   if (windows.length === 0) return false;
 
   if (vf !== null && vt !== null) {
     if (vt <= vf) return false;
-    return windows.some((window) => window.from < vt && vf < window.to);
+    return windows.some((window) => {
+      const from = parseClockMinutes(window.from);
+      const to = parseClockMinutes(window.to);
+      if (from === null || to === null) return false;
+      return hoursWindowMinutesOverlap(from, to, vf, vt);
+    });
   }
   if (vf !== null) {
-    return windows.some((window) => vf >= window.from && vf < window.to);
+    return windows.some((window) => {
+      const from = parseClockMinutes(window.from);
+      const to = parseClockMinutes(window.to);
+      return from !== null && to !== null && isNowInHoursWindow(vf, from, to);
+    });
   }
-  return windows.some((window) => vt! >= window.from && vt! < window.to);
+  return windows.some((window) => {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    return from !== null && to !== null && isNowInHoursWindow(vt!, from, to);
+  });
 }
 
 function minutesNow(now: Date) {
@@ -362,8 +440,10 @@ export function isHoursNightOver(house: HoursSource, now = appNow()) {
   if (windows.length === 0) return false;
   const nowMin = minutesNow(now);
   return windows.every((window) => {
+    const from = parseClockMinutes(window.from);
     const to = parseClockMinutes(window.to);
-    return to !== null && nowMin >= to;
+    if (from === null || to === null) return false;
+    return isHoursWindowEnded(nowMin, from, to);
   });
 }
 
@@ -372,9 +452,12 @@ export function isHoursNotYetOpen(house: HoursSource, now = appNow()) {
   if (eventNightRelation(now) !== 0) return false;
   const windows = houseHoursWindows(house);
   if (windows.length === 0) return false;
+  const nowMin = minutesNow(now);
+  if (isNowWithinHouseHours(nowMin, windows)) return false;
+  if (isHoursNightOver(house, now)) return false;
   const from = parseClockMinutes(windows[0]!.from);
   if (from === null) return false;
-  return minutesNow(now) < from;
+  return nowMin < from;
 }
 
 /**
@@ -440,13 +523,13 @@ export function hoursStatus(
   }));
 
   for (const window of parsed) {
-    if (nowMin >= window.from && nowMin < window.to) {
-      const minutesLeft = window.to - nowMin;
-      if (minutesLeft <= CLOSING_SOON_MINUTES) {
-        return { kind: "closingSoon", closesAt: window.labelTo };
-      }
-      return { kind: "open", closesAt: window.labelTo };
+    if (!isNowInHoursWindow(nowMin, window.from, window.to)) continue;
+    const minutesLeft = minutesUntilHoursWindowClose(nowMin, window.from, window.to);
+    if (minutesLeft === null) continue;
+    if (minutesLeft <= CLOSING_SOON_MINUTES) {
+      return { kind: "closingSoon", closesAt: window.labelTo };
     }
+    return { kind: "open", closesAt: window.labelTo };
   }
 
   const next = parsed.find((window) => nowMin < window.from);
@@ -455,7 +538,9 @@ export function hoursStatus(
     if (minutesUntil <= OPENS_SOON_MINUTES) {
       return { kind: "opensSoon", opensAt: next.labelFrom };
     }
-    const anyEarlierEnded = parsed.some((window) => nowMin >= window.to);
+    const anyEarlierEnded = parsed.some((window) =>
+      isHoursWindowEnded(nowMin, window.from, window.to),
+    );
     return {
       kind: anyEarlierEnded ? "between" : "before",
       opensAt: next.labelFrom,
@@ -525,7 +610,8 @@ export function closingSoonAt(house: SoonHouse, now = appNow()): string | null {
     const from = parseClockMinutes(window.from);
     const to = parseClockMinutes(window.to);
     if (from === null || to === null) continue;
-    if (nowMin >= from && nowMin < to && to - nowMin <= CLOSING_SOON_MINUTES) {
+    const minutesLeft = minutesUntilHoursWindowClose(nowMin, from, to);
+    if (minutesLeft !== null && minutesLeft <= CLOSING_SOON_MINUTES) {
       return window.to;
     }
   }
@@ -638,22 +724,33 @@ export function isOpenDuringCustomVisitForFilter(
   const prepared = preparedFilterHouse(house, probe);
   if (effectiveVisit(prepared) === "closed" || isFrozen(prepared, probe.getTime())) return false;
 
-  const windows = houseHoursWindows(prepared).flatMap((window) => {
-    const from = parseClockMinutes(window.from);
-    const to = parseClockMinutes(window.to);
-    if (from === null || to === null) return [];
-    return [{ from, to }];
-  });
+  const windows = houseHoursWindows(prepared);
   if (windows.length === 0) return false;
 
   if (vf !== null && vt !== null) {
     if (vt <= vf) return false;
-    return windows.some((window) => window.from < vt && vf < window.to);
+    return windows.some((window) => {
+      const from = parseClockMinutes(window.from);
+      const to = parseClockMinutes(window.to);
+      if (from === null || to === null) return false;
+      return hoursWindowMinutesOverlap(from, to, vf, vt);
+    });
   }
   if (vf !== null) {
-    return windows.some((window) => window.to > vf);
+    return windows.some((window) => {
+      const from = parseClockMinutes(window.from);
+      const to = parseClockMinutes(window.to);
+      if (from === null || to === null) return false;
+      if (isNowInHoursWindow(vf, from, to)) return true;
+      if (isHoursWindowEnded(vf, from, to)) return false;
+      return from > vf;
+    });
   }
-  return windows.some((window) => vt! >= window.from && vt! < window.to);
+  return windows.some((window) => {
+    const from = parseClockMinutes(window.from);
+    const to = parseClockMinutes(window.to);
+    return from !== null && to !== null && isNowInHoursWindow(vt!, from, to);
+  });
 }
 
 /** On break between hour windows during the visitor outing window. */
@@ -731,9 +828,9 @@ export function onBreakAt(house: SoonHouse, now = appNow()): string | null {
     if (from === null || to === null) return [];
     return [{ from, to, labelFrom: window.from }];
   });
-  if (parsed.some((window) => nowMin >= window.from && nowMin < window.to)) return null;
+  if (parsed.some((window) => isNowInHoursWindow(nowMin, window.from, window.to))) return null;
   const next = parsed.find((window) => nowMin < window.from);
-  const anyEnded = parsed.some((window) => nowMin >= window.to);
+  const anyEnded = parsed.some((window) => isHoursWindowEnded(nowMin, window.from, window.to));
   if (next && anyEnded) return next.labelFrom;
   return null;
 }

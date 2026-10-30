@@ -19,6 +19,8 @@ import { isStubHouse, type HouseSet } from "@/lib/house-set";
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import {
   houseHoursWindows,
+  hoursWindowDurationMinutes,
+  hoursWindowMinutesOverlap,
   hoursWindowsIssue,
   parseClockMinutes,
 } from "@/lib/hours";
@@ -81,15 +83,15 @@ export function anomalyDetectionContextFromDb(db: Pick<DbFile, "eventSettings">)
 function windowDurationMinutes(from: string, to: string): number | null {
   const start = parseClockMinutes(from);
   const end = parseClockMinutes(to);
-  if (start === null || end === null || end <= start) return null;
-  return end - start;
+  if (start === null || end === null || start === end) return null;
+  return hoursWindowDurationMinutes(start, end);
 }
 
 function windowOverlapsEvent(from: string, to: string, eventFromMin: number, eventToMin: number): boolean {
   const start = parseClockMinutes(from);
   const end = parseClockMinutes(to);
-  if (start === null || end === null || end <= start) return false;
-  return start < eventToMin && end > eventFromMin;
+  if (start === null || end === null || start === end) return false;
+  return hoursWindowMinutesOverlap(start, end, eventFromMin, eventToMin);
 }
 
 function nameLooksLikeAddress(name: string): boolean {
