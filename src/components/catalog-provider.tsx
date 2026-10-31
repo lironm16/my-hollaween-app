@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
@@ -64,6 +65,7 @@ import { HOUSE_DETAIL_LOADED_EVENT } from "@/lib/fetch-public-house";
 import { houseIsAtLeastAsNew } from "@/lib/house-updated-at";
 import { readGemPreviewAsUser } from "@/lib/gem-preview-as-user";
 import { isMapListSuspended, subscribeMapListSuspend } from "@/lib/map-list-suspend";
+import { isMapGestureActive, subscribeMapGestureActive } from "@/lib/map-gesture-state";
 import { trackCatalogRemovalDelta } from "@/lib/catalog-removed";
 import {
   catalogScopeKey,
@@ -132,6 +134,18 @@ function isFetchTimeout(err: unknown) {
     err instanceof Error &&
     (err.name === "TimeoutError" || err.name === "AbortError" || err.name === "AbortSignal")
   );
+}
+
+/** Strip device-cache flags — only remap rows touched by this poll (full lists still scan all). */
+function housesWithServerDetail(
+  houses: PublicHouse[],
+  live: CatalogDelta,
+): PublicHouse[] {
+  if (live.full) return houses.map((row) => withServerHouseDetail(row));
+  if (!live.houses.length && !(live.removed?.length ?? 0)) return houses;
+  const touched = new Set(live.houses.map((house) => house.id));
+  if (!touched.size) return houses;
+  return houses.map((row) => (touched.has(row.id) ? withServerHouseDetail(row) : row));
 }
 
 /** Live API full catalogs may drop ids; never use for CDN snapshot bundles. */
@@ -326,6 +340,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const offlineSinceRef = useRef<number | null>(null);
   const seededRef = useRef(false);
   const pendingCatalogRef = useRef<Catalog | null>(null);
+  const pendingGestureCatalogRef = useRef<Catalog | null>(null);
   const quickRetryCountRef = useRef(0);
   const quickRetryTimerRef = useRef<number | undefined>(undefined);
   /** Bumped when the night-pass scope wipes the device cache — stale async reads must not land. */
@@ -450,9 +465,25 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       pendingCatalogRef.current = next;
       return prev;
     }
+    if (isMapGestureActive()) {
+      pendingGestureCatalogRef.current = next;
+      return prev;
+    }
     refreshStaleOwnedPreviews(next.houses);
     void repairOwnedPreviewsMissingAddress();
     return next;
+  }, []);
+
+  const flushGestureDeferredCatalog = useCallback(() => {
+    const pending = pendingGestureCatalogRef.current;
+    if (!pending) return;
+    pendingGestureCatalogRef.current = null;
+    refreshStaleOwnedPreviews(pending.houses);
+    void repairOwnedPreviewsMissingAddress();
+    startTransition(() => {
+      setCatalog(pending);
+    });
+    window.dispatchEvent(new Event("hw-catalog-refreshed"));
   }, []);
 
   /** Banner only when the API failed and the on-device list may be stale — not every blip while online. */
@@ -508,31 +539,35 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       const merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
       const withDetail: Catalog = {
         ...merged,
-        houses: merged.houses.map((row) => withServerHouseDetail(row)),
+        houses: housesWithServerDetail(merged.houses, live),
       };
-      return publishCatalog(withDetail, cur) ?? withDetail;
+      return withDetail;
     };
-    // React may defer a state updater to the next render, so the code below cannot read its result.
-    const next = mergeInto(prev);
-    catalogRef.current = next;
-    setCatalog((cur) => (cur === prev ? next : mergeInto(cur)));
-    trackCatalogRemovalDelta(prev, next, live.removed);
-    if (isMapListSuspended()) return next;
+    const withDetail = mergeInto(prev);
+    catalogRef.current = withDetail;
+    const painted = publishCatalog(withDetail, prev) ?? withDetail;
+    startTransition(() => {
+      setCatalog((cur) => (cur === prev ? painted : publishCatalog(mergeInto(cur), cur) ?? mergeInto(cur)));
+    });
+    trackCatalogRemovalDelta(prev, withDetail, live.removed);
+    if (isMapListSuspended()) return withDetail;
     setSource("network");
     setUnreachable(false);
     setError(null);
     quickRetryCountRef.current = 0;
     const serverCount = resolveServerHouseCount(live);
-    if (serverCount != null && serverCount < next.houses.length) {
+    if (serverCount != null && serverCount < withDetail.houses.length) {
       clearCatalogCacheMeta();
     }
-    if (live.full || catalogServerCountSatisfied(next, serverCount)) {
-      recordCatalogCacheVerified(next);
+    if (live.full || catalogServerCountSatisfied(withDetail, serverCount)) {
+      recordCatalogCacheVerified(withDetail);
     }
-    window.dispatchEvent(new Event("hw-catalog-refreshed"));
-    scheduleSaveCatalogCache(next);
-    return next;
-  }, []);
+    if (!isMapGestureActive()) {
+      window.dispatchEvent(new Event("hw-catalog-refreshed"));
+    }
+    scheduleSaveCatalogCache(withDetail);
+    return withDetail;
+  }, [publishCatalog]);
 
   const refresh = useCallback(async (force = false) => {
     if (isMapListSuspended() && !force) return;
@@ -799,6 +834,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const flushHouseDetailBatch = () => {
       houseDetailBatchTimerRef.current = undefined;
+      if (isMapGestureActive()) {
+        houseDetailBatchTimerRef.current = window.setTimeout(flushHouseDetailBatch, 48);
+        return;
+      }
       const batch = houseDetailBatchRef.current;
       if (batch.size === 0) return;
       houseDetailBatchRef.current = new Map();
@@ -844,8 +883,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    return subscribeMapGestureActive(() => {
+      if (isMapGestureActive()) return;
+      flushGestureDeferredCatalog();
+    });
+  }, [flushGestureDeferredCatalog]);
+
+  useEffect(() => {
     return subscribeMapListSuspend(() => {
       if (isMapListSuspended()) return;
+      pendingGestureCatalogRef.current = null;
       const pending = pendingCatalogRef.current;
       if (pending) {
         pendingCatalogRef.current = null;
