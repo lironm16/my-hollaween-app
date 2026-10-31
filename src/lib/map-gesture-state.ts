@@ -14,5 +14,7 @@ export function setMapGestureActive(next: boolean) {
 
 export function subscribeMapGestureActive(listener: () => void) {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
