@@ -21,6 +21,8 @@ export function readSessionHouseDetail(
 ): PublicHouse | null {
   const hit = hydratedById.get(id);
   if (!hit || !houseServerDetailReady(hit)) return null;
+  /** Redacted catalog/API rows must not satisfy hydration — pass holders retry after register/reveal. */
+  if (houseNeedsLocationHydration(hit)) return null;
   if (!sessionDetailFresh(hit, minUpdatedAt)) return null;
   return hit;
 }
@@ -33,6 +35,7 @@ export function clearSessionHouseDetails() {
 
 export function rememberSessionHouseDetail(house: PublicHouse) {
   if (!houseServerDetailReady(house)) return;
+  if (houseNeedsLocationHydration(house)) return;
   const next = withServerHouseDetail(house);
   const prev = hydratedById.get(house.id);
   if (prev && houseUpdatedMs(next.updatedAt) < houseUpdatedMs(prev.updatedAt)) return;

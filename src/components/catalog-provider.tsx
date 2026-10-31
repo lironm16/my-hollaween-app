@@ -55,6 +55,7 @@ import { catalogHasExplicitStubFlags } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
 import { syncPlacedGemAnchors } from "@/lib/gem-placed-anchors";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
+import { isPoiHouse } from "@/lib/house-kind";
 import { houseWithLocationPolicy, isAddressRevealed } from "@/lib/address-reveal";
 import { visitorPreviewAddressRevealContext } from "@/lib/visitor-preview-address";
 import { withServerHouseDetail } from "@/lib/device-catalog-cache";
@@ -82,6 +83,13 @@ import { verifyOwnedHousesOnServer } from "@/lib/owned-house-check";
 import { repairOwnedPreviewsMissingAddress } from "@/lib/owned-bookmark-house";
 
 type Source = "network" | "cache" | "snapshot" | "ssr";
+
+function catalogHomesMissingStreet(catalog: Catalog | null | undefined): boolean {
+  if (!catalog?.houses?.length) return false;
+  return catalog.houses.some(
+    (house) => !house.locationPublic && !isPoiHouse(house) && !house.address?.trim(),
+  );
+}
 
 /** Full-list source: static deploy bundle (night passes off) or the scoped catalog API. */
 function snapshotUrl() {
@@ -770,6 +778,21 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     }
   }, [applyLiveResponse, markReachabilityAfterFetchFailure]);
 
+  const refreshPassCatalogIfStale = useCallback(async () => {
+    const pass = readNightPassState();
+    if (!pass.enabled || !pass.registered) return;
+    const schedule =
+      catalogRef.current?.eventSettings?.addressReveal ??
+      loadCatalogCacheSync()?.eventSettings?.addressReveal;
+    if (!isAddressRevealed(appNow(), schedule)) return;
+    clearSessionHouseDetails();
+    const cat = catalogRef.current ?? loadCatalogCacheSync();
+    const scope = catalogScopeOf(cat);
+    if (scope === "public" || (scope === "pass" && catalogHomesMissingStreet(cat))) {
+      await refresh(true);
+    }
+  }, [refresh]);
+
   useEffect(() => {
     const onHouseDetail = (event: Event) => {
       let house = (event as CustomEvent<PublicHouse>).detail;
@@ -820,6 +843,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       if (!cancelled && !seededRef.current) {
         await refresh(false);
       }
+      if (!cancelled) await refreshPassCatalogIfStale();
       if (!cancelled) {
         setLoading(false);
         setReady(true);
@@ -865,6 +889,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     const unsubscribeNightPass = subscribeNightPassState(() => {
       void (async () => {
         if (await syncCatalogScope()) await refresh(true);
+        await refreshPassCatalogIfStale();
       })();
     });
     const unsubscribePreview = subscribeAdminPreviewAsUser(() => {
@@ -883,6 +908,13 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         catalogRef.current?.eventSettings?.addressReveal,
       );
       const wasRevealed = revealWasOpenRef.current;
+      if (wasRevealed === null) {
+        revealWasOpenRef.current = revealed;
+        if (revealed && nightPass.enabled && nightPass.registered) {
+          void refreshPassCatalogIfStale();
+        }
+        return;
+      }
       revealWasOpenRef.current = revealed;
       if (
         wasRevealed === false &&
@@ -892,6 +924,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       ) {
         clearSessionHouseDetails();
         void refresh(true);
+        void refreshPassCatalogIfStale();
       }
     };
     window.addEventListener(CLOCK_EVENT, onRehearsalClock);
@@ -922,7 +955,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       unsubscribePreview();
       window.removeEventListener(CLOCK_EVENT, onRehearsalClock);
     };
-  }, [refresh, syncCatalogScope, publishCatalog]);
+  }, [refresh, refreshPassCatalogIfStale, syncCatalogScope, publishCatalog]);
 
   const value: CatalogContextValue = useMemo(
     () => ({

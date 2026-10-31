@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  clearSessionHouseDetails,
   fetchPublicHouseSession,
   houseNeedsSessionHydration,
   readSessionHouseDetail,
@@ -30,7 +31,22 @@ function full(id: string): PublicHouse {
 }
 
 describe("house-detail-session-cache", () => {
+  it("does not cache redacted rows missing street address", () => {
+    clearSessionHouseDetails();
+    rememberSessionHouseDetail({
+      ...full("בית-9"),
+      address: "",
+      arrival: "",
+    });
+    assert.equal(readSessionHouseDetail("בית-9"), null);
+    assert.equal(
+      houseNeedsSessionHydration({ ...full("בית-9"), address: "", updatedAt: "2026-10-31T12:00:00.000Z" }),
+      true,
+    );
+  });
+
   it("remembers hydrated rows for the session", () => {
+    clearSessionHouseDetails();
     rememberSessionHouseDetail(full("בית-1"));
     assert.equal(readSessionHouseDetail("בית-1")?.address, "רחוב 1");
     assert.equal(houseNeedsSessionHydration(pin("בית-1")), false);
