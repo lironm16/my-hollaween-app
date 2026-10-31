@@ -105,7 +105,7 @@ export const config = {
     day: 31,
     labelHe: "31 באוקטובר",
   },
-  /** Map distance / navigation unlock at this local time; list UI stays hood-only for homes. */
+  /** Street address and arrival instructions unlock at this local time on event night (registered devices when night passes are on). */
   addressReveal: {
     hour: 12,
     minute: 0,

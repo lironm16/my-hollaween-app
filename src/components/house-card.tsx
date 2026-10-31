@@ -10,6 +10,7 @@ import { HouseDetails } from "@/components/house-details";
 import { HoursStatusBanner } from "@/components/hours-status-banner";
 import { SkipReturnSection } from "@/components/skip-return-section";
 import type { SkippedHouseMeta } from "@/lib/offline-db";
+import { useAddressReveal } from "@/hooks/use-address-reveal";
 import { useAdminHouseFields } from "@/hooks/use-admin-house-fields";
 import { useServerHouseDetail } from "@/hooks/use-server-house-detail";
 import { houseNeedsLocationHydration, isDeviceCachePinHouse } from "@/lib/device-catalog-cache";
@@ -94,11 +95,14 @@ export function HouseCard({
   hideLiveStatus?: boolean;
 }) {
   const { t } = useLocale();
+  const addressReveal = useAddressReveal();
   const catalogRemoved = useCatalogRemoved(house.id);
   const mayEdit = canEdit && deviceHouseEditAllowed(house.id);
   const overlaid = useAdminHouseFields(house) ?? house;
   const shouldFetchLive =
-    (liveDetail && isDeviceCachePinHouse(overlaid)) || houseNeedsLocationHydration(overlaid);
+    (liveDetail && isDeviceCachePinHouse(overlaid)) ||
+    (houseNeedsLocationHydration(overlaid) &&
+      addressReveal.canViewDetails(overlaid.id));
   const { house: liveHouse, loading, unavailable } = useServerHouseDetail(
     shouldFetchLive ? overlaid : null,
   );
@@ -183,7 +187,7 @@ export function HouseCard({
           />
         ) : null}
         <HouseDetails
-          house={house}
+          house={displayHouse}
           distanceM={distanceM}
           catalogSource={catalogSource}
           liked={liked}

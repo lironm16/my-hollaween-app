@@ -34,7 +34,7 @@ import {
   refreshStaleOwnedPreviews,
   withDeviceHouseOverlays,
 } from "@/lib/offline-db";
-import { CLOCK_EVENT, readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
+import { appNow, CLOCK_EVENT, readServerSimDown, SERVER_SIM_EVENT } from "@/lib/app-clock";
 import { runCatalogBootMigrationIfNeeded } from "@/lib/catalog-boot-migration";
 import {
   catalogCacheIncomplete,
@@ -55,7 +55,7 @@ import { catalogHasExplicitStubFlags } from "@/lib/house-set";
 import { ensureGemOsmAnchorsLoaded } from "@/lib/gem-osm-anchor-cache";
 import { syncPlacedGemAnchors } from "@/lib/gem-placed-anchors";
 import { gemHuntMapHouses } from "@/lib/gem-monsters";
-import { houseWithLocationPolicy } from "@/lib/address-reveal";
+import { houseWithLocationPolicy, isAddressRevealed } from "@/lib/address-reveal";
 import { visitorPreviewAddressRevealContext } from "@/lib/visitor-preview-address";
 import { withServerHouseDetail } from "@/lib/device-catalog-cache";
 import { HOUSE_DETAIL_LOADED_EVENT } from "@/lib/fetch-public-house";
@@ -322,6 +322,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   /** Bumped when the night-pass scope wipes the device cache — stale async reads must not land. */
   const scopeGenRef = useRef(0);
   const ownedCheckedRef = useRef(false);
+  /** Tracks reveal clock so pass holders refetch unredacted rows once addresses open. */
+  const revealWasOpenRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     catalogRef.current = catalog;
@@ -875,6 +877,22 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
     const onRehearsalClock = () => {
       if (readGemPreviewAsUser()) clearSessionHouseDetails();
+      const nightPass = readNightPassState();
+      const revealed = isAddressRevealed(
+        appNow(),
+        catalogRef.current?.eventSettings?.addressReveal,
+      );
+      const wasRevealed = revealWasOpenRef.current;
+      revealWasOpenRef.current = revealed;
+      if (
+        wasRevealed === false &&
+        revealed &&
+        nightPass.enabled &&
+        nightPass.registered
+      ) {
+        clearSessionHouseDetails();
+        void refresh(true);
+      }
     };
     window.addEventListener(CLOCK_EVENT, onRehearsalClock);
 

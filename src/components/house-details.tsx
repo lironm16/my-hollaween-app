@@ -572,7 +572,7 @@ export function HouseDetails({
       )}
       {actions}
       <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
-      {showPrivateFields && addressReveal.canViewDetails(viewHouse.id) ? (
+      {addressReveal.canViewDetails(viewHouse.id) ? (
         <HouseNotesSection notes={viewHouse.notes} houseId={viewHouse.id} />
       ) : null}
       <HouseDescriptionSection description={viewHouse.description} houseId={viewHouse.id} />

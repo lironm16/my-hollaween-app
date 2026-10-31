@@ -104,32 +104,28 @@ describe("address reveal", () => {
     assert.equal(label, "רוקח 32, שיכון ותיקים");
   });
 
-  it("after reveal, public sees stored hood only (no street)", () => {
+  it("after reveal, registered devices see street and stored hood comma-separated", () => {
     const ctx = makeAddressRevealContext({
       now: new Date(2026, 9, 31, 20, 0),
       isAdmin: false,
+      audience: "registered",
     });
     const label = formatDisplayAddressWithPolicy(
       stub({ address: "סטרומה 4", neighborhood: "נחלת גנים" }),
       "בית-8975",
       ctx,
     );
-    assert.equal(label, "נחלת גנים");
-    assert.doesNotMatch(label, /סטרומה/u);
+    assert.equal(label, "סטרומה 4, נחלת גנים");
   });
 
-  it("after reveal, public never sees arrival text", () => {
+  it("after reveal, registered devices see arrival text", () => {
     const ctx = makeAddressRevealContext({
       now: new Date(2026, 9, 31, 20, 0),
       isAdmin: false,
-    });
-    assert.equal(visibleArrivalWithPolicy(stub({ arrival: "קומה 2" }), "בית-1001", ctx), "");
-    const adminCtx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 20, 0),
-      isAdmin: true,
+      audience: "registered",
     });
     assert.equal(
-      visibleArrivalWithPolicy(stub({ arrival: "קומה 2" }), "בית-1001", adminCtx),
+      visibleArrivalWithPolicy(stub({ arrival: "קומה 2" }), "בית-1001", ctx),
       "קומה 2",
     );
   });
