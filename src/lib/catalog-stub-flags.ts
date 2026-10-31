@@ -52,6 +52,7 @@ export function mergeCatalogHouseRow(
   if (!current) {
     return mergePublicHousePracticeField(withExplicitStubFlag(incoming), incoming);
   }
+  if (incoming.updatedAt === current.updatedAt) return current;
   const incomingWins =
     Date.parse(incoming.updatedAt) >= Date.parse(current.updatedAt);
   const merged = incomingWins

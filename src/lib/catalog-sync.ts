@@ -192,19 +192,52 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
       ...hiddenCountFields(delta),
     });
   }
+  const removedSet = new Set(delta.removed ?? []);
+  const hidden = loadHiddenHouseIds();
   const byId = new Map(prev.houses.map((house) => [house.id, house]));
-  for (const id of delta.removed ?? []) byId.delete(id);
+  for (const id of removedSet) byId.delete(id);
+  let rowsTouched = false;
   for (const house of delta.houses) {
-    byId.set(house.id, mergeCatalogHouseRow(byId.get(house.id), house));
+    const cur = byId.get(house.id);
+    const merged = mergeCatalogHouseRow(cur, house);
+    if (merged !== cur) rowsTouched = true;
+    byId.set(house.id, merged);
   }
-  const houses = withoutHiddenHouses([...byId.values()], loadHiddenHouseIds());
+  const houses: PublicHouse[] = [];
+  for (const house of prev.houses) {
+    if (removedSet.has(house.id) || hidden.has(house.id)) continue;
+    houses.push(byId.get(house.id)!);
+  }
+  for (const house of delta.houses) {
+    if (prev.houses.some((row) => row.id === house.id)) continue;
+    if (hidden.has(house.id)) continue;
+    rowsTouched = true;
+    houses.push(byId.get(house.id)!);
+  }
   const mergedLen = houses.length;
   let houseCount = delta.houseCount ?? prev.houseCount;
   if (typeof houseCount === "number" && houseCount < mergedLen) {
     houseCount = Math.max(prev.houseCount ?? 0, mergedLen);
   }
   const scope = delta.scope ?? prev.scope;
-  const hidden = hiddenCountFields(typeof delta.hiddenHouseCount === "number" ? delta : prev);
+  const hiddenFields = hiddenCountFields(typeof delta.hiddenHouseCount === "number" ? delta : prev);
+  const metaChanged = delta.pushTemplates !== undefined || delta.eventSettings !== undefined;
+  const sameRows =
+    !removedSet.size &&
+    !rowsTouched &&
+    houses.length === prev.houses.length &&
+    houses.every((row, index) => row === prev.houses[index]);
+  if (sameRows && !metaChanged) {
+    if (prev.updatedAt === delta.updatedAt && (delta.houseCount ?? prev.houseCount) === prev.houseCount) {
+      return prev;
+    }
+    return {
+      ...prev,
+      updatedAt: delta.updatedAt,
+      houseCount,
+      ...hiddenFields,
+    };
+  }
   return {
     updatedAt: delta.updatedAt,
     neighborhood: delta.neighborhood || prev.neighborhood,
@@ -213,7 +246,7 @@ export function mergeCatalogDelta(prev: Catalog | null, incoming: CatalogDelta):
     pushTemplates: delta.pushTemplates ?? prev.pushTemplates,
     eventSettings: delta.eventSettings ?? prev.eventSettings,
     ...(scope ? { scope } : {}),
-    ...hidden,
+    ...hiddenFields,
   };
 }
 

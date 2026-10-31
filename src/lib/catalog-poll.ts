@@ -31,3 +31,9 @@ export function adaptiveCatalogPollMs(baseSeconds: number, consecutiveEmptyDelta
 export function appInForeground() {
   return typeof document === "undefined" || document.visibilityState === "visible";
 }
+
+/** Spread foreground polls so peak traffic does not hit the server in one wave. */
+export function catalogPollJitterMs(maxMs = 45_000) {
+  if (typeof window === "undefined") return 0;
+  return Math.floor(Math.random() * Math.max(0, maxMs));
+}

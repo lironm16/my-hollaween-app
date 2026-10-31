@@ -23,7 +23,7 @@ import {
   syncCatalog,
 } from "@/lib/catalog-sync";
 import { config } from "@/lib/config";
-import { adaptiveCatalogPollMs, appInForeground } from "@/lib/catalog-poll";
+import { adaptiveCatalogPollMs, appInForeground, catalogPollJitterMs } from "@/lib/catalog-poll";
 import {
   loadCatalogCache,
   loadCatalogCacheMeta,
@@ -351,6 +351,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const houseDetailBatchRef = useRef<Map<string, PublicHouse>>(new Map());
   const houseDetailBatchTimerRef = useRef<number | undefined>(undefined);
   const gestureDeferredPollRef = useRef(false);
+  const refreshInFlightRef = useRef(false);
+  const refreshAgainRef = useRef(false);
 
   useEffect(() => {
     catalogRef.current = catalog;
@@ -535,7 +537,6 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setError(null);
       return prev;
     }
-    emptyDeltaStreakRef.current = 0;
     const mergeInto = (cur: Catalog | null): Catalog => {
       const merged = withDeviceHouseOverlays(applyCatalogResponse(cur, live));
       const withDetail: Catalog = {
@@ -546,6 +547,13 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     };
     const withDetail = mergeInto(prev);
     catalogRef.current = withDetail;
+    if (withDetail === prev) {
+      emptyDeltaStreakRef.current += 1;
+      setUnreachable(false);
+      setError(null);
+      return withDetail;
+    }
+    emptyDeltaStreakRef.current = 0;
     const painted = publishCatalog(withDetail, prev) ?? withDetail;
     startTransition(() => {
       setCatalog((cur) => (cur === prev ? painted : publishCatalog(mergeInto(cur), cur) ?? mergeInto(cur)));
@@ -570,7 +578,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     return withDetail;
   }, [publishCatalog]);
 
-  const refresh = useCallback(async (force = false) => {
+  const refreshOnce = useCallback(async (force = false) => {
     if (isMapListSuspended() && !force) return;
     if (!force && isMapGestureActive()) {
       gestureDeferredPollRef.current = true;
@@ -819,7 +827,26 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         quickRetryCountRef.current = 0;
       }
     }
-  }, [applyLiveResponse, markReachabilityAfterFetchFailure]);
+  }, [applyLiveResponse, markReachabilityAfterFetchFailure, publishCatalog, t]);
+
+  const refresh = useCallback(
+    async (force = false) => {
+      if (refreshInFlightRef.current) {
+        refreshAgainRef.current = true;
+        return;
+      }
+      refreshInFlightRef.current = true;
+      try {
+        do {
+          refreshAgainRef.current = false;
+          await refreshOnce(force);
+        } while (refreshAgainRef.current);
+      } finally {
+        refreshInFlightRef.current = false;
+      }
+    },
+    [refreshOnce],
+  );
 
   const refreshPassCatalogIfStale = useCallback(async () => {
     const pass = readNightPassState();
@@ -1017,11 +1044,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     window.addEventListener(CLOCK_EVENT, onRehearsalClock);
 
     let pollTimer: number | undefined;
+    let pollJitterApplied = false;
     const schedulePoll = () => {
-      const delay = adaptiveCatalogPollMs(
+      let delay = adaptiveCatalogPollMs(
         pollSecondsRef.current,
         emptyDeltaStreakRef.current,
       );
+      if (!pollJitterApplied) {
+        delay += catalogPollJitterMs();
+        pollJitterApplied = true;
+      }
       pollTimer = window.setTimeout(() => {
         if (!cancelled && appInForeground() && !isMapListSuspended()) void refresh(false);
         if (!cancelled) schedulePoll();
