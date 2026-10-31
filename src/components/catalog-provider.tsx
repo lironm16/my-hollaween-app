@@ -350,6 +350,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const revealWasOpenRef = useRef<boolean | null>(null);
   const houseDetailBatchRef = useRef<Map<string, PublicHouse>>(new Map());
   const houseDetailBatchTimerRef = useRef<number | undefined>(undefined);
+  const gestureDeferredPollRef = useRef(false);
 
   useEffect(() => {
     catalogRef.current = catalog;
@@ -571,6 +572,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async (force = false) => {
     if (isMapListSuspended() && !force) return;
+    if (!force && isMapGestureActive()) {
+      gestureDeferredPollRef.current = true;
+      return;
+    }
     const online = typeof navigator === "undefined" || navigator.onLine;
     setOffline(!online);
     if (!online) {
@@ -886,8 +891,12 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     return subscribeMapGestureActive(() => {
       if (isMapGestureActive()) return;
       flushGestureDeferredCatalog();
+      if (gestureDeferredPollRef.current) {
+        gestureDeferredPollRef.current = false;
+        void refresh(false);
+      }
     });
-  }, [flushGestureDeferredCatalog]);
+  }, [flushGestureDeferredCatalog, refresh]);
 
   useEffect(() => {
     return subscribeMapListSuspend(() => {

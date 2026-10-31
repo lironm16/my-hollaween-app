@@ -1180,6 +1180,22 @@
   animation: none !important;
 }
 
+.is-map-gesture-active .you-are-here-pulse {
+  animation: none !important;
+}
+
+/* Touch devices: static pin chrome — infinite CSS animations starve WebKit during pan. */
+@media (pointer: coarse) {
+  .house-pin .pin-gem-ring.is-sparkle,
+  .pumpkin-pin .pin-gem-ring.is-sparkle,
+  .house-pin .pin-gem-ring.is-diamond,
+  .pumpkin-pin .pin-gem-ring.is-diamond,
+  .pin-gem-sparkle-twinkle,
+  .you-are-here-pulse {
+    animation: none !important;
+  }
+}
+
 .house-skipped-banner {
   margin-bottom: 0.35rem;
 }

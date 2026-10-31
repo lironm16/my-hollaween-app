@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import {
   Circle,
@@ -87,7 +88,11 @@ import {
   type MapGemPinRingContext,
 } from "@/lib/map-gem-pin-ring";
 import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
-import { setMapGestureActive } from "@/lib/map-gesture-state";
+import {
+  isMapGestureActive,
+  setMapGestureActive,
+  subscribeMapGestureActive,
+} from "@/lib/map-gesture-state";
 
 /** Pin hours/opening state refresh — one bucket per minute (not app-wide 15s clock). */
 const MAP_PIN_TIME_BUCKET_MS = 60_000;
@@ -97,24 +102,24 @@ function useMapPinTimeBucket() {
   return Math.floor(now.getTime() / MAP_PIN_TIME_BUCKET_MS);
 }
 
-function MapDragAnimationPause({ onDraggingChange }: { onDraggingChange: (dragging: boolean) => void }) {
+function MapDragAnimationPause({
+  mapRegionRef,
+}: {
+  mapRegionRef: RefObject<HTMLDivElement | null>;
+}) {
+  const applyGestureActive = (active: boolean) => {
+    setMapGestureActive(active);
+    const root = mapRegionRef.current;
+    if (!root) return;
+    root.classList.toggle("is-map-gesture-active", active);
+  };
   useMapEvents({
-    movestart: () => {
-      onDraggingChange(true);
-      setMapGestureActive(true);
-    },
-    moveend: () => {
-      onDraggingChange(false);
-      setMapGestureActive(false);
-    },
-    zoomstart: () => {
-      onDraggingChange(true);
-      setMapGestureActive(true);
-    },
-    zoomend: () => {
-      onDraggingChange(false);
-      setMapGestureActive(false);
-    },
+    dragstart: () => applyGestureActive(true),
+    zoomstart: () => applyGestureActive(true),
+    movestart: () => applyGestureActive(true),
+    dragend: () => applyGestureActive(false),
+    zoomend: () => applyGestureActive(false),
+    moveend: () => applyGestureActive(false),
   });
   return null;
 }
@@ -563,30 +568,43 @@ function SizeSync() {
     let lastW = 0;
     let lastH = 0;
     let raf = 0;
+    let pendingAfterGesture = false;
+    const runInvalidate = () => {
+      const size = map.getSize();
+      if (size.x === lastW && size.y === lastH) return;
+      lastW = size.x;
+      lastH = size.y;
+      map.invalidateSize({ animate: false });
+    };
     const sync = () => {
       if (raf) return;
       raf = window.requestAnimationFrame(() => {
         raf = 0;
-        const size = map.getSize();
-        if (size.x === lastW && size.y === lastH) return;
-        lastW = size.x;
-        lastH = size.y;
-        map.invalidateSize({ animate: false });
+        if (isMapGestureActive()) {
+          pendingAfterGesture = true;
+          return;
+        }
+        pendingAfterGesture = false;
+        runInvalidate();
       });
     };
     const id = window.setTimeout(sync, 40);
     window.addEventListener("resize", sync);
-    window.visualViewport?.addEventListener("resize", sync);
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
     const container = map.getContainer();
     ro?.observe(container);
     const wrap = container.parentElement;
     if (wrap) ro?.observe(wrap);
+    const unsubGesture = subscribeMapGestureActive(() => {
+      if (isMapGestureActive() || !pendingAfterGesture) return;
+      pendingAfterGesture = false;
+      sync();
+    });
     return () => {
+      unsubGesture();
       window.clearTimeout(id);
       if (raf) window.cancelAnimationFrame(raf);
       window.removeEventListener("resize", sync);
-      window.visualViewport?.removeEventListener("resize", sync);
       ro?.disconnect();
     };
   }, [map]);
@@ -1041,7 +1059,7 @@ export function HouseMap({
     () => (pickMode ? [] : clusterHousesByAddress(houses)),
     [houses, pickMode],
   );
-  const [mapGestureActive, setMapGestureActive] = useState(false);
+  const mapRegionRef = useRef<HTMLDivElement>(null);
   const gemAnchorHousesVisible = useMemo(() => {
     if (!gemAnchorRespectFilters || !matchedIds) return gemAnchorHouses;
     return gemAnchorHouses.filter((house) => matchedIds.has(house.id));
@@ -1110,12 +1128,12 @@ export function HouseMap({
 
   return (
     <div
+      ref={mapRegionRef}
       role="region"
       aria-label={t("mapPin.mapRegion")}
       className={cn(
         "relative z-0 isolate overflow-hidden",
         originPickActive && "is-origin-pick",
-        mapGestureActive && "is-map-gesture-active",
         embed ? "bg-[#14091c]" : "bg-[#d6d3d1]",
         className ?? "h-full min-h-[280px] w-full",
       )}
@@ -1157,7 +1175,7 @@ export function HouseMap({
           />
         ) : null}
         <SizeSync />
-        <MapDragAnimationPause onDraggingChange={setMapGestureActive} />
+        <MapDragAnimationPause mapRegionRef={mapRegionRef} />
         {panTick > 0 && panTo ? <PanTo lat={panTo.lat} lng={panTo.lng} tick={panTick} /> : null}
         {embed && embedCenterOnSelect && focus && !gemAnchorEdit ? (
           <CenterOnHouse lat={focus.lat} lng={focus.lng} zoom={config.map.maxZoom - 1} />
