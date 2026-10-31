@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
-import { adminPatchSchema } from "@/lib/schema";
+import { adminPatchSchema, housePatchValidationErrorHe } from "@/lib/schema";
 import { purgeHouseNightPass } from "@/lib/night-pass-service";
 import { adminDeleteHouse, adminUpdate, getHouse } from "@/lib/store";
 import { canonicalHouseId, toEditorHouse } from "@/lib/ids";
@@ -23,7 +23,10 @@ export async function PATCH(
   const json = await request.json().catch(() => null);
   const parsed = adminPatchSchema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ error: "נתונים לא תקינים." }, { status: 400 });
+    return NextResponse.json(
+      { error: housePatchValidationErrorHe(parsed.error) },
+      { status: 400 },
+    );
   }
   try {
     const result = await adminUpdate(id, parsed.data, {

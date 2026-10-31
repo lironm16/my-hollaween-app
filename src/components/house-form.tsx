@@ -273,6 +273,28 @@ export function HouseForm({
     });
   }, [initial?.id, initial?.neighborhood, initial?.address]);
 
+  /** Houses missing street text (legacy redaction / bad rows) — infer from pin so save is not blocked. */
+  useEffect(() => {
+    if (!initial?.id || initial.address?.trim()) return;
+    if (typeof initial.lat !== "number" || typeof initial.lng !== "number") return;
+    let cancelled = false;
+    void reversePin(initial.lat, initial.lng).then((hit) => {
+      if (cancelled || !hit) return;
+      const address = displayAddressFromHit(hit);
+      if (address.trim().length < HOUSE_FIELD_LIMITS.address.min) return;
+      setForm((f) => ({
+        ...f,
+        address,
+        lat: hit.lat,
+        lng: hit.lng,
+      }));
+      setAddressOk(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [initial?.id, initial?.address, initial?.lat, initial?.lng]);
+
   const lockedSchoolHood = useMemo(
     () => schoolCampusNeighborhoodForAddress(form.address),
     [form.address],
@@ -398,7 +420,7 @@ export function HouseForm({
       onSubmit={(e) => {
         e.preventDefault();
         if (blocked) return;
-        if (!addressOk) {
+        if (!addressOk || form.address.trim().length < HOUSE_FIELD_LIMITS.address.min) {
           toast.error(t("houseForm.pickRealAddress"));
           return;
         }

@@ -161,3 +161,27 @@ export const adminSubmitSchema = houseSubmitSchema.extend({
   poiCategory: z.enum(POI_CATEGORIES).nullable().optional(),
   isPractice: z.boolean().optional(),
 });
+
+const PATCH_FIELD_ERRORS_HE: Partial<Record<string, string>> = {
+  address: "צריך כתובת אמיתית (רחוב ומספר). בחרו מהרשימה או גררו את הסיכה לבית.",
+  name: "שם הבית קצר מדי או ארוך מדי.",
+  ownerPhone: "מספר טלפון לא תקין.",
+  photoUrl: "כתובת תמונה לא תקינה.",
+  openHours: "שעות הפתיחה לא תקינות.",
+  openFrom: "שעת ההתחלה לא תקינה.",
+  openTo: "שעת הסיום לא תקינה.",
+};
+
+/** First validation issue for house PATCH bodies — clearer than a generic 400. */
+export function housePatchValidationErrorHe(error: z.ZodError): string {
+  for (const issue of error.issues) {
+    const key = issue.path[0];
+    if (typeof key === "string" && PATCH_FIELD_ERRORS_HE[key]) {
+      return PATCH_FIELD_ERRORS_HE[key]!;
+    }
+    if (issue.message.includes("שעת הסגירה") || issue.message.includes("חלונות השעות")) {
+      return issue.message;
+    }
+  }
+  return "נתונים לא תקינים.";
+}

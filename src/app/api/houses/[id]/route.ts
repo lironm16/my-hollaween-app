@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ownerPatchSchema } from "@/lib/schema";
+import { housePatchValidationErrorHe, ownerPatchSchema } from "@/lib/schema";
 import { purgeHouseNightPass } from "@/lib/night-pass-service";
 import { deleteByEditCode, getHouse, loadAddressRevealSchedule, updateByEditCode } from "@/lib/store";
 import { canonicalHouseId, sameHouseId, toEditorHouse, toPublicHouse } from "@/lib/ids";
@@ -72,7 +72,10 @@ export async function PATCH(
   }
   const parsed = ownerPatchSchema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ error: "נתונים לא תקינים." }, { status: 400 });
+    return NextResponse.json(
+      { error: housePatchValidationErrorHe(parsed.error) },
+      { status: 400 },
+    );
   }
   const existing = await getHouse(id);
   if (!existing) {
