@@ -5,6 +5,7 @@ import { localizedFormatDisplayAddress } from "@/lib/i18n/display-address";
 import { displayNeighborhoodName } from "@/lib/i18n/neighborhood-labels";
 import { translate } from "@/lib/i18n/translate";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
+import { dateInEventTimeZone } from "@/lib/event-timezone";
 import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
 export type AddressRevealContext = {
@@ -41,7 +42,14 @@ export function addressRevealTime(
 ) {
   void reference;
   const { year, month, day } = config.eventNight;
-  return new Date(year, month - 1, day, schedule.hour, schedule.minute, 0, 0);
+  return dateInEventTimeZone({
+    year,
+    month,
+    day,
+    hour: schedule.hour,
+    minute: schedule.minute,
+    second: 0,
+  });
 }
 
 export function isAddressRevealed(now = new Date(), schedule = mergeAddressRevealSchedule()) {

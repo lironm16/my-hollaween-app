@@ -42,6 +42,16 @@ function stub(overrides: Partial<PublicHouse> = {}): PublicHouse {
   };
 }
 
+const DEFAULT_SCHEDULE = { hour: 12, minute: 0 };
+
+function beforeDefaultReveal() {
+  return new Date(addressRevealTime(DEFAULT_SCHEDULE).getTime() - 60_000);
+}
+
+function afterDefaultReveal() {
+  return new Date(addressRevealTime(DEFAULT_SCHEDULE).getTime() + 60_000);
+}
+
 describe("address reveal", () => {
   it("reveals at noon on event night", () => {
     const schedule = { hour: 12, minute: 0 };
@@ -53,15 +63,22 @@ describe("address reveal", () => {
 
   it("honors admin schedule override", () => {
     const schedule = { hour: 18, minute: 0 };
-    const before = new Date(2026, 9, 31, 17, 59);
-    const after = new Date(2026, 9, 31, 18, 0);
+    const revealAt = addressRevealTime(schedule);
+    const before = new Date(revealAt.getTime() - 60_000);
+    const after = revealAt;
     assert.equal(isAddressRevealed(before, schedule), false);
     assert.equal(isAddressRevealed(after, schedule), true);
   });
 
   it("redacts catalog houses before reveal", () => {
     const house = stub({ notes: "יש כלב" });
-    const redacted = publicHouseForCatalog(house, new Date(2026, 9, 31, 11, 59));
+    const schedule = { hour: 12, minute: 0 };
+    const revealAt = addressRevealTime(schedule);
+    const redacted = publicHouseForCatalog(
+      house,
+      new Date(revealAt.getTime() - 60_000),
+      schedule,
+    );
     assert.equal(redacted.address, "");
     assert.equal(redacted.arrival, "");
     assert.equal(redacted.notes, "");
@@ -69,7 +86,7 @@ describe("address reveal", () => {
 
   it("admin and owner bypass before reveal", () => {
     const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
+      now: beforeDefaultReveal(),
       isAdmin: false,
       ownedHouseIds: ["בית-1001"],
     });
@@ -77,7 +94,7 @@ describe("address reveal", () => {
     assert.equal(canViewHouseLocationDetails("בית-9999", ctx), false);
 
     const adminCtx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
+      now: beforeDefaultReveal(),
       isAdmin: true,
     });
     assert.equal(canViewHouseLocationDetails("בית-9999", adminCtx), true);
@@ -85,7 +102,7 @@ describe("address reveal", () => {
 
   it("admin in user preview follows visitor address policy", () => {
     const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
+      now: beforeDefaultReveal(),
       isAdmin: false,
     });
     assert.equal(canViewHouseLocationDetails("בית-9999", ctx), false);
@@ -93,7 +110,7 @@ describe("address reveal", () => {
 
   it("admin sees street and stored hood on one line before reveal", () => {
     const adminCtx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
+      now: beforeDefaultReveal(),
       isAdmin: true,
     });
     const label = formatDisplayAddressWithPolicy(
@@ -106,7 +123,7 @@ describe("address reveal", () => {
 
   it("after reveal, registered devices see street and stored hood comma-separated", () => {
     const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 20, 0),
+      now: afterDefaultReveal(),
       isAdmin: false,
       audience: "registered",
     });
@@ -120,7 +137,7 @@ describe("address reveal", () => {
 
   it("after reveal, registered devices see arrival text", () => {
     const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 20, 0),
+      now: afterDefaultReveal(),
       isAdmin: false,
       audience: "registered",
     });
@@ -132,7 +149,7 @@ describe("address reveal", () => {
 
   it("shows hint instead of street before reveal", () => {
     const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
+      now: beforeDefaultReveal(),
       isAdmin: false,
     });
     const label = formatDisplayAddressWithPolicy(stub(), "בית-1001", ctx);
@@ -143,7 +160,7 @@ describe("address reveal", () => {
 
   it("night passes: unregistered never opens homes and gets the registered-users hint", () => {
     const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 20, 0),
+      now: afterDefaultReveal(),
       isAdmin: false,
       audience: "none",
     });
@@ -155,12 +172,12 @@ describe("address reveal", () => {
 
   it("night passes: registered keeps the event-night hint, then opens", () => {
     const before = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
+      now: beforeDefaultReveal(),
       audience: "registered",
     });
     assert.match(formatDisplayAddressWithPolicy(stub(), "בית-1001", before), /31 באוקטובר/u);
     const after = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 20, 0),
+      now: afterDefaultReveal(),
       audience: "registered",
     });
     assert.equal(canViewHouseLocationDetails("בית-1001", after), true);
@@ -168,7 +185,7 @@ describe("address reveal", () => {
 
   it("night passes: businesses / schools open for everyone", () => {
     const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
+      now: beforeDefaultReveal(),
       audience: "none",
       publicLocationIds: ["נק-1"],
     });
