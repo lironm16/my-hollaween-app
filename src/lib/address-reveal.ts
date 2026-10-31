@@ -34,7 +34,7 @@ export function eventNightDateLabel(locale: AppLocale): string {
   });
 }
 
-/** Local time on event night when street addresses, arrival and visitor notes become public. */
+/** Local time on event night when map distance and navigation unlock for visitors. */
 export function addressRevealTime(
   schedule = mergeAddressRevealSchedule(),
   reference = new Date(),
@@ -97,6 +97,37 @@ export function publicHouseForCatalog(
   return redactHouseLocationDetails(house);
 }
 
+function publicHoodDisplayLabel(
+  locale: AppLocale,
+  house: {
+    address: string;
+    neighborhood?: NeighborhoodId | null;
+    lat?: number;
+    lng?: number;
+  },
+): string {
+  const area = resolveNeighborhood(house);
+  return area ? displayNeighborhoodName(locale, area) : "";
+}
+
+/** Full street line for admins and public POIs; homes stay hood-only even after reveal. */
+function revealedDisplayLabel(
+  locale: AppLocale,
+  house: {
+    address: string;
+    neighborhood?: NeighborhoodId | null;
+    lat?: number;
+    lng?: number;
+  },
+  houseId: string,
+  ctx: AddressRevealContext,
+): string {
+  if (ctx.isAdmin || ctx.publicLocationIds.has(houseId)) {
+    return localizedFormatDisplayAddress(locale, house);
+  }
+  return publicHoodDisplayLabel(locale, house);
+}
+
 export function formatDisplayAddressWithPolicy(
   house: {
     address: string;
@@ -109,7 +140,7 @@ export function formatDisplayAddressWithPolicy(
   locale: AppLocale = "he",
 ): string {
   if (canViewHouseLocationDetails(houseId, ctx)) {
-    return localizedFormatDisplayAddress(locale, house);
+    return revealedDisplayLabel(locale, house, houseId, ctx);
   }
   const hint = addressHiddenHint(locale, ctx.now, ctx.addressReveal, ctx.audience);
   const area = resolveNeighborhood(house);
@@ -137,7 +168,7 @@ export function visibleArrivalWithPolicy(
   houseId: string,
   ctx: AddressRevealContext,
 ): string {
-  if (!canViewHouseLocationDetails(houseId, ctx)) return "";
+  if (!ctx.isAdmin || !canViewHouseLocationDetails(houseId, ctx)) return "";
   return house.arrival?.trim() ?? "";
 }
 

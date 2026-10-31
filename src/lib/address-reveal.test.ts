@@ -9,6 +9,7 @@ import {
   makeAddressRevealContext,
   publicHouseForCatalog,
   redactHouseLocationDetails,
+  visibleArrivalWithPolicy,
 } from "@/lib/address-reveal";
 import type { PublicHouse } from "@/lib/types";
 
@@ -103,7 +104,7 @@ describe("address reveal", () => {
     assert.equal(label, "רוקח 32, שיכון ותיקים");
   });
 
-  it("after reveal, public sees street and stored hood comma-separated", () => {
+  it("after reveal, public sees stored hood only (no street)", () => {
     const ctx = makeAddressRevealContext({
       now: new Date(2026, 9, 31, 20, 0),
       isAdmin: false,
@@ -113,7 +114,24 @@ describe("address reveal", () => {
       "בית-8975",
       ctx,
     );
-    assert.equal(label, "סטרומה 4, נחלת גנים");
+    assert.equal(label, "נחלת גנים");
+    assert.doesNotMatch(label, /סטרומה/u);
+  });
+
+  it("after reveal, public never sees arrival text", () => {
+    const ctx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 20, 0),
+      isAdmin: false,
+    });
+    assert.equal(visibleArrivalWithPolicy(stub({ arrival: "קומה 2" }), "בית-1001", ctx), "");
+    const adminCtx = makeAddressRevealContext({
+      now: new Date(2026, 9, 31, 20, 0),
+      isAdmin: true,
+    });
+    assert.equal(
+      visibleArrivalWithPolicy(stub({ arrival: "קומה 2" }), "בית-1001", adminCtx),
+      "קומה 2",
+    );
   });
 
   it("shows hint instead of street before reveal", () => {
