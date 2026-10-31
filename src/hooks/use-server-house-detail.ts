@@ -75,7 +75,9 @@ export function useServerHouseDetail(house: PublicHouse | null) {
       let detail = applyPreviewPolicy(result.house);
       rememberSessionHouseDetail(detail);
       setResolved(detail);
-      notifyHouseDetailLoaded(detail);
+      if (houseNeedsLocationHydration(house)) {
+        notifyHouseDetailLoaded(detail);
+      }
     })();
 
     return () => {

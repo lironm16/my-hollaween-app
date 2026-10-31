@@ -194,7 +194,7 @@ describe("address reveal", () => {
 
   it("cluster header uses a visible member's address while its homes stay hidden", () => {
     const ctx = makeAddressRevealContext({
-      now: new Date(2026, 9, 31, 10, 0),
+      now: beforeDefaultReveal(),
       audience: "registered",
       publicLocationIds: ["נק-1"],
     });

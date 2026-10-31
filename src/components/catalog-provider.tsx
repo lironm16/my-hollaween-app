@@ -29,7 +29,8 @@ import {
   loadCatalogCacheSync,
   recordCatalogCacheVerified,
   clearCatalogCacheMeta,
-  saveCatalogCache,
+  flushScheduledCatalogCacheWrite,
+  scheduleSaveCatalogCache,
   flushPendingHouseWrites,
   refreshStaleOwnedPreviews,
   withDeviceHouseOverlays,
@@ -332,6 +333,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const ownedCheckedRef = useRef(false);
   /** Tracks reveal clock so pass holders refetch unredacted rows once addresses open. */
   const revealWasOpenRef = useRef<boolean | null>(null);
+  const houseDetailBatchRef = useRef<Map<string, PublicHouse>>(new Map());
+  const houseDetailBatchTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     catalogRef.current = catalog;
@@ -397,7 +400,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setSource("cache");
         setLoading(false);
         setReady(true);
-        await saveCatalogCache(repaired);
+        scheduleSaveCatalogCache(repaired);
       } catch {
         if (!cancelled) {
           setLoading(false);
@@ -477,7 +480,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setSource("ssr");
     setLoading(false);
     setReady(true);
-    void saveCatalogCache(initial);
+    scheduleSaveCatalogCache(initial);
   }, []);
 
   const applyLiveResponse = useCallback(async (live: CatalogDelta) => {
@@ -526,8 +529,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     if (live.full || catalogServerCountSatisfied(next, serverCount)) {
       recordCatalogCacheVerified(next);
     }
-    await saveCatalogCache(next);
     window.dispatchEvent(new Event("hw-catalog-refreshed"));
+    scheduleSaveCatalogCache(next);
     return next;
   }, []);
 
@@ -585,7 +588,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           setCatalog((prev) => publishCatalog(reconciled, prev) ?? reconciled);
           if (!isMapListSuspended()) {
             setSource("cache");
-            await saveCatalogCache(reconciled);
+            scheduleSaveCatalogCache(reconciled);
             window.dispatchEvent(new Event("hw-catalog-refreshed"));
           }
         }
@@ -608,7 +611,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
               setError(null);
               quickRetryCountRef.current = 0;
               recordCatalogCacheVerified(recovered);
-              await saveCatalogCache(recovered);
+              scheduleSaveCatalogCache(recovered);
               window.dispatchEvent(new Event("hw-catalog-refreshed"));
             }
             return;
@@ -616,7 +619,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           if (recovered && localCatalogHouseCount(recovered) > localCatalogHouseCount(current)) {
             current = recovered;
             setCatalog((prev) => publishCatalog(recovered, prev) ?? recovered);
-            if (!isMapListSuspended()) await saveCatalogCache(recovered);
+            if (!isMapListSuspended()) scheduleSaveCatalogCache(recovered);
           }
         }
         if (
@@ -660,7 +663,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           setError(null);
           quickRetryCountRef.current = 0;
           recordCatalogCacheVerified(recovered);
-          await saveCatalogCache(recovered);
+          scheduleSaveCatalogCache(recovered);
           window.dispatchEvent(new Event("hw-catalog-refreshed"));
         }
         return;
@@ -705,7 +708,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setUnreachable(false);
         setError(null);
         quickRetryCountRef.current = 0;
-        await saveCatalogCache(merged);
+        scheduleSaveCatalogCache(merged);
         window.dispatchEvent(new Event("hw-catalog-refreshed"));
         return;
       } catch {
@@ -721,7 +724,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         quickRetryCountRef.current = 0;
         if (catalogHasRealHouses(merged)) {
           recordCatalogCacheVerified(merged);
-          await saveCatalogCache(merged);
+          scheduleSaveCatalogCache(merged);
         }
         window.dispatchEvent(new Event("hw-catalog-refreshed"));
         return;
@@ -737,7 +740,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setCatalog((prev) => {
           const merged = prev && cached ? syncCatalog(cached, prev) : (prev ?? cached);
           const next = merged ? withDeviceHouseOverlays(merged) : merged;
-          if (next && !isMapListSuspended()) void saveCatalogCache(next);
+          if (next && !isMapListSuspended()) scheduleSaveCatalogCache(next);
           if (!next) return prev;
           return publishCatalog(next, prev) ?? next;
         });
@@ -794,6 +797,30 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   useEffect(() => {
+    const flushHouseDetailBatch = () => {
+      houseDetailBatchTimerRef.current = undefined;
+      const batch = houseDetailBatchRef.current;
+      if (batch.size === 0) return;
+      houseDetailBatchRef.current = new Map();
+      setCatalog((prev) => {
+        if (!prev) return prev;
+        let changed = false;
+        const houses = prev.houses.map((row) => {
+          const hit = batch.get(row.id);
+          if (!hit) return row;
+          if (!houseIsAtLeastAsNew(hit, row)) return row;
+          changed = true;
+          return hit;
+        });
+        if (!changed) return prev;
+        const next = { ...prev, houses };
+        catalogRef.current = next;
+        scheduleSaveCatalogCache(next);
+        window.dispatchEvent(new Event("hw-catalog-refreshed"));
+        return next;
+      });
+    };
+
     const onHouseDetail = (event: Event) => {
       let house = (event as CustomEvent<PublicHouse>).detail;
       if (!house?.id) return;
@@ -803,17 +830,17 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           visitorPreviewAddressRevealContext(catalogRef.current?.eventSettings?.addressReveal),
         );
       }
-      setCatalog((prev) => {
-        if (!prev) return prev;
-        const houses = prev.houses.map((row) => {
-          if (row.id !== house.id) return row;
-          return houseIsAtLeastAsNew(house, row) ? house : row;
-        });
-        return { ...prev, houses };
-      });
+      houseDetailBatchRef.current.set(house.id, house);
+      if (houseDetailBatchTimerRef.current !== undefined) return;
+      houseDetailBatchTimerRef.current = window.setTimeout(flushHouseDetailBatch, 48);
     };
     window.addEventListener(HOUSE_DETAIL_LOADED_EVENT, onHouseDetail);
-    return () => window.removeEventListener(HOUSE_DETAIL_LOADED_EVENT, onHouseDetail);
+    return () => {
+      window.removeEventListener(HOUSE_DETAIL_LOADED_EVENT, onHouseDetail);
+      if (houseDetailBatchTimerRef.current !== undefined) {
+        window.clearTimeout(houseDetailBatchTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -826,7 +853,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         setSource("network");
         setUnreachable(false);
         setError(null);
-        void saveCatalogCache(pending);
+        scheduleSaveCatalogCache(pending);
         window.dispatchEvent(new Event("hw-catalog-refreshed"));
       }
       void refresh(false);
@@ -882,6 +909,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       if (appInForeground() && !isMapListSuspended()) void refresh(false);
     };
     document.addEventListener("visibilitychange", onVis);
+    const onVisibilityFlush = () => {
+      if (document.visibilityState === "hidden") void flushScheduledCatalogCacheWrite();
+    };
+    document.addEventListener("visibilitychange", onVisibilityFlush);
     const onChanged = () => void refresh(true);
     window.addEventListener("hw-catalog-changed", onChanged);
     const onSim = () => void refresh(true);
@@ -949,6 +980,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("online", onOff);
       window.removeEventListener("offline", onOff);
       document.removeEventListener("visibilitychange", onVis);
+      document.removeEventListener("visibilitychange", onVisibilityFlush);
       window.removeEventListener("hw-catalog-changed", onChanged);
       window.removeEventListener(SERVER_SIM_EVENT, onSim);
       unsubscribeNightPass();

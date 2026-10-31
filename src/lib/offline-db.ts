@@ -220,6 +220,55 @@ export async function saveCatalogCache(catalog: Catalog) {
   }
 }
 
+let pendingCatalogWrite: Catalog | null = null;
+let catalogCacheWriteChain: Promise<void> = Promise.resolve();
+
+function idleBeforeCatalogWrite(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(() => resolve(), { timeout: 2500 });
+    } else {
+      setTimeout(() => resolve(), 16);
+    }
+  });
+}
+
+async function deferredCatalogCacheWriteLoop() {
+  const { isMapGestureActive } = await import("@/lib/map-gesture-state");
+  for (;;) {
+    while (isMapGestureActive()) {
+      await new Promise((resolve) => setTimeout(resolve, 48));
+    }
+    await idleBeforeCatalogWrite();
+    const snapshot = pendingCatalogWrite;
+    if (!snapshot) return;
+    pendingCatalogWrite = null;
+    await saveCatalogCache(snapshot);
+    if (!pendingCatalogWrite) return;
+  }
+}
+
+/** Coalesce disk writes — in-memory catalog from polling stays immediate. */
+export function scheduleSaveCatalogCache(catalog: Catalog) {
+  if (typeof window === "undefined") {
+    void saveCatalogCache(catalog);
+    return;
+  }
+  pendingCatalogWrite = catalog;
+  catalogCacheWriteChain = catalogCacheWriteChain.then(() => deferredCatalogCacheWriteLoop());
+}
+
+/** Persist the latest scheduled catalog before the tab backgrounds (best-effort). */
+export function flushScheduledCatalogCacheWrite() {
+  catalogCacheWriteChain = catalogCacheWriteChain.then(async () => {
+    const snapshot = pendingCatalogWrite;
+    if (!snapshot) return;
+    pendingCatalogWrite = null;
+    await saveCatalogCache(snapshot);
+  });
+  return catalogCacheWriteChain;
+}
+
 export async function loadCatalogCache(): Promise<Catalog | null> {
   try {
     const db = await openDb();

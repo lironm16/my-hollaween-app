@@ -87,6 +87,7 @@ import {
   type MapGemPinRingContext,
 } from "@/lib/map-gem-pin-ring";
 import { mapPinIconCacheGemRingEpoch } from "@/lib/map-pin-icon-cache";
+import { setMapGestureActive } from "@/lib/map-gesture-state";
 
 /** Pin hours/opening state refresh — one bucket per minute (not app-wide 15s clock). */
 const MAP_PIN_TIME_BUCKET_MS = 60_000;
@@ -98,10 +99,22 @@ function useMapPinTimeBucket() {
 
 function MapDragAnimationPause({ onDraggingChange }: { onDraggingChange: (dragging: boolean) => void }) {
   useMapEvents({
-    movestart: () => onDraggingChange(true),
-    moveend: () => onDraggingChange(false),
-    zoomstart: () => onDraggingChange(true),
-    zoomend: () => onDraggingChange(false),
+    movestart: () => {
+      onDraggingChange(true);
+      setMapGestureActive(true);
+    },
+    moveend: () => {
+      onDraggingChange(false);
+      setMapGestureActive(false);
+    },
+    zoomstart: () => {
+      onDraggingChange(true);
+      setMapGestureActive(true);
+    },
+    zoomend: () => {
+      onDraggingChange(false);
+      setMapGestureActive(false);
+    },
   });
   return null;
 }
