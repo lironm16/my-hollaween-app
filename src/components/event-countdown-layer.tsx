@@ -7,10 +7,7 @@ import { EventCountdownFinale } from "@/components/event-countdown-finale";
 import { useEventCountdown } from "@/hooks/use-event-countdown";
 import { eventCountdownIsZero } from "@/lib/event-countdown";
 import type { AddressRevealSchedule, EventOpenHoursSchedule } from "@/lib/types";
-import {
-  markEventCountdownIntroSeen,
-  readEventCountdownIntroSeen,
-} from "@/lib/event-countdown-intro";
+import { markEventCountdownIntroSeen } from "@/lib/event-countdown-intro";
 
 const EventCountdownScreen = dynamic(
   () => import("@/components/event-countdown-screen").then((m) => m.EventCountdownScreen),
@@ -39,10 +36,6 @@ export function EventCountdownLayer({
   const closeScreen = useCallback(() => {
     markEventCountdownIntroSeen();
     setScreenOpen(false);
-  }, []);
-
-  useEffect(() => {
-    if (!readEventCountdownIntroSeen()) setScreenOpen(true);
   }, []);
 
   const beginFinale = useCallback(() => {

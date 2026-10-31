@@ -415,6 +415,10 @@ export function NeighborhoodApp({
 
   const housesForFilters = useMemo(() => stripPracticeHouses(mapListHouses), [mapListHouses]);
 
+  const filterNow = useMemo(
+    () => new Date(Math.floor(mapListNow.getTime() / 60_000) * 60_000),
+    [mapListNow],
+  );
   const filterContext = useMemo(
     () => ({
       houseSet: activeHouseSet,
@@ -422,9 +426,9 @@ export function NeighborhoodApp({
       visitedIds: visits.visitedIds,
       skippedIds: skips.skippedIds,
       gemCollectedIds: gemHuntActive ? gems.collectedIds : NO_GEM_COLLECTED_IDS,
-      now: mapListNow,
+      now: filterNow,
     }),
-    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, gemHuntActive, gems.collectedIds, mapListNow],
+    [activeHouseSet, likes.likedIds, visits.visitedIds, skips.skippedIds, gemHuntActive, gems.collectedIds, filterNow],
   );
 
   const mapHouses = useMemo(
@@ -1667,6 +1671,7 @@ export function NeighborhoodApp({
             aria-hidden={view !== "map"}
           >
                 <HouseMapDynamic
+                  addressRevealSchedule={catalog?.eventSettings?.addressReveal}
                   houses={mapHousesForMapPins}
                   matchedIds={matchedIds}
                   selectedId={originPick.originPickActive ? null : mapPinSelectedId}
@@ -1818,27 +1823,29 @@ export function NeighborhoodApp({
                 ) : null}
                 {listContentObscured ? (
                   <div className="min-h-[40vh] w-full bg-[#12081a]" aria-hidden />
-                ) : routeMode ? (
-                  <RouteList
-                    items={routeListItems}
-                    actionContext={houseActionContext}
-                    originLabel={routePlan?.originLabel}
-                    startedFrom={routePlan?.startedFrom}
-                    hasGps={Boolean(gps)}
-                    onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
-                    onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
-                    focusId={selection.listFocusId}
-                  />
-                ) : (
-                  <HouseList
-                    houses={visibleForList}
-                    origin={origin}
-                    now={now}
-                    actionContext={houseActionContext}
-                    focusId={selection.listFocusId}
-                    insetX="flush"
-                  />
-                )}
+                ) : view === "list" ? (
+                  routeMode ? (
+                    <RouteList
+                      items={routeListItems}
+                      actionContext={houseActionContext}
+                      originLabel={routePlan?.originLabel}
+                      startedFrom={routePlan?.startedFrom}
+                      hasGps={Boolean(gps)}
+                      onRequestLocation={gpsAllowed ? originPick.chooseGpsOrigin : undefined}
+                      onChangeOrigin={() => originPick.setOriginPickerOpen(true)}
+                      focusId={selection.listFocusId}
+                    />
+                  ) : (
+                    <HouseList
+                      houses={visibleForList}
+                      origin={origin}
+                      now={now}
+                      actionContext={houseActionContext}
+                      focusId={selection.listFocusId}
+                      insetX="flush"
+                    />
+                  )
+                ) : null}
               </div>
             </div>
           {showBootstrapSpinner ? (

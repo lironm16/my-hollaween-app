@@ -31,6 +31,11 @@ export function useAddressReveal(): AddressRevealContext & {
 } {
   const { locale } = useLocale();
   const now = useAppNow();
+  /** Map/list location policy only needs minute resolution — avoids rebuilding all pins every 15s. */
+  const policyNow = useMemo(
+    () => new Date(Math.floor(now.getTime() / 60_000) * 60_000),
+    [now],
+  );
   const { catalog } = useCatalog();
   const { admin } = useAdminSession();
   const { previewAsUser } = useGemPreviewAsUser();
@@ -53,14 +58,14 @@ export function useAddressReveal(): AddressRevealContext & {
   const ctx = useMemo(
     () =>
       makeAddressRevealContext({
-        now,
+        now: policyNow,
         isAdmin: adminShowsPrivateHouseFields(admin, previewAsUser),
         ownedHouseIds,
         addressReveal: addressRevealFromCatalog,
         audience,
         publicLocationIds,
       }),
-    [now, admin, previewAsUser, ownedHouseIds, addressRevealFromCatalog, audience, publicLocationIds],
+    [policyNow, admin, previewAsUser, ownedHouseIds, addressRevealFromCatalog, audience, publicLocationIds],
   );
 
   return useMemo(

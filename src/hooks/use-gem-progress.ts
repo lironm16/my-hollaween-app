@@ -34,11 +34,13 @@ export function useGemProgress() {
     () => entries.map((e) => e.houseId),
     [entries],
   );
+  const collectedSet = useMemo(() => new Set(collectedIds), [collectedIds]);
+  const collected = useCallback((id: string) => collectedSet.has(id), [collectedSet]);
 
   return {
     entries,
     collectedIds,
-    collected: (id: string) => entries.some((e) => e.houseId === id),
+    collected,
     collect: (houseId: string, gemType: string) => {
       if (isGemCollected(houseId)) return loadGemCollectedIds();
       const next = collectGem({ houseId, gemType });

@@ -9,6 +9,9 @@ export function isMapGestureActive() {
 export function setMapGestureActive(next: boolean) {
   if (active === next) return;
   active = next;
+  if (typeof window !== "undefined") {
+    (window as Window & { __hwMapGestureActive?: boolean }).__hwMapGestureActive = next;
+  }
   for (const listener of listeners) listener();
 }
 

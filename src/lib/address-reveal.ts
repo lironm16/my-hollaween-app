@@ -92,6 +92,10 @@ export function canViewHouseLocationDetails(
 export function redactHouseLocationDetails<
   T extends Pick<PublicHouse, "address" | "arrival"> & { notes?: string },
 >(house: T): T {
+  const address = house.address?.trim() ?? "";
+  const arrival = house.arrival?.trim() ?? "";
+  const notes = house.notes?.trim() ?? "";
+  if (!address && !arrival && !notes) return house;
   return { ...house, address: "", arrival: "", ...(house.notes !== undefined ? { notes: "" } : {}) };
 }
 
@@ -158,11 +162,16 @@ export function housesWithLocationPolicy(
   houses: readonly PublicHouse[],
   ctx: AddressRevealContext,
 ): PublicHouse[] {
-  return houses.map((house) =>
-    house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
-      ? house
-      : redactHouseLocationDetails(house),
-  );
+  let changed = false;
+  const next = houses.map((house) => {
+    if (house.locationPublic || canViewHouseLocationDetails(house.id, ctx)) {
+      return house;
+    }
+    const redacted = redactHouseLocationDetails(house);
+    if (redacted !== house) changed = true;
+    return redacted;
+  });
+  return changed ? next : (houses as PublicHouse[]);
 }
 
 export function houseWithLocationPolicy(house: PublicHouse, ctx: AddressRevealContext): PublicHouse {

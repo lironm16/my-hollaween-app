@@ -8,6 +8,7 @@
   }
 
   function syncAppH() {
+    if (window.__hwMapGestureActive) return;
     var vv = window.visualViewport;
     var h = vv ? vv.height : window.innerHeight;
     var top = vv ? vv.offsetTop : 0;

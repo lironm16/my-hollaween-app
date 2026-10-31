@@ -212,4 +212,9 @@ describe("address reveal", () => {
     assert.equal(next.arrival, "");
     assert.equal(next.notes, "");
   });
+
+  it("redact helper returns same object when already empty", () => {
+    const row = stub({ address: "", arrival: "", notes: "" });
+    assert.equal(redactHouseLocationDetails(row), row);
+  });
 });

@@ -1,3 +1,5 @@
+import { isMapGestureActive } from "@/lib/map-gesture-state";
+
 let safeAreaProbe: HTMLDivElement | null = null;
 
 function readSafeAreaInset(edge: "top" | "bottom") {
@@ -95,13 +97,17 @@ export function subscribeAppViewport(onChange?: () => void) {
     syncAppViewportVars();
     onChange?.();
   };
+  const syncUnlessMapGesture = () => {
+    if (isMapGestureActive()) return;
+    sync();
+  };
   sync();
   window.addEventListener("resize", sync);
-  window.visualViewport?.addEventListener("resize", sync);
-  window.visualViewport?.addEventListener("scroll", sync);
+  window.visualViewport?.addEventListener("resize", syncUnlessMapGesture);
+  window.visualViewport?.addEventListener("scroll", syncUnlessMapGesture);
   return () => {
     window.removeEventListener("resize", sync);
-    window.visualViewport?.removeEventListener("resize", sync);
-    window.visualViewport?.removeEventListener("scroll", sync);
+    window.visualViewport?.removeEventListener("resize", syncUnlessMapGesture);
+    window.visualViewport?.removeEventListener("scroll", syncUnlessMapGesture);
   };
 }

@@ -60,9 +60,8 @@ import {
   type TourLegTone,
 } from "@/lib/route-session-progress";
 import { candyPinDot, effectiveVisit, isDecorated, isOwnerFrozen } from "@/lib/house-state";
-import { useCatalog } from "@/hooks/use-catalog";
-import { isHouseClosedBeforeOpening, isHoursNightOver, isOnBreak } from "@/lib/hours";
 import type { AddressRevealSchedule } from "@/lib/types";
+import { isHouseClosedBeforeOpening, isHoursNightOver, isOnBreak } from "@/lib/hours";
 import { pinScareSrc } from "@/lib/pin-faces";
 import { effectiveHouseKind } from "@/lib/house-kind";
 import { pinBackgroundFill } from "@/lib/pin-colors";
@@ -987,9 +986,10 @@ type Props = {
   routeModeActive?: boolean;
   /** Admin QA — dashed HallowHood event hood outlines (GeoJSON-backed). */
   showEventZoneOutlines?: boolean;
+  addressRevealSchedule?: AddressRevealSchedule | null;
 };
 
-export function HouseMap({
+export const HouseMap = memo(function HouseMap({
   houses = [],
   selectedId,
   clusterOverview,
@@ -1037,12 +1037,11 @@ export function HouseMap({
   gemAnchorEdit = null,
   routeModeActive = false,
   showEventZoneOutlines = false,
+  addressRevealSchedule = null,
 }: Props) {
   const { locale, t } = useLocale();
   const originIcon = useMemo(() => originIconFor(locale), [locale]);
   const youAreHereIcon = useMemo(() => youAreHereIconFor(locale), [locale]);
-  const { catalog } = useCatalog();
-  const addressRevealSchedule = catalog?.eventSettings?.addressReveal;
   const pinRingHouses = gemPinRingHouses ?? gemAnchorHouses;
   const gemHouseIds = useMemo(() => gemMapHouseIdSet(pinRingHouses), [pinRingHouses]);
   const gemPinRingCtx = useMemo(
@@ -1051,7 +1050,7 @@ export function HouseMap({
       nearGemHouseIds: gemNearHouseIds,
       gemHouseIds,
       isCollected: isGemCollected ?? (() => true),
-      addressReveal: addressRevealSchedule,
+      addressReveal: addressRevealSchedule ?? undefined,
     }),
     [showGemPinRings, gemNearHouseIds, gemHouseIds, isGemCollected, addressRevealSchedule],
   );
@@ -1171,6 +1170,8 @@ export function HouseMap({
             }
             maxZoom={config.map.maxZoom}
             maxNativeZoom={tiles.maxNativeZoom}
+            updateWhenZooming={false}
+            updateWhenIdle
             className="hw-basemap"
           />
         ) : null}
@@ -1352,4 +1353,4 @@ export function HouseMap({
         </div>
     </div>
   );
-}
+});
