@@ -1,4 +1,4 @@
-import { redactHouseLocationDetails } from "@/lib/address-reveal";
+import { applyPostHoursVisitDetailPolicy, redactHouseLocationDetails } from "@/lib/address-reveal";
 import { isPoiHouse } from "@/lib/house-kind";
 import { isStubHouse, type HouseSet } from "@/lib/house-set";
 import { isPracticeHouse } from "@/lib/practice-house";
@@ -61,6 +61,7 @@ export function hiddenHouseCountForSet(
 export function scopeHousesForViewer<T extends ScopeRow>(
   rows: readonly T[],
   ctx: NightPassScopeContext,
+  now = new Date(),
 ): ScopedHouses<T> {
   const seesAllHomes =
     ctx.viewer === "pass" ||
@@ -85,7 +86,10 @@ export function scopeHousesForViewer<T extends ScopeRow>(
       if (isStubHouse(row)) hiddenStubHouseCount += 1;
       continue;
     }
-    houses.push(detailsOpen ? row : redactHouseLocationDetails(row));
+    const bypass = owned || ctx.viewer === "admin";
+    let scoped = detailsOpen ? row : redactHouseLocationDetails(row);
+    scoped = applyPostHoursVisitDetailPolicy(scoped, now, bypass);
+    houses.push(scoped);
   }
   return { houses, hiddenHouseCount, hiddenStubHouseCount };
 }

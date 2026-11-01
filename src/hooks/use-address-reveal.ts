@@ -8,6 +8,7 @@ import {
   makeAddressRevealContext,
   mapsNavigationAllowed,
   visibleArrivalWithPolicy,
+  visibleNotesWithPolicy,
   type AddressRevealContext,
 } from "@/lib/address-reveal";
 import { useAdminSession } from "@/hooks/use-admin-session";
@@ -26,6 +27,7 @@ export function useAddressReveal(): AddressRevealContext & {
   formatDisplayAddress: (house: PublicHouse) => string;
   formatClusterAddress: (houses: readonly PublicHouse[], fallback: PublicHouse) => string;
   visibleArrival: (house: PublicHouse) => string;
+  visibleNotes: (house: PublicHouse) => string;
   mapsAllowed: (houseId: string) => boolean;
   distanceAllowed: (houseId: string) => boolean;
 } {
@@ -77,6 +79,7 @@ export function useAddressReveal(): AddressRevealContext & {
       formatClusterAddress: (houses: readonly PublicHouse[], fallback: PublicHouse) =>
         clusterDisplayAddressWithPolicy(houses, fallback, ctx, locale),
       visibleArrival: (house: PublicHouse) => visibleArrivalWithPolicy(house, house.id, ctx),
+      visibleNotes: (house: PublicHouse) => visibleNotesWithPolicy(house, house.id, ctx),
       mapsAllowed: (houseId: string) => mapsNavigationAllowed(houseId, ctx),
       distanceAllowed: (houseId: string) => canViewHouseLocationDetails(houseId, ctx),
     }),

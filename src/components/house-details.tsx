@@ -370,6 +370,7 @@ export function HouseDetails({
   const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
   const displayAddress = addressReveal.formatDisplayAddress(viewHouse);
   const arrivalText = addressReveal.visibleArrival(viewHouse);
+  const notesText = addressReveal.visibleNotes(viewHouse);
   const showMaps = addressReveal.mapsAllowed(viewHouse.id) && houseServerDetailReady(viewHouse);
   const showDistance =
     addressReveal.distanceAllowed(viewHouse.id) && distanceM !== undefined;
@@ -572,9 +573,7 @@ export function HouseDetails({
       )}
       {actions}
       <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
-      {addressReveal.canViewDetails(viewHouse.id) ? (
-        <HouseNotesSection notes={viewHouse.notes} houseId={viewHouse.id} />
-      ) : null}
+      {notesText ? <HouseNotesSection notes={notesText} houseId={viewHouse.id} /> : null}
       <HouseDescriptionSection description={viewHouse.description} houseId={viewHouse.id} />
       {addedMeta || ownerPhone ? (
         <p className="text-sm text-violet-400">

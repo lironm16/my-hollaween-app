@@ -9,7 +9,9 @@ import {
   makeAddressRevealContext,
   publicHouseForCatalog,
   redactHouseLocationDetails,
+  redactPostHoursVisitDetails,
   visibleArrivalWithPolicy,
+  visibleNotesWithPolicy,
 } from "@/lib/address-reveal";
 import type { PublicHouse } from "@/lib/types";
 
@@ -216,5 +218,64 @@ describe("address reveal", () => {
   it("redact helper returns same object when already empty", () => {
     const row = stub({ address: "", arrival: "", notes: "" });
     assert.equal(redactHouseLocationDetails(row), row);
+  });
+
+  it("after the house’s last window, catalog keeps address and description but hides arrival and notes", () => {
+    const schedule = { hour: 12, minute: 0 };
+    const afterClose = new Date(2026, 9, 31, 22, 0, 0, 0);
+    const house = stub({
+      openFrom: "18:00",
+      openTo: "21:00",
+      arrival: "קומה 2",
+      notes: "יש כלב",
+      description: "ממתקים ופעילות",
+    });
+    const next = publicHouseForCatalog(house, afterClose, schedule);
+    assert.equal(next.address, "יהודית 15");
+    assert.equal(next.description, "ממתקים ופעילות");
+    assert.equal(next.arrival, "");
+    assert.equal(next.notes, "");
+  });
+
+  it("between two windows on event night, arrival and notes stay visible", () => {
+    const schedule = { hour: 12, minute: 0 };
+    const between = new Date(2026, 9, 31, 19, 30, 0, 0);
+    const house = stub({
+      openHours: [
+        { from: "18:00", to: "19:00" },
+        { from: "20:00", to: "22:00" },
+      ],
+      arrival: "דלת צד",
+      notes: "צלצול",
+    });
+    const ctx = makeAddressRevealContext({ now: between, audience: "registered" });
+    assert.equal(visibleArrivalWithPolicy(house, house.id, ctx), "דלת צד");
+    assert.equal(visibleNotesWithPolicy(house, house.id, ctx), "צלצול");
+  });
+
+  it("owner bypasses post-hours redaction for their home", () => {
+    const afterClose = new Date(2026, 9, 31, 22, 0, 0, 0);
+    const house = stub({
+      openFrom: "18:00",
+      openTo: "21:00",
+      arrival: "קומה 2",
+      notes: "יש כלב",
+    });
+    const ctx = makeAddressRevealContext({
+      now: afterClose,
+      ownedHouseIds: [house.id],
+      audience: "registered",
+    });
+    assert.equal(visibleArrivalWithPolicy(house, house.id, ctx), "קומה 2");
+    assert.equal(visibleNotesWithPolicy(house, house.id, ctx), "יש כלב");
+  });
+
+  it("post-hours redact helper clears only arrival and notes", () => {
+    const next = redactPostHoursVisitDetails(
+      stub({ arrival: "קומה 2", notes: "יש כלב", address: "יהודית 15" }),
+    );
+    assert.equal(next.address, "יהודית 15");
+    assert.equal(next.arrival, "");
+    assert.equal(next.notes, "");
   });
 });

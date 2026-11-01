@@ -11,11 +11,15 @@ import type { PublicHouse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/hooks/use-locale";
 
-export function houseSearchHaystack(house: PublicHouse, canViewLocationDetails = true) {
+export function houseSearchHaystack(
+  house: PublicHouse,
+  canViewLocationDetails = true,
+  visibleArrival = canViewLocationDetails ? house.arrival : "",
+) {
   return [
     house.name,
     canViewLocationDetails ? formatDisplayAddress(house) : "",
-    canViewLocationDetails ? house.arrival : "",
+    visibleArrival,
     house.description,
     canViewLocationDetails ? locationSearchHaystack(house) : "",
     isPoiHouse(house) ? poiCategoryLabel(house.poiCategory) : "",
@@ -28,10 +32,13 @@ export function houseMatchesQuery(
   house: PublicHouse,
   query: string,
   canViewLocationDetails = true,
+  visibleArrival = canViewLocationDetails ? house.arrival : "",
 ) {
   const needle = query.trim().toLowerCase();
   if (!needle) return true;
-  return houseSearchHaystack(house, canViewLocationDetails).toLowerCase().includes(needle);
+  return houseSearchHaystack(house, canViewLocationDetails, visibleArrival)
+    .toLowerCase()
+    .includes(needle);
 }
 
 export function HousePicker({
@@ -70,7 +77,12 @@ export function HousePicker({
     const needle =
       selected && query === houseHeadline(selected) ? "" : query;
     const filtered = houses.filter((house) =>
-      houseMatchesQuery(house, needle, addressReveal.canViewDetails(house.id)),
+      houseMatchesQuery(
+        house,
+        needle,
+        addressReveal.canViewDetails(house.id),
+        addressReveal.visibleArrival(house),
+      ),
     );
     return [...filtered].sort((a, b) => {
       const ao = owned.has(a.id) ? 0 : 1;
