@@ -4,9 +4,12 @@ import type { HouseInput } from "@/lib/types";
 
 /** Owners may not drag the pin — coords follow address geocode unless admin. */
 export async function pinCoordsForOwnerSubmit(
-  input: Pick<HouseInput, "address" | "lat" | "lng">,
+  input: Pick<HouseInput, "address" | "lat" | "lng" | "locationSourceId">,
   admin: boolean,
 ): Promise<{ lat: number; lng: number }> {
+  if (input.locationSourceId?.trim()) {
+    return { lat: input.lat, lng: input.lng };
+  }
   if (admin || isSchoolCampusAddress(input.address)) {
     return { lat: input.lat, lng: input.lng };
   }

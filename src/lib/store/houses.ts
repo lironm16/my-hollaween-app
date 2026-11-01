@@ -195,11 +195,13 @@ export async function submitHouse(
       lat: submitInput.lat,
       lng: submitInput.lng,
     });
-    const positioned = alignPublicHouseCoords({
-      address: addressFields.address,
-      lat: submitInput.lat,
-      lng: submitInput.lng,
-    });
+    const positioned = submitInput.locationSourceId
+      ? { lat: submitInput.lat, lng: submitInput.lng }
+      : alignPublicHouseCoords({
+          address: addressFields.address,
+          lat: submitInput.lat,
+          lng: submitInput.lng,
+        });
     const boothNumber =
       isSchoolCampusAddress(addressFields.address)
         ? nextBoothNumberForAddress(db.houses, addressFields.address, "real")
@@ -229,6 +231,7 @@ export async function submitHouse(
       entryLevel: submitInput.entryLevel,
       displayTier: submitInput.displayTier,
       addressEn: submitInput.addressEn ?? null,
+      locationSourceId: submitInput.locationSourceId ?? null,
       accessible,
       decorLevel: decor.decorLevel,
       decorated: decor.decorated,
@@ -317,6 +320,7 @@ function sanitizeOwnerPatch(
   if (patch.notes !== undefined) next.notes = patch.notes;
   if (patch.accessible !== undefined) next.accessible = patch.accessible;
   if (patch.addressEn !== undefined) next.addressEn = patch.addressEn;
+  if (patch.locationSourceId !== undefined) next.locationSourceId = patch.locationSourceId;
   if (patch.accessibilityLevel !== undefined) {
     next.accessibilityLevel = patch.accessibilityLevel;
     next.accessible = accessibleBooleanFromLevel(patch.accessibilityLevel);
@@ -366,9 +370,11 @@ function applyOwnerPatch(house: House, patch: Partial<HouseInput> & NightPatch) 
   house.decorated = decor.decorated;
   house.updatedAt = new Date().toISOString();
   house.soldOut = house.visit === "closed";
-  const aligned = alignPublicHouseCoords(house);
-  house.lat = aligned.lat;
-  house.lng = aligned.lng;
+  if (!house.locationSourceId) {
+    const aligned = alignPublicHouseCoords(house);
+    house.lat = aligned.lat;
+    house.lng = aligned.lng;
+  }
 }
 
 function snapshotHouse(house: House): House {
@@ -568,6 +574,7 @@ export async function adminUpdate(
     }
     if (patch.notes !== undefined) house.notes = patch.notes;
     if (patch.addressEn !== undefined) house.addressEn = patch.addressEn;
+    if (patch.locationSourceId !== undefined) house.locationSourceId = patch.locationSourceId;
     if (patch.accessibilityLevel !== undefined) {
       house.accessibilityLevel = patch.accessibilityLevel;
       house.accessible = accessibleBooleanFromLevel(patch.accessibilityLevel);
@@ -608,9 +615,11 @@ export async function adminUpdate(
       house.soldOut = patch.soldOut;
       house.visit = patch.soldOut ? "closed" : house.visit === "closed" ? "come" : house.visit;
     }
-    const aligned = alignPublicHouseCoords(house);
-    house.lat = aligned.lat;
-    house.lng = aligned.lng;
+    if (!house.locationSourceId) {
+      const aligned = alignPublicHouseCoords(house);
+      house.lat = aligned.lat;
+      house.lng = aligned.lng;
+    }
     house.updatedAt = new Date().toISOString();
     db.updatedAt = house.updatedAt;
     return house;

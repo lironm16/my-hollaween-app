@@ -39,7 +39,11 @@ export function localizedFormatDisplayAddress(
 ): string {
   const street = streetFromLegacyAddress(house.address);
   const area = resolveNeighborhood(house);
-  const streetLine = localizedStreetLine(locale, street);
+  const storedEn =
+    locale === "en" && "addressEn" in house && typeof house.addressEn === "string"
+      ? house.addressEn.trim()
+      : "";
+  const streetLine = storedEn || localizedStreetLine(locale, street);
   if (!streetLine) return area ? displayNeighborhoodName(locale, area) : "";
   if (!area) return streetLine;
   return `${streetLine}, ${displayNeighborhoodName(locale, area)}`;

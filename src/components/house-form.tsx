@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { compressJpegFile, type PhotoFocus } from "@/lib/compress-image";
 import { HousePhotoFrame } from "@/components/house-photo-frame";
 import { AddressField, reversePin } from "@/components/address-field";
+import { resolveAddressHit } from "@/lib/address-resolve-client";
+import type { LocationResolution } from "@/lib/location-resolution";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -167,6 +169,21 @@ export function HouseForm({
   });
   const [locating, setLocating] = useState(false);
   const [addressOk, setAddressOk] = useState(Boolean(initial?.address && initial.lat && initial.lng));
+  const [locationDraft, setLocationDraft] = useState<LocationResolution | null>(() => {
+    if (!initial?.address || initial.lat === undefined || initial.lng === undefined) return null;
+    return {
+      sourceId: initial.locationSourceId ?? "legacy-edit",
+      addressHe: initial.address,
+      addressEn: initial.addressEn?.trim() || initial.address,
+      lat: initial.lat,
+      lng: initial.lng,
+      precise: true,
+    };
+  });
+  const [locationConfirmed, setLocationConfirmed] = useState(
+    () => Boolean(initial?.locationSourceId) || Boolean(initial?.id && initial?.address),
+  );
+  const [resolvingLocation, setResolvingLocation] = useState(false);
   const [addressFieldActive, setAddressFieldActive] = useState(false);
   const [decorLevel, setDecorLevel] = useState<DecorLevel>(() => initialDecorLevel(initial));
   const [candy, setCandy] = useState<CandyTone>(() => initialCandyTone(initial));
@@ -360,7 +377,49 @@ export function HouseForm({
 
   function onAddressTyped(value: string) {
     setAddressOk(false);
-    setForm((f) => ({ ...f, address: value }));
+    setLocationConfirmed(false);
+    setLocationDraft(null);
+    setForm((f) => ({ ...f, address: value, locationSourceId: null, addressEn: null }));
+  }
+
+  async function applyResolvedHit(hit: AddressHit) {
+    setResolvingLocation(true);
+    try {
+      const resolved = await resolveAddressHit(hit, form.address);
+      if (!resolved) {
+        toast.error(t("addressField.searchFailed"));
+        setAddressOk(false);
+        setLocationConfirmed(false);
+        setLocationDraft(null);
+        return;
+      }
+      const { resolution } = resolved;
+      const hood = resolveNeighborhoodForPin(resolution.addressHe, resolution.lat, resolution.lng);
+      if (isNewHouse && !schoolCampusNeighborhoodForAddress(resolution.addressHe) && !hood) {
+        toast.error(t("houseForm.outsideEventZones"));
+        setAddressOk(false);
+        setLocationConfirmed(false);
+        setLocationDraft(null);
+        return;
+      }
+      setLocationDraft(resolution);
+      setLocationConfirmed(false);
+      setForm((f) => ({
+        ...f,
+        address: resolution.addressHe,
+        addressEn: resolution.addressEn,
+        lat: resolution.lat,
+        lng: resolution.lng,
+        locationSourceId: resolution.sourceId,
+        ...(hood !== null ? { neighborhood: hood } : {}),
+      }));
+      setAddressOk(true);
+      if (!resolution.precise) {
+        toast.message(streetPinHint(hit) ?? t("houseForm.pinStreetHint"));
+      }
+    } finally {
+      setResolvingLocation(false);
+    }
   }
 
   function resolveNeighborhoodForPin(address: string, lat: number, lng: number) {
@@ -371,52 +430,20 @@ export function HouseForm({
   }
 
   function onAddressSelect(hit: AddressHit) {
-    const address = displayAddressFromHit(hit);
-    const hood = resolveNeighborhoodForPin(address, hit.lat, hit.lng);
-    if (isNewHouse && !schoolCampusNeighborhoodForAddress(address) && !hood) {
-      toast.error(t("houseForm.outsideEventZones"));
-      setAddressOk(false);
-      return;
-    }
-    setForm((f) => ({
-      ...f,
-      address,
-      lat: hit.lat,
-      lng: hit.lng,
-      ...(hood !== null ? { neighborhood: hood } : {}),
-    }));
-    setAddressOk(true);
-    if (!hit.precise) {
-      toast.message(streetPinHint(hit) ?? t("houseForm.pinStreetHint"));
-    }
+    void applyResolvedHit(hit);
   }
 
   async function syncFromPin(lat: number, lng: number) {
     setForm((f) => ({ ...f, lat, lng }));
+    setLocationConfirmed(false);
     const hit = await reversePin(lat, lng);
     if (!hit) {
       setAddressOk(false);
+      setLocationDraft(null);
       toast.error(t("houseForm.geocodeMiss"));
       return;
     }
-    const address = displayAddressFromHit(hit);
-    const hood = resolveNeighborhoodForPin(address, hit.lat, hit.lng);
-    if (isNewHouse && !schoolCampusNeighborhoodForAddress(address) && !hood) {
-      toast.error(t("houseForm.outsideEventZones"));
-      setAddressOk(false);
-      return;
-    }
-    setForm((f) => ({
-      ...f,
-      lat: hit.lat,
-      lng: hit.lng,
-      address,
-      ...(hood !== null ? { neighborhood: hood } : {}),
-    }));
-    setAddressOk(true);
-    if (!hit.precise) {
-      toast.message(streetPinHint(hit) ?? t("houseForm.pinStreetHint"));
-    }
+    await applyResolvedHit(hit);
   }
 
   function useMyLocation() {
@@ -442,6 +469,10 @@ export function HouseForm({
         if (blocked) return;
         if (!addressOk || form.address.trim().length < HOUSE_FIELD_LIMITS.address.min) {
           toast.error(t("houseForm.pickRealAddress"));
+          return;
+        }
+        if (!locationConfirmed || !locationDraft) {
+          toast.error(t("addressField.needLocationConfirm"));
           return;
         }
         let neighborhood = form.neighborhood;
@@ -534,6 +565,11 @@ export function HouseForm({
         const hours = syncHoursFields(windows);
         const payload: HouseInput = {
           ...form,
+          address: locationDraft.addressHe,
+          addressEn: locationDraft.addressEn,
+          lat: locationDraft.lat,
+          lng: locationDraft.lng,
+          locationSourceId: locationDraft.sourceId,
           neighborhood,
           theme,
           treats,
@@ -700,7 +736,10 @@ export function HouseForm({
           </p>
         ) : null}
       </FormSection>
-      <FormSection title={t("houseForm.whereSection")}>
+      <FormSection
+        title={t("addressField.locationSection")}
+        hint={t("addressField.locationSubtitle")}
+      >
         <Field
           label={t("houseForm.address")}
           hint={t("houseForm.hiddenUntilEvent")}
@@ -710,9 +749,9 @@ export function HouseForm({
             value={form.address}
             onChange={onAddressTyped}
             onSelect={onAddressSelect}
-            confirmed={addressOk}
+            confirmed={addressOk && locationConfirmed}
             hoodLabel={confirmedHoodLabel}
-            disabled={blocked}
+            disabled={blocked || resolvingLocation}
             maxLength={HOUSE_FIELD_LIMITS.address.max}
             onFocusChange={setAddressFieldActive}
           />
@@ -720,6 +759,62 @@ export function HouseForm({
             <p className="mt-1 text-base text-violet-300">{t("houseForm.editAddressHint")}</p>
           ) : null}
         </Field>
+        <div>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-lg font-medium">{t("houseForm.mapPin")}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={useMyLocation}
+              disabled={schoolCampusPinLocked || blocked || resolvingLocation}
+            >
+              {locating ? t("houseForm.locating") : t("houseForm.myLocation")}
+            </Button>
+          </div>
+          <div
+            className={cn(
+              "relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30",
+              addressFieldActive && "hidden sm:block",
+            )}
+          >
+            <HouseMapDynamic
+              pickMode
+              pick={{ lat: form.lat, lng: form.lng }}
+              pickDraggable={!schoolCampusPinLocked && !blocked}
+              onPick={
+                !schoolCampusPinLocked && !blocked
+                  ? (lat, lng) => void syncFromPin(lat, lng)
+                  : undefined
+              }
+            />
+          </div>
+          <p className="mt-1 text-base text-violet-300">
+            {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
+            {schoolCampusPinLocked ? t("houseForm.schoolPinLocked") : null}
+          </p>
+        </div>
+        {locationDraft && addressOk ? (
+          <div className="space-y-2 rounded-xl bg-[#1d1028] p-4 ring-1 ring-orange-500/25">
+            <p className="text-lg text-orange-50">{locationDraft.addressHe}</p>
+            <p className="text-lg text-violet-200" dir="ltr">
+              {locationDraft.addressEn}
+            </p>
+            {locationConfirmed ? (
+              <p className="text-base text-emerald-300">{t("addressField.locationConfirmed")}</p>
+            ) : (
+              <p className="text-base text-amber-200">{t("addressField.locationDirty")}</p>
+            )}
+            <Button
+              type="button"
+              className="h-11 w-full bg-orange-500 text-black hover:bg-orange-400"
+              disabled={blocked || resolvingLocation || locationConfirmed}
+              onClick={() => setLocationConfirmed(true)}
+            >
+              {t("addressField.confirmLocation")}
+            </Button>
+          </div>
+        ) : null}
         <Field
           label={t("houseForm.arrival")}
           hint={t("houseForm.hiddenUntilEvent")}
@@ -744,41 +839,6 @@ export function HouseForm({
             placeholder={t("houseForm.visitorNotePlaceholder")}
           />
         </Field>
-        {admin ? (
-          <div>
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-lg font-medium">{t("houseForm.mapPin")}</p>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={useMyLocation}
-                disabled={schoolCampusPinLocked || blocked}
-              >
-                {locating ? t("houseForm.locating") : t("houseForm.myLocation")}
-              </Button>
-            </div>
-            <div
-              className={cn(
-                "relative z-0 isolate h-72 overflow-hidden rounded-xl ring-1 ring-orange-500/30",
-                addressFieldActive && "hidden sm:block",
-              )}
-            >
-              <HouseMapDynamic
-                pickMode
-                pick={{ lat: form.lat, lng: form.lng }}
-                pickDraggable={!schoolCampusPinLocked}
-                onPick={
-                  !schoolCampusPinLocked ? (lat, lng) => void syncFromPin(lat, lng) : undefined
-                }
-              />
-            </div>
-            <p className="mt-1 text-base text-violet-300">
-              {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
-              {schoolCampusPinLocked ? t("houseForm.schoolPinLocked") : null}
-            </p>
-          </div>
-        ) : null}
       </FormSection>
       <FormSection title={t("houseForm.accessibilitySection")} hint={t("houseForm.accessibilityHint")}>
         <div className="space-y-2">

@@ -7,6 +7,7 @@ import {
 } from "@/lib/config";
 import { clusterAddressKey } from "@/lib/house-clusters";
 import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
+import { campusAddressEn, linesFromPreparedHit } from "@/lib/location-resolution";
 import type { AddressHit } from "@/lib/types";
 
 export type { AddressHit } from "@/lib/types";
@@ -348,25 +349,15 @@ export async function searchAddress(query: string): Promise<AddressHit[]> {
 
   if (parsed.num) {
     try {
-      collected.push(...(await searchEsri(q, parsed)));
+      collected.push(...(await searchNominatim(q, parsed)));
     } catch {
-      // Keep going with OpenStreetMap if the numbered lookup fails.
+      // No hits when Nominatim is down.
     }
+  } else {
     try {
       collected.push(...(await searchNominatim(q, parsed)));
     } catch {
-      // Esri-only results remain when Nominatim is down.
-    }
-  } else {
-    const hasNumbered = collected.some(
-      (h) => h.precise && (!parsed.num || h.houseNumber === parsed.num),
-    );
-    if (!hasNumbered) {
-      try {
-        collected.push(...(await searchNominatim(q, parsed)));
-      } catch {
-        // No hits when both providers fail.
-      }
+      // No hits when Nominatim is down.
     }
   }
 
@@ -448,27 +439,45 @@ function preferPreciseHit(primary: AddressHit | null, fallback: AddressHit | nul
   return primary;
 }
 
-export async function reverseAddress(lat: number, lng: number): Promise<AddressHit | null> {
+async function reverseNominatimLang(
+  lat: number,
+  lng: number,
+  lang: "he" | "en",
+): Promise<AddressHit | null> {
   const raw = await nominatim<NominatimHit>("reverse", {
     format: "jsonv2",
     lat: String(lat),
     lon: String(lng),
     zoom: "19",
     addressdetails: "1",
-    "accept-language": "he",
+    "accept-language": lang,
   });
-  const nominatimHit = raw && typeof raw === "object" ? toHit(raw) : null;
+  return raw && typeof raw === "object" ? toHit(raw) : null;
+}
 
-  let esriHit: AddressHit | null = null;
-  if (!nominatimHit?.precise) {
-    try {
-      esriHit = await reverseEsri(lat, lng);
-    } catch {
-      // Nominatim result is still usable when Esri reverse fails.
-    }
+export async function reverseAddress(lat: number, lng: number): Promise<AddressHit | null> {
+  return reverseNominatimLang(lat, lng, "he");
+}
+
+/** Attach English street line using Nominatim reverse at the same coordinates. */
+export async function enrichAddressHitBilingual(hit: AddressHit): Promise<AddressHit> {
+  const { addressHe } = linesFromPreparedHit(hit);
+  const campusEn = campusAddressEn(addressHe);
+  if (campusEn || hit.id.startsWith("named-place-")) {
+    return { ...hit, addressHe, addressEn: campusEn ?? addressHe };
   }
-
-  return preferPreciseHit(nominatimHit, esriHit);
+  try {
+    const enHit = await reverseNominatimLang(hit.lat, hit.lng, "en");
+    if (enHit?.road) {
+      const num = hit.houseNumber || enHit.houseNumber;
+      const addressEn =
+        num && enHit.road ? `${enHit.road} ${num}` : enHit.label.split(",")[0]?.trim() ?? addressHe;
+      return { ...hit, addressHe, addressEn, road: hit.road || enHit.road };
+    }
+  } catch {
+    // Keep Hebrew-only line when EN reverse fails.
+  }
+  return { ...hit, addressHe, addressEn: addressHe };
 }
 
 export function haversineMeters(

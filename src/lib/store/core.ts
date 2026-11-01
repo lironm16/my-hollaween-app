@@ -184,6 +184,7 @@ export function normalizeHouse(house: House & { status?: string; rejectionReason
     arrival: base.arrival ?? "",
     accessible: Boolean(base.accessible),
     addressEn: base.addressEn ?? null,
+    locationSourceId: base.locationSourceId ?? null,
     accessibilityLevel: base.accessibilityLevel,
     entryLevel: base.entryLevel,
     displayTier: base.displayTier,

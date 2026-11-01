@@ -213,6 +213,11 @@ export function AddressField({
                     <MapPin className="mt-0.5 size-3.5 shrink-0 text-orange-400" />
                     <span>
                       <span className="block">{hit.label}</span>
+                      {hit.addressEn && hit.addressEn !== hit.label ? (
+                        <span className="block text-base text-violet-200/90" dir="ltr">
+                          {hit.addressEn}
+                        </span>
+                      ) : null}
                       {sub ? <span className="block text-base text-violet-300">{sub}</span> : null}
                     </span>
                   </button>

@@ -88,6 +88,8 @@ export type House = {
   address: string;
   /** English street line saved at geocode time (optional on legacy rows). */
   addressEn?: string | null;
+  /** Stable geocoder id (OSM) from confirmed pick — skips re-geocode on save. */
+  locationSourceId?: string | null;
   /** Wheelchair / stairs — replaces legacy boolean when set. */
   accessibilityLevel?: AccessibilityLevel;
   /** Ground floor / lobby vs upper floor. */
@@ -175,6 +177,7 @@ export type HouseInput = {
   notes: string;
   accessible: boolean;
   addressEn?: string | null;
+  locationSourceId?: string | null;
   accessibilityLevel?: AccessibilityLevel;
   entryLevel?: EntryLevel;
   displayTier?: HouseDisplayTier;
@@ -337,6 +340,10 @@ export type AddressHit = {
   precise: boolean;
   /** Autocomplete secondary line (e.g. campus street). */
   subtitle?: string;
+  /** Full street + number (Hebrew) — set when resolved for save. */
+  addressHe?: string;
+  /** Full street + number (English) — from Nominatim EN at pin. */
+  addressEn?: string;
 };
 
 export type PushSubscriptionRecord = {

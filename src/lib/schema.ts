@@ -95,6 +95,7 @@ const houseFields = z.object({
   notes: z.string().trim().max(HOUSE_FIELD_LIMITS.notes.max),
   accessible: z.boolean(),
   addressEn: z.string().trim().max(HOUSE_FIELD_LIMITS.address.max).optional().nullable(),
+  locationSourceId: z.string().trim().min(2).max(120).optional().nullable(),
   accessibilityLevel: z.enum(ACCESSIBILITY_LEVELS).optional(),
   entryLevel: z.enum(ENTRY_LEVELS).optional(),
   displayTier: z.enum(HOUSE_DISPLAY_TIERS).optional(),
