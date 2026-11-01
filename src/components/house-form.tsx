@@ -840,61 +840,58 @@ export function HouseForm({
           />
         </Field>
       </FormSection>
-      <FormSection title={t("houseForm.accessibilitySection")} hint={t("houseForm.accessibilityHint")}>
-        <div className="space-y-2">
-          <VisitorOptionCard
+      <FormSection title={t("houseForm.accessibilitySection")}>
+        <div className="flex flex-wrap gap-1.5">
+          <ChoiceChip
             selected={accessibilityLevel === "accessible"}
             onClick={() => setAccessibilityLevel("accessible")}
-            title={t("houseForm.accessibilityAccessible")}
-            hint={t("houseForm.accessibilityAccessibleHint")}
-          />
-          <VisitorOptionCard
+          >
+            {t("houseForm.accessibilityAccessible")}
+          </ChoiceChip>
+          <ChoiceChip
             selected={accessibilityLevel === "partial"}
             onClick={() => setAccessibilityLevel("partial")}
-            title={t("houseForm.accessibilityPartial")}
-            hint={t("houseForm.accessibilityPartialHint")}
-          />
-          <VisitorOptionCard
+          >
+            {t("houseForm.accessibilityPartial")}
+          </ChoiceChip>
+          <ChoiceChip
             selected={accessibilityLevel === "not_accessible"}
             onClick={() => setAccessibilityLevel("not_accessible")}
-            title={t("houseForm.accessibilityNot")}
-            hint={t("houseForm.accessibilityNotHint")}
-          />
+          >
+            {t("houseForm.accessibilityNot")}
+          </ChoiceChip>
         </div>
       </FormSection>
-      <FormSection title={t("houseForm.entrySection")} hint={t("houseForm.entryHint")}>
-        <div className="space-y-2">
-          <VisitorOptionCard
+      <FormSection title={t("houseForm.entrySection")}>
+        <div className="flex flex-wrap gap-1.5">
+          <ChoiceChip
             selected={entryLevel === "ground_entrance_lobby"}
             onClick={() => setEntryLevel("ground_entrance_lobby")}
-            title={t("houseForm.entryGround")}
-            hint={t("houseForm.entryGroundHint")}
-          />
-          <VisitorOptionCard
+          >
+            {t("houseForm.entryGround")}
+          </ChoiceChip>
+          <ChoiceChip
             selected={entryLevel === "not_ground"}
             onClick={() => setEntryLevel("not_ground")}
-            title={t("houseForm.entryNotGround")}
-            hint={t("houseForm.entryNotGroundHint")}
-          />
+          >
+            {t("houseForm.entryNotGround")}
+          </ChoiceChip>
         </div>
       </FormSection>
-      <FormSection title={t("houseForm.displayTierSection")} hint={t("houseForm.displayTierHint")}>
-        <div className="space-y-2">
-          <VisitorOptionCard
-            selected={displayTier === "subtle"}
-            onClick={() => setDisplayTier("subtle")}
-            title={t("houseForm.displayTierSubtle")}
-          />
-          <VisitorOptionCard
+      <FormSection title={t("houseForm.displayTierSection")}>
+        <div className="flex flex-wrap gap-1.5">
+          <ChoiceChip selected={displayTier === "subtle"} onClick={() => setDisplayTier("subtle")}>
+            {t("houseForm.displayTierSubtle")}
+          </ChoiceChip>
+          <ChoiceChip
             selected={displayTier === "very_nice"}
             onClick={() => setDisplayTier("very_nice")}
-            title={t("houseForm.displayTierVeryNice")}
-          />
-          <VisitorOptionCard
-            selected={displayTier === "wild"}
-            onClick={() => setDisplayTier("wild")}
-            title={t("houseForm.displayTierWild")}
-          />
+          >
+            {t("houseForm.displayTierVeryNice")}
+          </ChoiceChip>
+          <ChoiceChip selected={displayTier === "wild"} onClick={() => setDisplayTier("wild")}>
+            {t("houseForm.displayTierWild")}
+          </ChoiceChip>
         </div>
       </FormSection>
       <FormSection title={t("houseForm.hoursSection")}>
@@ -1151,34 +1148,6 @@ function NightStatusChip({
       <span className={cn("night-status-dot", dotClass)} />
       {label}
     </ChoiceChip>
-  );
-}
-
-function VisitorOptionCard({
-  selected,
-  onClick,
-  title,
-  hint,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  title: string;
-  hint?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "w-full rounded-xl px-4 py-3 text-start ring-1 transition",
-        selected
-          ? "bg-orange-500/15 ring-orange-400/60"
-          : "bg-[#1d1028] ring-orange-500/20 hover:bg-orange-500/5",
-      )}
-    >
-      <p className="text-lg font-medium text-orange-50">{title}</p>
-      {hint ? <p className="mt-0.5 text-base text-violet-200">{hint}</p> : null}
-    </button>
   );
 }
 
