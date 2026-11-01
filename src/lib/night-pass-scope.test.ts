@@ -59,6 +59,9 @@ const homeAboveBusiness = row({
 });
 const all = [home, otherHome, business, homeAboveBusiness];
 
+/** Event night while sample homes (18:00–21:00) are still open — post-hours logic uses wall clock. */
+const duringEventNightOpen = new Date(2026, 9, 31, 19, 0, 0, 0);
+
 function ctx(overrides: Partial<NightPassScopeContext>): NightPassScopeContext {
   return { ...PUBLIC_NIGHT_PASS_SCOPE, ...overrides };
 }
@@ -71,7 +74,7 @@ describe("night pass scope", () => {
   });
 
   it("public visitors see every home on the map — addresses like pass holders before reveal", () => {
-    const scoped = scopeHousesForViewer(all, PUBLIC_NIGHT_PASS_SCOPE);
+    const scoped = scopeHousesForViewer(all, PUBLIC_NIGHT_PASS_SCOPE, duringEventNightOpen);
     assert.equal(scoped.houses.length, 4);
     assert.equal(scoped.hiddenHouseCount, 0);
     const biz = scoped.houses.find((house) => house.id === "נק-1")!;
@@ -89,14 +92,22 @@ describe("night pass scope", () => {
   });
 
   it("public visitors stay redacted after reveal — only pass holders get street addresses", () => {
-    const scoped = scopeHousesForViewer(all, ctx({ viewer: "public", revealed: true }));
+    const scoped = scopeHousesForViewer(
+      all,
+      ctx({ viewer: "public", revealed: true }),
+      duringEventNightOpen,
+    );
     const homeAfter = scoped.houses.find((house) => house.id === "בית-1")!;
     assert.equal(homeAfter.address, "");
     assert.equal(homeAfter.arrival, "");
   });
 
   it("pass holders see every home, addresses only after reveal", () => {
-    const before = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: false }));
+    const before = scopeHousesForViewer(
+      all,
+      ctx({ viewer: "pass", revealed: false }),
+      duringEventNightOpen,
+    );
     assert.equal(before.houses.length, 4);
     assert.equal(before.hiddenHouseCount, 0);
     const homeBefore = before.houses.find((house) => house.id === "בית-1")!;
@@ -104,7 +115,11 @@ describe("night pass scope", () => {
     assert.equal(homeBefore.arrival, "");
     assert.equal(homeBefore.lat, home.lat);
 
-    const after = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: true }));
+    const after = scopeHousesForViewer(
+      all,
+      ctx({ viewer: "pass", revealed: true }),
+      duringEventNightOpen,
+    );
     const homeAfter = after.houses.find((house) => house.id === "בית-1")!;
     assert.equal(homeAfter.address, "יהודית 15");
     assert.equal(homeAfter.arrival, "קומה 2");
@@ -112,7 +127,11 @@ describe("night pass scope", () => {
   });
 
   it("a home in a business's building stays private until reveal, like any home", () => {
-    const before = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: false }));
+    const before = scopeHousesForViewer(
+      all,
+      ctx({ viewer: "pass", revealed: false }),
+      duringEventNightOpen,
+    );
     const mate = before.houses.find((house) => house.id === "בית-3")!;
     assert.equal(mate.address, "");
     assert.equal(mate.arrival, "");
@@ -120,14 +139,22 @@ describe("night pass scope", () => {
     assert.notEqual(mate.locationPublic, true);
     assert.equal(before.houses.find((house) => house.id === "נק-1")!.address, "סוקולוב 10");
 
-    const after = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: true }));
+    const after = scopeHousesForViewer(
+      all,
+      ctx({ viewer: "pass", revealed: true }),
+      duringEventNightOpen,
+    );
     const mateAfter = after.houses.find((house) => house.id === "בית-3")!;
     assert.equal(mateAfter.address, "סוקולוב 10");
     assert.equal(mateAfter.notes, "יש כלב");
   });
 
   it("strips visitor notes from homes before reveal", () => {
-    const before = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: false }));
+    const before = scopeHousesForViewer(
+      all,
+      ctx({ viewer: "pass", revealed: false }),
+      duringEventNightOpen,
+    );
     assert.equal(before.houses.find((house) => house.id === "בית-1")!.notes, "");
   });
 
@@ -135,6 +162,7 @@ describe("night pass scope", () => {
     const scoped = scopeHousesForViewer(
       all,
       ctx({ viewer: "owner", revealed: true, ownedIds: new Set(["בית-2"]) }),
+      duringEventNightOpen,
     );
     assert.equal(scoped.houses.length, 4);
     assert.equal(scoped.hiddenHouseCount, 0);
@@ -150,8 +178,18 @@ describe("night pass scope", () => {
   });
 
   it("admin sees everything with details", () => {
-    const scoped = scopeHousesForViewer(all, ctx({ viewer: "admin" }));
+    const scoped = scopeHousesForViewer(all, ctx({ viewer: "admin" }), duringEventNightOpen);
     assert.equal(scoped.houses.length, 4);
     assert.equal(scoped.houses.find((house) => house.id === "בית-1")!.address, "יהודית 15");
+  });
+
+  it("after closing, pass holders keep address but not arrival or visitor notes", () => {
+    const afterClose = new Date(2026, 9, 31, 22, 0, 0, 0);
+    const scoped = scopeHousesForViewer(all, ctx({ viewer: "pass", revealed: true }), afterClose);
+    const homeAfter = scoped.houses.find((house) => house.id === "בית-1")!;
+    assert.equal(homeAfter.address, "יהודית 15");
+    assert.equal(homeAfter.arrival, "");
+    assert.equal(homeAfter.notes, "");
+    assert.equal(scoped.houses.find((house) => house.id === "נק-1")!.arrival, "כניסה מהחצר");
   });
 });

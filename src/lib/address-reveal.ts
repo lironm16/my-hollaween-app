@@ -6,6 +6,10 @@ import { displayNeighborhoodName } from "@/lib/i18n/neighborhood-labels";
 import { translate } from "@/lib/i18n/translate";
 import { mergeAddressRevealSchedule } from "@/lib/event-settings";
 import { dateInEventTimeZone } from "@/lib/event-timezone";
+import { isPoiHouse } from "@/lib/house-kind";
+import { isHoursNightOver, type HoursSource } from "@/lib/hours";
+import { isPracticeHouse } from "@/lib/practice-house";
+import { isSchoolCampusAddress } from "@/lib/school-campus";
 import type { AddressRevealSchedule, PublicHouse } from "@/lib/types";
 
 export type AddressRevealContext = {
@@ -99,14 +103,58 @@ export function redactHouseLocationDetails<
   return { ...house, address: "", arrival: "", ...(house.notes !== undefined ? { notes: "" } : {}) };
 }
 
+/** Homes only — businesses / schools keep arrival and visitor notes after closing. */
+export function isHomeVisitDetailSubject(
+  house: Pick<PublicHouse, "kind" | "address" | "isPractice">,
+): boolean {
+  if (isPracticeHouse(house)) return false;
+  if (isPoiHouse(house)) return false;
+  if (isSchoolCampusAddress(house.address)) return false;
+  return true;
+}
+
+export function shouldRedactPostHoursVisitDetails(
+  house: HoursSource & Pick<PublicHouse, "kind" | "address" | "isPractice">,
+  now: Date,
+  bypass = false,
+): boolean {
+  if (bypass) return false;
+  if (!isHomeVisitDetailSubject(house)) return false;
+  return isHoursNightOver(house, now);
+}
+
+/** After the house’s last window: hide arrival and visitor notes; keep address and description. */
+export function redactPostHoursVisitDetails<
+  T extends Pick<PublicHouse, "arrival"> & { notes?: string },
+>(house: T): T {
+  const arrival = house.arrival?.trim() ?? "";
+  const notes = house.notes?.trim() ?? "";
+  if (!arrival && !notes) return house;
+  return { ...house, arrival: "", ...(house.notes !== undefined ? { notes: "" } : {}) };
+}
+
+export function applyPostHoursVisitDetailPolicy<
+  T extends HoursSource & Pick<PublicHouse, "kind" | "address" | "isPractice" | "arrival"> & {
+    notes?: string;
+  },
+>(house: T, now: Date, bypass = false): T {
+  if (!shouldRedactPostHoursVisitDetails(house, now, bypass)) return house;
+  return redactPostHoursVisitDetails(house);
+}
+
+function postHoursBypass(houseId: string, ctx: AddressRevealContext): boolean {
+  return ctx.isAdmin || ctx.ownedHouseIds.has(houseId);
+}
+
 /** Strip location fields for the public catalog before reveal time. */
 export function publicHouseForCatalog(
   house: PublicHouse,
   now = new Date(),
   schedule = mergeAddressRevealSchedule(),
 ): PublicHouse {
-  if (isAddressRevealed(now, schedule)) return house;
-  return redactHouseLocationDetails(house);
+  let next = isAddressRevealed(now, schedule) ? house : redactHouseLocationDetails(house);
+  next = applyPostHoursVisitDetailPolicy(next, now, false);
+  return next;
 }
 
 export function formatDisplayAddressWithPolicy(
@@ -145,12 +193,27 @@ export function clusterDisplayAddressWithPolicy(
 }
 
 export function visibleArrivalWithPolicy(
-  house: Pick<PublicHouse, "arrival">,
+  house: HoursSource & Pick<PublicHouse, "arrival" | "kind" | "address" | "isPractice">,
   houseId: string,
   ctx: AddressRevealContext,
 ): string {
   if (!canViewHouseLocationDetails(houseId, ctx)) return "";
+  if (shouldRedactPostHoursVisitDetails(house, ctx.now, postHoursBypass(houseId, ctx))) {
+    return "";
+  }
   return house.arrival?.trim() ?? "";
+}
+
+export function visibleNotesWithPolicy(
+  house: HoursSource & Pick<PublicHouse, "kind" | "address" | "isPractice"> & { notes?: string },
+  houseId: string,
+  ctx: AddressRevealContext,
+): string {
+  if (!canViewHouseLocationDetails(houseId, ctx)) return "";
+  if (shouldRedactPostHoursVisitDetails(house, ctx.now, postHoursBypass(houseId, ctx))) {
+    return "";
+  }
+  return house.notes?.trim() ?? "";
 }
 
 export function mapsNavigationAllowed(houseId: string, ctx: AddressRevealContext) {
@@ -164,20 +227,24 @@ export function housesWithLocationPolicy(
 ): PublicHouse[] {
   let changed = false;
   const next = houses.map((house) => {
-    if (house.locationPublic || canViewHouseLocationDetails(house.id, ctx)) {
-      return house;
+    let row = house;
+    if (!house.locationPublic && !canViewHouseLocationDetails(house.id, ctx)) {
+      row = redactHouseLocationDetails(house);
     }
-    const redacted = redactHouseLocationDetails(house);
-    if (redacted !== house) changed = true;
-    return redacted;
+    row = applyPostHoursVisitDetailPolicy(row, ctx.now, postHoursBypass(house.id, ctx));
+    if (row !== house) changed = true;
+    return row;
   });
   return changed ? next : (houses as PublicHouse[]);
 }
 
 export function houseWithLocationPolicy(house: PublicHouse, ctx: AddressRevealContext): PublicHouse {
-  return house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
-    ? house
-    : redactHouseLocationDetails(house);
+  let row =
+    house.locationPublic || canViewHouseLocationDetails(house.id, ctx)
+      ? house
+      : redactHouseLocationDetails(house);
+  row = applyPostHoursVisitDetailPolicy(row, ctx.now, postHoursBypass(house.id, ctx));
+  return row;
 }
 
 export function makeAddressRevealContext(input: {
