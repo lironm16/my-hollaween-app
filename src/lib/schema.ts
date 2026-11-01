@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { NEIGHBORHOODS } from "@/lib/config";
 import {
+  ACCESSIBILITY_LEVELS,
   DECOR_LEVELS,
+  ENTRY_LEVELS,
+  HOUSE_DISPLAY_TIERS,
   HOUSE_KINDS,
   HOUSE_THEMES,
   POI_CATEGORIES,
@@ -91,19 +94,28 @@ const houseFields = z.object({
   openTo2: optionalClockField,
   notes: z.string().trim().max(HOUSE_FIELD_LIMITS.notes.max),
   accessible: z.boolean(),
+  addressEn: z.string().trim().max(HOUSE_FIELD_LIMITS.address.max).optional().nullable(),
+  accessibilityLevel: z.enum(ACCESSIBILITY_LEVELS).optional(),
+  entryLevel: z.enum(ENTRY_LEVELS).optional(),
+  displayTier: z.enum(HOUSE_DISPLAY_TIERS).optional(),
   decorLevel: z.enum(DECOR_LEVELS).optional(),
   decorated: z.boolean().optional(),
   neighborhood: z.union([z.enum(NEIGHBORHOODS), z.null()]).optional(),
 });
 
-export const houseSubmitSchema = houseFields.extend({
-  addedBy: z
-    .string()
-    .trim()
-    .min(HOUSE_FIELD_LIMITS.addedBy.min)
-    .max(HOUSE_FIELD_LIMITS.addedBy.max),
-  ownerPhone: ownerPhoneSchema,
-});
+export const houseSubmitSchema = houseFields
+  .extend({
+    addedBy: z
+      .string()
+      .trim()
+      .min(HOUSE_FIELD_LIMITS.addedBy.min)
+      .max(HOUSE_FIELD_LIMITS.addedBy.max),
+    ownerPhone: ownerPhoneSchema,
+    accessibilityLevel: z.enum(ACCESSIBILITY_LEVELS),
+    entryLevel: z.enum(ENTRY_LEVELS),
+    displayTier: z.enum(HOUSE_DISPLAY_TIERS),
+  })
+;
 
 export const houseInputSchema = houseFields.extend({
   theme: z.enum(HOUSE_THEMES).default("pumpkin"),

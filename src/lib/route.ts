@@ -11,6 +11,7 @@ import { translate } from "@/lib/i18n/translate";
 import { formatRouteDurationPhrase } from "@/lib/route-duration-display";
 import { estimateWalkingMeters } from "@/lib/walk-distance-estimate";
 import { houseHeadline } from "@/lib/labels";
+import { housePassesAccessibleRouteFilter } from "@/lib/house-visitor-fields";
 import type { PublicHouse } from "@/lib/types";
 
 export type LatLng = { lat: number; lng: number };
@@ -70,7 +71,7 @@ export function buildWalkingRoute(
   const accessible = Boolean(options?.accessible);
   const candidates = houses
     .filter((house) => Number.isFinite(house.lat) && Number.isFinite(house.lng))
-    .filter((house) => (accessible ? house.accessible : true))
+    .filter((house) => (accessible ? housePassesAccessibleRouteFilter(house) : true))
     .slice();
   if (candidates.length === 0) return null;
 
@@ -137,7 +138,7 @@ export function buildWalkingRouteOrdered(
   const accessible = Boolean(options?.accessible);
   const candidates = houses
     .filter((house) => Number.isFinite(house.lat) && Number.isFinite(house.lng))
-    .filter((house) => (accessible ? house.accessible : true));
+    .filter((house) => (accessible ? housePassesAccessibleRouteFilter(house) : true));
   const clusters = clusterHousesInOrder(candidates);
   if (clusters.length === 0) return null;
   const startedFrom = options?.startedFrom ?? "neighborhood";

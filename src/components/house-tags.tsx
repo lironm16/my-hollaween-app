@@ -20,6 +20,7 @@ import {
   resolveDecorLevel,
   treatLevel,
 } from "@/lib/house-state";
+import { resolveAccessibilityLevel } from "@/lib/house-visitor-fields";
 import type { DecorLevel, ScareLevel, TreatId, TreatStock } from "@/lib/types";
 import { useLocale } from "@/hooks/use-locale";
 
@@ -68,6 +69,8 @@ export function HouseTags({
     lat?: number;
     lng?: number;
     accessible?: boolean;
+    accessibilityLevel?: "accessible" | "partial" | "not_accessible";
+    entryLevel?: "ground_entrance_lobby" | "not_ground";
     treats?: TreatId[];
     treatStock?: TreatStock;
     scareLevel?: ScareLevel;
@@ -120,11 +123,45 @@ export function HouseTags({
           glyphClassName={pinGlyphScale}
           locale={locale}
         />
-        {house.accessible ? (
-          <span title={t("houseSign.accessible")} aria-label={t("houseSign.accessible")}>
-            <StrollerSign className={signSize} />
-          </span>
-        ) : null}
+        {(() => {
+          const level = resolveAccessibilityLevel(house);
+          if (level === "accessible" || (!level && house.accessible)) {
+            return (
+              <span title={t("houseSign.accessible")} aria-label={t("houseSign.accessible")}>
+                <StrollerSign className={signSize} />
+              </span>
+            );
+          }
+          if (level === "partial") {
+            return (
+              <span
+                title={t("houseSign.accessibilityPartial")}
+                aria-label={t("houseSign.accessibilityPartial")}
+                className={cn(
+                  "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1d1028] text-base font-bold text-orange-200 ring-1 ring-orange-500/40",
+                  signSize,
+                )}
+              >
+                ~
+              </span>
+            );
+          }
+          if (level === "not_accessible") {
+            return (
+              <span
+                title={t("houseSign.accessibilityNot")}
+                aria-label={t("houseSign.accessibilityNot")}
+                className={cn(
+                  "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1d1028] text-base font-bold text-violet-300 ring-1 ring-violet-500/40",
+                  signSize,
+                )}
+              >
+                ✗
+              </span>
+            );
+          }
+          return null;
+        })()}
         {gluten ? <SensitivitySign kind="glutenFree" out={glutenOut} className={signSize} /> : null}
         {offersNutsFree(withTreats) ? <SensitivitySign kind="nutsFree" className={signSize} /> : null}
         {offersSesameFree(withTreats) ? <SensitivitySign kind="sesameFree" className={signSize} /> : null}

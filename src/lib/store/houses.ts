@@ -14,6 +14,7 @@ import { normalizeAddressFields } from "@/lib/address-fields";
 import { pushAlertsEnabled } from "@/lib/push-enabled";
 import { assertRealAddress } from "@/lib/geocode";
 import { ADD_HOUSE_OUTSIDE_EVENT_ZONES_HE, eventNeighborhoodForNewHousePin } from "@/lib/add-house-event-zone";
+import { accessibleBooleanFromLevel, isAccessibilityLevel } from "@/lib/house-visitor-fields";
 import { pinCoordsForOwnerSubmit } from "@/lib/owner-map-pin";
 import { alignPublicHouseCoords } from "@/lib/house-footprint-align";
 import {
@@ -203,6 +204,13 @@ export async function submitHouse(
       isSchoolCampusAddress(addressFields.address)
         ? nextBoothNumberForAddress(db.houses, addressFields.address, "real")
         : null;
+    const accessibilityLevel = isAccessibilityLevel(submitInput.accessibilityLevel)
+      ? submitInput.accessibilityLevel
+      : undefined;
+    const accessible =
+      accessibilityLevel !== undefined
+        ? accessibleBooleanFromLevel(accessibilityLevel)
+        : Boolean(submitInput.accessible);
     const house: House = {
       ...submitInput,
       lat: positioned.lat,
@@ -217,6 +225,11 @@ export async function submitHouse(
       visit,
       ...hours,
       id,
+      accessibilityLevel,
+      entryLevel: submitInput.entryLevel,
+      displayTier: submitInput.displayTier,
+      addressEn: submitInput.addressEn ?? null,
+      accessible,
       decorLevel: decor.decorLevel,
       decorated: decor.decorated,
       soldOut: visit === "closed",
@@ -303,6 +316,13 @@ function sanitizeOwnerPatch(
   }
   if (patch.notes !== undefined) next.notes = patch.notes;
   if (patch.accessible !== undefined) next.accessible = patch.accessible;
+  if (patch.addressEn !== undefined) next.addressEn = patch.addressEn;
+  if (patch.accessibilityLevel !== undefined) {
+    next.accessibilityLevel = patch.accessibilityLevel;
+    next.accessible = accessibleBooleanFromLevel(patch.accessibilityLevel);
+  }
+  if (patch.entryLevel !== undefined) next.entryLevel = patch.entryLevel;
+  if (patch.displayTier !== undefined) next.displayTier = patch.displayTier;
   if (patch.decorLevel !== undefined) next.decorLevel = patch.decorLevel;
   if (patch.decorated !== undefined) next.decorated = patch.decorated;
   if (patch.ownerFrozenUntil !== undefined) next.ownerFrozenUntil = patch.ownerFrozenUntil;
@@ -547,7 +567,15 @@ export async function adminUpdate(
       house.openTo2 = synced.openTo2;
     }
     if (patch.notes !== undefined) house.notes = patch.notes;
-    if (patch.accessible !== undefined) house.accessible = patch.accessible;
+    if (patch.addressEn !== undefined) house.addressEn = patch.addressEn;
+    if (patch.accessibilityLevel !== undefined) {
+      house.accessibilityLevel = patch.accessibilityLevel;
+      house.accessible = accessibleBooleanFromLevel(patch.accessibilityLevel);
+    } else if (patch.accessible !== undefined) {
+      house.accessible = patch.accessible;
+    }
+    if (patch.entryLevel !== undefined) house.entryLevel = patch.entryLevel;
+    if (patch.displayTier !== undefined) house.displayTier = patch.displayTier;
     if (
       patch.decorLevel !== undefined ||
       patch.decorated !== undefined ||

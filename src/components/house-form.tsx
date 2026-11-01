@@ -32,7 +32,10 @@ import {
 import { eventNeighborhoodForNewHousePin } from "@/lib/add-house-event-zone";
 import {
   SENSITIVITY_OPTIONS,
+  type AccessibilityLevel,
   type DecorLevel,
+  type EntryLevel,
+  type HouseDisplayTier,
   type HouseInput,
   type HouseKind,
   type ScareLevel,
@@ -40,9 +43,14 @@ import {
   type TreatId,
   type VisitState,
 } from "@/lib/types";
+import {
+  accessibleBooleanFromLevel,
+  resolveAccessibilityLevel,
+  resolveDisplayTier,
+  resolveEntryLevel,
+} from "@/lib/house-visitor-fields";
 import { candyTone, CandySign, type CandyTone } from "@/components/candy-glyphs";
 import { freezeExpireIso, isOwnerFrozen, resolveDecorLevel } from "@/lib/house-state";
-import { StrollerSign } from "@/components/symbols";
 import { LocationKindSign } from "@/components/location-kind-sign";
 import { PracticeLocationSign } from "@/components/practice-location-sign";
 import { ScarePumpkin, ScareSign } from "@/components/scare-glyphs";
@@ -130,6 +138,9 @@ export function HouseForm({
     ownerFrozenUntil?: string | null;
     addedBy?: string | null;
     ownerPhone?: string | null;
+    accessibilityLevel?: AccessibilityLevel;
+    entryLevel?: EntryLevel;
+    displayTier?: HouseDisplayTier;
   };
   submitLabel: string;
   onSubmit: (input: HouseInput, extras?: HouseFormExtras) => Promise<void> | void;
@@ -176,6 +187,15 @@ export function HouseForm({
   const [addedBy, setAddedBy] = useState(() => initial?.addedBy?.trim() ?? "");
   const [ownerPhone, setOwnerPhone] = useState(() => initial?.ownerPhone?.trim() ?? "");
   const [ownerPhoneTouched, setOwnerPhoneTouched] = useState(false);
+  const [accessibilityLevel, setAccessibilityLevel] = useState<AccessibilityLevel | null>(() =>
+    resolveAccessibilityLevel(initial ?? {}) ?? null,
+  );
+  const [entryLevel, setEntryLevel] = useState<EntryLevel | null>(
+    () => resolveEntryLevel(initial ?? {}) ?? null,
+  );
+  const [displayTier, setDisplayTier] = useState<HouseDisplayTier | null>(
+    () => resolveDisplayTier(initial ?? {}) ?? null,
+  );
   const existingPhoto = initial?.photoUrl ?? "";
   const isNewHouse = !initial?.id;
   const ownerPhoneRequired = isNewHouse || !initial?.ownerPhone?.trim();
@@ -462,6 +482,18 @@ export function HouseForm({
           return;
         }
         const phone = normalizeOwnerPhone(ownerPhone);
+        if (!accessibilityLevel) {
+          toast.error(t("houseForm.needAccessibility"));
+          return;
+        }
+        if (!entryLevel) {
+          toast.error(t("houseForm.needEntryLevel"));
+          return;
+        }
+        if (!displayTier) {
+          toast.error(t("houseForm.needDisplayTier"));
+          return;
+        }
         if (decorLevel === "none" && candy !== "plenty" && candy !== "low" && !(pauseCloseEnabled && nightStatus === "stop") && initial?.visit !== "closed") {
           toast.error(t("houseForm.needDecorOrCandy"));
           return;
@@ -509,6 +541,10 @@ export function HouseForm({
           visit,
           decorLevel,
           decorated: decorLevel !== "none",
+          accessibilityLevel,
+          entryLevel,
+          displayTier,
+          accessible: accessibleBooleanFromLevel(accessibilityLevel),
           openHours: hours.openHours,
           openFrom: hours.openFrom,
           openTo: hours.openTo,
@@ -680,6 +716,9 @@ export function HouseForm({
             maxLength={HOUSE_FIELD_LIMITS.address.max}
             onFocusChange={setAddressFieldActive}
           />
+          {!isNewHouse ? (
+            <p className="mt-1 text-base text-violet-300">{t("houseForm.editAddressHint")}</p>
+          ) : null}
         </Field>
         <Field
           label={t("houseForm.arrival")}
@@ -740,6 +779,63 @@ export function HouseForm({
             </p>
           </div>
         ) : null}
+      </FormSection>
+      <FormSection title={t("houseForm.accessibilitySection")} hint={t("houseForm.accessibilityHint")}>
+        <div className="space-y-2">
+          <VisitorOptionCard
+            selected={accessibilityLevel === "accessible"}
+            onClick={() => setAccessibilityLevel("accessible")}
+            title={t("houseForm.accessibilityAccessible")}
+            hint={t("houseForm.accessibilityAccessibleHint")}
+          />
+          <VisitorOptionCard
+            selected={accessibilityLevel === "partial"}
+            onClick={() => setAccessibilityLevel("partial")}
+            title={t("houseForm.accessibilityPartial")}
+            hint={t("houseForm.accessibilityPartialHint")}
+          />
+          <VisitorOptionCard
+            selected={accessibilityLevel === "not_accessible"}
+            onClick={() => setAccessibilityLevel("not_accessible")}
+            title={t("houseForm.accessibilityNot")}
+            hint={t("houseForm.accessibilityNotHint")}
+          />
+        </div>
+      </FormSection>
+      <FormSection title={t("houseForm.entrySection")} hint={t("houseForm.entryHint")}>
+        <div className="space-y-2">
+          <VisitorOptionCard
+            selected={entryLevel === "ground_entrance_lobby"}
+            onClick={() => setEntryLevel("ground_entrance_lobby")}
+            title={t("houseForm.entryGround")}
+            hint={t("houseForm.entryGroundHint")}
+          />
+          <VisitorOptionCard
+            selected={entryLevel === "not_ground"}
+            onClick={() => setEntryLevel("not_ground")}
+            title={t("houseForm.entryNotGround")}
+            hint={t("houseForm.entryNotGroundHint")}
+          />
+        </div>
+      </FormSection>
+      <FormSection title={t("houseForm.displayTierSection")} hint={t("houseForm.displayTierHint")}>
+        <div className="space-y-2">
+          <VisitorOptionCard
+            selected={displayTier === "subtle"}
+            onClick={() => setDisplayTier("subtle")}
+            title={t("houseForm.displayTierSubtle")}
+          />
+          <VisitorOptionCard
+            selected={displayTier === "very_nice"}
+            onClick={() => setDisplayTier("very_nice")}
+            title={t("houseForm.displayTierVeryNice")}
+          />
+          <VisitorOptionCard
+            selected={displayTier === "wild"}
+            onClick={() => setDisplayTier("wild")}
+            title={t("houseForm.displayTierWild")}
+          />
+        </div>
       </FormSection>
       <FormSection title={t("houseForm.hoursSection")}>
         <div className="space-y-2">
@@ -866,15 +962,6 @@ export function HouseForm({
         </Field>
         <Field label={t("houseForm.markWhatFits")}>
           <div className="space-y-2 rounded-xl bg-[#1d1028] p-3 ring-1 ring-orange-500/20">
-            <CheckRow
-              checked={form.accessible}
-              onChange={(accessible) => setForm({ ...form, accessible })}
-            >
-              <span className="inline-flex items-center gap-2">
-                <StrollerSign />
-                {t("houseForm.accessible")}
-              </span>
-            </CheckRow>
             {candyOffered
               ? SENSITIVITY_OPTIONS.map((id) => (
                   <CheckRow
@@ -1007,18 +1094,49 @@ function NightStatusChip({
   );
 }
 
+function VisitorOptionCard({
+  selected,
+  onClick,
+  title,
+  hint,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  hint?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "w-full rounded-xl px-4 py-3 text-start ring-1 transition",
+        selected
+          ? "bg-orange-500/15 ring-orange-400/60"
+          : "bg-[#1d1028] ring-orange-500/20 hover:bg-orange-500/5",
+      )}
+    >
+      <p className="text-lg font-medium text-orange-50">{title}</p>
+      {hint ? <p className="mt-0.5 text-base text-violet-200">{hint}</p> : null}
+    </button>
+  );
+}
+
 function FormSection({
   title,
+  hint,
   children,
 }: {
   title: string;
+  hint?: string;
   children: ReactNode;
 }) {
   return (
     <section className="space-y-4">
-      <h2 className="border-b border-orange-500/25 pb-1 text-xl font-semibold text-orange-200">
-        {title}
-      </h2>
+      <div className="border-b border-orange-500/25 pb-1">
+        <h2 className="text-xl font-semibold text-orange-200">{title}</h2>
+        {hint ? <p className="mt-1 text-base text-violet-300">{hint}</p> : null}
+      </div>
       {children}
     </section>
   );

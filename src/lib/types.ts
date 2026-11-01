@@ -13,6 +13,21 @@ export type LocationKindFilter = (typeof LOCATION_KIND_FILTERS)[number];
 export const DECOR_LEVELS = ["none", "mild", "medium", "heavy"] as const;
 export type DecorLevel = (typeof DECOR_LEVELS)[number];
 
+import type {
+  AccessibilityLevel,
+  EntryLevel,
+  HouseDisplayTier,
+} from "@/lib/house-visitor-fields";
+
+export {
+  ACCESSIBILITY_LEVELS,
+  ENTRY_LEVELS,
+  HOUSE_DISPLAY_TIERS,
+  type AccessibilityLevel,
+  type EntryLevel,
+  type HouseDisplayTier,
+} from "@/lib/house-visitor-fields";
+
 export const SENSITIVITY_OPTIONS = ["glutenFree", "nutsFree", "sesameFree", "vegan"] as const;
 export type SensitivityId = (typeof SENSITIVITY_OPTIONS)[number];
 
@@ -71,6 +86,14 @@ export type House = {
   theme: HouseTheme;
   /** Street + house number only (e.g. יהודית 15). */
   address: string;
+  /** English street line saved at geocode time (optional on legacy rows). */
+  addressEn?: string | null;
+  /** Wheelchair / stairs — replaces legacy boolean when set. */
+  accessibilityLevel?: AccessibilityLevel;
+  /** Ground floor / lobby vs upper floor. */
+  entryLevel?: EntryLevel;
+  /** Self-reported outdoor decor effort (עדין ונחמד …). */
+  displayTier?: HouseDisplayTier;
   /** One of the map neighborhoods; joined for display only. */
   neighborhood?: NeighborhoodId | null;
   arrival: string;
@@ -151,6 +174,10 @@ export type HouseInput = {
   openTo2?: string;
   notes: string;
   accessible: boolean;
+  addressEn?: string | null;
+  accessibilityLevel?: AccessibilityLevel;
+  entryLevel?: EntryLevel;
+  displayTier?: HouseDisplayTier;
   decorLevel?: DecorLevel;
   decorated?: boolean;
   /** Internal contact — set on create/full edit only. */
