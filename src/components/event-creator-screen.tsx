@@ -279,40 +279,20 @@ function ZoneContainmentDialog({
   );
 }
 
-function ViewToggle({
-  view,
-  onViewChange,
-  zoneCount,
-}: {
-  view: CreatorView;
-  onViewChange: (v: CreatorView) => void;
-  zoneCount: number;
-}) {
+function ViewToggle({ view, onViewChange }: { view: CreatorView; onViewChange: (v: CreatorView) => void }) {
   const switchTo = view === "map" ? "list" : "map";
   const SwitchIcon = switchTo === "list" ? List : MapIcon;
   const switchLabel = switchTo === "list" ? "רשימה" : "מפה";
 
   return (
-    <div className="inline-flex shrink-0 items-center gap-1">
-      <button
-        type="button"
-        onClick={() => onViewChange(switchTo)}
-        aria-label={
-          switchTo === "list" && zoneCount > 0 ? `רשימה, ${zoneCount} אזורים` : switchLabel
-        }
-        className="flex size-11 items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white transition hover:bg-white/10"
-      >
-        <SwitchIcon className="size-6" aria-hidden />
-      </button>
-      {switchTo === "list" && zoneCount > 0 ? (
-        <span
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-600/90 text-xs font-bold text-white tabular-nums"
-          title={`${zoneCount} אזורים`}
-        >
-          {zoneCount}
-        </span>
-      ) : null}
-    </div>
+    <button
+      type="button"
+      onClick={() => onViewChange(switchTo)}
+      aria-label={switchLabel}
+      className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white transition hover:bg-white/10"
+    >
+      <SwitchIcon className="size-6" aria-hidden />
+    </button>
   );
 }
 
@@ -415,14 +395,13 @@ export function EventCreatorScreen() {
   const [loadingMap, setLoadingMap] = useState(false);
   const [mapFocusId, setMapFocusId] = useState<string | null>(null);
   const [boundaryKind, setBoundaryKind] = useState<EventBoundaryKind>("neighborhood");
-  const [pointDraft, setPointDraft] = useState<{
+  const [mapPickDraft, setMapPickDraft] = useState<{
     lat: number;
     lng: number;
-    label: string;
-    city?: string;
     loading: boolean;
+    hit: BoundarySearchHit | null;
   } | null>(null);
-  const pointDraftGeocodeRef = useRef(0);
+  const mapPickDraftReqRef = useRef(0);
   const searchChromeRef = useRef<HTMLDivElement>(null);
   const [containmentPrompt, setContainmentPrompt] = useState<{
     hit: BoundarySearchHit;
@@ -512,95 +491,78 @@ export function EventCreatorScreen() {
     setContainmentPrompt(null);
   }, [applyPickHit, containmentPrompt]);
 
-  const mapPickInFlight = useRef(false);
-
-  const geocodePointDraft = useCallback(async (lat: number, lng: number) => {
-    const token = ++pointDraftGeocodeRef.current;
-    const rLat = roundEventBoundaryCoord(lat);
-    const rLng = roundEventBoundaryCoord(lng);
-    setPointDraft({ lat: rLat, lng: rLng, label: "", loading: true });
-    try {
-      const res = await fetch(
-        `/api/event-boundaries/pick?lat=${encodeURIComponent(String(rLat))}&lng=${encodeURIComponent(String(rLng))}&kind=point`,
-      );
-      const body = (await res.json()) as { ok?: boolean; hit?: BoundarySearchHit };
-      if (token !== pointDraftGeocodeRef.current) return;
-      if (body.hit) {
-        setPointDraft({
-          lat: rLat,
-          lng: rLng,
-          label: body.hit.label,
-          city: body.hit.city,
-          loading: false,
-        });
-        return;
+  const loadMapPickDraft = useCallback(
+    async (lat: number, lng: number, kind: EventBoundaryKind) => {
+      const token = ++mapPickDraftReqRef.current;
+      const rLat = roundEventBoundaryCoord(lat);
+      const rLng = roundEventBoundaryCoord(lng);
+      setMapPickDraft({ lat: rLat, lng: rLng, loading: true, hit: null });
+      setMapFocusId(null);
+      try {
+        const res = await fetch(
+          `/api/event-boundaries/pick?lat=${encodeURIComponent(String(rLat))}&lng=${encodeURIComponent(String(rLng))}&kind=${encodeURIComponent(kind)}`,
+        );
+        const body = (await res.json()) as { ok?: boolean; hit?: BoundarySearchHit };
+        if (token !== mapPickDraftReqRef.current) return;
+        if (body.hit) {
+          setMapPickDraft({
+            lat: rLat,
+            lng: rLng,
+            loading: false,
+            hit: {
+              ...body.hit,
+              lat: body.hit.lat ?? rLat,
+              lng: body.hit.lng ?? rLng,
+            },
+          });
+          return;
+        }
+        if (kind === "point") {
+          setMapPickDraft({
+            lat: rLat,
+            lng: rLng,
+            loading: false,
+            hit: {
+              kind: "point",
+              id: zoneKeyPoint(rLat, rLng),
+              label: `${rLat.toFixed(5)}, ${rLng.toFixed(5)}`,
+              lat: rLat,
+              lng: rLng,
+            },
+          });
+          return;
+        }
+        setMapPickDraft(null);
+        toast.message(MAP_TAP_EMPTY_MESSAGE[kind]);
+      } catch {
+        if (token !== mapPickDraftReqRef.current) return;
+        setMapPickDraft(null);
+        toast.error("לא הצלחנו לזהות אזור");
       }
-      setPointDraft({
-        lat: rLat,
-        lng: rLng,
-        label: `${rLat.toFixed(5)}, ${rLng.toFixed(5)}`,
-        loading: false,
-      });
-    } catch {
-      if (token !== pointDraftGeocodeRef.current) return;
-      setPointDraft({
-        lat: rLat,
-        lng: rLng,
-        label: `${rLat.toFixed(5)}, ${rLng.toFixed(5)}`,
-        loading: false,
-      });
-    }
-  }, []);
+    },
+    [],
+  );
 
   const onMapBackgroundTap = useCallback(
-    async (lat: number, lng: number) => {
+    (lat: number, lng: number) => {
       const onSelected = selectedZoneIdAtPoint(mapFeatures, selectedIds, lat, lng);
       if (onSelected) {
         setMapFocusId((cur) => (cur === onSelected ? null : onSelected));
         return;
       }
-      if (boundaryKind === "point") {
-        void geocodePointDraft(lat, lng);
-        return;
-      }
-      if (mapPickInFlight.current) return;
-      mapPickInFlight.current = true;
-      try {
-        const res = await fetch(
-          `/api/event-boundaries/pick?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}&kind=${encodeURIComponent(boundaryKind)}`,
-        );
-        const body = (await res.json()) as { ok?: boolean; hit?: BoundarySearchHit };
-        if (body.hit) {
-          await attemptPickHit(body.hit);
-          return;
-        }
-        toast.message(MAP_TAP_EMPTY_MESSAGE[boundaryKind]);
-      } catch {
-        toast.error("לא הצלחנו לזהות אזור");
-      } finally {
-        mapPickInFlight.current = false;
-      }
+      void loadMapPickDraft(lat, lng, boundaryKind);
     },
-    [attemptPickHit, boundaryKind, geocodePointDraft, mapFeatures, selectedIds],
+    [boundaryKind, loadMapPickDraft, mapFeatures, selectedIds],
   );
 
-  const confirmPointDraft = useCallback(() => {
-    if (!pointDraft || pointDraft.loading) return;
-    const hit: BoundarySearchHit = {
-      kind: "point",
-      id: zoneKeyPoint(pointDraft.lat, pointDraft.lng),
-      label: pointDraft.label,
-      city: pointDraft.city,
-      subtitle: pointDraft.city,
-      lat: pointDraft.lat,
-      lng: pointDraft.lng,
-    };
-    void attemptPickHit(hit);
-    setPointDraft(null);
-  }, [attemptPickHit, pointDraft]);
+  const confirmMapPickDraft = useCallback(() => {
+    if (!mapPickDraft || mapPickDraft.loading || !mapPickDraft.hit) return;
+    void attemptPickHit(mapPickDraft.hit);
+    setMapPickDraft(null);
+  }, [attemptPickHit, mapPickDraft]);
 
   useEffect(() => {
-    if (boundaryKind !== "point") setPointDraft(null);
+    setMapPickDraft(null);
   }, [boundaryKind]);
 
   const removeZone = useCallback(
@@ -750,7 +712,7 @@ export function EventCreatorScreen() {
                 placeholder={BOUNDARY_KIND_LABEL[boundaryKind]}
                 boundaryKind={boundaryKind}
               />
-              <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
+              <ViewToggle view={view} onViewChange={setView} />
             </div>
             {suggestOpen && query.trim().length > 0 && view === "map" ? (
               <BoundarySuggestPanel
@@ -783,8 +745,12 @@ export function EventCreatorScreen() {
               onAreaClick={onMapAreaClick}
               onBackgroundTap={onMapBackgroundTap}
               boundsFitKey={boundsFitKey}
-              pointDraft={boundaryKind === "point" ? pointDraft : null}
-              onPointDraftMove={(lat, lng) => void geocodePointDraft(lat, lng)}
+              pointDraft={
+                boundaryKind === "point" && mapPickDraft
+                  ? { lat: mapPickDraft.lat, lng: mapPickDraft.lng }
+                  : null
+              }
+              onPointDraftMove={(lat, lng) => void loadMapPickDraft(lat, lng, "point")}
             />
           </div>
 
@@ -795,33 +761,55 @@ export function EventCreatorScreen() {
                 מעדכן מפה…
               </div>
             ) : null}
-            {pointDraft ? (
-              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center gap-2 rounded-xl border border-violet-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
-                <EventBoundaryKindBadge kind="point" size="lg" />
-                <div className="min-w-0 flex-1 text-right">
-                  <p className="truncate text-lg text-white/90">
-                    {pointDraft.loading ? "מזהה כתובת…" : pointDraft.label}
-                  </p>
-                  <p className="truncate text-xs text-white/45 tabular-nums">
-                    {pointDraft.lat.toFixed(5)}, {pointDraft.lng.toFixed(5)}
-                  </p>
+            {mapPickDraft ? (
+              <div
+                className={cn(
+                  "absolute inset-x-3 bottom-3 z-[400] rounded-xl border bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md",
+                  (mapPickDraft.hit?.kind ?? boundaryKind) === "point"
+                    ? "border-violet-400/35"
+                    : "border-amber-400/35",
+                )}
+              >
+                <div className="flex items-start gap-3 text-right">
+                  <EventBoundaryKindBadge
+                    kind={mapPickDraft.hit?.kind ?? boundaryKind}
+                    size="lg"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-base font-medium leading-snug text-white/90 break-words">
+                      {mapPickDraft.loading
+                        ? "מזהה אזור…"
+                        : (mapPickDraft.hit?.label ?? "—")}
+                    </p>
+                    {mapPickDraft.hit?.city && mapPickDraft.hit.kind !== "city" ? (
+                      <p className="mt-0.5 text-sm leading-snug text-white/45 break-words">
+                        {mapPickDraft.hit.city}
+                      </p>
+                    ) : null}
+                    {(mapPickDraft.hit?.kind ?? boundaryKind) === "point" ? (
+                      <p className="mt-1 text-xs leading-relaxed text-white/40 break-all tabular-nums">
+                        {mapPickDraft.lat.toFixed(5)}, {mapPickDraft.lng.toFixed(5)}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-                <Button
-                  type="button"
-                  disabled={pointDraft.loading}
-                  className="shrink-0 bg-orange-500 px-4 text-base font-semibold text-black hover:bg-orange-400"
-                  onClick={confirmPointDraft}
-                >
-                  הוסף
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => setPointDraft(null)}
-                  className="flex size-11 shrink-0 items-center justify-center rounded-xl text-white/50 hover:bg-white/10"
-                  aria-label="בטל סימון"
-                >
-                  <Trash2 className="size-5" aria-hidden />
-                </button>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    type="button"
+                    disabled={mapPickDraft.loading || !mapPickDraft.hit}
+                    className="min-h-12 flex-1 py-3 text-lg font-semibold bg-orange-500 text-black hover:bg-orange-400"
+                    onClick={confirmMapPickDraft}
+                  >
+                    הוסף
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setMapPickDraft(null)}
+                    className="min-h-12 shrink-0 rounded-xl px-4 text-base font-medium text-white/55 hover:bg-white/10"
+                  >
+                    ביטול
+                  </button>
+                </div>
               </div>
             ) : mapFocusZone ? (
               <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center gap-3 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
@@ -844,7 +832,7 @@ export function EventCreatorScreen() {
             ) : null}
             </>
           ) : (
-            <div className="relative z-10 min-h-0 flex-1 overflow-y-auto bg-[#0c0610] px-3 pb-3 pt-2">
+            <div className="absolute inset-0 z-10 overflow-y-auto overscroll-y-contain bg-[#0c0610] px-3 pb-4 pt-2">
               {draft.zones.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-white/15 py-16 text-center text-lg text-white/45">
                   חפשו למעלה והוסיפו אזור — או עברו למפה
