@@ -7,17 +7,14 @@ import {
   pruneZonesContainedInParents,
 } from "@/lib/event-boundary-zone-prune";
 import { fetchEventBoundaryZoneGeometry } from "@/lib/event-boundary-geometry-client";
-import { ChevronRight, List, Map as MapIcon, Search, Trash2 } from "lucide-react";
+import { ChevronRight, Crosshair, List, Map as MapIcon, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { POINT_TAP_RADIUS_M } from "@/lib/event-boundary-point";
 import { pointInGeoPolygon } from "@/lib/event-boundary-street-geom";
 import { distanceMeters } from "@/lib/geo";
-import {
-  BOUNDARY_KIND_LABEL,
-  EventBoundaryKindBadge,
-} from "@/components/event-boundary-kind-badge";
+import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
 import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
 import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
 import type { BoundarySearchHit, EventBoundaryKind } from "@/lib/event-boundary";
@@ -137,11 +134,11 @@ function BoundarySuggestPanel({
         <p className={cn("px-3 py-3 text-red-300", large ? "text-base" : "text-sm")}>{listError}</p>
       ) : hits.length === 0 ? (
         <p className={cn("px-3 py-3 leading-relaxed text-white/45", large ? "text-base" : "text-sm")}>
-          {boundaryKind === "point" && query?.trim() && !queryEligibleForPointSearch(query)
+          {query?.trim() && !queryEligibleForPointSearch(query) && /\d/.test(query)
             ? "לכתובת מדויקת הוסיפו מספר בית (למשל: ביאליק 12, רמת גן)"
-            : boundaryKind === "street" && query?.trim() && queryEligibleForPointSearch(query)
-              ? "לכתובת עם מספר בחרו נקודה, או הוסיפו עיר (למשל: נחליאלי 4, רמת גן)"
-              : "אין תוצאות"}
+            : query?.trim() && queryEligibleForPointSearch(query)
+              ? "נסו להוסיף עיר, או בחרו נקודה במפה (למשל: נחליאלי 4, רמת גן)"
+              : "אין תוצאות — הוסיפו שם עיר לצמצום"}
         </p>
       ) : (
         <ul className="py-1">
@@ -299,6 +296,32 @@ function ZoneContainmentDialog({
   );
 }
 
+function MapTapModeButton({
+  active,
+  onToggle,
+}: {
+  active: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      aria-label={active ? "יציאה ממצב בחירה במפה" : "בחירה במפה"}
+      title={active ? "מצב בחירה במפה פעיל" : "בחירה במפה"}
+      onClick={onToggle}
+      className={cn(
+        "flex size-11 shrink-0 items-center justify-center rounded-xl border transition",
+        active
+          ? "border-orange-400/50 bg-orange-600 text-white shadow-sm"
+          : "border-white/12 bg-black/40 text-white hover:bg-white/10",
+      )}
+    >
+      <Crosshair className="size-6" aria-hidden />
+    </button>
+  );
+}
+
 function ViewToggle({ view, onViewChange }: { view: CreatorView; onViewChange: (v: CreatorView) => void }) {
   const switchTo = view === "map" ? "list" : "map";
   const SwitchIcon = switchTo === "list" ? List : MapIcon;
@@ -415,6 +438,7 @@ export function EventCreatorScreen() {
   const [loadingMap, setLoadingMap] = useState(false);
   const [mapFocusId, setMapFocusId] = useState<string | null>(null);
   const [boundaryKind, setBoundaryKind] = useState<EventBoundaryKind>("neighborhood");
+  const [mapTapMode, setMapTapMode] = useState(false);
   const [mapPickDraft, setMapPickDraft] = useState<{
     lat: number;
     lng: number;
@@ -587,6 +611,23 @@ export function EventCreatorScreen() {
     [],
   );
 
+  const enterMapTapMode = useCallback(() => {
+    setMapTapMode(true);
+    setView("map");
+  }, []);
+
+  const toggleMapTapMode = useCallback(() => {
+    setMapTapMode((on) => {
+      if (on) {
+        mapPickDraftReqRef.current += 1;
+        setMapPickDraft(null);
+        return false;
+      }
+      setView("map");
+      return true;
+    });
+  }, []);
+
   const onMapBackgroundTap = useCallback(
     (lat: number, lng: number) => {
       const onSelected = selectedZoneIdAtPoint(mapFeatures, selectedIds, lat, lng);
@@ -594,9 +635,12 @@ export function EventCreatorScreen() {
         setMapFocusId((cur) => (cur === onSelected ? null : onSelected));
         return;
       }
+      if (!mapTapMode) {
+        enterMapTapMode();
+      }
       void loadMapPickDraft(lat, lng, boundaryKind);
     },
-    [boundaryKind, loadMapPickDraft, mapFeatures, selectedIds],
+    [boundaryKind, enterMapTapMode, loadMapPickDraft, mapFeatures, mapTapMode, selectedIds],
   );
 
   const confirmMapPickDraft = useCallback(async () => {
@@ -664,9 +708,7 @@ export function EventCreatorScreen() {
     let cancelled = false;
     setLoadingList(true);
     setListError(null);
-    fetch(
-      `/api/event-boundaries/unified-search?q=${encodeURIComponent(debouncedQ)}&kind=${encodeURIComponent(boundaryKind)}`,
-    )
+    fetch(`/api/event-boundaries/unified-search?q=${encodeURIComponent(debouncedQ)}`)
       .then(async (res) => {
         const body = (await res.json()) as {
           ok?: boolean;
@@ -691,7 +733,7 @@ export function EventCreatorScreen() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQ, boundaryKind]);
+  }, [debouncedQ]);
 
   useEffect(() => {
     if (draft.zones.length === 0) {
@@ -739,6 +781,7 @@ export function EventCreatorScreen() {
 
   const canContinue = draft.zones.length > 0;
   const footerPad = "calc(3.75rem + env(safe-area-inset-bottom, 0px))";
+  const showKindTabs = mapTapMode || mapPickDraft !== null;
 
   return (
     <div className="fixed inset-0 z-[250] flex flex-col bg-[#0c0610]">
@@ -748,7 +791,6 @@ export function EventCreatorScreen() {
             <p className="font-display text-lg text-orange-200">איפה האירוע?</p>
             <p className="text-sm text-white/50">אפשר לבחור במפה או להקליד בחיפוש</p>
           </div>
-          <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
           <div ref={searchChromeRef} className="space-y-2">
             <div className="flex items-stretch gap-2">
               <BoundarySearchField
@@ -763,11 +805,14 @@ export function EventCreatorScreen() {
                 onPick={(hit) => void attemptPickHit(hit)}
                 listMode={view === "list"}
                 large={false}
-                placeholder={BOUNDARY_KIND_LABEL[boundaryKind]}
-                boundaryKind={boundaryKind}
+                placeholder="שכונה, רחוב, כתובת או עיר…"
               />
+              <MapTapModeButton active={mapTapMode} onToggle={toggleMapTapMode} />
               <ViewToggle view={view} onViewChange={setView} />
             </div>
+            {showKindTabs ? (
+              <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
+            ) : null}
             {suggestOpen && query.trim().length > 0 && view === "map" ? (
               <BoundarySuggestPanel
                 open
@@ -776,7 +821,6 @@ export function EventCreatorScreen() {
                 listError={listError}
                 selectedIds={selectedIds}
                 onPick={(hit) => void attemptPickHit(hit)}
-                boundaryKind={boundaryKind}
                 query={query}
               />
             ) : null}
