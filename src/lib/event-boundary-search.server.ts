@@ -1,6 +1,12 @@
 import { parsePointAddressQuery } from "@/lib/event-boundary-address-parse";
 import type { BoundarySearchHit, EventBoundaryKind } from "@/lib/event-boundary";
-import { queryEligibleForPointSearch, zoneKeyCity, zoneKeyNeighborhood, zoneKeyStreet } from "@/lib/event-boundary";
+import {
+  queryEligibleForPointSearch,
+  zoneKeyCity,
+  zoneKeyNeighborhood,
+  zoneKeyPoint,
+  zoneKeyStreet,
+} from "@/lib/event-boundary";
 import {
   searchAddressPoints,
   searchStreets,
@@ -18,6 +24,63 @@ const KIND_RANK: Record<BoundarySearchHit["kind"], number> = {
   street: 2,
   point: 3,
 };
+
+function isGooglePointHit(hit: BoundarySearchHit) {
+  return hit.kind === "point" && hit.id.startsWith("google-place-");
+}
+
+function pointLabelForEventSearch(label: string) {
+  return label.replace(/,?\s*רמת\s*גן\s*$/iu, "").replace(/,?\s*Ramat\s*Gan\s*$/iu, "").trim();
+}
+
+/** Google Places → event-creator נקודה rows (same stack as /api/address). */
+export async function googlePointSearchHits(q: string, cap: number): Promise<BoundarySearchHit[]> {
+  const { googlePlacesConfigured, searchGoogleAddressHits } = await import("@/lib/google-places.server");
+  if (!googlePlacesConfigured()) return [];
+  const { prepareAddressHits } = await import("@/lib/address-fields");
+  try {
+    const prepared = prepareAddressHits(await searchGoogleAddressHits(q, cap), q);
+    return prepared.map((h) => {
+      const label = pointLabelForEventSearch(h.label) || h.label;
+      return {
+        kind: "point" as const,
+        id: h.id.startsWith("google-place-") ? h.id : zoneKeyPoint(h.lat, h.lng),
+        label,
+        city: h.city || "רמת גן",
+        subtitle: h.subtitle ?? h.city ?? "רמת גן",
+        lat: h.lat,
+        lng: h.lng,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+function mergeBoundaryHits(primary: BoundarySearchHit[], extra: BoundarySearchHit[]) {
+  const seen = new Set(primary.map((h) => h.id));
+  const merged = [...primary];
+  for (const h of extra) {
+    if (seen.has(h.id)) continue;
+    seen.add(h.id);
+    merged.push(h);
+  }
+  return merged;
+}
+
+function nominatimPointsToBoundaryHits(
+  points: Awaited<ReturnType<typeof searchAddressPoints>>,
+): BoundarySearchHit[] {
+  return points.map((p) => ({
+    kind: "point" as const,
+    id: p.id,
+    label: p.label,
+    city: p.city,
+    subtitle: p.city,
+    lat: p.lat,
+    lng: p.lng,
+  }));
+}
 
 export function inferSettlementFromQuery(
   catalog: GovNeighborhoodCatalog,
@@ -47,20 +110,14 @@ export async function unifiedBoundarySearch(
   if (!trimmed) return [];
 
   if (filterKind === "point") {
+    const googlePts = await googlePointSearchHits(trimmed, limit);
+    let nominatimPts: BoundarySearchHit[] = [];
     try {
-      const points = await searchAddressPoints(trimmed, limit);
-      return points.map((p) => ({
-        kind: "point" as const,
-        id: p.id,
-        label: p.label,
-        city: p.city,
-        subtitle: p.city,
-        lat: p.lat,
-        lng: p.lng,
-      }));
+      nominatimPts = nominatimPointsToBoundaryHits(await searchAddressPoints(trimmed, limit));
     } catch {
-      return [];
+      // optional
     }
+    return mergeBoundaryHits(googlePts, nominatimPts).slice(0, limit);
   }
 
   const { settlement, nameQuery } = inferSettlementFromQuery(catalog, trimmed);
@@ -88,22 +145,18 @@ export async function unifiedBoundarySearch(
   const parsedAddress = hasHouseNumber ? parsePointAddressQuery(trimmed) : null;
 
   if (!filterKind && hasHouseNumber) {
+    const cap = Math.min(limit, 14);
+    const googlePts = await googlePointSearchHits(trimmed, cap);
+    hits.push(...googlePts);
     try {
-      const points = await searchAddressPoints(trimmed, Math.min(limit, 14));
-      for (const p of points) {
-        hits.push({
-          kind: "point",
-          id: p.id,
-          label: p.label,
-          city: p.city,
-          subtitle: p.city,
-          lat: p.lat,
-          lng: p.lng,
-        });
-      }
+      hits.push(...nominatimPointsToBoundaryHits(await searchAddressPoints(trimmed, cap)));
     } catch {
       // nominatim optional
     }
+  }
+
+  if (!filterKind && !hasHouseNumber) {
+    hits.push(...(await googlePointSearchHits(trimmed, Math.min(limit, 10))));
   }
 
   if (!filterKind || filterKind === "neighborhood") {
@@ -167,6 +220,11 @@ export async function unifiedBoundarySearch(
     if (hasHouseNumber) {
       if (a.kind === "point" && b.kind !== "point") return -1;
       if (b.kind === "point" && a.kind !== "point") return 1;
+    } else {
+      const aG = isGooglePointHit(a);
+      const bG = isGooglePointHit(b);
+      if (aG && !bG) return -1;
+      if (bG && !aG) return 1;
     }
     const r = KIND_RANK[a.kind] - KIND_RANK[b.kind];
     if (r !== 0) return r;
