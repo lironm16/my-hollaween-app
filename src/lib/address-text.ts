@@ -33,7 +33,7 @@ export function houseNumberFromHit(
 export function streetPinHint(
   hit: { precise: boolean; houseNumber?: string; label: string; id?: string },
 ) {
-  if (hit.id?.startsWith("named-place-")) return null;
+  if (hit.id?.startsWith("named-place-") || hit.id?.startsWith("google-place-")) return null;
   if (hit.precise) return null;
   const num = houseNumberFromHit(hit);
   if (num) return `סימנו את הרחוב. גררו את הסיכה עד לבית מספר ${num}`;

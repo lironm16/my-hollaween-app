@@ -99,7 +99,7 @@ function snapHitToFootprint(hit: AddressHit): AddressHit {
 }
 
 function isCuratedAddressHit(hit: AddressHit) {
-  return hit.id.startsWith("named-place-");
+  return hit.id.startsWith("named-place-") || hit.id.startsWith("google-place-");
 }
 
 /** Snap to OSM footprints and build a display label (may be outside the four neighborhoods). */
@@ -154,30 +154,51 @@ export function footprintAddressHit(query: string): AddressHit | null {
   return prepareAddressHit(raw, query);
 }
 
-export async function searchPreparedAddresses(query: string): Promise<AddressHit[]> {
-  const trimmed = query.trim();
-  const parsed = parseStreetAndNumber(trimmed);
-  const named = searchNamedAddressPlaces(trimmed)
-    .map((hit) => prepareAddressHit(hit, trimmed))
-    .filter(Boolean) as AddressHit[];
-  if (!parsed.num) {
-    return named;
-  }
-  const { searchAddress } = await import("@/lib/geocode");
-  let hits = prepareAddressHits(await searchAddress(trimmed), trimmed);
-  if (hits.length === 0) {
-    const synthetic = footprintAddressHit(trimmed);
-    if (synthetic) hits = [synthetic];
-  }
-  const merged = [...named];
-  const seen = new Set(named.map((h) => addressHitDedupeKey(h)));
-  for (const hit of hits) {
+function mergePreparedAddressHits(primary: AddressHit[], extra: AddressHit[]) {
+  const merged = [...primary];
+  const seen = new Set(primary.map((h) => addressHitDedupeKey(h)));
+  for (const hit of extra) {
     const key = addressHitDedupeKey(hit);
     if (seen.has(key)) continue;
     seen.add(key);
     merged.push(hit);
   }
   return merged;
+}
+
+export async function searchPreparedAddresses(query: string): Promise<AddressHit[]> {
+  const trimmed = query.trim();
+  const parsed = parseStreetAndNumber(trimmed);
+
+  let googlePrepared: AddressHit[] = [];
+  const { googlePlacesConfigured, searchGoogleAddressHits } = await import("@/lib/google-places.server");
+  if (googlePlacesConfigured()) {
+    try {
+      googlePrepared = prepareAddressHits(await searchGoogleAddressHits(trimmed), trimmed);
+    } catch {
+      // Fall back to Nominatim / curated lists when Google is down or misconfigured.
+    }
+  }
+
+  const useManualNamed = !googlePlacesConfigured() || googlePrepared.length === 0;
+  const named = useManualNamed
+    ? (searchNamedAddressPlaces(trimmed)
+        .map((hit) => prepareAddressHit(hit, trimmed))
+        .filter(Boolean) as AddressHit[])
+    : [];
+
+  if (!parsed.num) {
+    return mergePreparedAddressHits(named, googlePrepared);
+  }
+
+  const { searchAddress } = await import("@/lib/geocode");
+  let geocoded = prepareAddressHits(await searchAddress(trimmed), trimmed);
+  if (geocoded.length === 0) {
+    const synthetic = footprintAddressHit(trimmed);
+    if (synthetic) geocoded = [synthetic];
+  }
+
+  return mergePreparedAddressHits(mergePreparedAddressHits(named, googlePrepared), geocoded);
 }
 
 export function prepareAddressHits(hits: AddressHit[], query = ""): AddressHit[] {

@@ -108,6 +108,20 @@ describe("address fields", () => {
     assert.equal(prepareAddressHit(hit, "ביאליק 37")?.subtitle, undefined);
   });
 
+  it("accepts Google POI hits without a house number", () => {
+    const poi: AddressHit = {
+      id: "google-place-ChIJ-test",
+      label: "ביה״ס ניצנים, רמת גן",
+      lat: 32.093264,
+      lng: 34.81124,
+      road: "ביה״ס ניצנים",
+      city: "רמת גן",
+      precise: true,
+      subtitle: "רמבה",
+    };
+    assert.ok(prepareAddressHit(poi, "ניצנים"));
+  });
+
   it("skips street geocode suggestions until a house number is typed", () => {
     const suburbOnly: AddressHit = {
       id: "suburb-haruzim",
