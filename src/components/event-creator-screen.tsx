@@ -217,7 +217,7 @@ function ViewToggle({
       {zoneCount > 0 ? (
         <span
           className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-600/90 text-xs font-bold text-white tabular-nums"
-          aria-hidden
+          title={`${zoneCount} אזורים`}
         >
           {zoneCount}
         </span>
