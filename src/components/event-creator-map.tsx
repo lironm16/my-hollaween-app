@@ -62,6 +62,16 @@ function PointDraftPin({
   );
 }
 
+function extendBoundsWithFeature(b: L.LatLngBounds, feature: EventBoundaryMapFeature) {
+  const rings = ringsFromGeometry(feature.geometry);
+  for (const ring of rings) {
+    for (const [lat, lng] of ring) b.extend([lat, lng]);
+  }
+  const plat = feature.properties?.pointLat;
+  const plng = feature.properties?.pointLng;
+  if (plat != null && plng != null) b.extend([plat, plng]);
+}
+
 function ringsFromGeometry(geometry: GeoJSON.Geometry): [number, number][][] {
   if (geometry.type === "Polygon") {
     const ring = geometry.coordinates[0];
@@ -146,24 +156,23 @@ export function EventCreatorMap({
 }: Props) {
   const { tiles } = useMapTiles();
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const showCountry = features.length === 0;
+  const showCountry = features.length === 0 && selectedIds.length === 0;
 
   const bounds = useMemo(() => {
     if (features.length === 0) return null;
     const toFit =
       fitZoneId != null && fitZoneId !== ""
         ? features.filter((f) => f.properties?.id === fitZoneId)
-        : [];
+        : features.filter((f) => {
+            const id = f.properties?.id;
+            return id != null && selected.has(id);
+          });
     if (fitZoneId && toFit.length === 0) return null;
+    if (!fitZoneId && toFit.length === 0) return null;
     const b = L.latLngBounds([]);
-    for (const f of toFit) {
-      const rings = ringsFromGeometry(f.geometry);
-      for (const ring of rings) {
-        for (const [lat, lng] of ring) b.extend([lat, lng]);
-      }
-    }
+    for (const f of toFit) extendBoundsWithFeature(b, f);
     return b.isValid() ? b : null;
-  }, [features, fitZoneId]);
+  }, [features, fitZoneId, selected]);
 
   return (
     <div className={className ?? "h-full w-full"}>
