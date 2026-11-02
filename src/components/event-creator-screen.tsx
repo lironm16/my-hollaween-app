@@ -48,6 +48,7 @@ function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
     id: hit.id,
     label: hit.label,
     city: hit.city,
+    ...(hit.placeTypeLabel ? { placeTypeLabel: hit.placeTypeLabel } : {}),
     ...(hit.lat != null && hit.lng != null ? { lat: hit.lat, lng: hit.lng } : {}),
   };
 }
@@ -871,6 +872,7 @@ export function EventCreatorScreen() {
                 <div className="flex items-start gap-3 text-right">
                   <EventBoundaryKindBadge
                     kind={mapPickDraft.hit?.kind ?? boundaryKind}
+                    typeLabel={mapPickDraft.hit?.placeTypeLabel}
                     size="lg"
                   />
                   <div className="min-w-0 flex-1">

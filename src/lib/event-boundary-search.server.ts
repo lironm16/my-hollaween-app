@@ -17,6 +17,7 @@ import {
   searchCatalog,
   uniqueCitiesFromCatalog,
 } from "@/lib/gov-neighborhoods/load.server";
+import { searchNamedAddressPlaces } from "@/lib/named-address-places";
 
 const KIND_RANK: Record<BoundarySearchHit["kind"], number> = {
   city: 0,
@@ -29,6 +30,24 @@ function isGooglePointHit(hit: BoundarySearchHit) {
   return hit.kind === "point" && hit.id.startsWith("google-place-");
 }
 
+function isNamedSchoolPointHit(hit: BoundarySearchHit) {
+  return hit.kind === "point" && hit.id.startsWith("named-place-");
+}
+
+/** Curated Ramat Gan campuses — reliable for partial names like «המנחיל». */
+export function namedSchoolPointSearchHits(q: string): BoundarySearchHit[] {
+  return searchNamedAddressPlaces(q).map((h) => ({
+    kind: "point" as const,
+    id: h.id,
+    label: h.road.trim(),
+    city: h.city || "רמת גן",
+    subtitle: h.subtitle?.trim() || undefined,
+    lat: h.lat,
+    lng: h.lng,
+    placeTypeLabel: "school (curated)",
+  }));
+}
+
 function pointLabelForEventSearch(label: string) {
   return label.replace(/,?\s*רמת\s*גן\s*$/iu, "").replace(/,?\s*Ramat\s*Gan\s*$/iu, "").trim();
 }
@@ -38,19 +57,16 @@ export async function googlePointSearchHits(q: string, cap: number): Promise<Bou
   const { googlePlacesConfigured, isEstablishmentTypes, primaryGooglePlaceType, searchGoogleAddressHits } =
     await import("@/lib/google-places.server");
   if (!googlePlacesConfigured()) return [];
-  const { prepareAddressHits } = await import("@/lib/address-fields");
   try {
-    const prepared = prepareAddressHits(await searchGoogleAddressHits(q, cap), q);
-    return prepared.map((h) => {
+    const rows = await searchGoogleAddressHits(q, cap);
+    return rows.map((h) => {
       const isGoogle = h.id.startsWith("google-place-");
       const placeTypeLabel = isGoogle ? primaryGooglePlaceType(h.placeTypes) : undefined;
       const poi = isGoogle && isEstablishmentTypes(h.placeTypes ?? []);
       const title = poi
         ? pointLabelForEventSearch(h.road.trim())
         : pointLabelForEventSearch(h.label) || h.label;
-      const subtitle = isGoogle
-        ? h.addressLine?.trim() || h.subtitle?.trim() || undefined
-        : h.subtitle ?? h.city;
+      const subtitle = h.addressLine?.trim() || h.subtitle?.trim() || undefined;
       return {
         kind: "point" as const,
         id: isGoogle ? h.id : zoneKeyPoint(h.lat, h.lng),
@@ -120,6 +136,7 @@ export async function unifiedBoundarySearch(
   if (!trimmed) return [];
 
   if (filterKind === "point") {
+    const namedPts = namedSchoolPointSearchHits(trimmed);
     const googlePts = await googlePointSearchHits(trimmed, limit);
     let nominatimPts: BoundarySearchHit[] = [];
     try {
@@ -127,7 +144,7 @@ export async function unifiedBoundarySearch(
     } catch {
       // optional
     }
-    return mergeBoundaryHits(googlePts, nominatimPts).slice(0, limit);
+    return mergeBoundaryHits(mergeBoundaryHits(namedPts, googlePts), nominatimPts).slice(0, limit);
   }
 
   const { settlement, nameQuery } = inferSettlementFromQuery(catalog, trimmed);
@@ -165,6 +182,11 @@ export async function unifiedBoundarySearch(
     }
   }
 
+  const namedSchoolPts = !filterKind && !hasHouseNumber ? namedSchoolPointSearchHits(trimmed) : [];
+  if (namedSchoolPts.length) {
+    hits.push(...namedSchoolPts);
+  }
+
   if (!filterKind && !hasHouseNumber) {
     hits.push(...(await googlePointSearchHits(trimmed, Math.min(limit, 10))));
   }
@@ -192,6 +214,8 @@ export async function unifiedBoundarySearch(
         // skip street rows
       } else if (hasHouseNumber && !parsedAddress && !settlement) {
         // "נחליאלי 4" without a city is an address, not a nationwide street pick.
+      } else if (namedSchoolPts.length > 0 && !hasHouseNumber && !filterKind) {
+        // Skip noisy nationwide street guesses when a campus alias matched (e.g. «המנחיל» → הפודים).
       } else {
         const streetNeedle = parsedAddress?.street ?? hoodNeedle ?? trimmed;
         const streetCity = parsedAddress?.city ?? settlement;
@@ -231,10 +255,15 @@ export async function unifiedBoundarySearch(
       if (a.kind === "point" && b.kind !== "point") return -1;
       if (b.kind === "point" && a.kind !== "point") return 1;
     } else {
-      const aG = isGooglePointHit(a);
-      const bG = isGooglePointHit(b);
-      if (aG && !bG) return -1;
-      if (bG && !aG) return 1;
+      const rank = (h: BoundarySearchHit) => {
+        if (isNamedSchoolPointHit(h)) return 0;
+        if (isGooglePointHit(h)) return 1;
+        if (h.kind === "point") return 2;
+        return 3 + KIND_RANK[h.kind];
+      };
+      const ar = rank(a);
+      const br = rank(b);
+      if (ar !== br) return ar - br;
     }
     const r = KIND_RANK[a.kind] - KIND_RANK[b.kind];
     if (r !== 0) return r;

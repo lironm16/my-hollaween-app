@@ -11,6 +11,8 @@ export type EventBoundaryZone = {
   /** Pin for kind `point`. */
   lat?: number;
   lng?: number;
+  /** Google / curated POI type pill in event creator UI. */
+  placeTypeLabel?: string;
 };
 
 export function zoneKeyNeighborhood(govId: string): string {

@@ -117,6 +117,8 @@ export function prepareAddressHit(hit: AddressHit, query = ""): AddressHit | nul
   return {
     ...withNumber,
     label,
+    placeTypes: hit.placeTypes ?? withNumber.placeTypes,
+    addressLine: hit.addressLine ?? withNumber.addressLine,
     ...(hoodLine
       ? { subtitle: hoodLine }
       : curated && withNumber.subtitle
