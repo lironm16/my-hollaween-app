@@ -53,12 +53,18 @@ const MAP_TAP_KINDS: { kind: EventBoundaryKind; label: string }[] = [
 function MapTapKindToggle({
   kind,
   onKindChange,
+  className,
 }: {
   kind: EventBoundaryKind;
   onKindChange: (k: EventBoundaryKind) => void;
+  className?: string;
 }) {
   return (
-    <div className="flex rounded-xl border border-white/12 bg-black/40 p-1" role="radiogroup" aria-label="סוג אזור בלחיצה על המפה">
+    <div
+      className={cn("inline-flex shrink-0 rounded-xl border border-white/12 bg-black/40 p-0.5", className)}
+      role="radiogroup"
+      aria-label="סוג אזור בלחיצה על המפה"
+    >
       {MAP_TAP_KINDS.map(({ kind: k, label }) => (
         <button
           key={k}
@@ -67,7 +73,7 @@ function MapTapKindToggle({
           aria-checked={kind === k}
           onClick={() => onKindChange(k)}
           className={cn(
-            "flex-1 rounded-lg py-1.5 text-xs font-medium transition sm:text-sm",
+            "rounded-lg px-2.5 py-1.5 text-xs font-medium transition sm:text-sm",
             kind === k ? "bg-orange-600/90 text-white" : "text-white/60 hover:bg-white/5",
           )}
         >
@@ -133,30 +139,30 @@ function ViewToggle({
   zoneCount: number;
 }) {
   return (
-    <div className="flex rounded-xl border border-white/12 bg-black/40 p-1">
+    <div className="inline-flex shrink-0 rounded-xl border border-white/12 bg-black/40 p-0.5">
       <button
         type="button"
         onClick={() => onViewChange("map")}
         className={cn(
-          "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition",
+          "flex items-center gap-1 rounded-lg px-2.5 py-2 text-sm font-medium transition",
           view === "map" ? "bg-orange-600 text-white" : "text-white/65 hover:bg-white/5",
         )}
       >
-        <MapIcon className="size-4" aria-hidden />
+        <MapIcon className="size-3.5" aria-hidden />
         מפה
       </button>
       <button
         type="button"
         onClick={() => onViewChange("list")}
         className={cn(
-          "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition",
+          "flex items-center gap-1 rounded-lg px-2.5 py-2 text-sm font-medium transition",
           view === "list" ? "bg-orange-600 text-white" : "text-white/65 hover:bg-white/5",
         )}
       >
-        <List className="size-4" aria-hidden />
+        <List className="size-3.5" aria-hidden />
         רשימה
         {zoneCount > 0 ? (
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{zoneCount}</span>
+          <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] leading-none">{zoneCount}</span>
         ) : null}
       </button>
     </div>
@@ -201,7 +207,7 @@ function BoundarySearchField({
   const showSuggest = suggestOpen && query.trim().length > 0;
 
   return (
-    <div ref={wrapRef} className="relative z-10">
+    <div ref={wrapRef} className={cn("relative z-10 min-w-0", listMode ? "flex-1" : "flex-1")}>
       <label className="relative block">
         <Search
           className={cn(
@@ -533,27 +539,38 @@ export function EventCreatorScreen() {
           <p className="font-display text-lg text-orange-200">
             {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
           </p>
-          <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
+          <div className="flex items-stretch gap-2">
+            <BoundarySearchField
+              query={query}
+              onQueryChange={setQuery}
+              suggestOpen={suggestOpen}
+              onSuggestOpen={setSuggestOpen}
+              hits={hits}
+              loadingList={loadingList}
+              listError={listError}
+              selectedIds={selectedIds}
+              onPick={(hit) => void attemptPickHit(hit)}
+              listMode={view === "list"}
+              large={false}
+            />
+            <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
+          </div>
           {view === "map" ? (
-            <MapTapKindToggle kind={mapTapKind} onKindChange={setMapTapKind} />
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="shrink-0 text-sm text-white/50">או בחר במפה</span>
+              <MapTapKindToggle kind={mapTapKind} onKindChange={setMapTapKind} />
+            </div>
           ) : null}
-          <BoundarySearchField
-            query={query}
-            onQueryChange={setQuery}
-            suggestOpen={suggestOpen}
-            onSuggestOpen={setSuggestOpen}
-            hits={hits}
-            loadingList={loadingList}
-            listError={listError}
-            selectedIds={selectedIds}
-            onPick={(hit) => void attemptPickHit(hit)}
-            listMode={view === "list"}
-            large={view === "list"}
-          />
         </header>
 
-        {view === "map" ? (
-          <div className="relative min-h-0 flex-1">
+        <div className="relative min-h-0 flex-1">
+          <div
+            className={cn(
+              "absolute inset-0",
+              view !== "map" && "pointer-events-none invisible",
+            )}
+            aria-hidden={view !== "map"}
+          >
             <EventCreatorMapDynamic
               className="absolute inset-0"
               features={mapFeatures}
@@ -563,8 +580,12 @@ export function EventCreatorScreen() {
               onBackgroundTap={onMapBackgroundTap}
               boundsFitKey={boundsFitKey}
             />
+          </div>
+
+          {view === "map" ? (
+            <>
             {loadingMap ? (
-              <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs text-white/70">
+              <div className="pointer-events-none absolute bottom-3 left-3 z-[300] rounded-full bg-black/60 px-3 py-1 text-xs text-white/70">
                 מעדכן מפה…
               </div>
             ) : null}
@@ -595,41 +616,42 @@ export function EventCreatorScreen() {
                 </button>
               </div>
             ) : null}
-          </div>
-        ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2">
-            {draft.zones.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/15 py-16 text-center text-lg text-white/45">
-                חפשו למעלה והוסיפו אזור — או עברו למפה
-              </div>
-            ) : (
-              <ul className="space-y-3">
-                {draft.zones.map((z) => (
-                  <li
-                    key={z.id}
-                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3.5"
-                  >
-                    <EventBoundaryKindBadge kind={z.kind} size="lg" />
-                    <div className="min-w-0 flex-1 text-right">
-                      <p className="truncate text-lg text-white/90">{z.label}</p>
-                      {z.city && z.kind !== "city" ? (
-                        <p className="truncate text-base text-white/45">{z.city}</p>
-                      ) : null}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeZone(z.id)}
-                      className="flex size-11 shrink-0 items-center justify-center rounded-xl text-white/55 hover:bg-white/10 hover:text-white"
-                      aria-label={`הסר ${z.label}`}
+            </>
+          ) : (
+            <div className="relative z-10 min-h-0 flex-1 overflow-y-auto bg-[#0c0610] px-3 pb-3 pt-2">
+              {draft.zones.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-white/15 py-16 text-center text-lg text-white/45">
+                  חפשו למעלה והוסיפו אזור — או עברו למפה
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {draft.zones.map((z) => (
+                    <li
+                      key={z.id}
+                      className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3.5"
                     >
-                      <Trash2 className="size-5" aria-hidden />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
+                      <EventBoundaryKindBadge kind={z.kind} size="lg" />
+                      <div className="min-w-0 flex-1 text-right">
+                        <p className="truncate text-lg text-white/90">{z.label}</p>
+                        {z.city && z.kind !== "city" ? (
+                          <p className="truncate text-base text-white/45">{z.city}</p>
+                        ) : null}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeZone(z.id)}
+                        className="flex size-11 shrink-0 items-center justify-center rounded-xl text-white/55 hover:bg-white/10 hover:text-white"
+                        aria-label={`הסר ${z.label}`}
+                      >
+                        <Trash2 className="size-5" aria-hidden />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <ZoneContainmentDialog

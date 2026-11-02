@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo } from "react";
+import { Fragment, useEffect, useMemo, useRef } from "react";
 import { MapContainer, Polygon, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -62,13 +62,18 @@ function FitBounds({
   fitKey: string;
 }) {
   const map = useMap();
+  const lastFitKeyRef = useRef<string | null>(null);
   useEffect(() => {
+    const token = showCountry ? `country:${fitKey}` : `zones:${fitKey}`;
+    if (!showCountry && !bounds) return;
+    if (lastFitKeyRef.current === token) return;
+    lastFitKeyRef.current = token;
+
     if (showCountry) {
       map.fitBounds(EVENT_CREATOR_ISRAEL_BOUNDS, { padding: [20, 20], maxZoom: 8 });
       return;
     }
-    if (!bounds) return;
-    map.fitBounds(bounds, {
+    map.fitBounds(bounds!, {
       paddingTopLeft: [12, 12],
       paddingBottomRight: [12, 88],
       maxZoom: 18,
