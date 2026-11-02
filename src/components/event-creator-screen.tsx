@@ -128,6 +128,8 @@ function BoundarySuggestPanel({
         "z-[1200] w-full overflow-y-auto rounded-xl border border-white/15 bg-[#140a1c]/98 shadow-xl backdrop-blur-lg",
         large ? "relative mt-2 max-h-[36vh]" : "max-h-[min(42vh,320px)]",
       )}
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
     >
       {loadingList ? (
         <p className={cn("px-3 py-3 text-white/50", large ? "text-base" : "text-sm")}>מחפש…</p>
@@ -355,18 +357,8 @@ function BoundarySearchField({
   placeholder?: string;
   boundaryKind?: EventBoundaryKind;
 }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) onSuggestOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [onSuggestOpen]);
-
   return (
-    <div ref={wrapRef} className={cn("relative z-10 min-w-0 flex-1")}>
+    <div className={cn("relative z-10 min-w-0 flex-1")}>
       <label className="relative block">
         <Search
           className={cn(
@@ -443,6 +435,7 @@ export function EventCreatorScreen() {
     loading: boolean;
   } | null>(null);
   const pointDraftGeocodeRef = useRef(0);
+  const searchChromeRef = useRef<HTMLDivElement>(null);
   const [containmentPrompt, setContainmentPrompt] = useState<{
     hit: BoundarySearchHit;
     contained: EventBoundaryZone[];
@@ -645,6 +638,20 @@ export function EventCreatorScreen() {
   }, [query]);
 
   useEffect(() => {
+    const onDoc = (e: MouseEvent | TouchEvent) => {
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+      if (!searchChromeRef.current?.contains(target)) setSuggestOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("touchstart", onDoc, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("touchstart", onDoc);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!debouncedQ) {
       setHits([]);
       setListError(null);
@@ -738,36 +745,38 @@ export function EventCreatorScreen() {
             <p className="text-sm text-white/50">אפשר לבחור במפה או להקליד בחיפוש</p>
           </div>
           <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
-          <div className="flex items-stretch gap-2">
-            <BoundarySearchField
-              query={query}
-              onQueryChange={setQuery}
-              suggestOpen={suggestOpen}
-              onSuggestOpen={setSuggestOpen}
-              hits={hits}
-              loadingList={loadingList}
-              listError={listError}
-              selectedIds={selectedIds}
-              onPick={(hit) => void attemptPickHit(hit)}
-              listMode={view === "list"}
-              large={false}
-              placeholder={BOUNDARY_KIND_LABEL[boundaryKind]}
-              boundaryKind={boundaryKind}
-            />
-            <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
+          <div ref={searchChromeRef} className="space-y-2">
+            <div className="flex items-stretch gap-2">
+              <BoundarySearchField
+                query={query}
+                onQueryChange={setQuery}
+                suggestOpen={suggestOpen}
+                onSuggestOpen={setSuggestOpen}
+                hits={hits}
+                loadingList={loadingList}
+                listError={listError}
+                selectedIds={selectedIds}
+                onPick={(hit) => void attemptPickHit(hit)}
+                listMode={view === "list"}
+                large={false}
+                placeholder={BOUNDARY_KIND_LABEL[boundaryKind]}
+                boundaryKind={boundaryKind}
+              />
+              <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
+            </div>
+            {suggestOpen && query.trim().length > 0 && view === "map" ? (
+              <BoundarySuggestPanel
+                open
+                hits={hits}
+                loadingList={loadingList}
+                listError={listError}
+                selectedIds={selectedIds}
+                onPick={(hit) => void attemptPickHit(hit)}
+                boundaryKind={boundaryKind}
+                query={query}
+              />
+            ) : null}
           </div>
-          {suggestOpen && query.trim().length > 0 && view === "map" ? (
-            <BoundarySuggestPanel
-              open
-              hits={hits}
-              loadingList={loadingList}
-              listError={listError}
-              selectedIds={selectedIds}
-              onPick={(hit) => void attemptPickHit(hit)}
-              boundaryKind={boundaryKind}
-              query={query}
-            />
-          ) : null}
         </header>
 
         <div className="relative min-h-0 flex-1">
