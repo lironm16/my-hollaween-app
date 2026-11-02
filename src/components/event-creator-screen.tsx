@@ -7,7 +7,7 @@ import {
   pruneZonesContainedInParents,
 } from "@/lib/event-boundary-zone-prune";
 import { fetchEventBoundaryZoneGeometry } from "@/lib/event-boundary-geometry-client";
-import { ChevronRight, Crosshair, List, Map as MapIcon, Search, Trash2 } from "lucide-react";
+import { ChevronRight, List, Map as MapIcon, Pointer, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -38,6 +38,13 @@ const MAP_TAP_EMPTY_MESSAGE: Record<EventBoundaryKind, string> = {
   street: "לא נמצא רחוב בנקודה זו",
   neighborhood: "לא נמצאה שכונה בנקודה זו",
   city: "לא נמצאה עיר בנקודה זו",
+};
+
+const MAP_TAP_KIND_HINT: Record<EventBoundaryKind, string> = {
+  point: "לחצו על המפה ליד כתובת עם מספר בית",
+  street: "לחצו על המפה על הרחוב שרוצים להוסיף",
+  neighborhood: "לחצו על המפה בתוך השכונה",
+  city: "לחצו על המפה בתוך העיר",
 };
 
 function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
@@ -307,7 +314,7 @@ function MapTapModeButton({
     <button
       type="button"
       aria-pressed={active}
-      aria-label={active ? "סיום הוספה בלחיצה על המפה" : "הוספת אזור בלחיצה על המפה"}
+      aria-label={active ? "סיום לחיצה במפה" : "לחיצה במפה — הוספת אזור"}
       onClick={onToggle}
       className={cn(
         "flex max-w-[5.75rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1.5 transition",
@@ -316,10 +323,8 @@ function MapTapModeButton({
           : "border-white/12 bg-black/40 text-white/90 hover:bg-white/10",
       )}
     >
-      <Crosshair className="size-5 shrink-0" aria-hidden />
-      <span className="text-center text-[10px] font-semibold leading-tight">
-        {active ? "מצב הוספה" : "הוספה במפה"}
-      </span>
+      <Pointer className="size-5 shrink-0" aria-hidden />
+      <span className="text-center text-[10px] font-semibold leading-tight">לחיצה במפה</span>
     </button>
   );
 }
@@ -385,10 +390,10 @@ function BoundarySearchField({
           dir="rtl"
           autoComplete="off"
           className={cn(
-            "relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 text-start backdrop-blur-md placeholder:text-start placeholder:text-white/35",
+            "relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 text-right backdrop-blur-md placeholder:text-right placeholder:text-white/35",
+            "[&::placeholder]:[direction:rtl]",
             large ? "py-3.5 pl-3 pr-10 text-lg" : "py-3 pl-3 pr-9 text-base",
           )}
-          style={{ textAlign: "right" }}
           placeholder={placeholder ?? "חפשו אזור…"}
           value={query}
           onFocus={() => onSuggestOpen(true)}
@@ -784,14 +789,7 @@ export function EventCreatorScreen() {
     <div className="fixed inset-0 z-[250] flex flex-col bg-[#0c0610]">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ paddingBottom: footerPad }}>
         <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md">
-          <div className="space-y-0.5 text-right">
-            <p className="font-display text-lg text-orange-200">איפה האירוע?</p>
-            <p className="text-sm text-white/50">
-              {mapTapMode
-                ? "לחצו על המפה לפי הסוג למטה — או חפשו למעלה"
-                : "חפשו למעלה, או לחצו אזור שכבר בחרתם במפה"}
-            </p>
-          </div>
+          <p className="text-right font-display text-lg text-orange-200">איפה האירוע?</p>
           <div ref={searchChromeRef} className="space-y-2">
             <div className="flex items-stretch gap-2">
               <BoundarySearchField
@@ -812,7 +810,10 @@ export function EventCreatorScreen() {
               <ViewToggle view={view} onViewChange={setView} />
             </div>
             {showKindTabs ? (
-              <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
+              <>
+                <p className="text-right text-sm leading-snug text-white/55">{MAP_TAP_KIND_HINT[boundaryKind]}</p>
+                <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
+              </>
             ) : null}
             {suggestOpen && query.trim().length > 0 && view === "map" ? (
               <BoundarySuggestPanel
