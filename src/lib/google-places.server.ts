@@ -113,8 +113,12 @@ async function placesAutocomplete(input: string, languageCode: string): Promise<
   return out;
 }
 
+function placeResourceId(placeId: string) {
+  return placeId.startsWith("places/") ? placeId.slice("places/".length) : placeId;
+}
+
 async function placeDetails(placeId: string, languageCode: string): Promise<PlaceDetailsRow> {
-  const encoded = encodeURIComponent(placeId);
+  const encoded = encodeURIComponent(placeResourceId(placeId));
   const url = new URL(`${PLACES_BASE}/places/${encoded}`);
   url.searchParams.set("languageCode", languageCode);
 
