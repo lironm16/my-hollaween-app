@@ -129,8 +129,8 @@ function BoundarySuggestPanel({
   return (
     <div
       className={cn(
-        "z-[1200] w-full overflow-y-auto rounded-xl border border-white/15 bg-[#140a1c]/98 shadow-xl backdrop-blur-lg",
-        large ? "relative mt-2 max-h-[36vh]" : "max-h-[min(42vh,320px)]",
+        "relative z-[5] w-full overflow-y-auto rounded-xl border border-white/15 bg-[#140a1c]/98 shadow-xl backdrop-blur-lg",
+        large ? "mt-2 max-h-[36vh]" : "max-h-[min(42vh,320px)]",
       )}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
@@ -317,7 +317,7 @@ function MapTapModeButton({
       aria-label={active ? "סיום לחיצה במפה" : "לחיצה במפה — הוספת אזור"}
       onClick={onToggle}
       className={cn(
-        "flex max-w-[5.75rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1.5 transition",
+        "flex h-11 max-w-[5.75rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 transition",
         active
           ? "border-orange-400/50 bg-orange-600 text-white shadow-sm"
           : "border-white/12 bg-black/40 text-white/90 hover:bg-white/10",
@@ -791,40 +791,44 @@ export function EventCreatorScreen() {
         <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md">
           <p className="text-right font-display text-lg text-orange-200">איפה האירוע?</p>
           <div ref={searchChromeRef} className="space-y-2">
-            <div className="flex items-stretch gap-2">
-              <BoundarySearchField
-                query={query}
-                onQueryChange={setQuery}
-                suggestOpen={suggestOpen}
-                onSuggestOpen={setSuggestOpen}
-                hits={hits}
-                loadingList={loadingList}
-                listError={listError}
-                selectedIds={selectedIds}
-                onPick={(hit) => void attemptPickHit(hit)}
-                listMode={view === "list"}
-                large={false}
-                placeholder="שכונה, רחוב, כתובת או עיר…"
-              />
-              <MapTapModeButton active={mapTapMode} onToggle={toggleMapTapMode} />
-              <ViewToggle view={view} onViewChange={setView} />
+            <div className="flex items-start gap-2">
+              <div className="relative z-10 min-w-0 flex-1 space-y-2">
+                <BoundarySearchField
+                  query={query}
+                  onQueryChange={setQuery}
+                  suggestOpen={suggestOpen}
+                  onSuggestOpen={setSuggestOpen}
+                  hits={hits}
+                  loadingList={loadingList}
+                  listError={listError}
+                  selectedIds={selectedIds}
+                  onPick={(hit) => void attemptPickHit(hit)}
+                  listMode={view === "list"}
+                  large={false}
+                  placeholder="שכונה, רחוב, כתובת או עיר…"
+                />
+                {suggestOpen && query.trim().length > 0 && view === "map" ? (
+                  <BoundarySuggestPanel
+                    open
+                    hits={hits}
+                    loadingList={loadingList}
+                    listError={listError}
+                    selectedIds={selectedIds}
+                    onPick={(hit) => void attemptPickHit(hit)}
+                    query={query}
+                  />
+                ) : null}
+              </div>
+              <div className="relative z-20 flex shrink-0 items-start gap-2">
+                <MapTapModeButton active={mapTapMode} onToggle={toggleMapTapMode} />
+                <ViewToggle view={view} onViewChange={setView} />
+              </div>
             </div>
             {showKindTabs ? (
               <>
                 <p className="text-right text-sm leading-snug text-white/55">{MAP_TAP_KIND_HINT[boundaryKind]}</p>
                 <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
               </>
-            ) : null}
-            {suggestOpen && query.trim().length > 0 && view === "map" ? (
-              <BoundarySuggestPanel
-                open
-                hits={hits}
-                loadingList={loadingList}
-                listError={listError}
-                selectedIds={selectedIds}
-                onPick={(hit) => void attemptPickHit(hit)}
-                query={query}
-              />
             ) : null}
           </div>
         </header>
