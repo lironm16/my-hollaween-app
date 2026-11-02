@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef } from "react";
-import { MapContainer, Polygon, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, Marker, Polygon, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
@@ -29,6 +29,38 @@ export const EVENT_CREATOR_ISRAEL_BOUNDS: L.LatLngBoundsExpression = [
 ];
 
 const ISRAEL_CENTER: [number, number] = [31.35, 35.1];
+
+const EVENT_POINT_PIN_ICON = L.divIcon({
+  className: "event-creator-point-pin",
+  html: `<div style="width:26px;height:26px;background:#a78bfa;border:2.5px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 10px rgba(0,0,0,.5)"></div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 26],
+});
+
+function PointDraftPin({
+  lat,
+  lng,
+  onMove,
+}: {
+  lat: number;
+  lng: number;
+  onMove: (lat: number, lng: number) => void;
+}) {
+  return (
+    <Marker
+      position={[lat, lng]}
+      draggable
+      icon={EVENT_POINT_PIN_ICON}
+      zIndexOffset={900}
+      eventHandlers={{
+        dragend: (e) => {
+          const ll = e.target.getLatLng();
+          onMove(ll.lat, ll.lng);
+        },
+      }}
+    />
+  );
+}
 
 function ringsFromGeometry(geometry: GeoJSON.Geometry): [number, number][][] {
   if (geometry.type === "Polygon") {
@@ -92,6 +124,9 @@ type Props = {
   onAreaClick?: (featureId: string) => void;
   /** Tap on map outside selected polygons — e.g. add שכונה at point. */
   onBackgroundTap?: (lat: number, lng: number) => void;
+  /** Draggable pin while placing a נקודה on the map. */
+  pointDraft?: { lat: number; lng: number } | null;
+  onPointDraftMove?: (lat: number, lng: number) => void;
   className?: string;
 };
 
@@ -102,6 +137,8 @@ export function EventCreatorMap({
   boundsFitKey = "",
   onAreaClick,
   onBackgroundTap,
+  pointDraft = null,
+  onPointDraftMove,
   className,
 }: Props) {
   const { tiles } = useMapTiles();
@@ -146,6 +183,19 @@ export function EventCreatorMap({
         ) : null}
         <FitBounds bounds={bounds} showCountry={showCountry} fitKey={boundsFitKey} />
         {onBackgroundTap ? <MapBackgroundTap onTap={onBackgroundTap} /> : null}
+        {pointDraft && onPointDraftMove ? (
+          <PointDraftPin lat={pointDraft.lat} lng={pointDraft.lng} onMove={onPointDraftMove} />
+        ) : null}
+        {features.map((feature, idx) => {
+          if (feature.properties?.kind !== "point") return null;
+          const id = feature.properties?.id ?? String(idx);
+          if (!selected.has(id)) return null;
+          const plat = feature.properties.pointLat;
+          const plng = feature.properties.pointLng;
+          if (plat == null || plng == null) return null;
+          if (pointDraft && plat === pointDraft.lat && plng === pointDraft.lng) return null;
+          return <Marker key={`pin-${id}`} position={[plat, plng]} icon={EVENT_POINT_PIN_ICON} zIndexOffset={800} />;
+        })}
         {[...features]
           .map((feature, idx) => ({ feature, idx }))
           .sort((a, b) => {

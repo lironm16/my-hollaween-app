@@ -320,38 +320,79 @@ export type AddressPointHit = {
   city?: string;
 };
 
+function digitsFromQuery(q: string): string {
+  return q.replace(/\D/g, "");
+}
+
+function scoreAddressHit(h: NominatimGeoHit, query: string): number {
+  let score = 0;
+  const qDigits = digitsFromQuery(query);
+  const hn = h.address?.house_number?.replace(/\D/g, "") ?? "";
+  if (qDigits && hn && hn === qDigits) score += 80;
+  else if (qDigits && hn.includes(qDigits)) score += 40;
+  if (h.address?.house_number) score += 12;
+  if (h.class === "building" || h.type === "house" || h.addresstype === "building") score += 8;
+  const dn = (h.display_name ?? "").toLowerCase();
+  const needle = query.toLowerCase();
+  if (dn.includes(needle)) score += 20;
+  return score;
+}
+
+function nominatimHitToAddressPoint(h: NominatimGeoHit, fallbackQuery: string): AddressPointHit | null {
+  const lat = Number(h.lat);
+  const lng = Number(h.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const rLat = roundEventBoundaryCoord(lat);
+  const rLng = roundEventBoundaryCoord(lng);
+  const label = h.address
+    ? formatPointAddressLabel(h.address, h.display_name)
+    : h.display_name?.split(",").map((p) => p.trim()).slice(0, 3).join(", ") || fallbackQuery;
+  const city =
+    (h.address ? settlementFromNominatimAddress(h.address) : "") ||
+    h.address?.suburb?.trim() ||
+    undefined;
+  return {
+    id: zoneKeyPoint(rLat, rLng),
+    lat: rLat,
+    lng: rLng,
+    label,
+    city: city || undefined,
+  };
+}
+
 /** Forward geocode for specific addresses (map/search mode נקודה). */
 export async function searchAddressPoints(q: string, limit = 14): Promise<AddressPointHit[]> {
   const query = q.trim();
   if (!query) return [];
-  const hits = await nominatimSearch({
-    q: `${query}, Israel`,
-    format: "json",
-    countrycodes: "il",
-    limit: String(Math.min(limit + 6, 22)),
-    viewbox: viewbox(),
-    bounded: "0",
-    addressdetails: "1",
-  });
-  const out: AddressPointHit[] = [];
-  const seen = new Set<string>();
-  for (const h of hits) {
-    const lat = Number(h.lat);
-    const lng = Number(h.lon);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-    const rLat = roundEventBoundaryCoord(lat);
-    const rLng = roundEventBoundaryCoord(lng);
-    const id = zoneKeyPoint(rLat, rLng);
-    if (seen.has(id)) continue;
-    seen.add(id);
-    const label = h.address
-      ? formatPointAddressLabel(h.address, h.display_name)
-      : h.display_name?.split(",").map((p) => p.trim()).slice(0, 3).join(", ") || query;
-    const city =
-      (h.address ? settlementFromNominatimAddress(h.address) : "") ||
-      h.address?.suburb?.trim() ||
-      undefined;
-    out.push({ id, lat: rLat, lng: rLng, label, city: city || undefined });
+
+  const queryVariants = [query];
+  if (!/israel|ישראל/i.test(query)) {
+    queryVariants.push(`${query}, Israel`);
   }
-  return out.slice(0, limit);
+
+  const ranked: { row: AddressPointHit; score: number }[] = [];
+  const seen = new Set<string>();
+
+  for (const qStr of queryVariants) {
+    const hits = await nominatimSearch({
+      q: qStr,
+      format: "json",
+      countrycodes: "il",
+      limit: "25",
+      viewbox: viewbox(),
+      bounded: "0",
+      addressdetails: "1",
+    });
+    for (const h of hits) {
+      const row = nominatimHitToAddressPoint(h, query);
+      if (!row) continue;
+      const dedupeKey = `${row.id}|${row.label}`;
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+      ranked.push({ row, score: scoreAddressHit(h, query) });
+    }
+  }
+
+  ranked.sort((a, b) => b.score - a.score || a.row.label.localeCompare(b.row.label, "he"));
+  return ranked.slice(0, limit).map((r) => r.row);
 }

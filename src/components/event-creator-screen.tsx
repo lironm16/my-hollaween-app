@@ -7,17 +7,21 @@ import {
   pruneZonesContainedInParents,
 } from "@/lib/event-boundary-zone-prune";
 import { fetchEventBoundaryZoneGeometry } from "@/lib/event-boundary-geometry-client";
-import { ChevronRight, List, Map as MapIcon, Search, Trash2, X } from "lucide-react";
+import { ChevronRight, List, Map as MapIcon, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { POINT_TAP_RADIUS_M } from "@/lib/event-boundary-point";
 import { pointInGeoPolygon } from "@/lib/event-boundary-street-geom";
 import { distanceMeters } from "@/lib/geo";
-import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
+import {
+  BOUNDARY_KIND_LABEL,
+  EventBoundaryKindBadge,
+} from "@/components/event-boundary-kind-badge";
 import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
 import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
 import type { BoundarySearchHit, EventBoundaryKind } from "@/lib/event-boundary";
+import { roundEventBoundaryCoord, zoneKeyPoint } from "@/lib/event-boundary";
 import { addEventBoundaryZone, removeEventBoundaryZone } from "@/lib/event-boundary-selection";
 import {
   emptyCustomEventDraft,
@@ -94,13 +98,6 @@ function MapTapKindToggle({
     </div>
   );
 }
-
-const SEARCH_PLACEHOLDER: Record<EventBoundaryKind, string> = {
-  point: "כתובת מדויקת (רחוב ומספר)…",
-  street: "שם רחוב…",
-  neighborhood: "שם שכונה…",
-  city: "שם עיר…",
-};
 
 function BoundarySuggestPanel({
   open,
@@ -368,9 +365,10 @@ function BoundarySearchField({
         />
         <input
           type="search"
+          dir="rtl"
           autoComplete="off"
           className={cn(
-            "relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 backdrop-blur-md placeholder:text-white/35",
+            "relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 text-right backdrop-blur-md placeholder:text-right placeholder:text-white/35",
             large ? "py-3.5 pl-3 pr-10 text-lg" : "py-3 pl-3 pr-9 text-base",
           )}
           placeholder={placeholder ?? "חפשו אזור…"}
@@ -422,7 +420,15 @@ export function EventCreatorScreen() {
   const [mapFeatures, setMapFeatures] = useState<EventBoundaryMapFeature[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [mapFocusId, setMapFocusId] = useState<string | null>(null);
-  const [boundaryKind, setBoundaryKind] = useState<EventBoundaryKind>("point");
+  const [boundaryKind, setBoundaryKind] = useState<EventBoundaryKind>("neighborhood");
+  const [pointDraft, setPointDraft] = useState<{
+    lat: number;
+    lng: number;
+    label: string;
+    city?: string;
+    loading: boolean;
+  } | null>(null);
+  const pointDraftGeocodeRef = useRef(0);
   const [containmentPrompt, setContainmentPrompt] = useState<{
     hit: BoundarySearchHit;
     contained: EventBoundaryZone[];
@@ -513,11 +519,53 @@ export function EventCreatorScreen() {
 
   const mapPickInFlight = useRef(false);
 
+  const geocodePointDraft = useCallback(async (lat: number, lng: number) => {
+    const token = ++pointDraftGeocodeRef.current;
+    const rLat = roundEventBoundaryCoord(lat);
+    const rLng = roundEventBoundaryCoord(lng);
+    setPointDraft({ lat: rLat, lng: rLng, label: "", loading: true });
+    try {
+      const res = await fetch(
+        `/api/event-boundaries/pick?lat=${encodeURIComponent(String(rLat))}&lng=${encodeURIComponent(String(rLng))}&kind=point`,
+      );
+      const body = (await res.json()) as { ok?: boolean; hit?: BoundarySearchHit };
+      if (token !== pointDraftGeocodeRef.current) return;
+      if (body.hit) {
+        setPointDraft({
+          lat: rLat,
+          lng: rLng,
+          label: body.hit.label,
+          city: body.hit.city,
+          loading: false,
+        });
+        return;
+      }
+      setPointDraft({
+        lat: rLat,
+        lng: rLng,
+        label: `${rLat.toFixed(5)}, ${rLng.toFixed(5)}`,
+        loading: false,
+      });
+    } catch {
+      if (token !== pointDraftGeocodeRef.current) return;
+      setPointDraft({
+        lat: rLat,
+        lng: rLng,
+        label: `${rLat.toFixed(5)}, ${rLng.toFixed(5)}`,
+        loading: false,
+      });
+    }
+  }, []);
+
   const onMapBackgroundTap = useCallback(
     async (lat: number, lng: number) => {
       const onSelected = selectedZoneIdAtPoint(mapFeatures, selectedIds, lat, lng);
       if (onSelected) {
         setMapFocusId((cur) => (cur === onSelected ? null : onSelected));
+        return;
+      }
+      if (boundaryKind === "point") {
+        void geocodePointDraft(lat, lng);
         return;
       }
       if (mapPickInFlight.current) return;
@@ -538,8 +586,27 @@ export function EventCreatorScreen() {
         mapPickInFlight.current = false;
       }
     },
-    [attemptPickHit, boundaryKind, mapFeatures, selectedIds],
+    [attemptPickHit, boundaryKind, geocodePointDraft, mapFeatures, selectedIds],
   );
+
+  const confirmPointDraft = useCallback(() => {
+    if (!pointDraft || pointDraft.loading) return;
+    const hit: BoundarySearchHit = {
+      kind: "point",
+      id: zoneKeyPoint(pointDraft.lat, pointDraft.lng),
+      label: pointDraft.label,
+      city: pointDraft.city,
+      subtitle: pointDraft.city,
+      lat: pointDraft.lat,
+      lng: pointDraft.lng,
+    };
+    void attemptPickHit(hit);
+    setPointDraft(null);
+  }, [attemptPickHit, pointDraft]);
+
+  useEffect(() => {
+    if (boundaryKind !== "point") setPointDraft(null);
+  }, [boundaryKind]);
 
   const removeZone = useCallback(
     (id: string) => {
@@ -652,9 +719,14 @@ export function EventCreatorScreen() {
     <div className="fixed inset-0 z-[250] flex flex-col bg-[#0c0610]">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ paddingBottom: footerPad }}>
         <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md">
-          <p className="font-display text-lg text-orange-200">
-            {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
-          </p>
+          <div className="space-y-0.5 text-right">
+            <p className="font-display text-lg text-orange-200">
+              {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
+            </p>
+            {view === "map" ? (
+              <p className="text-sm text-white/50">אפשר לבחור במפה או להקליד בחיפוש</p>
+            ) : null}
+          </div>
           <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
           <div className="flex items-stretch gap-2">
             <BoundarySearchField
@@ -669,7 +741,7 @@ export function EventCreatorScreen() {
               onPick={(hit) => void attemptPickHit(hit)}
               listMode={view === "list"}
               large={false}
-              placeholder={SEARCH_PLACEHOLDER[boundaryKind]}
+              placeholder={BOUNDARY_KIND_LABEL[boundaryKind]}
             />
             <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
           </div>
@@ -701,6 +773,8 @@ export function EventCreatorScreen() {
               onAreaClick={onMapAreaClick}
               onBackgroundTap={onMapBackgroundTap}
               boundsFitKey={boundsFitKey}
+              pointDraft={boundaryKind === "point" ? pointDraft : null}
+              onPointDraftMove={(lat, lng) => void geocodePointDraft(lat, lng)}
             />
           </div>
 
@@ -711,7 +785,35 @@ export function EventCreatorScreen() {
                 מעדכן מפה…
               </div>
             ) : null}
-            {mapFocusZone ? (
+            {pointDraft ? (
+              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center gap-2 rounded-xl border border-violet-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
+                <EventBoundaryKindBadge kind="point" size="lg" />
+                <div className="min-w-0 flex-1 text-right">
+                  <p className="truncate text-lg text-white/90">
+                    {pointDraft.loading ? "מזהה כתובת…" : pointDraft.label}
+                  </p>
+                  <p className="truncate text-xs text-white/45 tabular-nums">
+                    {pointDraft.lat.toFixed(5)}, {pointDraft.lng.toFixed(5)}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  disabled={pointDraft.loading}
+                  className="shrink-0 bg-orange-500 px-4 text-base font-semibold text-black hover:bg-orange-400"
+                  onClick={confirmPointDraft}
+                >
+                  הוסף
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setPointDraft(null)}
+                  className="flex size-11 shrink-0 items-center justify-center rounded-xl text-white/50 hover:bg-white/10"
+                  aria-label="בטל סימון"
+                >
+                  <Trash2 className="size-5" aria-hidden />
+                </button>
+              </div>
+            ) : mapFocusZone ? (
               <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center gap-3 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
                 <EventBoundaryKindBadge kind={mapFocusZone.kind} size="lg" />
                 <div className="min-w-0 flex-1 text-right">
@@ -727,14 +829,6 @@ export function EventCreatorScreen() {
                   aria-label={`הסר ${mapFocusZone.label}`}
                 >
                   <Trash2 className="size-5" aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapFocusId(null)}
-                  className="flex size-10 shrink-0 items-center justify-center rounded-xl text-white/50 hover:bg-white/10"
-                  aria-label="סגור"
-                >
-                  <X className="size-5" aria-hidden />
                 </button>
               </div>
             ) : null}
