@@ -7,11 +7,7 @@ import {
   zoneKeyPoint,
   zoneKeyStreet,
 } from "@/lib/event-boundary";
-import {
-  searchAddressPoints,
-  searchStreets,
-  searchStreetsNationwide,
-} from "@/lib/event-boundary-nominatim.server";
+import { searchAddressPoints, searchStreets, searchStreetsNationwide } from "@/lib/event-boundary-nominatim.server";
 import type { GovNeighborhoodCatalog } from "@/lib/gov-neighborhoods/types";
 import {
   searchCatalog,
@@ -105,7 +101,32 @@ function nominatimPointsToBoundaryHits(
     subtitle: p.city,
     lat: p.lat,
     lng: p.lng,
+    placeTypeLabel: "nominatim",
   }));
+}
+
+/** Event address/POI search: Google when configured, else OSM geocode (no text street guessing). */
+export async function resolvePointSearchHits(q: string, cap: number): Promise<BoundarySearchHit[]> {
+  const trimmed = q.trim();
+  if (!trimmed) return [];
+
+  const named = namedSchoolPointSearchHits(trimmed);
+  const { googlePlacesConfigured } = await import("@/lib/google-places.server");
+
+  if (googlePlacesConfigured()) {
+    const google = await googlePointSearchHits(trimmed, cap);
+    if (google.length > 0) {
+      return mergeBoundaryHits(named, google).slice(0, cap);
+    }
+  }
+
+  let geo: BoundarySearchHit[] = [];
+  try {
+    geo = nominatimPointsToBoundaryHits(await searchAddressPoints(trimmed, cap));
+  } catch {
+    // optional
+  }
+  return mergeBoundaryHits(named, geo).slice(0, cap);
 }
 
 export function inferSettlementFromQuery(
@@ -136,15 +157,32 @@ export async function unifiedBoundarySearch(
   if (!trimmed) return [];
 
   if (filterKind === "point") {
-    const namedPts = namedSchoolPointSearchHits(trimmed);
-    const googlePts = await googlePointSearchHits(trimmed, limit);
-    let nominatimPts: BoundarySearchHit[] = [];
+    return resolvePointSearchHits(trimmed, limit);
+  }
+
+  if (filterKind === "street") {
+    const { settlement, nameQuery } = inferSettlementFromQuery(catalog, trimmed);
+    const parsedAddress = queryEligibleForPointSearch(trimmed) ? parsePointAddressQuery(trimmed) : null;
+    const hoodNeedle = settlement ? nameQuery || undefined : trimmed;
+    const streetNeedle = parsedAddress?.street ?? hoodNeedle ?? trimmed;
+    const streetCity = parsedAddress?.city ?? settlement;
     try {
-      nominatimPts = nominatimPointsToBoundaryHits(await searchAddressPoints(trimmed, limit));
+      const streets = streetCity
+        ? await searchStreets(streetCity, streetNeedle, limit)
+        : await searchStreetsNationwide(
+            streetNeedle.replace(/\d+[א-ת]?/g, " ").replace(/\s+/g, " ").trim(),
+            Math.min(limit, 12),
+          );
+      return streets.map((s) => ({
+        kind: "street" as const,
+        id: zoneKeyStreet(s.city, s.street),
+        label: s.street,
+        city: s.city,
+        subtitle: s.city,
+      }));
     } catch {
-      // optional
+      return [];
     }
-    return mergeBoundaryHits(mergeBoundaryHits(namedPts, googlePts), nominatimPts).slice(0, limit);
   }
 
   const { settlement, nameQuery } = inferSettlementFromQuery(catalog, trimmed);
@@ -169,26 +207,9 @@ export async function unifiedBoundarySearch(
   }
 
   const hasHouseNumber = queryEligibleForPointSearch(trimmed);
-  const parsedAddress = hasHouseNumber ? parsePointAddressQuery(trimmed) : null;
 
-  if (!filterKind && hasHouseNumber) {
-    const cap = Math.min(limit, 14);
-    const googlePts = await googlePointSearchHits(trimmed, cap);
-    hits.push(...googlePts);
-    try {
-      hits.push(...nominatimPointsToBoundaryHits(await searchAddressPoints(trimmed, cap)));
-    } catch {
-      // nominatim optional
-    }
-  }
-
-  const namedSchoolPts = !filterKind && !hasHouseNumber ? namedSchoolPointSearchHits(trimmed) : [];
-  if (namedSchoolPts.length) {
-    hits.push(...namedSchoolPts);
-  }
-
-  if (!filterKind && !hasHouseNumber) {
-    hits.push(...(await googlePointSearchHits(trimmed, Math.min(limit, 10))));
+  if (!filterKind) {
+    hits.push(...(await resolvePointSearchHits(trimmed, Math.min(limit, 14))));
   }
 
   if (!filterKind || filterKind === "neighborhood") {
@@ -205,41 +226,6 @@ export async function unifiedBoundarySearch(
       subtitle: e.city,
     });
   }
-  }
-
-  if (!filterKind || filterKind === "street") {
-    try {
-      // Unified search with a parsed address (street + number + city) → נקודה hits, not רחוב.
-      if (!filterKind && parsedAddress) {
-        // skip street rows
-      } else if (hasHouseNumber && !parsedAddress && !settlement) {
-        // "נחליאלי 4" without a city is an address, not a nationwide street pick.
-      } else if (namedSchoolPts.length > 0 && !hasHouseNumber && !filterKind) {
-        // Skip noisy nationwide street guesses when a campus alias matched (e.g. «המנחיל» → הפודים).
-      } else {
-        const streetNeedle = parsedAddress?.street ?? hoodNeedle ?? trimmed;
-        const streetCity = parsedAddress?.city ?? settlement;
-
-        const streets = streetCity
-          ? await searchStreets(streetCity, streetNeedle, 12)
-          : await searchStreetsNationwide(
-              streetNeedle.replace(/\d+[א-ת]?/g, " ").replace(/\s+/g, " ").trim(),
-              10,
-            );
-
-        for (const s of streets) {
-          hits.push({
-            kind: "street",
-            id: zoneKeyStreet(s.city, s.street),
-            label: s.street,
-            city: s.city,
-            subtitle: s.city,
-          });
-        }
-      }
-    } catch {
-      // streets optional when nominatim throttles
-    }
   }
 
   const seen = new Set<string>();
