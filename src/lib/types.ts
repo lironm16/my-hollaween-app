@@ -61,6 +61,21 @@ export type TreatStock = {
 
 export type HoursWindow = { from: string; to: string };
 
+/** Saved on create/update when Translate API is configured (forward-only; not backfilled). */
+export type HouseLocaleSnapshot = {
+  address?: string;
+  name?: string;
+  description?: string;
+  arrival?: string;
+  notes?: string;
+};
+
+export type HouseI18n = {
+  en?: HouseLocaleSnapshot;
+  /** ISO time when en snapshot was last generated. */
+  updatedAt?: string;
+};
+
 export type House = {
   id: string;
   /** Residential trick-or-treat house vs manager-curated point of interest. */
@@ -120,6 +135,8 @@ export type House = {
   gemAnchor?: GemAnchorPlacement | null;
   /** Admin-only — dismissals for house data anomalies (never in public catalog). */
   adminAnomalyReviews?: Partial<Record<HouseAnomalyKind, HouseAnomalyReview>>;
+  /** Bilingual visitor text — English snapshot; Hebrew remains primary fields. */
+  i18n?: HouseI18n;
 };
 
 export type GemAnchorPlacement = {

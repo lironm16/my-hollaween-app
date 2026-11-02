@@ -57,13 +57,20 @@ import {
   withLock,
 } from "./core";
 import { broadcastPush } from "./push";
+import { syncHouseBilingualContent } from "@/lib/house-content-i18n.server";
 import { refreshHouseAnomalyState } from "./house-anomalies";
 
 async function finalizeHouseRow(house: House): Promise<House> {
+  let row = house;
   try {
-    return await refreshHouseAnomalyState(house);
+    row = await syncHouseBilingualContent(row);
   } catch {
-    return house;
+    // Translate is optional — save still succeeds.
+  }
+  try {
+    return await refreshHouseAnomalyState(row);
+  } catch {
+    return row;
   }
 }
 

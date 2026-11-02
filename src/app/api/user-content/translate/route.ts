@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { googleTranslateApiKey, googleTranslateTexts } from "@/lib/google-translate.server";
 import { transliterateHebrewPersonName } from "@/lib/transliterate-hebrew-person-name";
 import type { UserContentTranslatePurpose } from "@/lib/user-content-translate-purpose";
 
@@ -9,25 +10,6 @@ type Body = {
   target?: unknown;
   purpose?: unknown;
 };
-
-async function googleTranslate(texts: string[], target: string, apiKey: string): Promise<string[]> {
-  const url = new URL("https://translation.googleapis.com/language/translate/v2");
-  url.searchParams.set("key", apiKey);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ q: texts, target, format: "text" }),
-  });
-  if (!res.ok) {
-    throw new Error(`translate HTTP ${res.status}`);
-  }
-  const json = (await res.json()) as {
-    data?: { translations?: { translatedText?: string }[] };
-  };
-  const out = json.data?.translations?.map((row) => row.translatedText ?? "") ?? [];
-  if (out.length !== texts.length) throw new Error("translate length mismatch");
-  return out.map((value, i) => value.trim() || texts[i]!);
-}
 
 function parsePurpose(value: unknown): UserContentTranslatePurpose {
   return value === "proper_name" ? "proper_name" : "prose";
@@ -57,13 +39,12 @@ export async function POST(request: Request) {
     });
   }
 
-  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY?.trim();
-  if (!apiKey) {
+  if (!process.env.GOOGLE_TRANSLATE_API_KEY?.trim()) {
     return NextResponse.json({ translations: texts, stub: true });
   }
 
   try {
-    const translations = await googleTranslate(texts, target, apiKey);
+    const translations = await googleTranslateTexts(texts, target, googleTranslateApiKey());
     return NextResponse.json({ translations });
   } catch {
     return NextResponse.json({ translations: texts, stub: true });

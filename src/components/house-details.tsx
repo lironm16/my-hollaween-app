@@ -20,7 +20,12 @@ import { formatHoursLabel } from "@/lib/hours";
 import { useLocale } from "@/hooks/use-locale";
 import { houseAddedMetaLineLocalized } from "@/lib/house-meta-i18n";
 import { useTranslatedUserText } from "@/hooks/use-translated-user-text";
-import { houseHeadline } from "@/lib/labels";
+import {
+  localizedHouseArrival,
+  localizedHouseDescription,
+  localizedHouseHeadline,
+  localizedHouseNotes,
+} from "@/lib/i18n/display-address";
 import { houseServerDetailReady } from "@/lib/device-catalog-cache";
 import { useHouseMapsUrl } from "@/hooks/use-house-maps-url";
 import { houseSharePath } from "@/lib/nav-links";
@@ -30,7 +35,11 @@ import { HOUSE_CARD_PHOTO_BOX } from "@/components/house-photo-frame";
 import { cn } from "@/lib/utils";
 
 function HouseDisplayHeadline({ house }: { house: PublicHouse }) {
-  const headline = houseHeadline(house);
+  const { locale } = useLocale();
+  const headline = localizedHouseHeadline(house, locale);
+  if (locale === "en" && house.i18n?.en?.name?.trim()) {
+    return <>{headline}</>;
+  }
   const display = useTranslatedUserText(headline);
   return <>{display}</>;
 }
@@ -369,8 +378,15 @@ export function HouseDetails({
   const editorHouse = viewHouse as EditorHouse;
   const ownerPhone = showPrivateFields ? editorHouse.ownerPhone?.trim() : "";
   const displayAddress = addressReveal.formatDisplayAddress(viewHouse);
-  const arrivalText = addressReveal.visibleArrival(viewHouse);
-  const notesText = addressReveal.visibleNotes(viewHouse);
+  const arrivalText = localizedHouseArrival(
+    { ...viewHouse, arrival: addressReveal.visibleArrival(viewHouse) ?? "" },
+    locale,
+  );
+  const notesText = localizedHouseNotes(
+    { ...viewHouse, notes: addressReveal.visibleNotes(viewHouse) ?? "" },
+    locale,
+  );
+  const descriptionText = localizedHouseDescription(viewHouse, locale);
   const showMaps = addressReveal.mapsAllowed(viewHouse.id) && houseServerDetailReady(viewHouse);
   const showDistance =
     addressReveal.distanceAllowed(viewHouse.id) && distanceM !== undefined;
@@ -574,7 +590,7 @@ export function HouseDetails({
       {actions}
       <HouseArrivalDirections arrival={arrivalText} houseId={house.id} />
       {notesText ? <HouseNotesSection notes={notesText} houseId={viewHouse.id} /> : null}
-      <HouseDescriptionSection description={viewHouse.description} houseId={viewHouse.id} />
+      <HouseDescriptionSection description={descriptionText} houseId={viewHouse.id} />
       {addedMeta || ownerPhone ? (
         <p className="text-sm text-violet-400">
           {addedMeta}

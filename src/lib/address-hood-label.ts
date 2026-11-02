@@ -4,7 +4,7 @@ import { streetFromAddressHit } from "@/lib/address-fields";
 import type { AddressHit } from "@/lib/types";
 
 function isCuratedAddressHit(hit: AddressHit) {
-  return hit.id.startsWith("named-place-") || hit.id.startsWith("google-place-");
+  return hit.id.startsWith("google-place-");
 }
 
 export function hoodIdForAddressHit(hit: AddressHit): NeighborhoodId | null {

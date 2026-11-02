@@ -105,6 +105,11 @@ export function removedHousesCollection() {
   return neighborhoodRoot().collection("removed");
 }
 
+/** Shared Hebrew ↔ English street lines (Translate API, forward-only). */
+export function addressTranslationsCollection() {
+  return neighborhoodRoot().collection("addressTranslations");
+}
+
 export function pushSubscriptionsCollection() {
   return neighborhoodRoot().collection("pushSubscriptions");
 }
