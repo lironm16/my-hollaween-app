@@ -3,9 +3,7 @@ import { resolveNeighborhood, type NeighborhoodId } from "@/lib/config";
 import type { AppLocale } from "@/lib/i18n/locale";
 import { localizedStreetLine as localizedStreetLineFromLabels } from "@/lib/i18n/event-street-labels";
 import { displayNeighborhoodName, localizedNeighborhoodLabel } from "@/lib/i18n/neighborhood-labels";
-import { namedPlaceForCampusAddress } from "@/lib/named-address-places";
-
-/** English labels for curated campus addresses (stored Hebrew in `address`). */
+/** English labels for common school addresses (stored Hebrew in `address`). */
 const CAMPUS_ADDRESS_EN: Record<string, string> = {
   'ביה״ס ניצנים': "Nitzanim School",
   'ביה״ס המנחיל': "HaMenachil School",
@@ -15,8 +13,7 @@ const CAMPUS_ADDRESS_EN: Record<string, string> = {
 function localizedStreetLine(locale: AppLocale, street: string): string {
   const trimmed = street.trim();
   if (!trimmed || locale === "he") return trimmed;
-  const place = namedPlaceForCampusAddress(trimmed);
-  if (place) return CAMPUS_ADDRESS_EN[place.displayName] ?? trimmed;
+  if (CAMPUS_ADDRESS_EN[trimmed]) return CAMPUS_ADDRESS_EN[trimmed]!;
   let out = localizedStreetLineFromLabels(locale, trimmed);
   const hoods: NeighborhoodId[] = ["שיכון ותיקים", "חרוזים", "נחלת גנים", "הגפן"];
   for (const id of hoods) {

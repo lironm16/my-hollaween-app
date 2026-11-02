@@ -16,10 +16,9 @@ describe("school campus", () => {
     assert.equal(isSchoolCampusAddress("חרוזים 8"), false);
   });
 
-  it("maps each school campus to a fixed neighborhood", () => {
-    assert.equal(schoolCampusNeighborhoodForAddress("ביה״ס ניצנים"), "שיכון ותיקים");
-    assert.equal(schoolCampusNeighborhoodForAddress("ביה״ס גבעולים"), "הגפן");
-    assert.equal(schoolCampusNeighborhoodForAddress("ביה״ס המנחיל"), "נחלת גנים");
+  it("does not assign hood from a manual campus list", () => {
+    assert.equal(schoolCampusNeighborhoodForAddress("ביה״ס ניצנים"), null);
+    assert.equal(schoolCampusNeighborhoodForAddress("ביה״ס גבעולים"), null);
   });
 
   it("uses school copy for one booth or many", () => {

@@ -1,18 +1,14 @@
 import { neighborhoodAtEventLocation, type NeighborhoodId } from "@/lib/config";
 import { houseNumberFromHit } from "@/lib/address-text";
 import { streetFromAddressHit } from "@/lib/address-fields";
-import { schoolCampusNeighborhoodForAddress } from "@/lib/named-address-places";
 import type { AddressHit } from "@/lib/types";
 
 function isCuratedAddressHit(hit: AddressHit) {
-  return hit.id.startsWith("named-place-");
+  return hit.id.startsWith("named-place-") || hit.id.startsWith("google-place-");
 }
 
 export function hoodIdForAddressHit(hit: AddressHit): NeighborhoodId | null {
-  const address = streetFromAddressHit(hit);
-  return (
-    schoolCampusNeighborhoodForAddress(address) ?? neighborhoodAtEventLocation(hit.lat, hit.lng)
-  );
+  return neighborhoodAtEventLocation(hit.lat, hit.lng);
 }
 
 /** Hood subtitle only after a house number (or curated campus pick). Requires precise pin for streets. */

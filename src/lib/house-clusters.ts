@@ -1,6 +1,5 @@
 import { boothNumberForHouse } from "@/lib/cluster-booth";
 import { parseStreetAndNumber } from "@/lib/address-text";
-import { namedPlaceForCampusAddress } from "@/lib/named-address-places";
 import { clusterIsSchoolCampus, isSchoolCampusAddress } from "@/lib/school-campus";
 import type { PublicHouse } from "@/lib/types";
 
@@ -83,15 +82,8 @@ function sortHouses(houses: PublicHouse[]) {
 
 function clusterFromHouses(key: string, houses: PublicHouse[]): HouseCluster {
   const housesSorted = sortHouses(houses);
-  const campusPlace = clusterIsSchoolCampus(housesSorted)
-    ? namedPlaceForCampusAddress(housesSorted[0]!.address)
-    : null;
-  const lat =
-    campusPlace?.lat ??
-    housesSorted.reduce((sum, h) => sum + h.lat, 0) / housesSorted.length;
-  const lng =
-    campusPlace?.lng ??
-    housesSorted.reduce((sum, h) => sum + h.lng, 0) / housesSorted.length;
+  const lat = housesSorted.reduce((sum, h) => sum + h.lat, 0) / housesSorted.length;
+  const lng = housesSorted.reduce((sum, h) => sum + h.lng, 0) / housesSorted.length;
   return {
     key,
     address: housesSorted[0]!.address,

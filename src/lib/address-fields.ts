@@ -10,7 +10,6 @@ import { houseNumberFromHit, parseStreetAndNumber } from "@/lib/address-text";
 import { osmFootprintForAddress } from "@/lib/house-footprint-align";
 import { clusterAddressKey } from "@/lib/house-clusters";
 import { hoodSubtitleForAddressHit } from "@/lib/address-hood-label";
-import { searchNamedAddressPlaces } from "@/lib/named-address-places";
 import type { AddressHit } from "@/lib/types";
 
 const ADDRESS_AREA_NAMES = [...NEIGHBORHOODS, "שכונת הגפן"] as const;
@@ -99,7 +98,7 @@ function snapHitToFootprint(hit: AddressHit): AddressHit {
 }
 
 function isCuratedAddressHit(hit: AddressHit) {
-  return hit.id.startsWith("named-place-") || hit.id.startsWith("google-place-");
+  return hit.id.startsWith("google-place-");
 }
 
 /** Snap to OSM footprints and build a display label (may be outside the four neighborhoods). */
@@ -182,15 +181,8 @@ export async function searchPreparedAddresses(query: string): Promise<AddressHit
     }
   }
 
-  const useManualNamed = !googlePlacesConfigured() || googlePrepared.length === 0;
-  const named = useManualNamed
-    ? (searchNamedAddressPlaces(trimmed)
-        .map((hit) => prepareAddressHit(hit, trimmed))
-        .filter(Boolean) as AddressHit[])
-    : [];
-
   if (!parsed.num) {
-    return mergePreparedAddressHits(named, googlePrepared);
+    return googlePrepared;
   }
 
   const { searchAddress } = await import("@/lib/geocode");
@@ -200,7 +192,7 @@ export async function searchPreparedAddresses(query: string): Promise<AddressHit
     if (synthetic) geocoded = [synthetic];
   }
 
-  return mergePreparedAddressHits(mergePreparedAddressHits(named, googlePrepared), geocoded);
+  return mergePreparedAddressHits(googlePrepared, geocoded);
 }
 
 export function prepareAddressHits(hits: AddressHit[], query = ""): AddressHit[] {

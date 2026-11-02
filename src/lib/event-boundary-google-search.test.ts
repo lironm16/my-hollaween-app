@@ -1,24 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  googlePointSearchHits,
-  namedSchoolPointSearchHits,
-  resolvePointSearchHits,
-} from "@/lib/event-boundary-search.server";
+import { googlePointSearchHits, resolvePointSearchHits } from "@/lib/event-boundary-search.server";
 
 describe("event boundary google search", () => {
-  it("maps «המנחיל» to the curated campus before Google", () => {
-    const hits = namedSchoolPointSearchHits("המנחיל");
-    assert.ok(hits.some((h) => h.label.includes("המנחיל")));
-    assert.equal(hits[0]?.placeTypeLabel, "school (curated)");
-  });
-
-  it("resolvePointSearchHits prefers curated schools without Google", async () => {
+  it("resolvePointSearchHits returns empty without Google key and no house number", async () => {
     const prev = process.env.GOOGLE_MAPS_API_KEY;
     delete process.env.GOOGLE_MAPS_API_KEY;
     try {
       const hits = await resolvePointSearchHits("המנחיל", 6);
-      assert.ok(hits.some((h) => h.label.includes("המנחיל")));
+      assert.deepEqual(hits, []);
     } finally {
       if (prev !== undefined) process.env.GOOGLE_MAPS_API_KEY = prev;
     }

@@ -4,28 +4,21 @@ import {
   localizedClusterPinAriaLabel,
 } from "@/lib/i18n/cluster-copy";
 import type { AppLocale } from "@/lib/i18n/locale";
-import {
-  NAMED_ADDRESS_PLACES,
-  namedPlaceForCampusAddress,
-  schoolCampusNeighborhoodForAddress,
-} from "@/lib/named-address-places";
+import type { NeighborhoodId } from "@/lib/config";
 import type { PublicHouse } from "@/lib/types";
 
-export { schoolCampusNeighborhoodForAddress };
-
-let campusNamesCache: Set<string> | null = null;
-function getCampusNames(): Set<string> {
-  if (!campusNamesCache) {
-    campusNamesCache = new Set(NAMED_ADDRESS_PLACES.map((p) => p.displayName));
-  }
-  return campusNamesCache;
+/** Legacy hook — campus hood no longer comes from a manual list. */
+export function schoolCampusNeighborhoodForAddress(
+  _address: string | null | undefined,
+): NeighborhoodId | null {
+  return null;
 }
 
-/** Address field equals a curated school campus (e.g. ביה״ס ניצנים). */
+/** Stored address looks like a school name (no manual coordinate list). */
 export function isSchoolCampusAddress(address: string | null | undefined): boolean {
   const street = streetFromLegacyAddress(address?.trim() ?? "");
   if (!street) return false;
-  return getCampusNames().has(street);
+  return /^ביה״ס|^בי["״]ס|^בית\s+ספר/iu.test(street);
 }
 
 /** Cluster sheet / list chrome — school campuses always use campus UI (even one booth). */
@@ -35,7 +28,7 @@ export function usesSchoolCampusClusterChrome(
   return clusterIsSchoolCampus(houses);
 }
 
-/** Map pin / copy — one or more rows at the same curated school address. */
+/** Map pin / copy — one or more rows at the same school-style address. */
 export function clusterIsSchoolCampus(houses: readonly Pick<PublicHouse, "address">[]): boolean {
   if (houses.length === 0) return false;
   if (houses.length === 1) return isSchoolCampusAddress(houses[0]?.address);
@@ -50,13 +43,10 @@ export function clusterOverviewSubtitle(
   return localizedClusterOverviewSubtitle(locale, houses);
 }
 
-/** Pin aria-label for multi-unit clusters. */
-/** Map pan / cluster anchor — curated campus coords when the row is a school address. */
+/** Map pan / cluster anchor — house coordinates only. */
 export function mapCoordsForHouse(
   house: Pick<PublicHouse, "address" | "lat" | "lng">,
 ): { lat: number; lng: number } {
-  const place = namedPlaceForCampusAddress(house.address);
-  if (place) return { lat: place.lat, lng: place.lng };
   return { lat: house.lat, lng: house.lng };
 }
 

@@ -13,7 +13,6 @@ import {
   searchCatalog,
   uniqueCitiesFromCatalog,
 } from "@/lib/gov-neighborhoods/load.server";
-import { searchNamedAddressPlaces } from "@/lib/named-address-places";
 
 const KIND_RANK: Record<BoundarySearchHit["kind"], number> = {
   city: 0,
@@ -24,24 +23,6 @@ const KIND_RANK: Record<BoundarySearchHit["kind"], number> = {
 
 function isGooglePointHit(hit: BoundarySearchHit) {
   return hit.kind === "point" && hit.id.startsWith("google-place-");
-}
-
-function isNamedSchoolPointHit(hit: BoundarySearchHit) {
-  return hit.kind === "point" && hit.id.startsWith("named-place-");
-}
-
-/** Curated Ramat Gan campuses — reliable for partial names like «המנחיל». */
-export function namedSchoolPointSearchHits(q: string): BoundarySearchHit[] {
-  return searchNamedAddressPlaces(q).map((h) => ({
-    kind: "point" as const,
-    id: h.id,
-    label: h.road.trim(),
-    city: h.city || "רמת גן",
-    subtitle: h.subtitle?.trim() || undefined,
-    lat: h.lat,
-    lng: h.lng,
-    placeTypeLabel: "school (curated)",
-  }));
 }
 
 function pointLabelForEventSearch(label: string) {
@@ -105,28 +86,22 @@ function nominatimPointsToBoundaryHits(
   }));
 }
 
-/** Event address/POI search: Google when configured, else OSM geocode (no text street guessing). */
+/** Event address/POI search: Google when configured, else OSM geocode. */
 export async function resolvePointSearchHits(q: string, cap: number): Promise<BoundarySearchHit[]> {
   const trimmed = q.trim();
   if (!trimmed) return [];
 
-  const named = namedSchoolPointSearchHits(trimmed);
   const { googlePlacesConfigured } = await import("@/lib/google-places.server");
-
   if (googlePlacesConfigured()) {
     const google = await googlePointSearchHits(trimmed, cap);
-    if (google.length > 0) {
-      return mergeBoundaryHits(named, google).slice(0, cap);
-    }
+    if (google.length > 0) return google.slice(0, cap);
   }
 
-  let geo: BoundarySearchHit[] = [];
   try {
-    geo = nominatimPointsToBoundaryHits(await searchAddressPoints(trimmed, cap));
+    return nominatimPointsToBoundaryHits(await searchAddressPoints(trimmed, cap)).slice(0, cap);
   } catch {
-    // optional
+    return [];
   }
-  return mergeBoundaryHits(named, geo).slice(0, cap);
 }
 
 export function inferSettlementFromQuery(
@@ -241,15 +216,12 @@ export async function unifiedBoundarySearch(
       if (a.kind === "point" && b.kind !== "point") return -1;
       if (b.kind === "point" && a.kind !== "point") return 1;
     } else {
-      const rank = (h: BoundarySearchHit) => {
-        if (isNamedSchoolPointHit(h)) return 0;
-        if (isGooglePointHit(h)) return 1;
-        if (h.kind === "point") return 2;
-        return 3 + KIND_RANK[h.kind];
-      };
-      const ar = rank(a);
-      const br = rank(b);
-      if (ar !== br) return ar - br;
+      const aG = isGooglePointHit(a);
+      const bG = isGooglePointHit(b);
+      if (aG && !bG) return -1;
+      if (bG && !aG) return 1;
+      if (a.kind === "point" && b.kind !== "point") return -1;
+      if (b.kind === "point" && a.kind !== "point") return 1;
     }
     const r = KIND_RANK[a.kind] - KIND_RANK[b.kind];
     if (r !== 0) return r;

@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { streetFromLegacyAddress } from "@/lib/address-fields";
 import { parseStreetAndNumber } from "@/lib/address-text";
-import { namedPlaceForCampusAddress } from "@/lib/named-address-places";
+import { isSchoolCampusAddress } from "@/lib/school-campus";
 
 const REPO_ROOT = join(process.cwd());
 
@@ -24,7 +24,7 @@ function roadsFromFootprints(): string[] {
 
 function roadFromAddress(address: string): string | null {
   const street = streetFromLegacyAddress(address.trim());
-  if (!street || namedPlaceForCampusAddress(street)) return null;
+  if (!street || isSchoolCampusAddress(street)) return null;
   const { road } = parseStreetAndNumber(street);
   const r = road.trim();
   return r || null;
