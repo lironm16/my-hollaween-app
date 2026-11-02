@@ -2,15 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  existingZonesContainedInNewZone,
   geometriesFromMapFeatures,
   pruneZonesContainedInParents,
 } from "@/lib/event-boundary-zone-prune";
+import { fetchEventBoundaryZoneGeometry } from "@/lib/event-boundary-geometry-client";
 import { ChevronRight, List, Map as MapIcon, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { HouseEditModal } from "@/components/house-edit-modal";
+import { Button } from "@/components/ui/button";
 import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
 import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
 import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
-import type { BoundarySearchHit } from "@/lib/event-boundary";
+import type { BoundarySearchHit, EventBoundaryKind } from "@/lib/event-boundary";
 import { addEventBoundaryZone, removeEventBoundaryZone } from "@/lib/event-boundary-selection";
 import {
   emptyCustomEventDraft,
@@ -25,6 +29,12 @@ type CreatorView = "map" | "list";
 
 const SEARCH_DEBOUNCE_MS = 280;
 
+const MAP_TAP_EMPTY_MESSAGE: Record<EventBoundaryKind, string> = {
+  city: "לא נמצאה עיר בנקודה זו",
+  neighborhood: "לא נמצאה שכונה בנקודה זו",
+  street: "לא נמצא רחוב בנקודה זו",
+};
+
 function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
   return {
     kind: hit.kind,
@@ -32,6 +42,85 @@ function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
     label: hit.label,
     city: hit.city,
   };
+}
+
+const MAP_TAP_KINDS: { kind: EventBoundaryKind; label: string }[] = [
+  { kind: "city", label: "עיר" },
+  { kind: "neighborhood", label: "שכונה" },
+  { kind: "street", label: "רחוב" },
+];
+
+function MapTapKindToggle({
+  kind,
+  onKindChange,
+}: {
+  kind: EventBoundaryKind;
+  onKindChange: (k: EventBoundaryKind) => void;
+}) {
+  return (
+    <div className="flex rounded-xl border border-white/12 bg-black/40 p-1" role="radiogroup" aria-label="סוג אזור בלחיצה על המפה">
+      {MAP_TAP_KINDS.map(({ kind: k, label }) => (
+        <button
+          key={k}
+          type="button"
+          role="radio"
+          aria-checked={kind === k}
+          onClick={() => onKindChange(k)}
+          className={cn(
+            "flex-1 rounded-lg py-1.5 text-xs font-medium transition sm:text-sm",
+            kind === k ? "bg-orange-600/90 text-white" : "text-white/60 hover:bg-white/5",
+          )}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ZoneContainmentDialog({
+  open,
+  newLabel,
+  contained,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  newLabel: string;
+  contained: EventBoundaryZone[];
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <HouseEditModal open={open} onClose={onCancel} title="החלפת אזורים קטנים יותר">
+      <div className="space-y-4 px-4 pb-4 text-right">
+        <p className="text-base leading-relaxed text-violet-100">
+          האזור <span className="font-semibold text-orange-200">{newLabel}</span> כולל אזורים שכבר בחרתם.
+          הם יוסרו אם תמשיכו:
+        </p>
+        <ul className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/85">
+          {contained.map((z) => (
+            <li key={z.id} className="flex items-center justify-end gap-2">
+              <span>{z.label}</span>
+              <EventBoundaryKindBadge kind={z.kind} size="sm" />
+            </li>
+          ))}
+        </ul>
+        <div className="flex gap-2 pt-1">
+          <Button
+            type="button"
+            className="min-w-0 flex-1 bg-orange-500 text-lg text-black hover:bg-orange-400"
+            onClick={onConfirm}
+          >
+            המשך
+          </Button>
+          <Button type="button" variant="outline" className="min-w-0 flex-1 text-lg" onClick={onCancel}>
+            ביטול
+          </Button>
+        </div>
+      </div>
+    </HouseEditModal>
+  );
 }
 
 function ViewToggle({
@@ -218,8 +307,14 @@ export function EventCreatorScreen() {
   const [mapFeatures, setMapFeatures] = useState<EventBoundaryMapFeature[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [mapFocusId, setMapFocusId] = useState<string | null>(null);
+  const [mapTapKind, setMapTapKind] = useState<EventBoundaryKind>("neighborhood");
+  const [containmentPrompt, setContainmentPrompt] = useState<{
+    hit: BoundarySearchHit;
+    contained: EventBoundaryZone[];
+  } | null>(null);
   const draftRef = useRef(draft);
   draftRef.current = draft;
+  const skipPruneToastRef = useRef(false);
 
   const persist = useCallback((next: CustomEventDraft) => {
     setDraft(next);
@@ -227,6 +322,7 @@ export function EventCreatorScreen() {
   }, []);
 
   const selectedIds = useMemo(() => draft.zones.map((z) => z.id), [draft.zones]);
+  const boundsFitKey = useMemo(() => selectedIds.join("|"), [selectedIds]);
 
   const mapFocusZone = useMemo(
     () => draft.zones.find((z) => z.id === mapFocusId) ?? null,
@@ -237,7 +333,7 @@ export function EventCreatorScreen() {
     clearSearchState({ setQuery, setDebouncedQ, setHits, setSuggestOpen });
   }, []);
 
-  const pickHit = useCallback(
+  const applyPickHit = useCallback(
     (hit: BoundarySearchHit) => {
       if (selectedIds.includes(hit.id)) {
         setMapFocusId(hit.id);
@@ -251,28 +347,78 @@ export function EventCreatorScreen() {
     [draft, persist, resetSearch, selectedIds],
   );
 
+  const attemptPickHit = useCallback(
+    async (hit: BoundarySearchHit) => {
+      if (selectedIds.includes(hit.id)) {
+        setMapFocusId(hit.id);
+        return;
+      }
+
+      const newZone = hitToZone(hit);
+      let geoms = geometriesFromMapFeatures(mapFeatures);
+      if (geoms.size === 0 && draft.zones.length > 0) {
+        const res = await fetch("/api/event-boundaries/geometry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ zones: draft.zones }),
+        });
+        if (res.ok) {
+          const body = (await res.json()) as { features?: EventBoundaryMapFeature[] };
+          geoms = geometriesFromMapFeatures(body.features ?? []);
+        }
+      }
+      if (geoms.size === 0) {
+        applyPickHit(hit);
+        return;
+      }
+
+      const newGeom = await fetchEventBoundaryZoneGeometry(newZone);
+      if (!newGeom) {
+        applyPickHit(hit);
+        return;
+      }
+
+      const contained = existingZonesContainedInNewZone(draft.zones, geoms, newZone, newGeom);
+      if (contained.length === 0) {
+        applyPickHit(hit);
+        return;
+      }
+
+      setContainmentPrompt({ hit, contained });
+    },
+    [applyPickHit, draft.zones, mapFeatures, selectedIds],
+  );
+
+  const confirmContainmentPick = useCallback(() => {
+    if (!containmentPrompt) return;
+    skipPruneToastRef.current = true;
+    applyPickHit(containmentPrompt.hit);
+    setContainmentPrompt(null);
+  }, [applyPickHit, containmentPrompt]);
+
   const mapPickInFlight = useRef(false);
+
   const onMapBackgroundTap = useCallback(
     async (lat: number, lng: number) => {
       if (mapPickInFlight.current) return;
       mapPickInFlight.current = true;
       try {
         const res = await fetch(
-          `/api/event-boundaries/pick?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
+          `/api/event-boundaries/pick?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}&kind=${encodeURIComponent(mapTapKind)}`,
         );
         const body = (await res.json()) as { ok?: boolean; hit?: BoundarySearchHit };
         if (body.hit) {
-          pickHit(body.hit);
+          await attemptPickHit(body.hit);
           return;
         }
-        toast.message("לא נמצאה שכונה בנקודה זו");
+        toast.message(MAP_TAP_EMPTY_MESSAGE[mapTapKind]);
       } catch {
-        toast.error("לא הצלחנו לזהות שכונה");
+        toast.error("לא הצלחנו לזהות אזור");
       } finally {
         mapPickInFlight.current = false;
       }
     },
-    [pickHit],
+    [attemptPickHit, mapTapKind],
   );
 
   const removeZone = useCallback(
@@ -362,8 +508,11 @@ export function EventCreatorScreen() {
           const removed = current.zones.filter((z) => !pruned.some((p) => p.id === z.id));
           persist({ ...current, zones: pruned });
           setMapFocusId((focus) => (focus && removed.some((z) => z.id === focus) ? null : focus));
-          const names = removed.map((z) => z.label).join(", ");
-          toast.message(`הוסר ${names} — כבר כלול באזור גדול יותר`);
+          if (!skipPruneToastRef.current) {
+            const names = removed.map((z) => z.label).join(", ");
+            toast.message(`הוסר ${names} — כבר כלול באזור גדול יותר`);
+          }
+          skipPruneToastRef.current = false;
         }
       })
       .finally(() => {
@@ -385,6 +534,9 @@ export function EventCreatorScreen() {
             {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
           </p>
           <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
+          {view === "map" ? (
+            <MapTapKindToggle kind={mapTapKind} onKindChange={setMapTapKind} />
+          ) : null}
           <BoundarySearchField
             query={query}
             onQueryChange={setQuery}
@@ -394,7 +546,7 @@ export function EventCreatorScreen() {
             loadingList={loadingList}
             listError={listError}
             selectedIds={selectedIds}
-            onPick={pickHit}
+            onPick={(hit) => void attemptPickHit(hit)}
             listMode={view === "list"}
             large={view === "list"}
           />
@@ -409,6 +561,7 @@ export function EventCreatorScreen() {
               focusedId={mapFocusId}
               onAreaClick={onMapAreaClick}
               onBackgroundTap={onMapBackgroundTap}
+              boundsFitKey={boundsFitKey}
             />
             {loadingMap ? (
               <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs text-white/70">
@@ -478,6 +631,14 @@ export function EventCreatorScreen() {
           </div>
         )}
       </div>
+
+      <ZoneContainmentDialog
+        open={containmentPrompt !== null}
+        newLabel={containmentPrompt?.hit.label ?? ""}
+        contained={containmentPrompt?.contained ?? []}
+        onConfirm={confirmContainmentPick}
+        onCancel={() => setContainmentPrompt(null)}
+      />
 
       <footer className="fixed inset-x-0 bottom-0 z-[500] flex gap-2 border-t border-white/10 bg-[#140a1c]/98 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-lg">
         <button

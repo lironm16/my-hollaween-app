@@ -54,9 +54,12 @@ function MapBackgroundTap({ onTap }: { onTap?: (lat: number, lng: number) => voi
 function FitBounds({
   bounds,
   showCountry,
+  fitKey,
 }: {
   bounds: L.LatLngBoundsExpression | null;
   showCountry: boolean;
+  /** Changes when selected zone set changes — avoids over-wide refits on minor geometry updates. */
+  fitKey: string;
 }) {
   const map = useMap();
   useEffect(() => {
@@ -65,8 +68,12 @@ function FitBounds({
       return;
     }
     if (!bounds) return;
-    map.fitBounds(bounds, { padding: [48, 48], maxZoom: 16 });
-  }, [bounds, showCountry, map]);
+    map.fitBounds(bounds, {
+      paddingTopLeft: [12, 12],
+      paddingBottomRight: [12, 88],
+      maxZoom: 18,
+    });
+  }, [bounds, showCountry, fitKey, map]);
   return null;
 }
 
@@ -74,6 +81,7 @@ type Props = {
   features: EventBoundaryMapFeature[];
   selectedIds: string[];
   focusedId?: string | null;
+  boundsFitKey?: string;
   onAreaClick?: (featureId: string) => void;
   /** Tap on map outside selected polygons — e.g. add שכונה at point. */
   onBackgroundTap?: (lat: number, lng: number) => void;
@@ -84,6 +92,7 @@ export function EventCreatorMap({
   features,
   selectedIds,
   focusedId = null,
+  boundsFitKey = "",
   onAreaClick,
   onBackgroundTap,
   className,
@@ -128,7 +137,7 @@ export function EventCreatorMap({
             zIndex={450}
           />
         ) : null}
-        <FitBounds bounds={bounds} showCountry={showCountry} />
+        <FitBounds bounds={bounds} showCountry={showCountry} fitKey={boundsFitKey} />
         {onBackgroundTap ? <MapBackgroundTap onTap={onBackgroundTap} /> : null}
         {[...features]
           .map((feature, idx) => ({ feature, idx }))

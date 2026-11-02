@@ -67,6 +67,25 @@ export function pruneZonesContainedInParents(
   return zones.filter((z) => !toDrop.has(z.id));
 }
 
+/** Existing selections that would be dropped once `newZone` (with `newGeom`) is added. */
+export function existingZonesContainedInNewZone(
+  existing: EventBoundaryZone[],
+  geoms: Map<string, AreaGeom>,
+  newZone: EventBoundaryZone,
+  newGeom: AreaGeom,
+): EventBoundaryZone[] {
+  const newRank = KIND_SPECIFICITY[newZone.kind];
+  const contained: EventBoundaryZone[] = [];
+  for (const z of existing) {
+    const inner = geoms.get(z.id);
+    if (!inner) continue;
+    const innerRank = KIND_SPECIFICITY[z.kind];
+    if (innerRank <= newRank) continue;
+    if (areaGeometryEntirelyInside(inner, newGeom)) contained.push(z);
+  }
+  return contained;
+}
+
 export function geometriesFromMapFeatures(
   features: GeoJSON.Feature<GeoJSON.Geometry | null, { id?: string }>[],
 ): Map<string, AreaGeom> {

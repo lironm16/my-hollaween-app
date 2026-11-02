@@ -17,6 +17,41 @@ type NominatimGeoHit = {
 let lastCall = 0;
 const MIN_GAP_MS = 1100;
 
+export type NominatimAddress = {
+  road?: string;
+  pedestrian?: string;
+  residential?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  municipality?: string;
+  suburb?: string;
+};
+
+async function nominatimReverse(lat: number, lng: number): Promise<{ address?: NominatimAddress } | null> {
+  const wait = Math.max(0, MIN_GAP_MS - (Date.now() - lastCall));
+  if (wait) await new Promise((r) => setTimeout(r, wait));
+  const url = new URL("https://nominatim.openstreetmap.org/reverse");
+  url.searchParams.set("lat", String(lat));
+  url.searchParams.set("lon", String(lng));
+  url.searchParams.set("format", "json");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("zoom", "18");
+  lastCall = Date.now();
+  const res = await fetch(url, {
+    headers: { "User-Agent": USER_AGENT, Accept: "application/json", "Accept-Language": "he" },
+    cache: "no-store",
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as { address?: NominatimAddress };
+}
+
+export async function reverseGeocodeAddress(lat: number, lng: number): Promise<NominatimAddress | null> {
+  const body = await nominatimReverse(lat, lng);
+  return body?.address ?? null;
+}
+
 async function nominatimSearch(params: Record<string, string>): Promise<NominatimGeoHit[]> {
   const wait = Math.max(0, MIN_GAP_MS - (Date.now() - lastCall));
   if (wait) await new Promise((r) => setTimeout(r, wait));

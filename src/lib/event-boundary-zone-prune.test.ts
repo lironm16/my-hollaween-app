@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { areaGeometryEntirelyInside, pruneZonesContainedInParents } from "@/lib/event-boundary-zone-prune";
+import {
+  areaGeometryEntirelyInside,
+  existingZonesContainedInNewZone,
+  pruneZonesContainedInParents,
+} from "@/lib/event-boundary-zone-prune";
 import { zoneKeyCity, zoneKeyNeighborhood, zoneKeyStreet } from "@/lib/event-boundary";
 
 describe("event-boundary-zone-prune", () => {
@@ -81,6 +85,46 @@ describe("event-boundary-zone-prune", () => {
     const pruned = pruneZonesContainedInParents([hood, street], geoms);
     assert.equal(pruned.length, 1);
     assert.equal(pruned[0].id, hood.id);
+  });
+
+  it("lists hoods that a new city would replace", () => {
+    const city = { kind: "city" as const, id: zoneKeyCity("רמת גן"), label: "רמת גן" };
+    const hood = {
+      kind: "neighborhood" as const,
+      id: zoneKeyNeighborhood("h1"),
+      label: "שכונה",
+      city: "רמת גן",
+    };
+    const cityGeom: GeoJSON.Polygon = {
+      type: "Polygon",
+      coordinates: [
+        [
+          [34.7, 31.9],
+          [35.0, 31.9],
+          [35.0, 32.2],
+          [34.7, 32.2],
+          [34.7, 31.9],
+        ],
+      ],
+    };
+    const hoodGeom: GeoJSON.Polygon = {
+      type: "Polygon",
+      coordinates: [
+        [
+          [34.8, 32.0],
+          [34.9, 32.0],
+          [34.9, 32.1],
+          [34.8, 32.1],
+          [34.8, 32.0],
+        ],
+      ],
+    };
+    const geoms = new Map([
+      [hood.id, hoodGeom],
+    ]);
+    const contained = existingZonesContainedInNewZone([hood], geoms, city, cityGeom);
+    assert.equal(contained.length, 1);
+    assert.equal(contained[0].id, hood.id);
   });
 
   it("removes hood contained in selected city", () => {
