@@ -140,7 +140,7 @@ function BoundarySuggestPanel({
           {boundaryKind === "point" && query?.trim() && !queryEligibleForPointSearch(query)
             ? "לכתובת מדויקת הוסיפו מספר בית (למשל: ביאליק 12, רמת גן)"
             : boundaryKind === "street" && query?.trim() && queryEligibleForPointSearch(query)
-              ? "לכתובת עם מספר — עברו לטאב נקודה"
+              ? "לכתובת עם מספר בחרו נקודה, או הוסיפו עיר (למשל: נחליאלי 4, רמת גן)"
               : "אין תוצאות"}
         </p>
       ) : (

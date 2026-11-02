@@ -1,5 +1,6 @@
+import { parsePointAddressQuery } from "@/lib/event-boundary-address-parse";
 import type { BoundarySearchHit, EventBoundaryKind } from "@/lib/event-boundary";
-import { zoneKeyCity, zoneKeyNeighborhood, zoneKeyStreet } from "@/lib/event-boundary";
+import { queryEligibleForPointSearch, zoneKeyCity, zoneKeyNeighborhood, zoneKeyStreet } from "@/lib/event-boundary";
 import {
   searchAddressPoints,
   searchStreets,
@@ -100,22 +101,37 @@ export async function unifiedBoundarySearch(
   }
 
   if (!filterKind || filterKind === "street") {
-  try {
-    const streets = settlement
-      ? await searchStreets(settlement, hoodNeedle ?? settlement, 12)
-      : await searchStreetsNationwide(trimmed, 10);
-    for (const s of streets) {
-      hits.push({
-        kind: "street",
-        id: zoneKeyStreet(s.city, s.street),
-        label: s.street,
-        city: s.city,
-        subtitle: s.city,
-      });
+    try {
+      const hasHouseNumber = queryEligibleForPointSearch(trimmed);
+      const parsedAddress = hasHouseNumber ? parsePointAddressQuery(trimmed) : null;
+
+      // "נחליאלי 4" without a city is an address, not a nationwide street pick.
+      if (hasHouseNumber && !parsedAddress && !settlement) {
+        // no street hits — UI prompts switching to נקודה
+      } else {
+        const streetNeedle = parsedAddress?.street ?? hoodNeedle ?? trimmed;
+        const streetCity = parsedAddress?.city ?? settlement;
+
+        const streets = streetCity
+          ? await searchStreets(streetCity, streetNeedle, 12)
+          : await searchStreetsNationwide(
+              streetNeedle.replace(/\d+[א-ת]?/g, " ").replace(/\s+/g, " ").trim(),
+              10,
+            );
+
+        for (const s of streets) {
+          hits.push({
+            kind: "street",
+            id: zoneKeyStreet(s.city, s.street),
+            label: s.street,
+            city: s.city,
+            subtitle: s.city,
+          });
+        }
+      }
+    } catch {
+      // streets optional when nominatim throttles
     }
-  } catch {
-    // streets optional when nominatim throttles
-  }
   }
 
   const seen = new Set<string>();
