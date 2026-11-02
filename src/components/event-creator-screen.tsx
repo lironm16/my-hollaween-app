@@ -40,12 +40,7 @@ const MAP_TAP_EMPTY_MESSAGE: Record<EventBoundaryKind, string> = {
   city: "לא נמצאה עיר בנקודה זו",
 };
 
-const MAP_TAP_KIND_HINT: Record<EventBoundaryKind, string> = {
-  point: "בחרו «נקודה» למטה — ואז לחצו על המפה ליד כתובת עם מספר בית",
-  street: "בחרו «רחוב» למטה — ואז לחצו על המפה על קטע הרחוב",
-  neighborhood: "בחרו «שכונה» למטה — ואז לחצו על המפה בתוך גבולות השכונה",
-  city: "בחרו «עיר» למטה — ואז לחצו על המפה בתוך גבולות העיר",
-};
+const MAP_TAP_HINT = "לחצו על המפה לבחירת נקודה, רחוב, שכונה או עיר";
 
 function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
   return {
@@ -817,7 +812,7 @@ export function EventCreatorScreen() {
             ) : null}
             {showKindTabs ? (
               <>
-                <p className="text-right text-sm leading-snug text-white/55">{MAP_TAP_KIND_HINT[boundaryKind]}</p>
+                <p className="text-right text-sm leading-snug text-white/55">{MAP_TAP_HINT}</p>
                 <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
               </>
             ) : null}
