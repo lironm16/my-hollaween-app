@@ -29,6 +29,11 @@ export function roundEventBoundaryCoord(n: number): number {
   return Math.round(n * 1e5) / 1e5;
 }
 
+/** נקודה mode: search needs a building number in the query text. */
+export function queryEligibleForPointSearch(q: string): boolean {
+  return /\d/.test(q.trim());
+}
+
 export function zoneKeyPoint(lat: number, lng: number): string {
   return `p:${roundEventBoundaryCoord(lat)},${roundEventBoundaryCoord(lng)}`;
 }

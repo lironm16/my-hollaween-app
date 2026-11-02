@@ -1,4 +1,4 @@
-import { roundEventBoundaryCoord, zoneKeyPoint } from "@/lib/event-boundary";
+import { queryEligibleForPointSearch, roundEventBoundaryCoord, zoneKeyPoint } from "@/lib/event-boundary";
 import { config } from "@/lib/config";
 import { pickStreetCenterlines } from "@/lib/event-boundary-street-geom";
 import { bufferPolylineLngLat } from "@/lib/line-buffer";
@@ -324,6 +324,17 @@ function digitsFromQuery(q: string): string {
   return q.replace(/\D/g, "");
 }
 
+function isSpecificAddressNominatimHit(h: NominatimGeoHit): boolean {
+  const hn = h.address?.house_number?.trim();
+  if (!hn) return false;
+  const at = h.addresstype ?? h.type ?? "";
+  if (at === "city" || at === "town" || at === "municipality" || at === "village") {
+    return false;
+  }
+  if (h.class === "place" && h.type === "city") return false;
+  return true;
+}
+
 function scoreAddressHit(h: NominatimGeoHit, query: string): number {
   let score = 0;
   const qDigits = digitsFromQuery(query);
@@ -363,7 +374,7 @@ function nominatimHitToAddressPoint(h: NominatimGeoHit, fallbackQuery: string): 
 /** Forward geocode for specific addresses (map/search mode נקודה). */
 export async function searchAddressPoints(q: string, limit = 14): Promise<AddressPointHit[]> {
   const query = q.trim();
-  if (!query) return [];
+  if (!query || !queryEligibleForPointSearch(query)) return [];
 
   const queryVariants = [query];
   if (!/israel|ישראל/i.test(query)) {
@@ -384,8 +395,11 @@ export async function searchAddressPoints(q: string, limit = 14): Promise<Addres
       addressdetails: "1",
     });
     for (const h of hits) {
+      if (!isSpecificAddressNominatimHit(h)) continue;
       const row = nominatimHitToAddressPoint(h, query);
       if (!row) continue;
+      const road = h.address ? roadFromNominatimAddress(h.address) : "";
+      if (!road && !h.address?.house_number) continue;
       const dedupeKey = `${row.id}|${row.label}`;
       if (seen.has(dedupeKey)) continue;
       seen.add(dedupeKey);

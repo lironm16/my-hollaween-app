@@ -21,7 +21,7 @@ import {
 import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
 import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
 import type { BoundarySearchHit, EventBoundaryKind } from "@/lib/event-boundary";
-import { roundEventBoundaryCoord, zoneKeyPoint } from "@/lib/event-boundary";
+import { queryEligibleForPointSearch, roundEventBoundaryCoord, zoneKeyPoint } from "@/lib/event-boundary";
 import { addEventBoundaryZone, removeEventBoundaryZone } from "@/lib/event-boundary-selection";
 import {
   emptyCustomEventDraft,
@@ -107,6 +107,8 @@ function BoundarySuggestPanel({
   selectedIds,
   onPick,
   large = false,
+  boundaryKind,
+  query,
 }: {
   open: boolean;
   hits: BoundarySearchHit[];
@@ -115,6 +117,8 @@ function BoundarySuggestPanel({
   selectedIds: string[];
   onPick: (hit: BoundarySearchHit) => void;
   large?: boolean;
+  boundaryKind?: EventBoundaryKind;
+  query?: string;
 }) {
   if (!open) return null;
 
@@ -130,7 +134,11 @@ function BoundarySuggestPanel({
       ) : listError ? (
         <p className={cn("px-3 py-3 text-red-300", large ? "text-base" : "text-sm")}>{listError}</p>
       ) : hits.length === 0 ? (
-        <p className={cn("px-3 py-3 text-white/45", large ? "text-base" : "text-sm")}>אין תוצאות</p>
+        <p className={cn("px-3 py-3 leading-relaxed text-white/45", large ? "text-base" : "text-sm")}>
+          {boundaryKind === "point" && query?.trim() && !queryEligibleForPointSearch(query)
+            ? "לכתובת מדויקת הוסיפו מספר בית (למשל: ביאליק 12, רמת גן)"
+            : "אין תוצאות"}
+        </p>
       ) : (
         <ul className="py-1">
           {hits.map((hit) => {
@@ -329,6 +337,7 @@ function BoundarySearchField({
   listMode = false,
   large = false,
   placeholder,
+  boundaryKind,
 }: {
   query: string;
   onQueryChange: (q: string) => void;
@@ -342,6 +351,7 @@ function BoundarySearchField({
   listMode?: boolean;
   large?: boolean;
   placeholder?: string;
+  boundaryKind?: EventBoundaryKind;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -390,6 +400,8 @@ function BoundarySearchField({
           selectedIds={selectedIds}
           onPick={onPick}
           large={large}
+          boundaryKind={boundaryKind}
+          query={query}
         />
       ) : null}
     </div>
@@ -742,6 +754,7 @@ export function EventCreatorScreen() {
               listMode={view === "list"}
               large={false}
               placeholder={BOUNDARY_KIND_LABEL[boundaryKind]}
+              boundaryKind={boundaryKind}
             />
             <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
           </div>
@@ -753,6 +766,8 @@ export function EventCreatorScreen() {
               listError={listError}
               selectedIds={selectedIds}
               onPick={(hit) => void attemptPickHit(hit)}
+              boundaryKind={boundaryKind}
+              query={query}
             />
           ) : null}
         </header>
