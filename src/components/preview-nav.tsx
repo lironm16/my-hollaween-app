@@ -15,6 +15,7 @@ export const PREVIEW_LINKS = [
   { href: "/preview/countdown", label: "ספירה" },
   { href: "/preview/countdown-fonts", label: "גופני ספירה" },
   { href: "/preview/countdown-finale", label: "finale" },
+  { href: "/preview/google-places", label: "Google Places" },
 ] as const;
 
 export function PreviewNav({ current }: { current: string }) {
