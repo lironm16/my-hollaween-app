@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   CARTO_VOYAGER_NOLABELS_TEMPLATE,
+  CARTO_VOYAGER_ONLY_LABELS_TEMPLATE,
   CARTO_VOYAGER_TEMPLATE,
   OSM_TILE_ATTRIBUTION,
   OSM_TILE_TEMPLATE,
@@ -72,9 +73,13 @@ export async function GET() {
   // OSM is only when no key. keyActive is diagnostic (server probe may fail on deploy URLs).
   const streetLabels = process.env.NEXT_PUBLIC_MAP_STREET_LABELS === "1";
   const voyagerTemplate = streetLabels ? CARTO_VOYAGER_TEMPLATE : CARTO_VOYAGER_NOLABELS_TEMPLATE;
+  const useNolabelsBase = keyConfigured && !streetLabels;
   const tiles = keyConfigured
     ? {
         url: cartoTileUrlWithKey(voyagerTemplate, key),
+        ...(useNolabelsBase
+          ? { labelsUrl: cartoTileUrlWithKey(CARTO_VOYAGER_ONLY_LABELS_TEMPLATE, key) }
+          : {}),
         subdomains: "abcd",
         invert: false as const,
         maxNativeZoom: 18,

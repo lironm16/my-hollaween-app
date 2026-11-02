@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo } from "react";
-import { MapContainer, Polygon, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Polygon, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { config } from "@/lib/config";
@@ -13,6 +13,12 @@ const KIND_COLORS: Record<EventBoundaryKind, string> = {
   city: "#38bdf8",
   neighborhood: "#34d399",
   street: "#fb923c",
+};
+
+const KIND_DRAW_ORDER: Record<EventBoundaryKind, number> = {
+  city: 0,
+  neighborhood: 1,
+  street: 2,
 };
 
 export const EVENT_CREATOR_ISRAEL_BOUNDS: L.LatLngBoundsExpression = [
@@ -34,6 +40,15 @@ function ringsFromGeometry(geometry: GeoJSON.Geometry): [number, number][][] {
     );
   }
   return [];
+}
+
+function MapBackgroundTap({ onTap }: { onTap?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onTap?.(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
 }
 
 function FitBounds({
@@ -60,6 +75,8 @@ type Props = {
   selectedIds: string[];
   focusedId?: string | null;
   onAreaClick?: (featureId: string) => void;
+  /** Tap on map outside selected polygons — e.g. add שכונה at point. */
+  onBackgroundTap?: (lat: number, lng: number) => void;
   className?: string;
 };
 
@@ -68,6 +85,7 @@ export function EventCreatorMap({
   selectedIds,
   focusedId = null,
   onAreaClick,
+  onBackgroundTap,
   className,
 }: Props) {
   const { tiles } = useMapTiles();
@@ -102,8 +120,27 @@ export function EventCreatorMap({
           subdomains={tiles.subdomains}
           maxNativeZoom={tiles.maxNativeZoom}
         />
+        {tiles.labelsUrl ? (
+          <TileLayer
+            url={tiles.labelsUrl}
+            subdomains={tiles.subdomains}
+            maxNativeZoom={tiles.maxNativeZoom}
+            zIndex={450}
+          />
+        ) : null}
         <FitBounds bounds={bounds} showCountry={showCountry} />
-        {features.map((feature, idx) => {
+        {onBackgroundTap ? <MapBackgroundTap onTap={onBackgroundTap} /> : null}
+        {[...features]
+          .map((feature, idx) => ({ feature, idx }))
+          .sort((a, b) => {
+            const ka = a.feature.properties?.kind ?? "neighborhood";
+            const kb = b.feature.properties?.kind ?? "neighborhood";
+            return (
+              (KIND_DRAW_ORDER[ka as EventBoundaryKind] ?? 1) -
+              (KIND_DRAW_ORDER[kb as EventBoundaryKind] ?? 1)
+            );
+          })
+          .map(({ feature, idx }) => {
           const id = feature.properties?.id ?? String(idx);
           if (!selected.has(id)) return null;
           const kind = feature.properties?.kind ?? "neighborhood";
@@ -118,16 +155,19 @@ export function EventCreatorMap({
                   positions={positions}
                   pathOptions={{
                     color: isFocused ? "#fbbf24" : color,
-                    weight: isFocused ? 4 : 3,
+                    weight: kind === "street" ? (isFocused ? 5 : 4) : isFocused ? 4 : 3,
                     opacity: 1,
                     fillColor: color,
-                    fillOpacity: kind === "city" ? 0.12 : kind === "street" ? 0.26 : 0.32,
+                    fillOpacity: kind === "city" ? 0.12 : kind === "street" ? 0.38 : 0.28,
                     dashArray: kind === "city" ? "8 4" : undefined,
                   }}
                   eventHandlers={
                     onAreaClick
                       ? {
-                          click: () => onAreaClick(id),
+                          click: (e) => {
+                            L.DomEvent.stopPropagation(e.originalEvent);
+                            onAreaClick(id);
+                          },
                         }
                       : undefined
                   }

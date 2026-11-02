@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  geometriesFromMapFeatures,
+  pruneZonesContainedInParents,
+} from "@/lib/event-boundary-zone-prune";
 import { ChevronRight, List, Map as MapIcon, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
@@ -214,6 +218,8 @@ export function EventCreatorScreen() {
   const [mapFeatures, setMapFeatures] = useState<EventBoundaryMapFeature[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [mapFocusId, setMapFocusId] = useState<string | null>(null);
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
 
   const persist = useCallback((next: CustomEventDraft) => {
     setDraft(next);
@@ -233,12 +239,40 @@ export function EventCreatorScreen() {
 
   const pickHit = useCallback(
     (hit: BoundarySearchHit) => {
-      if (selectedIds.includes(hit.id)) return;
+      if (selectedIds.includes(hit.id)) {
+        setMapFocusId(hit.id);
+        return;
+      }
       persist({ ...draft, zones: addEventBoundaryZone(draft.zones, hitToZone(hit)) });
+      setMapFocusId(hit.id);
       resetSearch();
       toast.success(`נוסף: ${hit.label}`);
     },
     [draft, persist, resetSearch, selectedIds],
+  );
+
+  const mapPickInFlight = useRef(false);
+  const onMapBackgroundTap = useCallback(
+    async (lat: number, lng: number) => {
+      if (mapPickInFlight.current) return;
+      mapPickInFlight.current = true;
+      try {
+        const res = await fetch(
+          `/api/event-boundaries/pick?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
+        );
+        const body = (await res.json()) as { ok?: boolean; hit?: BoundarySearchHit };
+        if (body.hit) {
+          pickHit(body.hit);
+          return;
+        }
+        toast.message("לא נמצאה שכונה בנקודה זו");
+      } catch {
+        toast.error("לא הצלחנו לזהות שכונה");
+      } finally {
+        mapPickInFlight.current = false;
+      }
+    },
+    [pickHit],
   );
 
   const removeZone = useCallback(
@@ -318,7 +352,19 @@ export function EventCreatorScreen() {
           features?: EventBoundaryMapFeature[];
         };
         if (cancelled) return;
-        setMapFeatures(body.features ?? []);
+        const features = body.features ?? [];
+        setMapFeatures(features);
+
+        const geoms = geometriesFromMapFeatures(features);
+        const current = draftRef.current;
+        const pruned = pruneZonesContainedInParents(current.zones, geoms);
+        if (pruned.length < current.zones.length) {
+          const removed = current.zones.filter((z) => !pruned.some((p) => p.id === z.id));
+          persist({ ...current, zones: pruned });
+          setMapFocusId((focus) => (focus && removed.some((z) => z.id === focus) ? null : focus));
+          const names = removed.map((z) => z.label).join(", ");
+          toast.message(`הוסר ${names} — כבר כלול באזור גדול יותר`);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingMap(false);
@@ -362,6 +408,7 @@ export function EventCreatorScreen() {
               selectedIds={selectedIds}
               focusedId={mapFocusId}
               onAreaClick={onMapAreaClick}
+              onBackgroundTap={onMapBackgroundTap}
             />
             {loadingMap ? (
               <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs text-white/70">
@@ -369,7 +416,14 @@ export function EventCreatorScreen() {
               </div>
             ) : null}
             {mapFocusZone ? (
-              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center justify-end gap-2 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
+              <div className="absolute inset-x-3 bottom-3 z-[400] flex items-center gap-3 rounded-xl border border-amber-400/35 bg-[#140a1c]/96 p-3 shadow-lg backdrop-blur-md">
+                <EventBoundaryKindBadge kind={mapFocusZone.kind} size="lg" />
+                <div className="min-w-0 flex-1 text-right">
+                  <p className="truncate text-lg text-white/90">{mapFocusZone.label}</p>
+                  {mapFocusZone.city && mapFocusZone.kind !== "city" ? (
+                    <p className="truncate text-base text-white/45">{mapFocusZone.city}</p>
+                  ) : null}
+                </div>
                 <button
                   type="button"
                   onClick={() => removeZone(mapFocusZone.id)}
