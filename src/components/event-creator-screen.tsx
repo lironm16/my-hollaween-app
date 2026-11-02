@@ -200,6 +200,23 @@ function EventZoneListRow({ zone, showDelete, onDelete }: { zone: EventBoundaryZ
   );
 }
 
+function pointCoveredBySelectedZones(
+  lat: number,
+  lng: number,
+  features: EventBoundaryMapFeature[],
+  selectedIds: string[],
+): boolean {
+  const selected = new Set(selectedIds);
+  for (const f of features) {
+    const id = f.properties?.id;
+    if (!id || !selected.has(id)) continue;
+    const g = f.geometry;
+    if (!g || (g.type !== "Polygon" && g.type !== "MultiPolygon")) continue;
+    if (pointInGeoPolygon(lng, lat, g)) return true;
+  }
+  return false;
+}
+
 function selectedZoneIdAtPoint(
   features: EventBoundaryMapFeature[],
   selectedIds: string[],
@@ -243,7 +260,10 @@ function ZoneContainmentDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
-      <DialogContent showCloseButton={false} className="max-w-[min(100%-2rem,26rem)] border-orange-500/30 bg-[#1d1028] p-4 text-orange-50">
+      <DialogContent
+        showCloseButton={false}
+        className="z-[600] max-w-[min(100%-2rem,26rem)] border-orange-500/30 bg-[#1d1028] p-4 text-orange-50"
+      >
         <div className="space-y-4 text-right">
           <p className="text-base leading-relaxed text-violet-100">
             האזור <span className="font-semibold text-orange-200">{newLabel}</span> כולל אזורים שכבר בחרתם.
@@ -417,7 +437,13 @@ export function EventCreatorScreen() {
   }, []);
 
   const selectedIds = useMemo(() => draft.zones.map((z) => z.id), [draft.zones]);
-  const boundsFitKey = useMemo(() => selectedIds.join("|"), [selectedIds]);
+  const [fitZoneId, setFitZoneId] = useState<string | null>(null);
+  const boundsFitKey = useMemo(() => {
+    if (!fitZoneId) return "";
+    const f = mapFeatures.find((x) => x.properties?.id === fitZoneId);
+    if (!f?.geometry) return `${fitZoneId}:pending`;
+    return `${fitZoneId}:ready`;
+  }, [fitZoneId, mapFeatures]);
 
   const mapFocusZone = useMemo(
     () => draft.zones.find((z) => z.id === mapFocusId) ?? null,
@@ -430,32 +456,50 @@ export function EventCreatorScreen() {
 
   const applyPickHit = useCallback(
     (hit: BoundarySearchHit) => {
-      if (selectedIds.includes(hit.id)) {
+      const current = draftRef.current;
+      if (current.zones.some((z) => z.id === hit.id)) {
         setMapFocusId(hit.id);
+        toast.message("כבר נבחר");
         return;
       }
-      persist({ ...draft, zones: addEventBoundaryZone(draft.zones, hitToZone(hit)) });
+      persist({ ...current, zones: addEventBoundaryZone(current.zones, hitToZone(hit)) });
       setMapFocusId(hit.id);
+      setFitZoneId(hit.id);
       resetSearch();
       toast.success(`נוסף: ${hit.label}`);
     },
-    [draft, persist, resetSearch, selectedIds],
+    [persist, resetSearch],
   );
 
   const attemptPickHit = useCallback(
     async (hit: BoundarySearchHit) => {
-      if (selectedIds.includes(hit.id)) {
+      const current = draftRef.current;
+      if (current.zones.some((z) => z.id === hit.id)) {
         setMapFocusId(hit.id);
+        toast.message("כבר נבחר");
         return;
+      }
+
+      if (hit.kind === "point") {
+        const plat = hit.lat;
+        const plng = hit.lng;
+        if (
+          plat != null &&
+          plng != null &&
+          pointCoveredBySelectedZones(plat, plng, mapFeatures, current.zones.map((z) => z.id))
+        ) {
+          toast.message("הנקודה כבר כלולה באזורים שבחרתם לאירוע");
+          return;
+        }
       }
 
       const newZone = hitToZone(hit);
       let geoms = geometriesFromMapFeatures(mapFeatures);
-      if (geoms.size === 0 && draft.zones.length > 0) {
+      if (geoms.size === 0 && current.zones.length > 0) {
         const res = await fetch("/api/event-boundaries/geometry", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ zones: draft.zones }),
+          body: JSON.stringify({ zones: current.zones }),
         });
         if (res.ok) {
           const body = (await res.json()) as { features?: EventBoundaryMapFeature[] };
@@ -473,7 +517,7 @@ export function EventCreatorScreen() {
         return;
       }
 
-      const contained = existingZonesContainedInNewZone(draft.zones, geoms, newZone, newGeom);
+      const contained = existingZonesContainedInNewZone(current.zones, geoms, newZone, newGeom);
       if (contained.length === 0) {
         applyPickHit(hit);
         return;
@@ -481,7 +525,7 @@ export function EventCreatorScreen() {
 
       setContainmentPrompt({ hit, contained });
     },
-    [applyPickHit, draft.zones, mapFeatures, selectedIds],
+    [applyPickHit, mapFeatures],
   );
 
   const confirmContainmentPick = useCallback(() => {
@@ -555,11 +599,21 @@ export function EventCreatorScreen() {
     [boundaryKind, loadMapPickDraft, mapFeatures, selectedIds],
   );
 
-  const confirmMapPickDraft = useCallback(() => {
+  const confirmMapPickDraft = useCallback(async () => {
     if (!mapPickDraft || mapPickDraft.loading || !mapPickDraft.hit) return;
-    void attemptPickHit(mapPickDraft.hit);
+    const hit = mapPickDraft.hit;
+    const plat = hit.lat ?? mapPickDraft.lat;
+    const plng = hit.lng ?? mapPickDraft.lng;
+    if (
+      hit.kind === "point" &&
+      pointCoveredBySelectedZones(plat, plng, mapFeatures, selectedIds)
+    ) {
+      toast.message("הנקודה כבר כלולה באזורים שבחרתם לאירוע");
+      return;
+    }
     setMapPickDraft(null);
-  }, [attemptPickHit, mapPickDraft]);
+    await attemptPickHit(hit);
+  }, [attemptPickHit, mapFeatures, mapPickDraft, selectedIds]);
 
   useEffect(() => {
     setMapPickDraft(null);
@@ -745,6 +799,7 @@ export function EventCreatorScreen() {
               onAreaClick={onMapAreaClick}
               onBackgroundTap={onMapBackgroundTap}
               boundsFitKey={boundsFitKey}
+              fitZoneId={fitZoneId}
               pointDraft={
                 boundaryKind === "point" && mapPickDraft
                   ? { lat: mapPickDraft.lat, lng: mapPickDraft.lng }

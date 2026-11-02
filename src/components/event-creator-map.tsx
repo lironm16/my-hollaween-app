@@ -99,7 +99,7 @@ function FitBounds({
   const lastFitKeyRef = useRef<string | null>(null);
   useEffect(() => {
     const token = showCountry ? `country:${fitKey}` : `zones:${fitKey}`;
-    if (!showCountry && !bounds) return;
+    if (!showCountry && (!bounds || !fitKey)) return;
     if (lastFitKeyRef.current === token) return;
     lastFitKeyRef.current = token;
 
@@ -121,6 +121,8 @@ type Props = {
   selectedIds: string[];
   focusedId?: string | null;
   boundsFitKey?: string;
+  /** When set, fit the map viewport to this zone only (e.g. after add). */
+  fitZoneId?: string | null;
   onAreaClick?: (featureId: string) => void;
   /** Tap on map outside selected polygons — e.g. add שכונה at point. */
   onBackgroundTap?: (lat: number, lng: number) => void;
@@ -135,6 +137,7 @@ export function EventCreatorMap({
   selectedIds,
   focusedId = null,
   boundsFitKey = "",
+  fitZoneId = null,
   onAreaClick,
   onBackgroundTap,
   pointDraft = null,
@@ -147,15 +150,20 @@ export function EventCreatorMap({
 
   const bounds = useMemo(() => {
     if (features.length === 0) return null;
+    const toFit =
+      fitZoneId != null && fitZoneId !== ""
+        ? features.filter((f) => f.properties?.id === fitZoneId)
+        : [];
+    if (fitZoneId && toFit.length === 0) return null;
     const b = L.latLngBounds([]);
-    for (const f of features) {
+    for (const f of toFit) {
       const rings = ringsFromGeometry(f.geometry);
       for (const ring of rings) {
         for (const [lat, lng] of ring) b.extend([lat, lng]);
       }
     }
     return b.isValid() ? b : null;
-  }, [features]);
+  }, [features, fitZoneId]);
 
   return (
     <div className={className ?? "h-full w-full"}>
