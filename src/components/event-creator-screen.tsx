@@ -9,8 +9,9 @@ import {
 import { fetchEventBoundaryZoneGeometry } from "@/lib/event-boundary-geometry-client";
 import { ChevronRight, List, Map as MapIcon, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { HouseEditModal } from "@/components/house-edit-modal";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { pointInGeoPolygon } from "@/lib/event-boundary-street-geom";
 import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
 import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
 import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
@@ -61,20 +62,20 @@ function MapTapKindToggle({
 }) {
   return (
     <div
-      className={cn("inline-flex shrink-0 rounded-xl border border-white/12 bg-black/40 p-0.5", className)}
-      role="radiogroup"
+      className={cn("flex min-w-0 rounded-xl border border-white/12 bg-black/40 p-0.5", className)}
+      role="tablist"
       aria-label="סוג אזור בלחיצה על המפה"
     >
       {MAP_TAP_KINDS.map(({ kind: k, label }) => (
         <button
           key={k}
           type="button"
-          role="radio"
-          aria-checked={kind === k}
+          role="tab"
+          aria-selected={kind === k}
           onClick={() => onKindChange(k)}
           className={cn(
-            "rounded-lg px-2.5 py-1.5 text-xs font-medium transition sm:text-sm",
-            kind === k ? "bg-orange-600/90 text-white" : "text-white/60 hover:bg-white/5",
+            "min-h-9 min-w-0 flex-1 rounded-[10px] py-2 text-center text-sm font-medium transition",
+            kind === k ? "bg-orange-600 text-white shadow-sm" : "text-white/55 hover:text-white/80",
           )}
         >
           {label}
@@ -82,6 +83,47 @@ function MapTapKindToggle({
       ))}
     </div>
   );
+}
+
+function EventZoneListRow({ zone, showDelete, onDelete }: { zone: EventBoundaryZone; showDelete?: boolean; onDelete?: () => void }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3.5">
+      <EventBoundaryKindBadge kind={zone.kind} size="lg" />
+      <div className="min-w-0 flex-1 text-right">
+        <p className="truncate text-lg text-white/90">{zone.label}</p>
+        {zone.city && zone.kind !== "city" ? (
+          <p className="truncate text-base text-white/45">{zone.city}</p>
+        ) : null}
+      </div>
+      {showDelete && onDelete ? (
+        <button
+          type="button"
+          onClick={onDelete}
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl text-white/55 hover:bg-white/10 hover:text-white"
+          aria-label={`הסר ${zone.label}`}
+        >
+          <Trash2 className="size-5" aria-hidden />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function selectedZoneIdAtPoint(
+  features: EventBoundaryMapFeature[],
+  selectedIds: string[],
+  lat: number,
+  lng: number,
+): string | null {
+  const selected = new Set(selectedIds);
+  for (const f of features) {
+    const id = f.properties?.id;
+    if (!id || !selected.has(id)) continue;
+    const g = f.geometry;
+    if (!g || (g.type !== "Polygon" && g.type !== "MultiPolygon")) continue;
+    if (pointInGeoPolygon(lng, lat, g)) return id;
+  }
+  return null;
 }
 
 function ZoneContainmentDialog({
@@ -98,34 +140,40 @@ function ZoneContainmentDialog({
   onCancel: () => void;
 }) {
   return (
-    <HouseEditModal open={open} onClose={onCancel} title="החלפת אזורים קטנים יותר">
-      <div className="space-y-4 px-4 pb-4 text-right">
-        <p className="text-base leading-relaxed text-violet-100">
-          האזור <span className="font-semibold text-orange-200">{newLabel}</span> כולל אזורים שכבר בחרתם.
-          הם יוסרו אם תמשיכו:
-        </p>
-        <ul className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/85">
-          {contained.map((z) => (
-            <li key={z.id} className="flex items-center justify-end gap-2">
-              <span>{z.label}</span>
-              <EventBoundaryKindBadge kind={z.kind} size="sm" />
-            </li>
-          ))}
-        </ul>
-        <div className="flex gap-2 pt-1">
-          <Button
-            type="button"
-            className="min-w-0 flex-1 bg-orange-500 text-lg text-black hover:bg-orange-400"
-            onClick={onConfirm}
-          >
-            המשך
-          </Button>
-          <Button type="button" variant="outline" className="min-w-0 flex-1 text-lg" onClick={onCancel}>
-            ביטול
-          </Button>
+    <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
+      <DialogContent showCloseButton={false} className="max-w-[min(100%-2rem,26rem)] border-orange-500/30 bg-[#1d1028] p-4 text-orange-50">
+        <div className="space-y-4 text-right">
+          <p className="text-base leading-relaxed text-violet-100">
+            האזור <span className="font-semibold text-orange-200">{newLabel}</span> כולל אזורים שכבר בחרתם.
+            הם יוסרו אם תמשיכו:
+          </p>
+          <ul className="max-h-[40vh] space-y-3 overflow-y-auto">
+            {contained.map((z) => (
+              <li key={z.id}>
+                <EventZoneListRow zone={z} />
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              className="min-h-12 min-w-0 flex-1 py-3 text-lg font-semibold bg-orange-500 text-black hover:bg-orange-400"
+              onClick={onConfirm}
+            >
+              המשך
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-12 min-w-0 flex-1 py-3 text-lg font-semibold"
+              onClick={onCancel}
+            >
+              ביטול
+            </Button>
+          </div>
         </div>
-      </div>
-    </HouseEditModal>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -139,32 +187,41 @@ function ViewToggle({
   zoneCount: number;
 }) {
   return (
-    <div className="inline-flex shrink-0 rounded-xl border border-white/12 bg-black/40 p-0.5">
-      <button
-        type="button"
-        onClick={() => onViewChange("map")}
-        className={cn(
-          "flex items-center gap-1 rounded-lg px-2.5 py-2 text-sm font-medium transition",
-          view === "map" ? "bg-orange-600 text-white" : "text-white/65 hover:bg-white/5",
-        )}
-      >
-        <MapIcon className="size-3.5" aria-hidden />
-        מפה
-      </button>
-      <button
-        type="button"
-        onClick={() => onViewChange("list")}
-        className={cn(
-          "flex items-center gap-1 rounded-lg px-2.5 py-2 text-sm font-medium transition",
-          view === "list" ? "bg-orange-600 text-white" : "text-white/65 hover:bg-white/5",
-        )}
-      >
-        <List className="size-3.5" aria-hidden />
-        רשימה
-        {zoneCount > 0 ? (
-          <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] leading-none">{zoneCount}</span>
-        ) : null}
-      </button>
+    <div className="inline-flex shrink-0 items-center gap-1">
+      <div className="inline-flex rounded-xl border border-white/12 bg-black/40 p-0.5">
+        <button
+          type="button"
+          onClick={() => onViewChange("map")}
+          aria-label="מפה"
+          aria-pressed={view === "map"}
+          className={cn(
+            "flex size-11 items-center justify-center rounded-lg transition",
+            view === "map" ? "bg-orange-600 text-white" : "text-white/65 hover:bg-white/5",
+          )}
+        >
+          <MapIcon className="size-6" aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={() => onViewChange("list")}
+          aria-label={zoneCount > 0 ? `רשימה, ${zoneCount} אזורים` : "רשימה"}
+          aria-pressed={view === "list"}
+          className={cn(
+            "flex size-11 items-center justify-center rounded-lg transition",
+            view === "list" ? "bg-orange-600 text-white" : "text-white/65 hover:bg-white/5",
+          )}
+        >
+          <List className="size-6" aria-hidden />
+        </button>
+      </div>
+      {zoneCount > 0 ? (
+        <span
+          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-600/90 text-xs font-bold text-white tabular-nums"
+          aria-hidden
+        >
+          {zoneCount}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -406,6 +463,11 @@ export function EventCreatorScreen() {
 
   const onMapBackgroundTap = useCallback(
     async (lat: number, lng: number) => {
+      const onSelected = selectedZoneIdAtPoint(mapFeatures, selectedIds, lat, lng);
+      if (onSelected) {
+        setMapFocusId((cur) => (cur === onSelected ? null : onSelected));
+        return;
+      }
       if (mapPickInFlight.current) return;
       mapPickInFlight.current = true;
       try {
@@ -424,7 +486,7 @@ export function EventCreatorScreen() {
         mapPickInFlight.current = false;
       }
     },
-    [attemptPickHit, mapTapKind],
+    [attemptPickHit, mapFeatures, mapTapKind, selectedIds],
   );
 
   const removeZone = useCallback(
@@ -556,9 +618,9 @@ export function EventCreatorScreen() {
             <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
           </div>
           {view === "map" ? (
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <div className="flex items-center gap-2">
               <span className="shrink-0 text-sm text-white/50">או בחר במפה</span>
-              <MapTapKindToggle kind={mapTapKind} onKindChange={setMapTapKind} />
+              <MapTapKindToggle kind={mapTapKind} onKindChange={setMapTapKind} className="flex-1" />
             </div>
           ) : null}
         </header>
@@ -626,25 +688,8 @@ export function EventCreatorScreen() {
               ) : (
                 <ul className="space-y-3">
                   {draft.zones.map((z) => (
-                    <li
-                      key={z.id}
-                      className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3.5"
-                    >
-                      <EventBoundaryKindBadge kind={z.kind} size="lg" />
-                      <div className="min-w-0 flex-1 text-right">
-                        <p className="truncate text-lg text-white/90">{z.label}</p>
-                        {z.city && z.kind !== "city" ? (
-                          <p className="truncate text-base text-white/45">{z.city}</p>
-                        ) : null}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeZone(z.id)}
-                        className="flex size-11 shrink-0 items-center justify-center rounded-xl text-white/55 hover:bg-white/10 hover:text-white"
-                        aria-label={`הסר ${z.label}`}
-                      >
-                        <Trash2 className="size-5" aria-hidden />
-                      </button>
+                    <li key={z.id}>
+                      <EventZoneListRow zone={z} showDelete onDelete={() => removeZone(z.id)} />
                     </li>
                   ))}
                 </ul>

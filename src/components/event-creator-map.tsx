@@ -179,12 +179,14 @@ export function EventCreatorMap({
                     onAreaClick
                       ? {
                           click: (e) => {
-                            L.DomEvent.stopPropagation(e.originalEvent);
+                            L.DomEvent.stopPropagation(e);
+                            L.DomEvent.preventDefault(e.originalEvent);
                             onAreaClick(id);
                           },
                         }
                       : undefined
                   }
+                  bubblingMouseEvents={false}
                 />
               ))}
             </Fragment>
