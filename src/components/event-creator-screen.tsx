@@ -288,35 +288,23 @@ function ViewToggle({
   onViewChange: (v: CreatorView) => void;
   zoneCount: number;
 }) {
+  const switchTo = view === "map" ? "list" : "map";
+  const SwitchIcon = switchTo === "list" ? List : MapIcon;
+  const switchLabel = switchTo === "list" ? "רשימה" : "מפה";
+
   return (
     <div className="inline-flex shrink-0 items-center gap-1">
-      <div className="inline-flex rounded-xl border border-white/12 bg-black/40 p-0.5">
-        <button
-          type="button"
-          onClick={() => onViewChange("map")}
-          aria-label="מפה"
-          aria-pressed={view === "map"}
-          className={cn(
-            "flex size-11 items-center justify-center rounded-lg transition",
-            view === "map" ? "bg-orange-600 text-white" : "text-white/65 hover:bg-white/5",
-          )}
-        >
-          <MapIcon className="size-6" aria-hidden />
-        </button>
-        <button
-          type="button"
-          onClick={() => onViewChange("list")}
-          aria-label={zoneCount > 0 ? `רשימה, ${zoneCount} אזורים` : "רשימה"}
-          aria-pressed={view === "list"}
-          className={cn(
-            "flex size-11 items-center justify-center rounded-lg transition",
-            view === "list" ? "bg-orange-600 text-white" : "text-white/65 hover:bg-white/5",
-          )}
-        >
-          <List className="size-6" aria-hidden />
-        </button>
-      </div>
-      {zoneCount > 0 ? (
+      <button
+        type="button"
+        onClick={() => onViewChange(switchTo)}
+        aria-label={
+          switchTo === "list" && zoneCount > 0 ? `רשימה, ${zoneCount} אזורים` : switchLabel
+        }
+        className="flex size-11 items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white transition hover:bg-white/10"
+      >
+        <SwitchIcon className="size-6" aria-hidden />
+      </button>
+      {switchTo === "list" && zoneCount > 0 ? (
         <span
           className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-600/90 text-xs font-bold text-white tabular-nums"
           title={`${zoneCount} אזורים`}
