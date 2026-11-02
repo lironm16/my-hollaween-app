@@ -1,4 +1,11 @@
-import { queryEligibleForPointSearch, roundEventBoundaryCoord, zoneKeyPoint } from "@/lib/event-boundary";
+import { parsePointAddressQuery } from "@/lib/event-boundary-address-parse";
+import { rankAndFilterStreets } from "@/lib/event-boundary-street-search";
+import {
+  queryEligibleForPointSearch,
+  roundEventBoundaryCoord,
+  zoneKeyPoint,
+  zoneKeyPointAddress,
+} from "@/lib/event-boundary";
 import { config } from "@/lib/config";
 import { pickStreetCenterlines } from "@/lib/event-boundary-street-geom";
 import { bufferPolylineLngLat } from "@/lib/line-buffer";
@@ -13,6 +20,7 @@ type NominatimGeoHit = {
   class?: string;
   type?: string;
   addresstype?: string;
+  name?: string;
   address?: NominatimAddress;
 };
 
@@ -283,7 +291,10 @@ export async function searchStreets(city: string, q: string, limit = 20): Promis
     seen.add(key);
     out.push(row);
   }
-  return preferExactStreetMatches(out, query);
+  return rankAndFilterStreets(out, query, limit).map((row) => ({
+    ...row,
+    label: `${row.street}, ${row.city}`,
+  }));
 }
 
 /** Free-text street search (multiple settlements); slower — one Nominatim call. */
@@ -294,7 +305,7 @@ export async function searchStreetsNationwide(q: string, limit = 12): Promise<St
     q: `${query}, Israel`,
     format: "json",
     countrycodes: "il",
-    limit: String(Math.min(limit + 6, 20)),
+    limit: "25",
     viewbox: viewbox(),
     bounded: "0",
     addressdetails: "1",
@@ -309,7 +320,10 @@ export async function searchStreetsNationwide(q: string, limit = 12): Promise<St
     seen.add(key);
     out.push(row);
   }
-  return preferExactStreetMatches(out, query).slice(0, limit);
+  return rankAndFilterStreets(out, query, limit).map((row) => ({
+    ...row,
+    label: `${row.street}, ${row.city}`,
+  }));
 }
 
 export type AddressPointHit = {
@@ -333,6 +347,71 @@ function isSpecificAddressNominatimHit(h: NominatimGeoHit): boolean {
   }
   if (h.class === "place" && h.type === "city") return false;
   return true;
+}
+
+function normalizeToken(s: string): string {
+  return s.trim().toLowerCase().replace(/['"׳״]/g, "");
+}
+
+function streetHitMatchesQuery(h: NominatimGeoHit, street: string): boolean {
+  const road = h.address ? roadFromNominatimAddress(h.address) : h.name ?? "";
+  const a = normalizeToken(road);
+  const b = normalizeToken(street);
+  if (!a || !b) return false;
+  return a.includes(b) || b.includes(a);
+}
+
+async function geocodePointAddressStreetFallback(query: string): Promise<AddressPointHit[]> {
+  const parsed = parsePointAddressQuery(query);
+  if (!parsed) return [];
+
+  const { houseNumber, street, city } = parsed;
+  const label = `${street} ${houseNumber}, ${city}`;
+
+  const queryVariants = [
+    `${houseNumber} ${street}, ${city}`,
+    `${street} ${houseNumber}, ${city}`,
+    `${street}, ${city}`,
+  ];
+
+  for (const qStr of queryVariants) {
+    const hits = await nominatimSearch({
+      q: `${qStr}, Israel`,
+      format: "json",
+      countrycodes: "il",
+      limit: "12",
+      addressdetails: "1",
+    });
+    const streetHit =
+      hits.find((h) => streetHitMatchesQuery(h, street) && h.class === "highway") ??
+      hits.find((h) => streetHitMatchesQuery(h, street)) ??
+      hits.find((h) => h.address?.road);
+
+    if (!streetHit) continue;
+
+    const lat = Number(streetHit.lat);
+    const lng = Number(streetHit.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+    const rLat = roundEventBoundaryCoord(lat);
+    const rLng = roundEventBoundaryCoord(lng);
+    const resolvedCity =
+      settlementFromNominatimAddress(streetHit.address ?? {}) ||
+      streetHit.address?.suburb?.trim() ||
+      city;
+
+    return [
+      {
+        id: zoneKeyPointAddress(resolvedCity, street, houseNumber),
+        lat: rLat,
+        lng: rLng,
+        label,
+        city: resolvedCity,
+      },
+    ];
+  }
+
+  return [];
 }
 
 function scoreAddressHit(h: NominatimGeoHit, query: string): number {
@@ -376,10 +455,7 @@ export async function searchAddressPoints(q: string, limit = 14): Promise<Addres
   const query = q.trim();
   if (!query || !queryEligibleForPointSearch(query)) return [];
 
-  const queryVariants = [query];
-  if (!/israel|ישראל/i.test(query)) {
-    queryVariants.push(`${query}, Israel`);
-  }
+  const queryVariants = [query, `${query}, Israel`];
 
   const ranked: { row: AddressPointHit; score: number }[] = [];
   const seen = new Set<string>();
@@ -408,5 +484,8 @@ export async function searchAddressPoints(q: string, limit = 14): Promise<Addres
   }
 
   ranked.sort((a, b) => b.score - a.score || a.row.label.localeCompare(b.row.label, "he"));
-  return ranked.slice(0, limit).map((r) => r.row);
+  const precise = ranked.slice(0, limit).map((r) => r.row);
+  if (precise.length > 0) return precise;
+
+  return geocodePointAddressStreetFallback(query);
 }

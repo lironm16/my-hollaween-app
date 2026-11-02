@@ -38,6 +38,11 @@ export function zoneKeyPoint(lat: number, lng: number): string {
   return `p:${roundEventBoundaryCoord(lat)},${roundEventBoundaryCoord(lng)}`;
 }
 
+/** Stable id when geocoder has street center but no building outline (common in IL). */
+export function zoneKeyPointAddress(city: string, street: string, houseNumber: string): string {
+  return `p:${city.trim()}|${street.trim()}|${houseNumber.trim()}`;
+}
+
 export function parsePointZoneCoords(rest: string): { lat: number; lng: number } | null {
   const [latRaw, lngRaw] = rest.split(",");
   const lat = Number(latRaw);

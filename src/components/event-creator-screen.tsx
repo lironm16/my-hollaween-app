@@ -137,7 +137,9 @@ function BoundarySuggestPanel({
         <p className={cn("px-3 py-3 leading-relaxed text-white/45", large ? "text-base" : "text-sm")}>
           {boundaryKind === "point" && query?.trim() && !queryEligibleForPointSearch(query)
             ? "לכתובת מדויקת הוסיפו מספר בית (למשל: ביאליק 12, רמת גן)"
-            : "אין תוצאות"}
+            : boundaryKind === "street" && query?.trim() && queryEligibleForPointSearch(query)
+              ? "לכתובת עם מספר — עברו לטאב נקודה"
+              : "אין תוצאות"}
         </p>
       ) : (
         <ul className="py-1">
@@ -732,12 +734,8 @@ export function EventCreatorScreen() {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ paddingBottom: footerPad }}>
         <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md">
           <div className="space-y-0.5 text-right">
-            <p className="font-display text-lg text-orange-200">
-              {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
-            </p>
-            {view === "map" ? (
-              <p className="text-sm text-white/50">אפשר לבחור במפה או להקליד בחיפוש</p>
-            ) : null}
+            <p className="font-display text-lg text-orange-200">איפה האירוע?</p>
+            <p className="text-sm text-white/50">אפשר לבחור במפה או להקליד בחיפוש</p>
           </div>
           <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
           <div className="flex items-stretch gap-2">
