@@ -61,18 +61,14 @@ export type TreatStock = {
 
 export type HoursWindow = { from: string; to: string };
 
-/** Saved on create/update when Translate API is configured (forward-only; not backfilled). */
+/** English address line from Translate + `addressTranslations` cache (forward-only). */
 export type HouseLocaleSnapshot = {
   address?: string;
-  name?: string;
-  description?: string;
-  arrival?: string;
-  notes?: string;
 };
 
 export type HouseI18n = {
   en?: HouseLocaleSnapshot;
-  /** ISO time when en snapshot was last generated. */
+  /** ISO time when the English address snapshot was last generated. */
   updatedAt?: string;
 };
 
@@ -135,7 +131,7 @@ export type House = {
   gemAnchor?: GemAnchorPlacement | null;
   /** Admin-only — dismissals for house data anomalies (never in public catalog). */
   adminAnomalyReviews?: Partial<Record<HouseAnomalyKind, HouseAnomalyReview>>;
-  /** Bilingual visitor text — English snapshot; Hebrew remains primary fields. */
+  /** English address snapshot for locale=en; Hebrew stays in `address`. */
   i18n?: HouseI18n;
 };
 
