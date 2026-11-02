@@ -68,9 +68,13 @@ function MapTapKindToggle({
 }) {
   return (
     <div
-      className={cn("flex min-w-0 rounded-xl border border-white/12 bg-black/40 p-0.5", className)}
+      className={cn(
+        "grid w-full grid-cols-4 gap-0.5 rounded-xl border border-white/20 bg-white/12 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+        className,
+      )}
       role="tablist"
-      aria-label="סוג אזור בלחיצה על המפה"
+      dir="rtl"
+      aria-label="סוג אזור לחיפוש ולבחירה במפה"
     >
       {MAP_TAP_KINDS.map(({ kind: k, label }) => (
         <button
@@ -80,13 +84,85 @@ function MapTapKindToggle({
           aria-selected={kind === k}
           onClick={() => onKindChange(k)}
           className={cn(
-            "min-h-9 min-w-0 flex-1 rounded-[10px] px-0.5 py-2 text-center text-xs font-medium transition sm:text-sm",
-            kind === k ? "bg-orange-600 text-white shadow-sm" : "text-white/55 hover:text-white/80",
+            "min-h-9 rounded-[10px] px-0.5 py-2 text-center text-[11px] font-semibold leading-tight transition sm:text-xs",
+            kind === k ? "bg-orange-600 text-white shadow-sm" : "text-white/70 hover:bg-white/8 hover:text-white",
           )}
         >
           {label}
         </button>
       ))}
+    </div>
+  );
+}
+
+const SEARCH_PLACEHOLDER: Record<EventBoundaryKind, string> = {
+  point: "כתובת מדויקת (רחוב ומספר)…",
+  street: "שם רחוב…",
+  neighborhood: "שם שכונה…",
+  city: "שם עיר…",
+};
+
+function BoundarySuggestPanel({
+  open,
+  hits,
+  loadingList,
+  listError,
+  selectedIds,
+  onPick,
+  large = false,
+}: {
+  open: boolean;
+  hits: BoundarySearchHit[];
+  loadingList: boolean;
+  listError: string | null;
+  selectedIds: string[];
+  onPick: (hit: BoundarySearchHit) => void;
+  large?: boolean;
+}) {
+  if (!open) return null;
+
+  return (
+    <div
+      className={cn(
+        "z-[1200] w-full overflow-y-auto rounded-xl border border-white/15 bg-[#140a1c]/98 shadow-xl backdrop-blur-lg",
+        large ? "relative mt-2 max-h-[36vh]" : "max-h-[min(42vh,320px)]",
+      )}
+    >
+      {loadingList ? (
+        <p className={cn("px-3 py-3 text-white/50", large ? "text-base" : "text-sm")}>מחפש…</p>
+      ) : listError ? (
+        <p className={cn("px-3 py-3 text-red-300", large ? "text-base" : "text-sm")}>{listError}</p>
+      ) : hits.length === 0 ? (
+        <p className={cn("px-3 py-3 text-white/45", large ? "text-base" : "text-sm")}>אין תוצאות</p>
+      ) : (
+        <ul className="py-1">
+          {hits.map((hit) => {
+            const taken = selectedIds.includes(hit.id);
+            return (
+              <li key={hit.id}>
+                <button
+                  type="button"
+                  disabled={taken}
+                  onClick={() => onPick(hit)}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 text-right transition",
+                    large ? "py-3" : "py-2.5",
+                    taken ? "opacity-40" : "hover:bg-white/5",
+                  )}
+                >
+                  <EventBoundaryKindBadge kind={hit.kind} size={large ? "lg" : "sm"} />
+                  <div className="min-w-0 flex-1">
+                    <p className={cn("truncate text-white/90", large ? "text-lg" : "text-sm")}>{hit.label}</p>
+                    {hit.subtitle && hit.kind !== "city" ? (
+                      <p className={cn("truncate text-white/45", large ? "text-base" : "text-xs")}>{hit.subtitle}</p>
+                    ) : null}
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
@@ -255,6 +331,7 @@ function BoundarySearchField({
   onPick,
   listMode = false,
   large = false,
+  placeholder,
 }: {
   query: string;
   onQueryChange: (q: string) => void;
@@ -267,6 +344,7 @@ function BoundarySearchField({
   onPick: (hit: BoundarySearchHit) => void;
   listMode?: boolean;
   large?: boolean;
+  placeholder?: string;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -278,10 +356,8 @@ function BoundarySearchField({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [onSuggestOpen]);
 
-  const showSuggest = suggestOpen && query.trim().length > 0;
-
   return (
-    <div ref={wrapRef} className={cn("relative z-10 min-w-0", listMode ? "flex-1" : "flex-1")}>
+    <div ref={wrapRef} className={cn("relative z-10 min-w-0 flex-1")}>
       <label className="relative block">
         <Search
           className={cn(
@@ -297,7 +373,7 @@ function BoundarySearchField({
             "relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 backdrop-blur-md placeholder:text-white/35",
             large ? "py-3.5 pl-3 pr-10 text-lg" : "py-3 pl-3 pr-9 text-base",
           )}
-          placeholder="שכונה, רחוב או עיר…"
+          placeholder={placeholder ?? "חפשו אזור…"}
           value={query}
           onFocus={() => onSuggestOpen(true)}
           onChange={(e) => {
@@ -307,57 +383,16 @@ function BoundarySearchField({
         />
       </label>
 
-      {showSuggest ? (
-        <div
-          className={cn(
-            "overflow-y-auto rounded-xl border border-white/15 bg-[#140a1c]/98 shadow-xl backdrop-blur-lg",
-            listMode
-              ? "relative z-20 mt-2 max-h-[36vh]"
-              : "absolute inset-x-0 top-[calc(100%+6px)] z-[1200] max-h-[min(40vh,280px)]",
-          )}
-        >
-          {loadingList ? (
-            <p className={cn("px-3 py-3 text-white/50", large ? "text-base" : "text-sm")}>מחפש…</p>
-          ) : listError ? (
-            <p className={cn("px-3 py-3 text-red-300", large ? "text-base" : "text-sm")}>{listError}</p>
-          ) : hits.length === 0 ? (
-            <p className={cn("px-3 py-3 text-white/45", large ? "text-base" : "text-sm")}>
-              אין תוצאות — הוסיפו שם עיר לצמצום
-            </p>
-          ) : (
-            <ul className="py-1">
-              {hits.map((hit) => {
-                const taken = selectedIds.includes(hit.id);
-                return (
-                  <li key={hit.id}>
-                    <button
-                      type="button"
-                      disabled={taken}
-                      onClick={() => onPick(hit)}
-                      className={cn(
-                        "flex w-full items-center gap-2 px-3 text-right transition",
-                        large ? "py-3" : "py-2.5",
-                        taken ? "opacity-40" : "hover:bg-white/5",
-                      )}
-                    >
-                      <EventBoundaryKindBadge kind={hit.kind} size={large ? "lg" : "sm"} />
-                      <div className="min-w-0 flex-1">
-                        <p className={cn("truncate text-white/90", large ? "text-lg" : "text-sm")}>
-                          {hit.label}
-                        </p>
-                        {hit.subtitle && hit.kind !== "city" ? (
-                          <p className={cn("truncate text-white/45", large ? "text-base" : "text-xs")}>
-                            {hit.subtitle}
-                          </p>
-                        ) : null}
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+      {listMode && suggestOpen && query.trim().length > 0 ? (
+        <BoundarySuggestPanel
+          open
+          hits={hits}
+          loadingList={loadingList}
+          listError={listError}
+          selectedIds={selectedIds}
+          onPick={onPick}
+          large={large}
+        />
       ) : null}
     </div>
   );
@@ -387,7 +422,7 @@ export function EventCreatorScreen() {
   const [mapFeatures, setMapFeatures] = useState<EventBoundaryMapFeature[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [mapFocusId, setMapFocusId] = useState<string | null>(null);
-  const [mapTapKind, setMapTapKind] = useState<EventBoundaryKind>("point");
+  const [boundaryKind, setBoundaryKind] = useState<EventBoundaryKind>("point");
   const [containmentPrompt, setContainmentPrompt] = useState<{
     hit: BoundarySearchHit;
     contained: EventBoundaryZone[];
@@ -489,21 +524,21 @@ export function EventCreatorScreen() {
       mapPickInFlight.current = true;
       try {
         const res = await fetch(
-          `/api/event-boundaries/pick?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}&kind=${encodeURIComponent(mapTapKind)}`,
+          `/api/event-boundaries/pick?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}&kind=${encodeURIComponent(boundaryKind)}`,
         );
         const body = (await res.json()) as { ok?: boolean; hit?: BoundarySearchHit };
         if (body.hit) {
           await attemptPickHit(body.hit);
           return;
         }
-        toast.message(MAP_TAP_EMPTY_MESSAGE[mapTapKind]);
+        toast.message(MAP_TAP_EMPTY_MESSAGE[boundaryKind]);
       } catch {
         toast.error("לא הצלחנו לזהות אזור");
       } finally {
         mapPickInFlight.current = false;
       }
     },
-    [attemptPickHit, mapFeatures, mapTapKind, selectedIds],
+    [attemptPickHit, boundaryKind, mapFeatures, selectedIds],
   );
 
   const removeZone = useCallback(
@@ -537,7 +572,9 @@ export function EventCreatorScreen() {
     let cancelled = false;
     setLoadingList(true);
     setListError(null);
-    fetch(`/api/event-boundaries/unified-search?q=${encodeURIComponent(debouncedQ)}`)
+    fetch(
+      `/api/event-boundaries/unified-search?q=${encodeURIComponent(debouncedQ)}&kind=${encodeURIComponent(boundaryKind)}`,
+    )
       .then(async (res) => {
         const body = (await res.json()) as {
           ok?: boolean;
@@ -562,7 +599,7 @@ export function EventCreatorScreen() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQ]);
+  }, [debouncedQ, boundaryKind]);
 
   useEffect(() => {
     if (draft.zones.length === 0) {
@@ -618,6 +655,7 @@ export function EventCreatorScreen() {
           <p className="font-display text-lg text-orange-200">
             {view === "map" ? "איפה האירוע?" : "אזורים באירוע"}
           </p>
+          <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
           <div className="flex items-stretch gap-2">
             <BoundarySearchField
               query={query}
@@ -631,14 +669,19 @@ export function EventCreatorScreen() {
               onPick={(hit) => void attemptPickHit(hit)}
               listMode={view === "list"}
               large={false}
+              placeholder={SEARCH_PLACEHOLDER[boundaryKind]}
             />
             <ViewToggle view={view} onViewChange={setView} zoneCount={draft.zones.length} />
           </div>
-          {view === "map" ? (
-            <div className="flex items-center gap-2">
-              <span className="shrink-0 text-sm text-white/50">או בחר במפה</span>
-              <MapTapKindToggle kind={mapTapKind} onKindChange={setMapTapKind} className="flex-1" />
-            </div>
+          {suggestOpen && query.trim().length > 0 && view === "map" ? (
+            <BoundarySuggestPanel
+              open
+              hits={hits}
+              loadingList={loadingList}
+              listError={listError}
+              selectedIds={selectedIds}
+              onPick={(hit) => void attemptPickHit(hit)}
+            />
           ) : null}
         </header>
 

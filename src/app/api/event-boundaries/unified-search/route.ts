@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { EventBoundaryKind } from "@/lib/event-boundary";
 import { unifiedBoundarySearch } from "@/lib/event-boundary-search.server";
 import {
   buildGovNeighborhoodCatalog,
@@ -12,6 +13,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";
   const limit = Number(searchParams.get("limit") ?? "28");
+  const kindParam = searchParams.get("kind");
+  const kind =
+    kindParam && ["city", "neighborhood", "street", "point"].includes(kindParam)
+      ? (kindParam as EventBoundaryKind)
+      : undefined;
 
   if (!q.trim()) {
     return NextResponse.json({ ok: true, hits: [] });
@@ -32,6 +38,6 @@ export async function GET(request: Request) {
     );
   }
 
-  const hits = await unifiedBoundarySearch(catalog, q, limit);
+  const hits = await unifiedBoundarySearch(catalog, q, limit, kind);
   return NextResponse.json({ ok: true, hits });
 }

@@ -1,3 +1,4 @@
+import { roundEventBoundaryCoord, zoneKeyPoint } from "@/lib/event-boundary";
 import { config } from "@/lib/config";
 import { pickStreetCenterlines } from "@/lib/event-boundary-street-geom";
 import { bufferPolylineLngLat } from "@/lib/line-buffer";
@@ -12,6 +13,7 @@ type NominatimGeoHit = {
   class?: string;
   type?: string;
   addresstype?: string;
+  address?: NominatimAddress;
 };
 
 let lastCall = 0;
@@ -308,4 +310,48 @@ export async function searchStreetsNationwide(q: string, limit = 12): Promise<St
     out.push(row);
   }
   return preferExactStreetMatches(out, query).slice(0, limit);
+}
+
+export type AddressPointHit = {
+  id: string;
+  lat: number;
+  lng: number;
+  label: string;
+  city?: string;
+};
+
+/** Forward geocode for specific addresses (map/search mode נקודה). */
+export async function searchAddressPoints(q: string, limit = 14): Promise<AddressPointHit[]> {
+  const query = q.trim();
+  if (!query) return [];
+  const hits = await nominatimSearch({
+    q: `${query}, Israel`,
+    format: "json",
+    countrycodes: "il",
+    limit: String(Math.min(limit + 6, 22)),
+    viewbox: viewbox(),
+    bounded: "0",
+    addressdetails: "1",
+  });
+  const out: AddressPointHit[] = [];
+  const seen = new Set<string>();
+  for (const h of hits) {
+    const lat = Number(h.lat);
+    const lng = Number(h.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    const rLat = roundEventBoundaryCoord(lat);
+    const rLng = roundEventBoundaryCoord(lng);
+    const id = zoneKeyPoint(rLat, rLng);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const label = h.address
+      ? formatPointAddressLabel(h.address, h.display_name)
+      : h.display_name?.split(",").map((p) => p.trim()).slice(0, 3).join(", ") || query;
+    const city =
+      (h.address ? settlementFromNominatimAddress(h.address) : "") ||
+      h.address?.suburb?.trim() ||
+      undefined;
+    out.push({ id, lat: rLat, lng: rLng, label, city: city || undefined });
+  }
+  return out.slice(0, limit);
 }

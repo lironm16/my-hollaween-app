@@ -1,6 +1,10 @@
-import type { BoundarySearchHit } from "@/lib/event-boundary";
+import type { BoundarySearchHit, EventBoundaryKind } from "@/lib/event-boundary";
 import { zoneKeyCity, zoneKeyNeighborhood, zoneKeyStreet } from "@/lib/event-boundary";
-import { searchStreets, searchStreetsNationwide } from "@/lib/event-boundary-nominatim.server";
+import {
+  searchAddressPoints,
+  searchStreets,
+  searchStreetsNationwide,
+} from "@/lib/event-boundary-nominatim.server";
 import type { GovNeighborhoodCatalog } from "@/lib/gov-neighborhoods/types";
 import {
   searchCatalog,
@@ -36,15 +40,38 @@ export async function unifiedBoundarySearch(
   catalog: GovNeighborhoodCatalog,
   q: string,
   limit = 28,
+  filterKind?: EventBoundaryKind,
 ): Promise<BoundarySearchHit[]> {
   const trimmed = q.trim();
   if (!trimmed) return [];
+
+  if (filterKind === "point") {
+    try {
+      const points = await searchAddressPoints(trimmed, limit);
+      return points.map((p) => ({
+        kind: "point" as const,
+        id: p.id,
+        label: p.label,
+        city: p.city,
+        subtitle: p.city,
+        lat: p.lat,
+        lng: p.lng,
+      }));
+    } catch {
+      return [];
+    }
+  }
 
   const { settlement, nameQuery } = inferSettlementFromQuery(catalog, trimmed);
   const hoodNeedle = settlement ? nameQuery || undefined : trimmed;
 
   const hits: BoundarySearchHit[] = [];
 
+  if (filterKind && filterKind !== "city" && filterKind !== "neighborhood" && filterKind !== "street") {
+    return [];
+  }
+
+  if (!filterKind || filterKind === "city") {
   for (const c of uniqueCitiesFromCatalog(catalog, trimmed, 10)) {
     hits.push({
       kind: "city",
@@ -54,7 +81,9 @@ export async function unifiedBoundarySearch(
       subtitle: "עיר שלמה",
     });
   }
+  }
 
+  if (!filterKind || filterKind === "neighborhood") {
   for (const e of searchCatalog(catalog, {
     city: settlement,
     q: hoodNeedle ?? (settlement ? undefined : trimmed),
@@ -68,7 +97,9 @@ export async function unifiedBoundarySearch(
       subtitle: e.city,
     });
   }
+  }
 
+  if (!filterKind || filterKind === "street") {
   try {
     const streets = settlement
       ? await searchStreets(settlement, hoodNeedle ?? settlement, 12)
@@ -84,6 +115,7 @@ export async function unifiedBoundarySearch(
     }
   } catch {
     // streets optional when nominatim throttles
+  }
   }
 
   const seen = new Set<string>();
