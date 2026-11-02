@@ -196,10 +196,25 @@ function googleHitId(placeId: string) {
   return `google-place-${placeResourceId(placeId)}`;
 }
 
-function isEstablishmentTypes(types: string[]) {
+export function isEstablishmentTypes(types: string[]) {
   return types.some((t) =>
     ["establishment", "point_of_interest", "school", "store", "shopping_mall", "park"].includes(t),
   );
+}
+
+const GENERIC_GOOGLE_TYPES = new Set([
+  "establishment",
+  "point_of_interest",
+  "geocode",
+  "premise",
+  "street_address",
+  "route",
+]);
+
+/** Raw primary type for UI experiments (shows what Google returned). */
+export function primaryGooglePlaceType(types: string[] | undefined): string | undefined {
+  if (!types?.length) return undefined;
+  return types.find((t) => !GENERIC_GOOGLE_TYPES.has(t)) ?? types[0];
 }
 
 function googleDetailsToAddressHit(
@@ -231,7 +246,13 @@ function googleDetailsToAddressHit(
     route && houseNumber ? `${route} ${houseNumber}` : route || display || details.formattedAddress || road;
   const precise = Boolean(houseNumber) || details.types.includes("street_address") || details.types.includes("premise");
 
-  const labelBase = streetLine.trim() || road;
+  const addressLine =
+    route && houseNumber
+      ? `${route} ${houseNumber}`.trim()
+      : hint?.secondary?.trim() || undefined;
+
+  const labelBase =
+    establishment && display ? display : streetLine.trim() || road;
   const label = /רמת\s*גן/u.test(labelBase) ? labelBase : `${labelBase}, רמת גן`;
 
   return {
@@ -243,7 +264,9 @@ function googleDetailsToAddressHit(
     houseNumber: houseNumber || undefined,
     city: "רמת גן",
     precise: establishment && !houseNumber ? true : precise,
-    subtitle: hint?.secondary?.trim() || (establishment && route ? route : undefined),
+    subtitle: establishment ? addressLine : hint?.secondary?.trim() || (route ? route : undefined),
+    addressLine: establishment ? addressLine : undefined,
+    placeTypes: details.types,
   };
 }
 

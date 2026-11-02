@@ -35,21 +35,31 @@ function pointLabelForEventSearch(label: string) {
 
 /** Google Places → event-creator נקודה rows (same stack as /api/address). */
 export async function googlePointSearchHits(q: string, cap: number): Promise<BoundarySearchHit[]> {
-  const { googlePlacesConfigured, searchGoogleAddressHits } = await import("@/lib/google-places.server");
+  const { googlePlacesConfigured, isEstablishmentTypes, primaryGooglePlaceType, searchGoogleAddressHits } =
+    await import("@/lib/google-places.server");
   if (!googlePlacesConfigured()) return [];
   const { prepareAddressHits } = await import("@/lib/address-fields");
   try {
     const prepared = prepareAddressHits(await searchGoogleAddressHits(q, cap), q);
     return prepared.map((h) => {
-      const label = pointLabelForEventSearch(h.label) || h.label;
+      const isGoogle = h.id.startsWith("google-place-");
+      const placeTypeLabel = isGoogle ? primaryGooglePlaceType(h.placeTypes) : undefined;
+      const poi = isGoogle && isEstablishmentTypes(h.placeTypes ?? []);
+      const title = poi
+        ? pointLabelForEventSearch(h.road.trim())
+        : pointLabelForEventSearch(h.label) || h.label;
+      const subtitle = isGoogle
+        ? h.addressLine?.trim() || h.subtitle?.trim() || undefined
+        : h.subtitle ?? h.city;
       return {
         kind: "point" as const,
-        id: h.id.startsWith("google-place-") ? h.id : zoneKeyPoint(h.lat, h.lng),
-        label,
+        id: isGoogle ? h.id : zoneKeyPoint(h.lat, h.lng),
+        label: title,
         city: h.city || "רמת גן",
-        subtitle: h.subtitle ?? h.city ?? "רמת גן",
+        subtitle,
         lat: h.lat,
         lng: h.lng,
+        placeTypeLabel,
       };
     });
   } catch {

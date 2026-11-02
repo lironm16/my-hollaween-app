@@ -73,4 +73,6 @@ export type BoundarySearchHit = {
   subtitle?: string;
   lat?: number;
   lng?: number;
+  /** When set, suggest list shows this instead of the kind pill (e.g. Google `school`). */
+  placeTypeLabel?: string;
 };

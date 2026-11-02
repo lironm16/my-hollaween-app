@@ -161,7 +161,11 @@ function BoundarySuggestPanel({
                     taken ? "opacity-40" : "hover:bg-white/5",
                   )}
                 >
-                  <EventBoundaryKindBadge kind={hit.kind} size={large ? "lg" : "sm"} />
+                  <EventBoundaryKindBadge
+                    kind={hit.kind}
+                    typeLabel={hit.placeTypeLabel}
+                    size={large ? "lg" : "sm"}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className={cn("truncate text-white/90", large ? "text-lg" : "text-sm")}>{hit.label}</p>
                     {hit.subtitle && hit.kind !== "city" ? (

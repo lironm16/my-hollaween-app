@@ -17,23 +17,29 @@ const BOUNDARY_KIND_PILL: Record<EventBoundaryKind, string> = {
 
 export function EventBoundaryKindBadge({
   kind,
+  typeLabel,
   className,
   size = "sm",
 }: {
   kind: EventBoundaryKind;
+  /** Overrides kind pill text (e.g. raw Google place type). */
+  typeLabel?: string;
   className?: string;
   size?: "sm" | "lg";
 }) {
+  const text = typeLabel?.trim() || BOUNDARY_KIND_LABEL[kind];
   return (
     <span
       className={cn(
         "shrink-0 rounded-md font-medium",
         size === "lg" ? "px-2.5 py-1 text-sm" : "px-2 py-0.5 text-[11px]",
         BOUNDARY_KIND_PILL[kind],
+        typeLabel && "max-w-[7.5rem] truncate font-mono normal-case",
         className,
       )}
+      title={typeLabel?.trim() || undefined}
     >
-      {BOUNDARY_KIND_LABEL[kind]}
+      {text}
     </span>
   );
 }

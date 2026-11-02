@@ -310,6 +310,10 @@ export type AddressHit = {
   precise: boolean;
   /** Autocomplete secondary line (e.g. campus street). */
   subtitle?: string;
+  /** Google Places (New) type tags — e.g. school, shopping_mall. */
+  placeTypes?: string[];
+  /** Street line for POIs (event search subtitle), without city. */
+  addressLine?: string;
 };
 
 export type PushSubscriptionRecord = {
