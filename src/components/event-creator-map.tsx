@@ -13,12 +13,14 @@ const KIND_COLORS: Record<EventBoundaryKind, string> = {
   city: "#38bdf8",
   neighborhood: "#34d399",
   street: "#fb923c",
+  point: "#a78bfa",
 };
 
 const KIND_DRAW_ORDER: Record<EventBoundaryKind, number> = {
   city: 0,
   neighborhood: 1,
   street: 2,
+  point: 3,
 };
 
 export const EVENT_CREATOR_ISRAEL_BOUNDS: L.LatLngBoundsExpression = [
@@ -172,7 +174,8 @@ export function EventCreatorMap({
                     weight: kind === "street" ? (isFocused ? 5 : 4) : isFocused ? 4 : 3,
                     opacity: 1,
                     fillColor: color,
-                    fillOpacity: kind === "city" ? 0.12 : kind === "street" ? 0.38 : 0.28,
+                    fillOpacity:
+                      kind === "city" ? 0.12 : kind === "point" ? 0.55 : kind === "street" ? 0.38 : 0.28,
                     dashArray: kind === "city" ? "8 4" : undefined,
                   }}
                   eventHandlers={

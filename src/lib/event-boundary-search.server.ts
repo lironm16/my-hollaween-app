@@ -11,6 +11,7 @@ const KIND_RANK: Record<BoundarySearchHit["kind"], number> = {
   city: 0,
   neighborhood: 1,
   street: 2,
+  point: 3,
 };
 
 export function inferSettlementFromQuery(

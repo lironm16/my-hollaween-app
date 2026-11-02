@@ -1,6 +1,6 @@
 import type { BoundarySearchHit, EventBoundaryKind } from "@/lib/event-boundary";
-import { zoneKeyCity, zoneKeyStreet } from "@/lib/event-boundary";
-import { reverseGeocodeAddress } from "@/lib/event-boundary-nominatim.server";
+import { roundEventBoundaryCoord, zoneKeyCity, zoneKeyPoint, zoneKeyStreet } from "@/lib/event-boundary";
+import { reverseGeocodeAddress, reverseGeocodePointLabel } from "@/lib/event-boundary-nominatim.server";
 import { pickGovNeighborhoodAtPoint } from "@/lib/gov-neighborhoods/pick-at-point.server";
 
 function settlementFromAddress(addr: NonNullable<Awaited<ReturnType<typeof reverseGeocodeAddress>>>) {
@@ -24,6 +24,22 @@ export async function pickBoundaryAtPoint(
 ): Promise<BoundarySearchHit | null> {
   if (kind === "neighborhood") {
     return pickGovNeighborhoodAtPoint(lat, lng);
+  }
+
+  if (kind === "point") {
+    const row = await reverseGeocodePointLabel(lat, lng);
+    if (!row) return null;
+    const rLat = roundEventBoundaryCoord(lat);
+    const rLng = roundEventBoundaryCoord(lng);
+    return {
+      kind: "point",
+      id: zoneKeyPoint(rLat, rLng),
+      label: row.label,
+      city: row.city,
+      subtitle: row.city,
+      lat: rLat,
+      lng: rLng,
+    };
   }
 
   const address = await reverseGeocodeAddress(lat, lng);

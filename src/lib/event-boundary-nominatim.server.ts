@@ -21,6 +21,7 @@ export type NominatimAddress = {
   road?: string;
   pedestrian?: string;
   residential?: string;
+  house_number?: string;
   city?: string;
   town?: string;
   village?: string;
@@ -28,7 +29,9 @@ export type NominatimAddress = {
   suburb?: string;
 };
 
-async function nominatimReverse(lat: number, lng: number): Promise<{ address?: NominatimAddress } | null> {
+type NominatimReverseBody = { address?: NominatimAddress; display_name?: string };
+
+async function nominatimReverse(lat: number, lng: number): Promise<NominatimReverseBody | null> {
   const wait = Math.max(0, MIN_GAP_MS - (Date.now() - lastCall));
   if (wait) await new Promise((r) => setTimeout(r, wait));
   const url = new URL("https://nominatim.openstreetmap.org/reverse");
@@ -44,12 +47,64 @@ async function nominatimReverse(lat: number, lng: number): Promise<{ address?: N
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) return null;
-  return (await res.json()) as { address?: NominatimAddress };
+  return (await res.json()) as NominatimReverseBody;
 }
 
 export async function reverseGeocodeAddress(lat: number, lng: number): Promise<NominatimAddress | null> {
   const body = await nominatimReverse(lat, lng);
   return body?.address ?? null;
+}
+
+function settlementFromNominatimAddress(addr: NominatimAddress): string {
+  return (
+    addr.city?.trim() ||
+    addr.town?.trim() ||
+    addr.municipality?.trim() ||
+    addr.village?.trim() ||
+    ""
+  );
+}
+
+function roadFromNominatimAddress(addr: NominatimAddress): string {
+  return addr.road?.trim() || addr.pedestrian?.trim() || addr.residential?.trim() || "";
+}
+
+/** Hebrew-friendly single-line label for a map pin (specific address). */
+export function formatPointAddressLabel(
+  address: NominatimAddress,
+  displayName?: string,
+): string {
+  const road = roadFromNominatimAddress(address);
+  const num = address.house_number?.trim();
+  const city = settlementFromNominatimAddress(address) || address.suburb?.trim() || "";
+  const streetLine = road ? (num ? `${road} ${num}` : road) : "";
+  if (streetLine && city) return `${streetLine}, ${city}`;
+  if (streetLine) return streetLine;
+  if (city) return city;
+  const trimmed = displayName?.trim();
+  if (trimmed) {
+    const parts = trimmed.split(",").map((p) => p.trim()).filter(Boolean);
+    return parts.slice(0, 3).join(", ");
+  }
+  return "נקודה";
+}
+
+export async function reverseGeocodePointLabel(
+  lat: number,
+  lng: number,
+): Promise<{ label: string; city?: string } | null> {
+  const body = await nominatimReverse(lat, lng);
+  if (!body?.address) {
+    if (body?.display_name?.trim()) {
+      return { label: formatPointAddressLabel({}, body.display_name) };
+    }
+    return null;
+  }
+  const city = settlementFromNominatimAddress(body.address) || body.address.suburb?.trim() || undefined;
+  return {
+    label: formatPointAddressLabel(body.address, body.display_name),
+    city,
+  };
 }
 
 async function nominatimSearch(params: Record<string, string>): Promise<NominatimGeoHit[]> {

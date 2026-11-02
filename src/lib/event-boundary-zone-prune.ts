@@ -29,6 +29,7 @@ const KIND_SPECIFICITY: Record<EventBoundaryKind, number> = {
   city: 0,
   neighborhood: 1,
   street: 2,
+  point: 3,
 };
 
 /**
@@ -45,12 +46,13 @@ export function pruneZonesContainedInParents(
   const toDrop = new Set<string>();
 
   for (const zone of zones) {
+    if (zone.kind === "point") continue;
     const inner = geometries.get(zone.id);
     if (!inner) continue;
     const innerRank = KIND_SPECIFICITY[zone.kind];
 
     for (const parent of zones) {
-      if (parent.id === zone.id) continue;
+      if (parent.id === zone.id || parent.kind === "point") continue;
       const outer = geometries.get(parent.id);
       if (!outer) continue;
       const outerRank = KIND_SPECIFICITY[parent.kind];
@@ -77,6 +79,7 @@ export function existingZonesContainedInNewZone(
   const newRank = KIND_SPECIFICITY[newZone.kind];
   const contained: EventBoundaryZone[] = [];
   for (const z of existing) {
+    if (z.kind === "point") continue;
     const inner = geoms.get(z.id);
     if (!inner) continue;
     const innerRank = KIND_SPECIFICITY[z.kind];

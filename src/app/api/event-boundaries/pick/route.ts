@@ -4,7 +4,7 @@ import { pickBoundaryAtPoint } from "@/lib/event-boundary-pick-at-point.server";
 
 export const runtime = "nodejs";
 
-const KINDS: EventBoundaryKind[] = ["city", "neighborhood", "street"];
+const KINDS: EventBoundaryKind[] = ["city", "neighborhood", "street", "point"];
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

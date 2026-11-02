@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { parseZoneKey, type EventBoundaryZone } from "@/lib/event-boundary";
+import { parsePointZoneCoords, parseZoneKey, type EventBoundaryZone } from "@/lib/event-boundary";
+import { pointZoneCirclePolygon } from "@/lib/event-boundary-point";
 import { cityBoundaryPolygon, streetBoundaryPolygon } from "@/lib/event-boundary-nominatim.server";
 import { loadGovNeighborhoodById } from "@/lib/gov-neighborhoods/load.server";
 
@@ -31,6 +32,14 @@ async function resolveZoneGeometry(
     const geom = await cityBoundaryPolygon(city);
     if (!geom || !isAreaGeom(geom)) return null;
     return { geometry: geom, source: "osm-nominatim" };
+  }
+
+  if (kind === "point") {
+    const coords =
+      parsePointZoneCoords(parsed?.rest ?? "") ??
+      (zone.lat != null && zone.lng != null ? { lat: zone.lat, lng: zone.lng } : null);
+    if (!coords) return null;
+    return { geometry: pointZoneCirclePolygon(coords.lng, coords.lat), source: "pin" };
   }
 
   return null;
@@ -88,15 +97,25 @@ export async function POST(request: Request) {
       const row = await resolveZoneGeometry(zone);
       if (!row) continue;
       resolved.set(zone.id, row.geometry);
+      const props: GeoJSON.GeoJsonProperties = {
+        id: zone.id,
+        kind: zone.kind,
+        label: zone.label,
+        city: zone.city,
+        source: row.source,
+      };
+      if (kind === "point") {
+        const coords =
+          parsePointZoneCoords(parsed?.rest ?? "") ??
+          (zone.lat != null && zone.lng != null ? { lat: zone.lat, lng: zone.lng } : null);
+        if (coords) {
+          props.pointLat = coords.lat;
+          props.pointLng = coords.lng;
+        }
+      }
       features.push({
         type: "Feature",
-        properties: {
-          id: zone.id,
-          kind: zone.kind,
-          label: zone.label,
-          city: zone.city,
-          source: row.source,
-        },
+        properties: props,
         geometry: row.geometry,
       });
     } catch {

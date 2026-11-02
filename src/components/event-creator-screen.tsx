@@ -11,7 +11,9 @@ import { ChevronRight, List, Map as MapIcon, Search, Trash2, X } from "lucide-re
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { POINT_TAP_RADIUS_M } from "@/lib/event-boundary-point";
 import { pointInGeoPolygon } from "@/lib/event-boundary-street-geom";
+import { distanceMeters } from "@/lib/geo";
 import { EventBoundaryKindBadge } from "@/components/event-boundary-kind-badge";
 import { EventCreatorMapDynamic } from "@/components/event-creator-map-dynamic";
 import type { EventBoundaryMapFeature } from "@/components/event-creator-map-types";
@@ -31,9 +33,10 @@ type CreatorView = "map" | "list";
 const SEARCH_DEBOUNCE_MS = 280;
 
 const MAP_TAP_EMPTY_MESSAGE: Record<EventBoundaryKind, string> = {
-  city: "לא נמצאה עיר בנקודה זו",
-  neighborhood: "לא נמצאה שכונה בנקודה זו",
+  point: "לא נמצאה כתובת בנקודה זו",
   street: "לא נמצא רחוב בנקודה זו",
+  neighborhood: "לא נמצאה שכונה בנקודה זו",
+  city: "לא נמצאה עיר בנקודה זו",
 };
 
 function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
@@ -42,13 +45,16 @@ function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
     id: hit.id,
     label: hit.label,
     city: hit.city,
+    ...(hit.lat != null && hit.lng != null ? { lat: hit.lat, lng: hit.lng } : {}),
   };
 }
 
+/** RTL tab order (right → left): נקודה · רחוב · שכונה · עיר */
 const MAP_TAP_KINDS: { kind: EventBoundaryKind; label: string }[] = [
-  { kind: "city", label: "עיר" },
-  { kind: "neighborhood", label: "שכונה" },
+  { kind: "point", label: "נקודה" },
   { kind: "street", label: "רחוב" },
+  { kind: "neighborhood", label: "שכונה" },
+  { kind: "city", label: "עיר" },
 ];
 
 function MapTapKindToggle({
@@ -74,7 +80,7 @@ function MapTapKindToggle({
           aria-selected={kind === k}
           onClick={() => onKindChange(k)}
           className={cn(
-            "min-h-9 min-w-0 flex-1 rounded-[10px] py-2 text-center text-sm font-medium transition",
+            "min-h-9 min-w-0 flex-1 rounded-[10px] px-0.5 py-2 text-center text-xs font-medium transition sm:text-sm",
             kind === k ? "bg-orange-600 text-white shadow-sm" : "text-white/55 hover:text-white/80",
           )}
         >
@@ -116,14 +122,25 @@ function selectedZoneIdAtPoint(
   lng: number,
 ): string | null {
   const selected = new Set(selectedIds);
+  let bestPoint: { id: string; dist: number } | null = null;
   for (const f of features) {
     const id = f.properties?.id;
     if (!id || !selected.has(id)) continue;
+    if (f.properties?.kind === "point") {
+      const plat = f.properties.pointLat;
+      const plng = f.properties.pointLng;
+      if (plat == null || plng == null) continue;
+      const dist = distanceMeters({ lat, lng }, { lat: plat, lng: plng });
+      if (dist <= POINT_TAP_RADIUS_M && (!bestPoint || dist < bestPoint.dist)) {
+        bestPoint = { id, dist };
+      }
+      continue;
+    }
     const g = f.geometry;
     if (!g || (g.type !== "Polygon" && g.type !== "MultiPolygon")) continue;
     if (pointInGeoPolygon(lng, lat, g)) return id;
   }
-  return null;
+  return bestPoint?.id ?? null;
 }
 
 function ZoneContainmentDialog({
@@ -370,7 +387,7 @@ export function EventCreatorScreen() {
   const [mapFeatures, setMapFeatures] = useState<EventBoundaryMapFeature[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
   const [mapFocusId, setMapFocusId] = useState<string | null>(null);
-  const [mapTapKind, setMapTapKind] = useState<EventBoundaryKind>("neighborhood");
+  const [mapTapKind, setMapTapKind] = useState<EventBoundaryKind>("point");
   const [containmentPrompt, setContainmentPrompt] = useState<{
     hit: BoundarySearchHit;
     contained: EventBoundaryZone[];
