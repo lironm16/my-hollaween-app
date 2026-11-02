@@ -41,10 +41,10 @@ const MAP_TAP_EMPTY_MESSAGE: Record<EventBoundaryKind, string> = {
 };
 
 const MAP_TAP_KIND_HINT: Record<EventBoundaryKind, string> = {
-  point: "לחצו על המפה ליד כתובת עם מספר בית",
-  street: "לחצו על המפה על הרחוב שרוצים להוסיף",
-  neighborhood: "לחצו על המפה בתוך השכונה",
-  city: "לחצו על המפה בתוך העיר",
+  point: "בחרו «נקודה» למטה — ואז לחצו על המפה ליד כתובת עם מספר בית",
+  street: "בחרו «רחוב» למטה — ואז לחצו על המפה על קטע הרחוב",
+  neighborhood: "בחרו «שכונה» למטה — ואז לחצו על המפה בתוך גבולות השכונה",
+  city: "בחרו «עיר» למטה — ואז לחצו על המפה בתוך גבולות העיר",
 };
 
 function hitToZone(hit: BoundarySearchHit): EventBoundaryZone {
@@ -317,7 +317,7 @@ function MapTapModeButton({
       aria-label={active ? "סיום לחיצה במפה" : "לחיצה במפה — הוספת אזור"}
       onClick={onToggle}
       className={cn(
-        "flex h-11 max-w-[5.75rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 transition",
+        "flex min-h-11 max-w-[5.75rem] shrink-0 flex-col items-center justify-center gap-0.5 self-start rounded-xl border px-1.5 py-1.5 transition",
         active
           ? "border-orange-400/50 bg-orange-600 text-white shadow-sm"
           : "border-white/12 bg-black/40 text-white/90 hover:bg-white/10",
@@ -404,19 +404,6 @@ function BoundarySearchField({
         />
       </label>
 
-      {listMode && suggestOpen && query.trim().length > 0 ? (
-        <BoundarySuggestPanel
-          open
-          hits={hits}
-          loadingList={loadingList}
-          listError={listError}
-          selectedIds={selectedIds}
-          onPick={onPick}
-          large={large}
-          boundaryKind={boundaryKind}
-          query={query}
-        />
-      ) : null}
     </div>
   );
 }
@@ -471,11 +458,14 @@ export function EventCreatorScreen() {
   const selectedIds = useMemo(() => draft.zones.map((z) => z.id), [draft.zones]);
   const [fitZoneId, setFitZoneId] = useState<string | null>(null);
   const boundsFitKey = useMemo(() => {
-    if (!fitZoneId) return "";
-    const f = mapFeatures.find((x) => x.properties?.id === fitZoneId);
-    if (!f?.geometry) return `${fitZoneId}:pending`;
-    return `${fitZoneId}:ready`;
-  }, [fitZoneId, mapFeatures]);
+    if (fitZoneId) {
+      const f = mapFeatures.find((x) => x.properties?.id === fitZoneId);
+      if (!f?.geometry) return `one:${fitZoneId}:pending`;
+      return `one:${fitZoneId}:ready`;
+    }
+    if (mapFeatures.length === 0 || selectedIds.length === 0) return "";
+    return `all:${[...selectedIds].sort().join(",")}`;
+  }, [fitZoneId, mapFeatures, selectedIds]);
 
   const mapFocusZone = useMemo(
     () => draft.zones.find((z) => z.id === mapFocusId) ?? null,
@@ -790,9 +780,9 @@ export function EventCreatorScreen() {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ paddingBottom: footerPad }}>
         <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md">
           <p className="text-right font-display text-lg text-orange-200">איפה האירוע?</p>
-          <div ref={searchChromeRef} className="space-y-2">
+          <div ref={searchChromeRef} className="space-y-1.5">
             <div className="flex items-start gap-2">
-              <div className="relative z-10 min-w-0 flex-1 space-y-2">
+              <div className="relative z-10 min-w-0 flex-1">
                 <BoundarySearchField
                   query={query}
                   onQueryChange={setQuery}
@@ -804,26 +794,27 @@ export function EventCreatorScreen() {
                   selectedIds={selectedIds}
                   onPick={(hit) => void attemptPickHit(hit)}
                   listMode={view === "list"}
-                  large={false}
+                  large={view === "list"}
                   placeholder="שכונה, רחוב, כתובת או עיר…"
                 />
-                {suggestOpen && query.trim().length > 0 && view === "map" ? (
-                  <BoundarySuggestPanel
-                    open
-                    hits={hits}
-                    loadingList={loadingList}
-                    listError={listError}
-                    selectedIds={selectedIds}
-                    onPick={(hit) => void attemptPickHit(hit)}
-                    query={query}
-                  />
-                ) : null}
               </div>
               <div className="relative z-20 flex shrink-0 items-start gap-2">
                 <MapTapModeButton active={mapTapMode} onToggle={toggleMapTapMode} />
                 <ViewToggle view={view} onViewChange={setView} />
               </div>
             </div>
+            {suggestOpen && query.trim().length > 0 ? (
+              <BoundarySuggestPanel
+                open
+                hits={hits}
+                loadingList={loadingList}
+                listError={listError}
+                selectedIds={selectedIds}
+                onPick={(hit) => void attemptPickHit(hit)}
+                large={view === "list"}
+                query={query}
+              />
+            ) : null}
             {showKindTabs ? (
               <>
                 <p className="text-right text-sm leading-snug text-white/55">{MAP_TAP_KIND_HINT[boundaryKind]}</p>
