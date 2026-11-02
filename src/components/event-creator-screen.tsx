@@ -108,6 +108,7 @@ function BoundarySuggestPanel({
   large = false,
   boundaryKind,
   query,
+  className,
 }: {
   open: boolean;
   hits: BoundarySearchHit[];
@@ -118,14 +119,16 @@ function BoundarySuggestPanel({
   large?: boolean;
   boundaryKind?: EventBoundaryKind;
   query?: string;
+  className?: string;
 }) {
   if (!open) return null;
 
   return (
     <div
       className={cn(
-        "relative z-[5] w-full overflow-y-auto rounded-xl border border-white/15 bg-[#140a1c]/98 shadow-xl backdrop-blur-lg",
-        large ? "mt-2 max-h-[36vh]" : "max-h-[min(42vh,320px)]",
+        "relative z-[5] w-full min-w-0 overflow-y-auto rounded-xl border border-white/15 bg-[#140a1c]/98 shadow-xl backdrop-blur-lg",
+        large ? "max-h-[36vh]" : "max-h-[min(42vh,320px)]",
+        className,
       )}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
@@ -775,28 +778,27 @@ export function EventCreatorScreen() {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ paddingBottom: footerPad }}>
         <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md">
           <p className="text-right font-display text-lg text-orange-200">איפה האירוע?</p>
-          <div ref={searchChromeRef} className="space-y-1.5">
-            <div className="flex items-start gap-2">
-              <div className="relative z-10 min-w-0 flex-1">
-                <BoundarySearchField
-                  query={query}
-                  onQueryChange={setQuery}
-                  suggestOpen={suggestOpen}
-                  onSuggestOpen={setSuggestOpen}
-                  hits={hits}
-                  loadingList={loadingList}
-                  listError={listError}
-                  selectedIds={selectedIds}
-                  onPick={(hit) => void attemptPickHit(hit)}
-                  listMode={view === "list"}
-                  large={view === "list"}
-                  placeholder="שכונה, רחוב, כתובת או עיר…"
-                />
-              </div>
-              <div className="relative z-20 flex shrink-0 items-start gap-2">
-                <MapTapModeButton active={mapTapMode} onToggle={toggleMapTapMode} />
-                <ViewToggle view={view} onViewChange={setView} />
-              </div>
+          <div
+            ref={searchChromeRef}
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1"
+          >
+            <BoundarySearchField
+              query={query}
+              onQueryChange={setQuery}
+              suggestOpen={suggestOpen}
+              onSuggestOpen={setSuggestOpen}
+              hits={hits}
+              loadingList={loadingList}
+              listError={listError}
+              selectedIds={selectedIds}
+              onPick={(hit) => void attemptPickHit(hit)}
+              listMode={view === "list"}
+              large={view === "list"}
+              placeholder="שכונה, רחוב, כתובת או עיר…"
+            />
+            <div className="relative z-20 flex shrink-0 items-start gap-2">
+              <MapTapModeButton active={mapTapMode} onToggle={toggleMapTapMode} />
+              <ViewToggle view={view} onViewChange={setView} />
             </div>
             {suggestOpen && query.trim().length > 0 ? (
               <BoundarySuggestPanel
@@ -808,13 +810,14 @@ export function EventCreatorScreen() {
                 onPick={(hit) => void attemptPickHit(hit)}
                 large={view === "list"}
                 query={query}
+                className="col-span-2"
               />
             ) : null}
             {showKindTabs ? (
-              <>
+              <div className="col-span-2 space-y-1.5">
                 <p className="text-right text-sm leading-snug text-white/55">{MAP_TAP_HINT}</p>
                 <MapTapKindToggle kind={boundaryKind} onKindChange={setBoundaryKind} />
-              </>
+              </div>
             ) : null}
           </div>
         </header>

@@ -84,6 +84,28 @@ export async function unifiedBoundarySearch(
   }
   }
 
+  const hasHouseNumber = queryEligibleForPointSearch(trimmed);
+  const parsedAddress = hasHouseNumber ? parsePointAddressQuery(trimmed) : null;
+
+  if (!filterKind && hasHouseNumber) {
+    try {
+      const points = await searchAddressPoints(trimmed, Math.min(limit, 14));
+      for (const p of points) {
+        hits.push({
+          kind: "point",
+          id: p.id,
+          label: p.label,
+          city: p.city,
+          subtitle: p.city,
+          lat: p.lat,
+          lng: p.lng,
+        });
+      }
+    } catch {
+      // nominatim optional
+    }
+  }
+
   if (!filterKind || filterKind === "neighborhood") {
   for (const e of searchCatalog(catalog, {
     city: settlement,
@@ -102,12 +124,11 @@ export async function unifiedBoundarySearch(
 
   if (!filterKind || filterKind === "street") {
     try {
-      const hasHouseNumber = queryEligibleForPointSearch(trimmed);
-      const parsedAddress = hasHouseNumber ? parsePointAddressQuery(trimmed) : null;
-
-      // "נחליאלי 4" without a city is an address, not a nationwide street pick.
-      if (hasHouseNumber && !parsedAddress && !settlement) {
-        // no street hits — UI prompts switching to נקודה
+      // Unified search with a parsed address (street + number + city) → נקודה hits, not רחוב.
+      if (!filterKind && parsedAddress) {
+        // skip street rows
+      } else if (hasHouseNumber && !parsedAddress && !settlement) {
+        // "נחליאלי 4" without a city is an address, not a nationwide street pick.
       } else {
         const streetNeedle = parsedAddress?.street ?? hoodNeedle ?? trimmed;
         const streetCity = parsedAddress?.city ?? settlement;
@@ -143,6 +164,10 @@ export async function unifiedBoundarySearch(
   }
 
   deduped.sort((a, b) => {
+    if (hasHouseNumber) {
+      if (a.kind === "point" && b.kind !== "point") return -1;
+      if (b.kind === "point" && a.kind !== "point") return 1;
+    }
     const r = KIND_RANK[a.kind] - KIND_RANK[b.kind];
     if (r !== 0) return r;
     return a.label.localeCompare(b.label, "he");
