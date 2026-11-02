@@ -307,17 +307,19 @@ function MapTapModeButton({
     <button
       type="button"
       aria-pressed={active}
-      aria-label={active ? "יציאה ממצב בחירה במפה" : "בחירה במפה"}
-      title={active ? "מצב בחירה במפה פעיל" : "בחירה במפה"}
+      aria-label={active ? "סיום הוספה בלחיצה על המפה" : "הוספת אזור בלחיצה על המפה"}
       onClick={onToggle}
       className={cn(
-        "flex size-11 shrink-0 items-center justify-center rounded-xl border transition",
+        "flex max-w-[5.75rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1.5 transition",
         active
           ? "border-orange-400/50 bg-orange-600 text-white shadow-sm"
-          : "border-white/12 bg-black/40 text-white hover:bg-white/10",
+          : "border-white/12 bg-black/40 text-white/90 hover:bg-white/10",
       )}
     >
-      <Crosshair className="size-6" aria-hidden />
+      <Crosshair className="size-5 shrink-0" aria-hidden />
+      <span className="text-center text-[10px] font-semibold leading-tight">
+        {active ? "מצב הוספה" : "הוספה במפה"}
+      </span>
     </button>
   );
 }
@@ -383,9 +385,10 @@ function BoundarySearchField({
           dir="rtl"
           autoComplete="off"
           className={cn(
-            "relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 text-right backdrop-blur-md placeholder:text-right placeholder:text-white/35",
+            "relative w-full touch-manipulation rounded-xl border border-white/15 bg-black/60 text-start backdrop-blur-md placeholder:text-start placeholder:text-white/35",
             large ? "py-3.5 pl-3 pr-10 text-lg" : "py-3 pl-3 pr-9 text-base",
           )}
+          style={{ textAlign: "right" }}
           placeholder={placeholder ?? "חפשו אזור…"}
           value={query}
           onFocus={() => onSuggestOpen(true)}
@@ -611,11 +614,6 @@ export function EventCreatorScreen() {
     [],
   );
 
-  const enterMapTapMode = useCallback(() => {
-    setMapTapMode(true);
-    setView("map");
-  }, []);
-
   const toggleMapTapMode = useCallback(() => {
     setMapTapMode((on) => {
       if (on) {
@@ -632,15 +630,14 @@ export function EventCreatorScreen() {
     (lat: number, lng: number) => {
       const onSelected = selectedZoneIdAtPoint(mapFeatures, selectedIds, lat, lng);
       if (onSelected) {
+        setMapPickDraft(null);
         setMapFocusId((cur) => (cur === onSelected ? null : onSelected));
         return;
       }
-      if (!mapTapMode) {
-        enterMapTapMode();
-      }
+      if (!mapTapMode) return;
       void loadMapPickDraft(lat, lng, boundaryKind);
     },
-    [boundaryKind, enterMapTapMode, loadMapPickDraft, mapFeatures, mapTapMode, selectedIds],
+    [boundaryKind, loadMapPickDraft, mapFeatures, mapTapMode, selectedIds],
   );
 
   const confirmMapPickDraft = useCallback(async () => {
@@ -789,7 +786,11 @@ export function EventCreatorScreen() {
         <header className="relative z-20 shrink-0 space-y-2 border-b border-white/8 bg-[#0c0610]/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md">
           <div className="space-y-0.5 text-right">
             <p className="font-display text-lg text-orange-200">איפה האירוע?</p>
-            <p className="text-sm text-white/50">אפשר לבחור במפה או להקליד בחיפוש</p>
+            <p className="text-sm text-white/50">
+              {mapTapMode
+                ? "לחצו על המפה לפי הסוג למטה — או חפשו למעלה"
+                : "חפשו למעלה, או לחצו אזור שכבר בחרתם במפה"}
+            </p>
           </div>
           <div ref={searchChromeRef} className="space-y-2">
             <div className="flex items-stretch gap-2">
